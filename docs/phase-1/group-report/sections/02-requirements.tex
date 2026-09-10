@@ -1,0 +1,92 @@
+\clearpage
+\section{Yêu cầu hệ thống}
+\OwnerNote{Nguyễn Quốc Trung -- 2413707 (phụ trách toàn bộ Phần II)}
+
+\subsection{Quy ước đặc tả yêu cầu}
+
+Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể kiểm tra. Functional requirement dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, business rule dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu chất lượng dùng \texttt{NFR-[NHÓM]-[SỐ]}. Tên và mã phải khớp với \texttt{project-conventions.md}.
+
+\subsection{Business Rules}
+
+Business rule được trình bày thành từng quy tắc độc lập để dễ đọc trong báo cáo. Mỗi quy tắc phải nói rõ điều kiện nghiệp vụ, kết quả bắt buộc và các FR/use case chịu ảnh hưởng.
+
+\newcommand{\BusinessRuleItem}[2]{%
+  \par\medskip
+  \noindent\textbf{BR-#1-01 -- \Placeholder{Tên quy tắc nghiệp vụ}.}
+  \Placeholder{Mô tả quy tắc của #2 dưới dạng một phát biểu rõ ràng, có điều kiện và kết quả.}
+  \textit{Liên quan: \Placeholder{FR-#1-XX; UC-#1-XX}.}
+  \par
+}
+
+\BusinessRuleItem{HUB}{SUB-HUB}
+\BusinessRuleItem{RES}{SUB-RES}
+\BusinessRuleItem{TRIP}{SUB-TRIP}
+\BusinessRuleItem{PARK}{SUB-PARK}
+\BusinessRuleItem{CHG}{SUB-CHG}
+\BusinessRuleItem{OPS}{SUB-OPS}
+\BusinessRuleItem{SIM}{SUB-SIM}
+
+\subsection{Functional Requirements}
+
+Các yêu cầu được nhóm theo phân hệ. Khi hoàn thiện, thành viên có thể thêm số lượng FR cần thiết nhưng không gộp nhiều trách nhiệm vào cùng một mã.
+
+\newcommand{\RequirementBlock}[3]{%
+  \subsubsection{SUB-#1 -- #2}
+  \noindent\textbf{FR-#1-01.} \Placeholder{Hệ thống phải thực hiện một chức năng cụ thể của phân hệ.}
+  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
+
+  \medskip
+  \noindent\textbf{FR-#1-02.} \Placeholder{Hệ thống phải thực hiện một chức năng cụ thể khác của phân hệ.}
+  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
+
+  \medskip
+  \noindent\textbf{FR-#1-03.} \Placeholder{Bổ sung hoặc bỏ yêu cầu này tùy kết quả phân tích, nhưng giữ cách đánh mã liên tục.}
+  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
+}
+
+\RequirementBlock{HUB}{Tra cứu Hub và tài nguyên}{UC-HUB-01--03}
+\RequirementBlock{RES}{Đặt phương tiện dùng chung}{UC-RES-01--02}
+\RequirementBlock{TRIP}{Quản lý chuyến đi}{UC-TRIP-01--02}
+\RequirementBlock{PARK}{Quản lý chỗ đỗ xe cá nhân}{UC-PARK-01--03}
+\RequirementBlock{CHG}{Quản lý sạc và lịch sạc}{UC-CHG-01--03}
+\RequirementBlock{OPS}{Giám sát và điều phối vận hành}{UC-OPS-01--03}
+\RequirementBlock{SIM}{What-if Simulation và khuyến nghị}{UC-SIM-01--02}
+
+\subsection{Non-interactive Functional Requirements}
+
+Các chức năng dưới đây được kích hoạt bởi sự kiện hoặc thời gian, không cần actor thao tác trực tiếp. Đây là nhóm ứng viên cho phần bonus và chỉ giữ lại những mục nhóm có thể giải thích, thiết kế và kiểm thử.
+
+\newcommand{\NIFRItem}[3]{%
+  \par\medskip
+  \noindent\textbf{NIFR-#1-01 -- #2.}
+  \Placeholder{Nêu trigger, điều kiện được kiểm tra, xử lý tự động và kết quả có thể quan sát.}
+  \textit{Phân hệ: SUB-#1; kết quả dự kiến: #3.}
+  \par
+}
+
+\NIFRItem{HUB}{Cập nhật trạng thái Hub}{Trạng thái tài nguyên được làm mới}
+\NIFRItem{RES}{Giải phóng lượt đặt hết hạn}{Phương tiện trở lại trạng thái sẵn sàng}
+\NIFRItem{PARK}{Giải phóng chỗ đỗ hết hạn}{Chỗ đỗ có thể được đặt lại}
+\NIFRItem{CHG}{Tính lại ưu tiên sạc}{Lịch hoặc hàng đợi sạc được cập nhật}
+\NIFRItem{OPS}{Phát hiện và mở sự cố}{Nhân viên vận hành nhận được cảnh báo}
+\NIFRItem{SIM}{Tạo khuyến nghị sau mô phỏng}{Kết quả mô phỏng có đề xuất đi kèm}
+
+\subsection{Non-functional Requirements}
+
+NFR phải có tiêu chí đo và cách kiểm tra, tránh các câu chung như ``hệ thống nhanh'', ``an toàn'' hoặc ``dễ sử dụng''.
+
+\newcommand{\NFRItem}[2]{%
+  \par\medskip
+  \noindent\textbf{NFR-#1-01 -- #2.}
+  \Placeholder{Viết yêu cầu chất lượng có ngữ cảnh, ngưỡng đo và điều kiện áp dụng.}
+  \textit{Cách kiểm tra: \Placeholder{Phép đo, test case hoặc bằng chứng đánh giá}.}
+  \par
+}
+
+\NFRItem{PERF}{Performance}
+\NFRItem{SEC}{Security}
+\NFRItem{CON}{Consistency}
+\NFRItem{REL}{Reliability}
+\NFRItem{USA}{Usability}
+\NFRItem{AUD}{Auditability}
+\NFRItem{MNT}{Maintainability}

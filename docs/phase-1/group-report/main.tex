@@ -1,0 +1,142 @@
+\documentclass[12pt,a4paper]{article}
+
+% Đường dẫn từ docs/phase-1/group-report đến assets/ của repository.
+\newcommand{\HCMUTAssetPath}{../../../assets}
+\input{../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+
+% Báo cáo tham khảo dùng họ VnTeX/Computer Modern. Template chung đã cấu hình
+% Latin Modern để giữ đúng tinh thần đó và vẫn hỗ trợ Unicode tiếng Việt.
+
+% Header và footer được dàn theo báo cáo tham khảo: logo nhỏ ở trái, hai dòng
+% chữ mono, đường kẻ mảnh và số trang ở góc phải.
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \footnotesize\ttfamily Trường Đại Học Bách Khoa - ĐHQG TP.HCM\\[-1pt]
+      \footnotesize\ttfamily Khoa Khoa học và kỹ thuật máy tính
+    \end{tabular}
+  \end{tabular}%
+}
+\fancyfoot[L]{\scriptsize\ttfamily Bài tập lớn công nghệ phần mềm\\Niên khoá \AcademicYear}
+\fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
+
+\newcommand{\Placeholder}[1]{\textit{\color{gray!70!black}[#1]}}
+\newcommand{\OwnerNote}[1]{%
+  \par\vspace{-0.25em}
+  \noindent\hfill{\small\itshape\color{gray!70!black}Phụ trách: #1}\par
+  \vspace{0.35em}
+}
+\newcommand{\DiagramPlaceholder}[2]{%
+  \par\medskip
+  \noindent\begin{minipage}{\textwidth}
+    \centering
+    \fbox{%
+      \begin{minipage}[c][70mm][c]{0.88\textwidth}
+        \centering
+        \Placeholder{CHÈN DIAGRAM TẠI ĐÂY}\\[2mm]
+        \small #1
+      \end{minipage}%
+    }
+    \captionof{figure}{#1}
+    \label{#2}
+  \end{minipage}
+  \par\medskip
+}
+
+\newcommand{\UseCaseDiagramPlaceholder}[3]{%
+  \par\medskip
+  \noindent\begin{minipage}{\textwidth}
+    \centering
+    \fbox{%
+      \begin{minipage}[c][88mm][c]{0.9\textwidth}
+        \centering
+        \Placeholder{CHÈN SƠ ĐỒ USE CASE CHI TIẾT TẠI ĐÂY}\\[3mm]
+        \small #1\\[2mm]
+        \footnotesize Actor, use case, quan hệ include/extend và system boundary phải khớp với phần đặc tả bên dưới.
+      \end{minipage}%
+    }
+    \captionof{figure}{Sơ đồ Use Case #1 -- #2}
+    \label{#3}
+  \end{minipage}
+  \par\medskip
+}
+
+% Mục lục bám theo cách dàn của báo cáo tham khảo: phần lớn nổi bật,
+% phân hệ và use case thụt cấp đều, khoảng cách dòng gọn và không ngắt thủ công.
+\setcounter{tocdepth}{3}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\listfigurename}{Danh sách hình}
+\renewcommand{\listtablename}{Danh sách bảng}
+\makeatletter
+\renewcommand*\l@section[2]{%
+  \ifnum\c@tocdepth>\z@
+    \addpenalty{\@secpenalty}%
+    \addvspace{0.3em \@plus\p@}%
+    \setlength\@tempdima{2.1em}%
+    \begingroup
+      \parindent\z@
+      \rightskip\@pnumwidth
+      \parfillskip-\@pnumwidth
+      \leavevmode\bfseries
+      \advance\leftskip\@tempdima
+      \hskip-\leftskip
+      #1\nobreak\hfill\nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+    \endgroup
+  \fi
+}
+\renewcommand*\l@subsection{\@dottedtocline{2}{1.55em}{2.25em}}
+\renewcommand*\l@subsubsection{\@dottedtocline{3}{4.1em}{3.2em}}
+\newcommand{\ReferenceTableOfContents}{%
+  \begingroup
+    \setstretch{1.0}%
+    \fontsize{9pt}{10.7pt}\selectfont
+    \section*{\normalfont\Large Mục lục}%
+    \vspace{-0.45em}%
+    \@starttoc{toc}%
+  \endgroup
+}
+\makeatother
+
+\begin{document}
+
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section*{Danh sách thành viên}
+
+\small
+\begin{center}
+\begin{tabularx}{0.94\textwidth}{|C{10mm}|L{45mm}|C{27mm}|Y|}
+  \hline
+  \rowcolor{gray!15}
+  \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
+  \textbf{MSSV} & \centering\arraybackslash\textbf{Vai trò / Nhiệm vụ}\\
+  \hline
+  1 & Nguyễn Quốc Trung & 2413707 & Bối cảnh, stakeholder; SUB-HUB -- 3 use case\\\hline
+  2 & Phan Võ Bảo Trâm & 2413576 & Mục tiêu, phạm vi, boundary; SUB-RES -- 2 use case\\\hline
+  3 & Lê Nguyễn Tường Vi & 2413937 & Tổng hợp FR/BR; SUB-TRIP -- 2 use case\\\hline
+  4 & Nguyễn Ngọc Hân & 2410951 & Use-case model chung; SUB-PARK -- 3 use case\\\hline
+  5 & Trần Thị Hương Giang & 2410845 & Tổng hợp NFR; SUB-CHG -- 3 use case\\\hline
+  6 & Nguyễn Thị Minh Anh & 2410126 & Tổng hợp NIFR; SUB-OPS -- 3 use case\\\hline
+  7 & Trần Nhật Bảo Anh & 2410155 & Quy ước, tích hợp báo cáo; SUB-SIM -- 2 use case\\\hline
+\end{tabularx}
+\end{center}
+\normalsize
+
+\clearpage
+\ReferenceTableOfContents
+
+\clearpage
+\listoffigures
+
+\clearpage
+\listoftables
+
+\clearpage
+\input{sections/01-project-details}
+\input{sections/02-requirements}
+\input{sections/03-use-cases}
+
+\end{document}

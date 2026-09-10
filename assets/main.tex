@@ -1,0 +1,439 @@
+\documentclass[14pt, a4paper]{article}
+\usepackage{vntex}
+\usepackage[dvipsnames]{xcolor}
+%\usepackage[english,vietnam]{babel}
+%\usepackage[utf8]{inputenc}
+
+%\usepackage[utf8]{inputenc}
+%\usepackage[francais]{babel}
+\usepackage{a4wide,amssymb,epsfig,latexsym,array,hhline,fancyhdr}
+\usepackage[normalem]{ulem}
+%\usepackage{soul}
+\usepackage{caption}
+\usepackage{float}
+\renewcommand{\figurename}{}
+\usepackage{wasysym}
+\usepackage{enumitem}
+
+\usepackage[table]{xcolor}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{matlabstyle}{
+    language=Matlab,
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    backgroundcolor=\color{gray!5},
+    frame=single,
+    rulecolor=\color{gray!70},
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray!70}\itshape,
+    stringstyle=\color{teal},
+    showstringspaces=false,
+    tabsize=4,
+    breaklines=true,
+    captionpos=b
+}
+
+\lstset{style=matlabstyle}
+
+
+
+
+
+
+
+
+\usepackage[makeroom]{cancel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{multicol,longtable,amscd}
+\usepackage{diagbox}%Make diagonal lines in tables
+\usepackage{booktabs}
+\usepackage{alltt}
+\usepackage[framemethod=tikz]{mdframed}% For highlighting paragraph backgrounds
+\usepackage{caption,subcaption}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{lastpage}
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{graphicx}							% Standard graphics package
+\usepackage{array}
+\usepackage{tabularx, caption}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{rotating}
+\usepackage{graphics}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{epsfig}
+\usepackage{tikz}
+\newcommand{\circled}[1]{
+  \tikz[baseline=(char.base)]{
+    \node[shape=circle, draw, inner sep=1pt] (char) {#1};
+  }
+}
+\usetikzlibrary{arrows,snakes,backgrounds}
+\usepackage[unicode]{hyperref}
+
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true}
+%\usepackage{pstcol} % PSTricks with the standard color package
+
+\usepackage[normalem]{ulem}
+
+\newtheorem{theorem}{{\bf Định lý}}
+
+\newtheorem{property}{{\bf Tính chất}}
+\newtheorem{proposition}{{\bf Mệnh đề}}
+\newtheorem{corollary}[proposition]{{\bf Hệ quả}}
+\newtheorem{lemma}[proposition]{{\bf Bổ đề}}
+\theoremstyle{definition}
+\newtheorem{exer}{Bài toán}
+
+\def\thesislayout{	% A4: 210 × 297
+	\geometry{
+		a4paper,
+		total={160mm,240mm},  % fix over page
+		left=30mm,
+		top=30mm,
+	}
+}
+\thesislayout
+
+%\usepackage{fancyhdr}
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{hcmut (1).png}}
+    %\put(0,-8){\epsfig{width=10mm,figure=hcmut.eps}}
+   \end{picture}&
+	%\includegraphics[width=8mm, height=8mm]{hcmut.png} & %
+	\begin{tabular}{l}
+		\textbf{\bf \ttfamily Trường Đại Học Bách Khoa - ĐHQG TP.HCM}\\
+		\textbf{\bf \ttfamily Khoa Khoa học và kỹ thuật máy tính}
+	\end{tabular}
+ \end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{l}
+		\tiny \bf \\
+		\tiny \bf
+	\end{tabular}  }
+\fancyfoot{} % clear all footer fields
+\fancyfoot[L]{\scriptsize \ttfamily Bài báo cáo lab Kiến trúc máy tính \\ Niên khoá 2025 - 2026}
+\fancyfoot[R]{\scriptsize \ttfamily Trang {\thepage}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+%%%
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{2}
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\everymath{\color{black}}%make in-line maths symbols blue to read/check easily
+
+\sloppy
+\captionsetup[figure]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=-9pt}
+%space remove between caption, figure, and text
+\captionsetup[table]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=7pt}
+%space remove between caption, table, and text
+
+%\floatplacement{figure}{H}%forced here float placement automatically for figures
+%\floatplacement{table}{H}%forced here float placement automatically for table
+%the following settings (11 lines) are to remove white space before or after the figures and tables
+%\setcounter{topnumber}{2}
+%\setcounter{bottomnumber}{2}
+%\setcounter{totalnumber}{4}
+%\renewcommand{\topfraction}{0.85}
+%\renewcommand{\bottomfraction}{0.85}
+%\renewcommand{\textfraction}{0.15}
+%\renewcommand{\floatpagefraction}{0.8}
+%\renewcommand{\textfraction}{0.1}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+\thesislayout
+\lstset{
+language=C++,
+    aboveskip=6mm,
+    belowskip=-6mm,
+    backgroundcolor=\color{white},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=tb,
+    framesep=8pt,
+    rulecolor=\color{black},
+    title=\lstname,
+}
+
+\usepackage{listings}
+
+\usepackage{xcolor}
+
+%New colors defined below
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+%Code listing style named "mystyle"
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour}, commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2
+}
+
+%"mystyle" code listing set
+\lstset{style=mystyle}
+\lstset{
+        literate=%
+% Vần a
+	{á}{{\'a}}1
+	{à}{{\`a}}1
+	{ạ}{{\d a}}1
+	{ả}{{\h a}}1
+	{ã}{{\~ a}}1
+	%
+	{Á}{{\'A}}1
+	{À}{{\`A}}1
+	{Ạ}{{\d A}}1
+	{Ả}{{\h A}}1
+	{Ã}{{\~ A}}1
+%
+% Vần ă
+	{ă}{{\u a}}1
+	{ắ}{{\'\abreve }}1
+	{ằ}{{\`\abreve }}1
+	{ặ}{{\d \abreve }}1
+	{ẳ}{{\h \abreve }}1
+	{ẵ}{{\~\abreve }}1
+	%
+	{Ă}{{\u A}}1
+	{Ắ}{{\'\ABREVE }}1
+	{Ằ}{{\`\ABREVE }}1
+	{Ặ}{{\d \ABREVE }}1
+	{Ẳ}{{\h \ABREVE }}1
+	{Ẵ}{{\~\ABREVE }}1
+%
+% Vần â
+	{â}{{\^ a}}1
+	{ấ}{{\'\acircumflex }}1
+	{ầ}{{\`\acircumflex }}1
+	{ậ}{{\d \acircumflex }}1
+	{ẩ}{{\h \acircumflex }}1
+	{ẫ}{{\~\acircumflex }}1
+	 %
+	{Â}{{\^ A}}1
+	{Ấ}{{\'\ACIRCUMFLEX }}1
+	{Ầ}{{\`\ACIRCUMFLEX }}1
+	{Ậ}{{\d \ACIRCUMFLEX }}1
+	{Ẩ}{{\h \ACIRCUMFLEX }}1
+	{Ẫ}{{\~\ACIRCUMFLEX }}1
+%
+% Vần đ
+	{đ}{{\dj }}1
+	{Đ}{{\DJ }}1
+%
+% Vần e
+	{é}{{\'e}}1
+	{è}{{\`e}}1
+	{ẹ}{{\d e}}1
+	{ẻ}{{\h e}}1
+	{ẽ}{{\~ e}}1
+	%
+	{É}{{\'E}}1
+	{È}{{\`E}}1
+	{Ẹ}{{\d E}}1
+	{Ẻ}{{\h E}}1
+	{Ẽ}{{\~ E}}1
+%
+% Vần ê
+	{ê}{{\^e}}1
+	{ế}{{\'\ecircumflex }}1
+	{ề}{{\`\ecircumflex }}1
+	{ệ}{{\d \ecircumflex }}1
+	{ể}{{\h \ecircumflex }}1
+	{ễ}{{\~\ecircumflex }}1
+	%
+	{Ê}{{\^E}}1
+	{Ế}{{\'\ECIRCUMFLEX }}1
+	{Ề}{{\`\ECIRCUMFLEX }}1
+	{Ệ}{{\d \ECIRCUMFLEX }}1
+	{Ể}{{\h \ECIRCUMFLEX }}1
+	{Ễ}{{\~\ECIRCUMFLEX }}1
+%
+% Vần i
+	{í}{{\'i}}1
+	{ì}{{\`\i }}1
+	{ị}{{\d i}}1
+	{ỉ}{{\h i}}1
+	{ĩ}{{\~\i }}1
+	%
+	{Í}{{\'I}}1
+	{Ì}{{\`I}}1
+	{Ị}{{\d I}}1
+	{Ỉ}{{\h I}}1
+	{Ĩ}{{\~I}}1
+%
+% Vần o
+	{ó}{{\'o}}1
+	{ò}{{\`o}}1
+	{ọ}{{\d o}}1
+	{ỏ}{{\h o}}1
+	{õ}{{\~o}}1
+	%
+	{Ó}{{\'O}}1
+	{Ò}{{\`O}}1
+	{Ọ}{{\d O}}1
+	{Ỏ}{{\h O}}1
+	{Õ}{{\~O}}1
+%
+% Vần ô
+	{ô}{{\^o}}1
+	{ố}{{\'\ocircumflex }}1
+	{ồ}{{\`\ocircumflex }}1
+	{ộ}{{\d \ocircumflex }}1
+	{ổ}{{\h \ocircumflex }}1
+	{ỗ}{{\~\ocircumflex }}1
+	%
+	{Ô}{{\^O}}1
+	{Ố}{{\'\OCIRCUMFLEX }}1
+	{Ồ}{{\`\OCIRCUMFLEX }}1
+	{Ộ}{{\d \OCIRCUMFLEX }}1
+	{Ổ}{{\h \OCIRCUMFLEX }}1
+	{Ỗ}{{\~\OCIRCUMFLEX }}1
+%
+% Vần ơ
+	{ơ}{{\ohorn }}1
+	{ớ}{{\'\ohorn }}1
+	{ờ}{{\`\ohorn }}1
+	{ợ}{{\d \ohorn }}1
+	{ở}{{\h \ohorn }}1
+	{ỡ}{{\~\ohorn }}1
+	%
+	{Ơ}{{\OHORN }}1
+	{Ớ}{{\'\OHORN }}1
+	{Ờ}{{\`\OHORN }}1
+	{Ợ}{{\d \OHORN }}1
+	{Ở}{{\h \OHORN }}1
+	{Ỡ}{{\~\OHORN }}1
+%
+% Vần u
+	{ú}{{\'u}}1
+	{ù}{{\`u}}1
+	{ụ}{{\d u}}1
+	{ủ}{{\h u}}1
+	{ũ}{{\~u}}1
+	%
+	{Ú}{{\'U}}1
+	{Ù}{{\`U}}1
+	{Ụ}{{\d U}}1
+	{Ủ}{{\h U}}1
+	{Ũ}{{\~U}}1
+%
+% Vần ư
+	{ư}{{\uhorn }}1
+	{ứ}{{\'\uhorn }}1
+	{ừ}{{\`\uhorn }}1
+	{ự}{{\d \uhorn }}1
+	{ử}{{\h \uhorn }}1
+	{ữ}{{\~\uhorn }}1
+	%
+	{Ư}{{\UHORN }}1
+	{Ứ}{{\'\UHORN }}1
+	{Ừ}{{\`\UHORN }}1
+	{Ự}{{\d \UHORN }}1
+	{Ử}{{\h \UHORN }}1
+	{Ữ}{{\~\UHORN }}1
+%
+% Vần y
+	{ý}{{\'y}}1
+	{ỳ}{{\`y}}1
+	{ỵ}{{\d y}}1
+	{ỷ}{{\h y}}1
+	{ỹ}{{\~y}}1
+	%
+	{Ý}{{\'Y}}1
+	{Ỳ}{{\`Y}}1
+	{Ỵ}{{\d Y}}1
+	{Ỷ}{{\h Y}}1
+	{Ỹ}{{\~Y}}1
+}
+\renewcommand{\thesection}{\Roman{section}} % Số chương dùng La Mã
+
+\renewcommand{\thesubsection}{\arabic{subsection}} % Đổi định dạng thành 1, 2,...
+
+\begin{document}
+\input{cover_page}
+\newpage
+\textbf{\Large Danh sách thành viên}
+
+\bigskip
+\begin{table}[h]
+\centering
+\rowcolors{2}{gray!15}{white} % tô màu xen kẽ
+\begin{tabularx}{\textwidth}{|c|X|c|}
+\hline
+\rowcolor{blue!20}
+\textbf{STT} & \textbf{Họ và tên} & \textbf{MSSV} \\
+\hline
+1 & A & 0000\\
+2 & B & 0000\\
+3 & C & 0000 \\
+\hline
+\end{tabularx}
+\end{table}
+\newpage
+\newpage
+
+
+\newpage
+%\thispagestyle{empty},
+\newpage
+\newpage
+
+\end{document}

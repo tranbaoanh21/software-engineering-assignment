@@ -1,0 +1,49 @@
+\section{GIỚI THIỆU}
+
+Tài liệu này là bản xem trước của template LaTeX dùng chung cho các báo cáo trong bài tập lớn. Phần nội dung bên dưới chỉ minh hoạ cách trình bày tiêu đề, đoạn văn, danh sách, bảng và hình. Khi viết bài thật, nhóm thay phần này bằng nội dung tương ứng của từng phase.
+
+\subsection{Mục tiêu của template}
+
+Template thống nhất trang bìa, header, footer, kiểu chữ, cách đánh số mục và cách chú thích hình, bảng. Nhờ đó, báo cáo nhóm, báo cáo cá nhân và biên bản họp có cùng một hình thức trình bày.
+
+\begin{itemize}
+  \item Biên dịch bằng XeLaTeX để xử lý tiếng Việt Unicode.
+  \item Dùng Latin Modern để giữ phong cách gần với VnTeX trong bài tham khảo.
+  \item Chỉ dùng màu xanh cho liên kết; nội dung và tiêu đề giữ màu đen.
+\end{itemize}
+
+\subsection{Ví dụ bảng}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Quy ước trình bày tài liệu}
+  \label{tab:format-rules}
+  \begin{tabularx}{\textwidth}{|C{28mm}|Y|Y|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{Thành phần} & \centering\arraybackslash\textbf{Cách trình bày} & \centering\arraybackslash\textbf{Ghi chú}\\
+    \hline
+    Tiêu đề chính & In đậm, đánh số La Mã & Không dùng màu trang trí\\
+    \hline
+    Tiêu đề con & Đánh số 1, 2, 3 theo từng phần & Giữ tên ngắn và rõ\\
+    \hline
+    Hình và bảng & Căn giữa, chú thích in nghiêng & Gắn nhãn để tham chiếu\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection{Ví dụ hình}
+
+\begin{figure}[htbp]
+  \centering
+  \fbox{%
+    \begin{minipage}[c][42mm][c]{0.78\textwidth}
+      \centering
+      \textit{Khu vực đặt use-case diagram, activity diagram,\\mockup hoặc hình minh hoạ của báo cáo.}
+    \end{minipage}%
+  }
+  \caption{Vị trí minh hoạ cho một hình trong báo cáo}
+  \label{fig:placeholder}
+\end{figure}
+
+Nhóm có thể tham chiếu Bảng~\ref{tab:format-rules} và Hình~\ref{fig:placeholder} trực tiếp trong phần thuyết minh. Các liên kết nội bộ vẫn giữ màu đen; URL bên ngoài hiển thị màu xanh theo phong cách của báo cáo tham khảo.

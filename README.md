@@ -1,6 +1,17 @@
 # Smart E-Mobility Hub
 
-Đây là bài tập lớn môn Công nghệ phần mềm học kỳ 261. Nội dung bên dưới được tổng hợp từ đề bài và thông báo trên LMS để cả nhóm theo dõi trong suốt quá trình làm dự án. File đề gốc được lưu tại [`assignment-details/BTL_SoftwareEngineering_HK261_v1.pdf`](assignment-details/BTL_SoftwareEngineering_HK261_v1.pdf).
+Đây là bài tập lớn môn Công nghệ phần mềm học kỳ 261. Nội dung bên dưới được tổng hợp từ đề bài và thông báo trên LMS để cả nhóm theo dõi trong suốt quá trình làm dự án. File đề gốc được lưu tại [`BTL_SoftwareEngineering_HK261_v1.pdf`](BTL_SoftwareEngineering_HK261_v1.pdf).
+
+## Điều hướng tài liệu
+
+- [Báo cáo chính Phase 1](docs/phase-1/group-report/output/pdf/phase-1-group-report-outline.pdf): bản khung báo cáo nhóm đang được hoàn thiện;
+- [Biên bản họp nhóm buổi 01](docs/meeting-minutes/phase-1/meeting-01/output/pdf/meeting-minutes-01.pdf): buổi tìm hiểu đề tài và xác định các vấn đề cần làm rõ;
+- [Biên bản họp nhóm buổi 02](docs/meeting-minutes/phase-1/meeting-02/output/pdf/meeting-minutes-02.pdf): kết quả làm rõ yêu cầu và phân công công việc Phase 1;
+- [`docs/phase-1/README.md`](docs/phase-1/README.md): yêu cầu và quy trình thực hiện Phase 1;
+- [`general-knowledge.md`](general-knowledge.md): kiến thức chung cho toàn bộ bài tập lớn;
+- [Đề bài gốc](BTL_SoftwareEngineering_HK261_v1.pdf).
+
+Toàn bộ tài liệu theo từng phase được lưu trong thư mục [`docs/`](docs/).
 
 ## 1. Đề tài đang giải quyết bài toán gì?
 

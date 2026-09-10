@@ -1,2 +1,15 @@
-# Internal team planning; keep local to the team leader.
-/phase-1/team-assignment.private.md
+assignment-reference.pdf
+/docs/phase-1/team-assignment.private.md
+
+# LaTeX build files and local rendering artifacts.
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.lof
+*.lot
+*.out
+*.toc
+*.xdv
+*.synctex.gz
+**/tmp/

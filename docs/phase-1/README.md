@@ -4,8 +4,10 @@ Phase 1 tập trung vào việc hiểu đúng bài toán và xác định hệ t
 
 - Deadline trên LMS: **27/09/2026**
 - Review dự kiến trên lớp: **Tuần 7**
-- Đề bài gốc: [`../assignment-details/BTL_SoftwareEngineering_HK261_v1.pdf`](../assignment-details/BTL_SoftwareEngineering_HK261_v1.pdf)
-- Mô tả chung của dự án: [`../README.md`](../README.md)
+- Đề bài gốc: [`../../BTL_SoftwareEngineering_HK261_v1.pdf`](../../BTL_SoftwareEngineering_HK261_v1.pdf)
+- Mô tả chung của dự án: [`../../README.md`](../../README.md)
+- Quy ước tên, mã, trạng thái và traceability: [`project-conventions.md`](project-conventions.md)
+- Nguồn LaTeX của báo cáo group work: [`group-report/main.tex`](group-report/main.tex)
 
 ## 1. Nội dung phải hoàn thành
 
@@ -197,7 +199,7 @@ Ví dụ:
 ```text
 FR-HUB-01: Hệ thống phải cho phép sinh viên xem danh sách Mobility Hub.
 
-FR-VEH-01: Hệ thống phải hiển thị trạng thái và mức pin của các phương tiện
+FR-HUB-03: Hệ thống phải hiển thị trạng thái và mức pin của các phương tiện
 tại Hub được chọn.
 
 FR-RES-01: Hệ thống phải cho phép sinh viên đặt một phương tiện đang ở
@@ -279,48 +281,30 @@ Ví dụ ngắn:
 
 Exception flow phải ghi rõ cách xử lý khi xe vừa được người khác đặt, xe gặp sự cố hoặc sinh viên không đủ điều kiện tạo thêm lượt đặt.
 
-## 3. Phạm vi nghiệp vụ ban đầu
+## 3. Phạm vi nghiệp vụ theo phân hệ
+
+Nhóm chia nghiệp vụ thành bảy phân hệ và chốt 18 use case ở mức mục tiêu người dùng. Cả 18 use case đều được đặc tả trong báo cáo nhóm. Mỗi thành viên nhận một phân hệ làm một nhiệm vụ thống nhất; use case trọng tâm là use case sẽ tiếp tục được phát triển thành các artifact cá nhân ở phase sau.
+
+| Mã | Phân hệ | Use case cá nhân cốt lõi |
+|---|---|---|
+| `HUB` | Tra cứu Hub và tài nguyên | `UC-HUB-01` - Tra cứu Hub phù hợp |
+| `RES` | Đặt phương tiện dùng chung | `UC-RES-01` - Đặt phương tiện dùng chung |
+| `TRIP` | Quản lý chuyến đi | `UC-TRIP-02` - Trả phương tiện và kết thúc chuyến đi |
+| `PARK` | Quản lý chỗ đỗ xe cá nhân | `UC-PARK-01` - Đặt chỗ đỗ cho xe cá nhân |
+| `CHG` | Quản lý sạc và lịch sạc | `UC-CHG-01` - Đăng ký nhu cầu sạc |
+| `OPS` | Giám sát và điều phối vận hành | `UC-OPS-02` - Xử lý sự cố vận hành |
+| `SIM` | What-if Simulation và khuyến nghị | `UC-SIM-01` - Chạy kịch bản What-if Simulation |
+
+Danh mục hiện tại có 18 use case tương tác và 8 non-interactive functional requirement ứng viên cho phần bonus. Danh mục đầy đủ, actor, thuật ngữ và trạng thái được quản lý tại [`project-conventions.md`](project-conventions.md).
 
 ### 3.1. Actor chính
 
 1. **Student:** tìm và sử dụng xe điện dùng chung; đặt chỗ đỗ hoặc đăng ký sạc cho xe cá nhân.
 2. **Operator:** theo dõi mạng lưới, xử lý sự cố, điều phối tài nguyên, quản lý lịch sạc và chạy mô phỏng.
-3. **State Data Source:** nguồn dữ liệu cảm biến hoặc dữ liệu giả lập cập nhật trạng thái tài nguyên.
+3. **Maintenance Staff:** tiếp nhận công việc kỹ thuật và xác nhận kết quả khắc phục sự cố.
+4. **State Data Source:** nguồn dữ liệu cảm biến hoặc dữ liệu giả lập cập nhật trạng thái tài nguyên.
 
-### 3.2. Use case của Student
-
-- Find Suitable Hub;
-- Find Suitable Vehicle;
-- View Vehicle Availability and Battery Level;
-- Reserve Shared Vehicle;
-- Pick Up Vehicle;
-- Return Vehicle;
-- Reserve Parking Space;
-- Submit Charging Request;
-- Schedule Charging Session for Private Vehicle.
-
-### 3.3. Use case của Operator
-
-- Monitor Mobility Hub Network;
-- View Vehicle and Charging Point Status;
-- Identify Hub Capacity Risk;
-- Coordinate Vehicle Redistribution;
-- Manage Operational Incident;
-- Adjust Charging Schedule;
-- Run What-if Simulation;
-- View Simulation Impact;
-- View Coordination Recommendation.
-
-### 3.4. Use case của State Data Source
-
-- Update Vehicle Status and Battery Level;
-- Update Parking Occupancy;
-- Update Charging Point Status;
-- Send Operational Event.
-
-Danh sách này cần được kiểm tra trước khi vẽ diagram để xác định use case nào nên gộp, use case nào nên tách và quan hệ giữa chúng.
-
-### 3.5. Các trạng thái cần thống nhất
+### 3.2. Các trạng thái cần thống nhất
 
 Phase 1 chưa yêu cầu state diagram, nhưng requirement và use case sẽ không rõ nếu chưa thống nhất trạng thái cơ bản.
 
@@ -330,10 +314,10 @@ Phase 1 chưa yêu cầu state diagram, nhưng requirement và use case sẽ kh�
 Available, Reserved, InUse, Charging, OutOfService
 ```
 
-**Reservation:**
+**Vehicle Reservation:**
 
 ```text
-Pending, Confirmed, Active, Completed, Cancelled, Expired, Rejected
+Pending, Confirmed, Fulfilled, Cancelled, Expired, Rejected
 ```
 
 **Parking Space:**
@@ -348,53 +332,25 @@ Available, Reserved, Occupied, OutOfService
 Available, Reserved, Charging, OutOfService
 ```
 
-Không dùng nhiều tên khác nhau cho cùng một trạng thái.
+Các trạng thái còn lại và ý nghĩa đầy đủ được quy định tại [`project-conventions.md`](project-conventions.md). Không dùng nhiều tên khác nhau cho cùng một trạng thái.
 
 ## 4. Quy ước đặt ID
 
-### Functional requirement
+Requirement và use case được đánh mã theo phân hệ, không đánh theo actor:
 
 ```text
-FR-HUB-01   Hub management
-FR-VEH-01   Vehicle management
-FR-RES-01   Reservation
-FR-PARK-01  Parking
-FR-CHG-01   Charging
-FR-OPS-01   Operations
-FR-SIM-01   Simulation
+FR-RES-01   Functional requirement của phân hệ đặt phương tiện
+BR-RES-01   Business rule của phân hệ đặt phương tiện
+UC-RES-01   Use case của phân hệ đặt phương tiện
+
+FR-CHG-01   Functional requirement của phân hệ sạc
+BR-CHG-01   Business rule của phân hệ sạc
+UC-CHG-01   Use case của phân hệ sạc
 ```
 
-### Non-functional requirement
+NFR được đánh mã theo thuộc tính chất lượng, ví dụ `NFR-PERF-01`, `NFR-SEC-01` và `NFR-CON-01`. Toàn bộ quy tắc cấp mã, giữ mã và đặt tên file diagram nằm trong [`project-conventions.md`](project-conventions.md).
 
-```text
-NFR-PERF-01   Performance
-NFR-SEC-01    Security and authorization
-NFR-CON-01    Consistency
-NFR-REL-01    Reliability
-NFR-USA-01    Usability
-NFR-AUD-01    Auditability
-NFR-MNT-01    Maintainability
-```
-
-### Use case
-
-```text
-UC-ST-01    Student use case
-UC-OP-01    Operator use case
-UC-DATA-01  State data source use case
-```
-
-### Business rule
-
-```text
-BR-VEH-01
-BR-RES-01
-BR-PARK-01
-BR-CHG-01
-BR-SIM-01
-```
-
-Tên tiếng Anh dùng trên diagram phải có bản dịch thống nhất trong glossary.
+Non-interactive functional requirement của phần bonus dùng mã `NIFR-[PHÂN HỆ]-[SỐ]`, ví dụ `NIFR-RES-01`. `NIFR` là chức năng hệ thống tự kích hoạt; `NFR` là yêu cầu chất lượng. Hai loại này không được ghi chung một danh sách.
 
 ## 5. Quy trình thực hiện Phase 1
 
@@ -439,7 +395,7 @@ Tên tiếng Anh dùng trên diagram phải có bản dịch thống nhất tron
 - Viết alternative flow;
 - Viết exception flow;
 - Liên kết business rule và requirement;
-- Review chéo.
+- Tự kiểm tra theo checklist chung.
 
 ### Bước 6: Tích hợp và kiểm tra
 
@@ -450,9 +406,9 @@ Tên tiếng Anh dùng trên diagram phải có bản dịch thống nhất tron
 - Kiểm tra diagram khi xuất ra PDF;
 - Đọc lại toàn bộ như người chấm bài.
 
-## 6. Review và traceability
+## 6. Tự kiểm tra và traceability
 
-### 6.1. Câu hỏi review bắt buộc
+### 6.1. Câu hỏi tự kiểm tra bắt buộc
 
 1. Nội dung có đúng đề bài không?
 2. Thuật ngữ có khớp glossary không?
@@ -467,10 +423,10 @@ Tên tiếng Anh dùng trên diagram phải có bản dịch thống nhất tron
 
 | Stakeholder need | Requirement | Use case | Trạng thái |
 |---|---|---|---|
-| Sinh viên cần tìm xe phù hợp | FR-VEH-01 | UC-ST-01 | Draft |
-| Sinh viên cần giữ trước một xe | FR-RES-01 | UC-ST-02 | Draft |
-| Operator cần theo dõi toàn mạng lưới | FR-OPS-01 | UC-OP-01 | Draft |
-| Operator cần đánh giá kịch bản giả định | FR-SIM-01 | UC-OP-02 | Draft |
+| Sinh viên cần tìm Hub phù hợp | FR-HUB-01 | UC-HUB-01 | Draft |
+| Sinh viên cần giữ trước một xe | FR-RES-01 | UC-RES-01 | Draft |
+| Operator cần theo dõi toàn mạng lưới | FR-OPS-01 | UC-OPS-01 | Draft |
+| Operator cần đánh giá kịch bản giả định | FR-SIM-01 | UC-SIM-01 | Draft |
 
 Requirement không liên kết được với stakeholder need hoặc use case phải được kiểm tra lại. Use case không có requirement tương ứng cho thấy requirement catalog đang thiếu.
 
@@ -500,14 +456,16 @@ Requirement không liên kết được với stakeholder need hoặc use case p
 - Quan hệ `include` và `extend` được dùng đúng;
 - Diagram bao phủ các chức năng chính của Student và Operator.
 
-### Use-case detail cá nhân
+### Use-case specification
 
-- Mỗi thành viên có phần cá nhân;
+- Có đủ 18 use-case specification trong báo cáo nhóm;
+- Mỗi thành viên hoàn thiện toàn bộ use case thuộc phân hệ được giao;
+- Một use case trọng tâm của mỗi thành viên được dùng làm phần cá nhân xuyên suốt các phase;
 - Có trigger, preconditions và postconditions;
 - Có main flow rõ ràng;
 - Có alternative flow và exception flow cần thiết;
 - Có business rule và requirement liên quan;
-- Được ít nhất một thành viên khác review.
+- Được người phụ trách tự kiểm tra theo checklist chung.
 
 ### Non-functional requirements
 

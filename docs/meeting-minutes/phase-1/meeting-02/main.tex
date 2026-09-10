@@ -1,0 +1,245 @@
+\documentclass[10pt,a4paper]{article}
+
+% Đường dẫn từ thư mục meeting-02 đến assets/ của repository.
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+
+\begin{document}
+
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section{THÔNG TIN BUỔI HỌP}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{|>{\bfseries}L{45mm}|Y|}
+    \hline
+    Lần họp & Buổi 02 -- Phase 1\\
+    \hline
+    Ngày họp & 10/09/2026\\
+    \hline
+    Thời gian bắt đầu & 20:30\\
+    \hline
+    Hình thức & Họp trực tuyến\\
+    \hline
+    Chủ đề & Làm rõ các vấn đề tồn đọng, thống nhất phạm vi Submission 1 và phân công công việc\\
+    \hline
+    Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\
+    \hline
+    Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{THÀNH PHẦN NHÓM}
+
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+
+\noindent Buổi họp có sự tham gia của đầy đủ bảy thành viên trong nhóm.
+
+\section{MỤC TIÊU BUỔI HỌP}
+
+Buổi họp thứ hai được tổ chức sau khi nhóm trưởng trao đổi lại với giảng viên về những điểm chưa rõ trong đề bài. Cả nhóm tập trung vào ba việc: thống nhất cách nộp bài, chốt cấu trúc và mức độ chi tiết của Submission 1, đồng thời giao từng gói công việc cụ thể để các thành viên có thể bắt đầu thực hiện từ ngày 11/09/2026.
+
+\section{CÁC VẤN ĐỀ TỒN ĐỌNG SAU BUỔI 01}
+
+Sau buổi họp đầu tiên, nhóm đã hiểu bối cảnh chung của đề tài Smart E-Mobility Hub nhưng chưa thể phân công ngay vì còn các vấn đề sau:
+
+\begin{enumerate}
+  \item \textbf{Cách nộp group work và individual work:} chưa rõ ai chịu trách nhiệm nộp báo cáo nhóm, mỗi thành viên có phải nộp riêng hay không và nội dung cá nhân được phép trùng với báo cáo nhóm ở mức nào.
+  \item \textbf{Biên bản họp:} chưa rõ nhóm phải lập biên bản theo từng buổi hay chỉ tổng hợp một lần ở cuối phase; đồng thời chưa xác định ai là người quản lý và nộp các biên bản.
+  \item \textbf{Minh chứng sử dụng Generative AI:} chưa rõ có bắt buộc công khai prompt hay không, một minh chứng cần mô tả những gì và phải thể hiện phần kiểm tra, chỉnh sửa của nhóm ra sao.
+  \item \textbf{Nội dung của Submission 1:} chưa rõ mức độ chi tiết của project details specification, yêu cầu hệ thống và use-case model; đặc biệt là nên chỉ làm bảy use case cá nhân hay phải xây dựng đầy đủ use case cho từng phân hệ.
+  \item \textbf{Phạm vi What-if Simulation và MVP:} chưa rõ Phase 1 phải mô tả chức năng mô phỏng đến đâu và sản phẩm cuối có bắt buộc hiện thực toàn bộ chức năng đã đặc tả hay không.
+  \item \textbf{Cách tổ chức phần làm chung và phần cá nhân:} nếu mỗi người tự viết theo một cấu trúc riêng thì thuật ngữ, mã yêu cầu, sơ đồ và báo cáo cá nhân có thể không đồng nhất với báo cáo nhóm.
+\end{enumerate}
+
+\section{NỘI DUNG ĐÃ ĐƯỢC LÀM RÕ}
+
+\subsection{Cách nộp báo cáo}
+
+Nhóm trưởng nộp một bản \textbf{group work} đại diện cho cả nhóm. Báo cáo này phải tổng hợp đầy đủ nội dung chung và các phần do từng thành viên thực hiện.
+
+Mỗi thành viên tự nộp \textbf{individual work} trên LMS bằng tài khoản của mình. Nội dung cá nhân được phép trùng với phần tương ứng trong group work vì đây là minh chứng cho phần việc mà thành viên đã đóng góp. Tuy nhiên, từng thành viên phải đọc kỹ, hiểu và chịu trách nhiệm về nội dung trong báo cáo cá nhân của mình.
+
+\subsection{Biên bản họp}
+
+Nhóm lập biên bản cho các buổi họp trong từng phase. Nhóm trưởng chịu trách nhiệm lưu trữ, đồng bộ định dạng và nộp các biên bản cùng group work. Mỗi biên bản phải ghi rõ thành phần tham gia, nội dung thảo luận, kết quả thống nhất, phân công, thời hạn và những vấn đề chưa giải quyết.
+
+\subsection{Khai báo việc sử dụng Generative AI}
+
+Giảng viên yêu cầu công khai prompt đã sử dụng. Mỗi minh chứng phải nêu được vấn đề gặp phải, prompt thực tế, phần AI hỗ trợ và cách nhóm kiểm tra, sửa đổi hoặc phát triển thêm kết quả đó. Nhóm chỉ ghi nhận những lần sử dụng thực tế trong quá trình làm bài.
+
+\subsection{Phạm vi Submission 1}
+
+Nhóm thống nhất báo cáo Submission 1 gồm ba phần chính:
+
+\begin{enumerate}
+  \item \textbf{Project Details Specification:} bối cảnh, vấn đề, stakeholder, user story, mục tiêu, phạm vi, system boundary, assumption, constraint và thuật ngữ chung.
+  \item \textbf{Yêu cầu hệ thống:} business rule, functional requirement theo từng phân hệ, non-interactive functional requirement và non-functional requirement.
+  \item \textbf{Use-case Model và Use-case Scenario:} actor catalog, sơ đồ use case toàn hệ thống, sơ đồ của bảy phân hệ và đặc tả đầy đủ 18 use case.
+\end{enumerate}
+
+Bảy use case trọng tâm vẫn được dùng làm phần cá nhân của bảy thành viên. Trong group work, mỗi người phải hoàn thiện tất cả use case thuộc phân hệ mình, không chỉ use case trọng tâm.
+
+\subsection{Phạm vi What-if Simulation và MVP}
+
+Nhóm xem What-if Simulation là một phân hệ nghiệp vụ độc lập. Trong Phase 1, phân hệ này phải nêu actor, dữ liệu đầu vào, kịch bản, quy tắc xử lý, kết quả mô phỏng và khuyến nghị. Nhóm chưa đặt yêu cầu phải xây dựng mô hình AI dự báo phức tạp.
+
+Đối với MVP ở phase cuối, nhóm có thể ưu tiên các luồng cốt lõi thay vì hiện thực toàn bộ trường hợp đã mô tả. Việc chọn phạm vi triển khai cụ thể sẽ được chốt lại sau khi hoàn thành phần phân tích và thiết kế.
+
+\subsection{Quy ước dùng chung}
+
+Tất cả thành viên sử dụng cùng danh sách actor, tên phân hệ và quy tắc đặt mã. Mã phân hệ có dạng \texttt{SUB-XXX}; functional requirement, business rule và use case lần lượt có dạng \texttt{FR-XXX-NN}, \texttt{BR-XXX-NN} và \texttt{UC-XXX-NN}. Nội dung của các phần phải khớp nhau: requirement phải truy được đến use case, còn luồng use case phải tuân theo business rule liên quan.
+
+\section{PHÂN CÔNG CÔNG VIỆC}
+
+Nhóm chia công việc theo hai lớp. Ba phần lớn của báo cáo được giao tập trung cho một người phụ trách để tránh nội dung bị chia nhỏ. Song song đó, mỗi thành viên nhận trọn một phân hệ, bao gồm phạm vi, actor, FR, BR, sơ đồ phân hệ và toàn bộ use-case specification của phân hệ đó.
+
+\subsection{Phụ trách các phần chính của báo cáo}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{\textwidth}{|L{45mm}|L{40mm}|Y|}
+    \hline
+    \rowcolor{gray!15}
+    \centering\arraybackslash\textbf{Thành viên} &
+    \centering\arraybackslash\textbf{Phần phụ trách} &
+    \centering\arraybackslash\textbf{Nội dung cần hoàn thành}\\
+    \hline
+    Trần Nhật Bảo Anh -- 2410155 &
+    Toàn bộ Phần I &
+    Project Details Specification; đồng thời kiểm soát thuật ngữ, cấu trúc, chất lượng nội dung và tích hợp toàn bộ báo cáo nhóm.\\
+    \hline
+    Nguyễn Quốc Trung -- 2413707 &
+    Toàn bộ Phần II &
+    Hệ thống business rule, functional requirement, non-interactive functional requirement và non-functional requirement.\\
+    \hline
+    Lê Nguyễn Tường Vi -- 2413937 &
+    Mô hình use case toàn hệ thống thuộc Phần III &
+    Actor catalog, bản đồ bảy phân hệ, danh mục 18 use case và use-case diagram tổng quát của hệ thống.\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\noindent Trần Nhật Bảo Anh là nhóm trưởng và người kiểm soát toàn bộ báo cáo. Trách nhiệm này bao gồm rà soát tính nhất quán, ghép nội dung và chuẩn hóa LaTeX, nhưng không thay thế trách nhiệm chuyên môn của người được giao từng phần.
+
+\subsection{Phân công bảy phân hệ nghiệp vụ}
+
+\begingroup
+\footnotesize
+\renewcommand{\arraystretch}{1.0}
+\begin{longtable}{|C{7mm}|L{32mm}|L{23mm}|L{50mm}|L{23mm}|}
+  \hline
+  \rowcolor{gray!15}
+  \textbf{STT} &
+  \centering\arraybackslash\textbf{Thành viên} &
+  \centering\arraybackslash\textbf{Phân hệ} &
+  \centering\arraybackslash\textbf{Use case phải hoàn thiện} &
+  \centering\arraybackslash\textbf{UC trọng tâm}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{STT} &
+  \centering\arraybackslash\textbf{Thành viên} &
+  \centering\arraybackslash\textbf{Phân hệ} &
+  \centering\arraybackslash\textbf{Use case phải hoàn thiện} &
+  \centering\arraybackslash\textbf{UC trọng tâm}\\
+  \hline
+  \endhead
+  1 & Nguyễn Quốc Trung & SUB-HUB &
+  UC-HUB-01, UC-HUB-02, UC-HUB-03 & UC-HUB-01\\
+  \hline
+  2 & Phan Võ Bảo Trâm & SUB-RES &
+  UC-RES-01, UC-RES-02 & UC-RES-01\\
+  \hline
+  3 & Lê Nguyễn Tường Vi & SUB-TRIP &
+  UC-TRIP-01, UC-TRIP-02 & UC-TRIP-02\\
+  \hline
+  4 & Nguyễn Ngọc Hân & SUB-PARK &
+  UC-PARK-01, UC-PARK-02, UC-PARK-03 & UC-PARK-01\\
+  \hline
+  5 & Trần Thị Hương Giang & SUB-CHG &
+  UC-CHG-01, UC-CHG-02, UC-CHG-03 & UC-CHG-01\\
+  \hline
+  6 & Nguyễn Thị Minh Anh & SUB-OPS &
+  UC-OPS-01, UC-OPS-02, UC-OPS-03 & UC-OPS-02\\
+  \hline
+  7 & Trần Nhật Bảo Anh & SUB-SIM &
+  UC-SIM-01, UC-SIM-02 & UC-SIM-01\\
+  \hline
+\end{longtable}
+\endgroup
+
+\noindent Tổng cộng, group work có một use-case diagram toàn hệ thống, bảy use-case diagram cấp phân hệ và 18 use-case specification. Bảy use case trọng tâm là nội dung đại diện cho individual work của từng thành viên:
+
+\begin{itemize}
+  \item \texttt{UC-HUB-01}: Tra cứu Hub phù hợp;
+  \item \texttt{UC-RES-01}: Đặt phương tiện dùng chung;
+  \item \texttt{UC-TRIP-02}: Trả phương tiện và kết thúc chuyến đi;
+  \item \texttt{UC-PARK-01}: Đặt chỗ đỗ cho xe cá nhân;
+  \item \texttt{UC-CHG-01}: Đăng ký nhu cầu sạc;
+  \item \texttt{UC-OPS-02}: Xử lý sự cố vận hành;
+  \item \texttt{UC-SIM-01}: Chạy kịch bản What-if Simulation.
+\end{itemize}
+
+\section{YÊU CẦU BÀN GIAO VÀ TIẾN ĐỘ}
+
+Mỗi người gửi một gói nội dung hoàn chỉnh cho phân hệ mình phụ trách. Gói bàn giao phải có phạm vi, actor, đầu vào và đầu ra, FR, BR, use-case diagram, đặc tả tất cả use case, dependency, trạng thái nghiệp vụ và câu hỏi còn mở. Thành viên tự đối chiếu mã và thuật ngữ với tài liệu quy ước trước khi gửi.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{\textwidth}{|C{23mm}|Y|L{42mm}|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{Mốc} &
+    \centering\arraybackslash\textbf{Kết quả cần có} &
+    \centering\arraybackslash\textbf{Người chịu trách nhiệm}\\
+    \hline
+    11/09 & Nhận phân công, đọc quy ước chung và ghi lại các câu hỏi. & Từng thành viên\\
+    \hline
+    14/09 & Nộp phạm vi, actor, FR, BR và use-case diagram bản nháp của phân hệ. & Từng thành viên\\
+    \hline
+    18/09 & Nộp đầy đủ use-case specification thuộc phân hệ được giao. & Từng thành viên\\
+    \hline
+    20/09 & Tự kiểm tra và gửi gói nội dung hoàn chỉnh. & Từng thành viên\\
+    \hline
+    22/09 & Hoàn thành group report bản thứ nhất. & Trần Nhật Bảo Anh\\
+    \hline
+    24/09 & Hoàn thành bảy individual report từ nội dung đã được duyệt. & Nhóm trưởng định dạng; từng thành viên xác nhận nội dung\\
+    \hline
+    25/09 & Biên dịch và kiểm tra toàn bộ file PDF. & Trần Nhật Bảo Anh\\
+    \hline
+    27/09 & Nộp bài trên LMS. & Nhóm trưởng nộp group work; mỗi thành viên nộp individual work\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{RỦI RO CẦN THEO DÕI}
+
+\begin{itemize}
+  \item \textbf{Nội dung giữa các phân hệ không khớp:} mọi người phải dùng đúng actor, mã, trạng thái và dependency đã thống nhất; không tự đổi thuật ngữ riêng.
+  \item \textbf{Chỉ làm use case trọng tâm:} use case trọng tâm dùng cho individual work, nhưng group work phải có đầy đủ 18 use case.
+  \item \textbf{Requirement và use case không liên kết:} mỗi FR và BR phải được đối chiếu với use case liên quan trước khi bàn giao.
+  \item \textbf{Nội dung gửi trễ:} các mốc nội bộ được đặt trước hạn nộp chính thức; thành viên phải báo sớm nếu có nguy cơ chậm tiến độ.
+  \item \textbf{Thiếu minh chứng sử dụng AI:} khi thực sự dùng AI, thành viên cần lưu prompt và ghi lại phần đã kiểm tra, chỉnh sửa ngay trong quá trình làm.
+\end{itemize}
+
+\section{KẾT LUẬN BUỔI HỌP}
+
+Kết thúc buổi họp, các vấn đề tồn đọng sau buổi 01 đã được làm rõ. Nhóm đã thống nhất cách nộp bài, cấu trúc Submission 1, phạm vi của bảy phân hệ, danh mục 18 use case và bảy use case trọng tâm. Công việc đã được giao theo từng phần lớn và từng gói phân hệ, có người chịu trách nhiệm và mốc bàn giao cụ thể. Các thành viên bắt đầu thực hiện phần việc từ ngày 11/09/2026.
+
+\end{document}

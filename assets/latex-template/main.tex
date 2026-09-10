@@ -1,0 +1,41 @@
+\documentclass[10pt,a4paper]{article}
+
+% Từ thư mục này, logo nằm ngay trong assets/.
+\newcommand{\HCMUTAssetPath}{..}
+\usepackage{hcmut-report}
+\input{metadata}
+
+\title{Mẫu báo cáo dùng chung}
+\author{Nhóm Smart E-Mobility Hub}
+
+\begin{document}
+
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section*{DANH SÁCH THÀNH VIÊN}
+\addcontentsline{toc}{section}{Danh sách thành viên}
+
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\addcontentsline{toc}{section}{Danh sách hình}
+\vspace{8mm}
+\listoftables
+\addcontentsline{toc}{section}{Danh sách bảng}
+
+\clearpage
+\input{sections/sample-content}
+
+\end{document}

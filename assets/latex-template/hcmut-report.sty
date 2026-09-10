@@ -1,0 +1,195 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{hcmut-report}[2026/09/10 Shared HCMUT report style]
+
+\RequirePackage{fontspec}
+\RequirePackage[a4paper,total={160mm,240mm},left=30mm,top=30mm]{geometry}
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\RequirePackage{fancyhdr}
+\RequirePackage{lastpage}
+\RequirePackage{caption}
+\RequirePackage{tabularx}
+\RequirePackage{longtable}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage[table]{xcolor}
+\RequirePackage{enumitem}
+\RequirePackage{etoolbox}
+\RequirePackage{setspace}
+\RequirePackage[unicode,colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black]{hyperref}
+
+% Latin Modern giữ gần phong cách Computer Modern/VnTeX của báo cáo tham khảo,
+% đồng thời hiển thị tiếng Việt Unicode tốt khi biên dịch bằng XeLaTeX.
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf
+]
+\setmonofont{lmmono10-regular.otf}[
+  BoldFont=lmmonolt10-bold.otf,
+  ItalicFont=lmmonolt10-oblique.otf
+]
+
+\providecommand{\HCMUTAssetPath}{..}
+\providecommand{\UniversityName}{ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}
+\providecommand{\SchoolName}{TRƯỜNG ĐẠI HỌC BÁCH KHOA}
+\providecommand{\FacultyName}{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
+\providecommand{\ReportType}{BÁO CÁO}
+\providecommand{\ReportTitle}{BÀI TẬP LỚN CÔNG NGHỆ PHẦN MỀM}
+\providecommand{\ReportSubjectLabel}{ĐỀ TÀI:}
+\providecommand{\ProjectTitle}{SMART E-MOBILITY HUB}
+\providecommand{\ProjectSubtitle}{}
+\providecommand{\CourseCode}{CO3001}
+\providecommand{\LecturerName}{}
+\providecommand{\ClassCode}{}
+\providecommand{\Semester}{Học KỲ 261}
+\providecommand{\AcademicYear}{2026 -- 2027}
+\providecommand{\PlaceAndDate}{TP. Hồ Chí Minh, tháng 09/2026}
+\providecommand{\FooterTitle}{Bài tập lớn Công nghệ phần mềm}
+\providecommand{\CoverReportTypeStyle}{\LARGE\bfseries}
+\providecommand{\CoverReportTitleStyle}{\Large\bfseries}
+\providecommand{\CoverSubjectLabelStyle}{\large\bfseries}
+\providecommand{\CoverProjectTitleStyle}{\Large\bfseries}
+\providecommand{\CoverProjectSubtitleStyle}{\large\bfseries}
+
+\setlength{\headheight}{40pt}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{2pt}
+\setstretch{1.15}
+\setlist{nosep,leftmargin=1.8em}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+
+\renewcommand{\thesection}{\Roman{section}}
+\renewcommand{\thesubsection}{\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{subsection}.\arabic{subsubsection}}
+
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\contentsname}{MỤC LỤC}
+\renewcommand{\listfigurename}{DANH SÁCH HÌNH}
+\renewcommand{\listtablename}{DANH SÁCH BẢNG}
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  textfont=it,
+  labelsep=colon,
+  justification=centering,
+  singlelinecheck=true
+}
+\captionsetup[figure]{aboveskip=6pt,belowskip=2pt}
+\captionsetup[table]{aboveskip=6pt,belowskip=2pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\renewcommand{\arraystretch}{1.25}
+\arrayrulecolor{black}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \scriptsize\bfseries\ttfamily Trường Đại Học Bách Khoa -- ĐHQG TP.HCM\\[-1pt]
+      \scriptsize\bfseries\ttfamily Khoa Khoa học và Kỹ thuật Máy tính
+    \end{tabular}
+  \end{tabular}%
+}
+\fancyfoot[L]{\scriptsize\ttfamily \FooterTitle\\Niên khoá \AcademicYear}
+\fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+\newcommand{\MakeHCMUTCover}{%
+  \hypersetup{pageanchor=false}%
+  \begin{titlepage}
+    \thispagestyle{empty}
+    \begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+      \coordinate (A) at ([xshift=-15mm,yshift=-20mm]current page.north east);
+      \coordinate (B) at ([xshift=24mm,yshift=-20mm]current page.north west);
+      \coordinate (C) at ([xshift=24mm,yshift=20mm]current page.south west);
+      \coordinate (D) at ([xshift=-15mm,yshift=20mm]current page.south east);
+      \draw[blue!80!black,line width=4pt] (A)--(B)--(C)--(D)--cycle;
+      \draw[line width=0.35pt]
+        ([yshift=5mm,xshift=-5mm]A)--([yshift=5mm,xshift=5mm]B)--
+        ([yshift=-5mm,xshift=5mm]B)--([yshift=-5mm,xshift=-5mm]B)--
+        ([yshift=5mm,xshift=-5mm]C)--([yshift=5mm,xshift=5mm]C)--
+        ([yshift=-5mm,xshift=5mm]C)--([yshift=-5mm,xshift=-5mm]D)--
+        ([yshift=5mm,xshift=-5mm]D)--([yshift=5mm,xshift=5mm]D)--
+        ([yshift=-5mm,xshift=5mm]A)--([yshift=-5mm,xshift=-5mm]A)--
+        ([yshift=5mm,xshift=-5mm]A);
+      \draw[line width=0.35pt]
+        ([yshift=-3mm,xshift=3mm]A)--([yshift=-3mm,xshift=-3mm]B)--
+        ([yshift=3mm,xshift=-3mm]B)--([yshift=3mm,xshift=3mm]B)--
+        ([yshift=-3mm,xshift=3mm]C)--([yshift=-3mm,xshift=-3mm]C)--
+        ([yshift=3mm,xshift=-3mm]C)--([yshift=3mm,xshift=3mm]D)--
+        ([yshift=-3mm,xshift=3mm]D)--([yshift=-3mm,xshift=-3mm]D)--
+        ([yshift=3mm,xshift=-3mm]A)--([yshift=3mm,xshift=3mm]A)--
+        ([yshift=-3mm,xshift=3mm]A);
+    \end{tikzpicture}
+
+    \begin{center}
+      \vspace*{-7mm}
+      {\large \UniversityName\par}
+      \vspace{1mm}
+      {\large \SchoolName\par}
+      \vspace{1mm}
+      {\large\bfseries \FacultyName\par}
+
+      \vspace{10mm}
+      \includegraphics[width=44mm]{\HCMUTAssetPath/logo BK.png}
+
+      \vspace{10mm}
+      {\CoverReportTypeStyle \ReportType\par}
+      \vspace{3mm}
+      {\CoverReportTitleStyle \ReportTitle\par}
+
+      \vspace{10mm}
+      \ifdefempty{\ReportSubjectLabel}{}{%
+        {\CoverSubjectLabelStyle \ReportSubjectLabel\par}\vspace{3mm}%
+      }
+      {\CoverProjectTitleStyle \ProjectTitle\par}
+      \ifdefempty{\ProjectSubtitle}{}{%
+        \vspace{3mm}{\begin{minipage}{0.84\textwidth}\centering\CoverProjectSubtitleStyle \ProjectSubtitle\end{minipage}\par}%
+      }
+
+      \vfill
+      \begin{tabular}{@{}rl@{}}
+        \textbf{Mã môn học:} & \CourseCode\\[2mm]
+        \textbf{Giảng viên hướng dẫn:} & \LecturerName\\[2mm]
+        \ifdefempty{\ClassCode}{}{\textbf{Lớp:} & \ClassCode\\[2mm]}
+        \textbf{Học kỳ:} & \Semester
+      \end{tabular}
+
+      \vfill
+      {\large \PlaceAndDate\par}
+      \vspace*{9mm}
+    \end{center}
+  \end{titlepage}
+  \clearpage
+  \pagenumbering{arabic}
+  \hypersetup{pageanchor=true}%
+}
+
+\newenvironment{HCMUTMemberTable}{%
+  \begin{longtable}{|C{10mm}|L{45mm}|C{27mm}|L{50mm}|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
+    \textbf{MSSV} & \centering\arraybackslash\textbf{Vai trò / Nhiệm vụ}\\
+    \hline
+    \endfirsthead
+    \hline
+    \rowcolor{gray!15}
+    \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
+    \textbf{MSSV} & \centering\arraybackslash\textbf{Vai trò / Nhiệm vụ}\\
+    \hline
+    \endhead
+}{%
+  \end{longtable}
+  \addtocounter{table}{-1}
+}
+
+\newcommand{\MemberRow}[4]{#1 & #2 & #3 & #4\\\hline}
