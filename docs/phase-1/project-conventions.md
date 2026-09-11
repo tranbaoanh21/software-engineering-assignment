@@ -129,7 +129,23 @@ SUB-OPS
 SUB-SIM
 ```
 
-### 6.2. Functional requirement
+### 6.2. Mã cho phần tổng quan và đặc tả dự án
+
+Các mã dưới đây giúp truy vết từ vấn đề ban đầu đến nhu cầu, user story và phạm vi đã chốt:
+
+```text
+PB-[SỐ]                 Vấn đề cần giải quyết
+SH-[VAI TRÒ]            Stakeholder
+SN-[VAI TRÒ]-[SỐ]       Nhu cầu của stakeholder
+US-[PHÂN HỆ]-[SỐ]       User story
+OBJ-[SỐ]                Mục tiêu dự án
+SCP-IN-[SỐ]             Nội dung thuộc phạm vi
+SCP-OUT-[SỐ]            Nội dung ngoài phạm vi
+```
+
+Ví dụ: `SN-STU-01`, `US-RES-01`, `OBJ-01`, `SCP-IN-01`. Mã stakeholder dùng tên viết tắt ổn định của vai trò, chẳng hạn `SH-STU`, `SH-OPR`, `SH-MNT` và `SH-MGT`. User story được đánh mã theo phân hệ chịu trách nhiệm chính; một user story có thể liên quan đến nhiều requirement nhưng không được đổi mã khi chỉnh câu chữ.
+
+### 6.3. Functional requirement
 
 Định dạng: `FR-[PHÂN HỆ]-[SỐ]`.
 
@@ -148,7 +164,7 @@ FR-RES-01: Hệ thống phải cho phép Sinh viên đặt một phương tiện
 
 Không ghi giao diện, framework, API, database hoặc tên class vào FR nghiệp vụ.
 
-### 6.3. Non-interactive functional requirement - bonus
+### 6.4. Non-interactive functional requirement - bonus
 
 Định dạng: `NIFR-[PHÂN HỆ]-[SỐ]`.
 
@@ -159,7 +175,7 @@ chuyển lượt đặt sang Expired và giải phóng phương tiện.
 
 NIFR vẫn mô tả hệ thống phải làm gì nhưng không bắt đầu trực tiếp từ thao tác của người dùng. Mỗi NIFR phải có trigger, điều kiện, xử lý và kết quả. Không nhầm `NIFR` với `NFR`: `NIFR` là chức năng tự động; `NFR` là yêu cầu chất lượng.
 
-### 6.4. Business rule
+### 6.5. Business rule
 
 Định dạng: `BR-[PHÂN HỆ]-[SỐ]`.
 
@@ -170,7 +186,7 @@ tại cùng một thời điểm.
 
 BR phải là quy tắc, điều kiện, giới hạn hoặc bất biến nghiệp vụ. Không viết lại hành động của FR dưới một mã BR khác.
 
-### 6.5. Use case
+### 6.6. Use case
 
 Định dạng: `UC-[PHÂN HỆ]-[SỐ]`.
 
@@ -182,7 +198,7 @@ UC-TRIP-01: Nhận phương tiện đã đặt
 
 Tên use case dùng cấu trúc **động từ + đối tượng hoặc kết quả**. Không dùng tên quá rộng như `Quản lý hệ thống` và không tách thao tác nhỏ như `Nhấn nút xác nhận` thành use case.
 
-### 6.6. Non-functional requirement
+### 6.7. Non-functional requirement
 
 NFR dùng mã theo thuộc tính chất lượng, không theo phân hệ:
 
@@ -203,7 +219,7 @@ NFR-PERF-01: Danh sách Hub phải được hiển thị trong vòng 2 giây
 trong điều kiện dữ liệu của môi trường demo.
 ```
 
-### 6.7. Assumption và constraint
+### 6.8. Assumption và constraint
 
 ```text
 ASM-GEN-01  Assumption áp dụng cho toàn hệ thống
@@ -214,7 +230,7 @@ CON-SIM-01  Constraint của phân hệ mô phỏng
 
 Assumption là điều nhóm tạm coi là đúng để tiếp tục phân tích. Constraint là giới hạn phải tuân theo do đề bài, thời gian, nguồn lực hoặc môi trường áp đặt.
 
-### 6.8. Không tái sử dụng mã
+### 6.9. Không tái sử dụng mã
 
 - Mã tăng dần từ `01` trong từng nhóm.
 - Không đổi số chỉ để sắp xếp lại tài liệu.

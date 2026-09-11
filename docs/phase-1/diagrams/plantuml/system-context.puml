@@ -1,0 +1,40 @@
+@startuml
+!pragma layout elk
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  RoundCorner 8
+}
+
+actor "Sinh viên\n(ACT-STU)" as ACT_STU
+actor "Nhân viên vận hành\n(ACT-OPR)" as ACT_OPR
+actor "Nhân viên kỹ thuật\n(ACT-MNT)" as ACT_MNT
+
+rectangle "<<System>>\n**SMART E-MOBILITY HUB SYSTEM**\n(SEMH)\n\nQuản lý trạng thái, đặt và sử dụng tài nguyên;\ngiám sát, điều phối và mô phỏng" as SEMH
+
+rectangle "<<External System>>\nNguồn dữ liệu trạng thái\n(EXT-STATE / ACT-DAT)" as EXT_STATE
+
+ACT_STU -right- SEMH : Tra cứu, đặt và\nsử dụng tài nguyên
+SEMH -right- ACT_OPR : Giám sát, điều phối\nvà mô phỏng
+SEMH -right- ACT_MNT : Thông tin sự cố và\nkết quả xử lý
+EXT_STATE -up-> SEMH : Trạng thái tài nguyên\nvà sự kiện vận hành
+
+@enduml

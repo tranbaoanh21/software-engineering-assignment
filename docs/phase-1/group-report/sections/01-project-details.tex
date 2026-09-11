@@ -3,28 +3,54 @@
 
 \subsection{Giới thiệu đề tài}
 
-\Placeholder{Giới thiệu ngắn gọn Smart E-Mobility Hub, lý do nhóm thực hiện tài liệu này và những nội dung được xác định trong Submission 1.}
+Smart E-Mobility Hub là hệ thống phần mềm hỗ trợ quản lý và điều phối mạng lưới phương tiện điện trong Khu đô thị ĐHQG-HCM. Hệ thống kết nối nhu cầu di chuyển của sinh viên với các nguồn lực hữu hạn tại nhiều Mobility Hub, bao gồm phương tiện điện dùng chung, chỗ đỗ và cổng sạc. Bên cạnh các chức năng phục vụ người dùng, hệ thống còn hỗ trợ đơn vị vận hành theo dõi trạng thái mạng lưới, xử lý sự cố, điều chuyển phương tiện và đánh giá các kịch bản vận hành giả định.
+
+Submission 1 tập trung làm rõ bài toán trước khi nhóm lựa chọn kiến trúc hoặc công nghệ triển khai. Phần này xác định bối cảnh, vấn đề, stakeholder, nhu cầu, mục tiêu, phạm vi, ranh giới hệ thống và các giả định, ràng buộc đang được sử dụng. Đây là cơ sở để xây dựng yêu cầu chức năng, yêu cầu phi chức năng và mô hình use case ở các phần tiếp theo.
+
+Trong báo cáo, tên \textit{Mobility Hub} chỉ một địa điểm tập hợp các tài nguyên phục vụ di chuyển bằng phương tiện điện. Một Hub có thể được đặt tại ga Metro, ký túc xá, khu trường đại học hoặc khu dịch vụ; mỗi Hub quản lý một tập phương tiện, chỗ đỗ và cổng sạc có trạng thái thay đổi theo thời gian.
 
 \subsection{Bối cảnh và vấn đề cần giải quyết}
 
 \subsubsection*{Bối cảnh dự án}
 
-\Placeholder{Viết bối cảnh di chuyển trong Khu đô thị ĐHQG-HCM, vai trò của Metro, các trường đại học, ký túc xá, khu dịch vụ và mạng lưới Mobility Hub. Không đưa framework hoặc giải pháp cài đặt vào phần này.}
+Khu đô thị ĐHQG-HCM tập trung nhiều trường đại học, ký túc xá, thư viện, khu dịch vụ và đầu mối giao thông công cộng. Khi Metro số 1 trở thành một phần của hành trình đến khu đô thị, nhu cầu di chuyển chặng ngắn giữa ga Metro và các khu chức năng sẽ tăng lên. Xe đạp điện, xe máy điện và các phương tiện điện dùng chung có thể đáp ứng nhu cầu này, nhưng chỉ hiệu quả khi phương tiện, chỗ đỗ và cổng sạc được phân bổ hợp lý giữa các địa điểm.
+
+Mạng lưới này có đặc trưng là tài nguyên dùng chung, số lượng hữu hạn và trạng thái thay đổi liên tục. Một phương tiện có thể lần lượt ở trạng thái sẵn sàng, được đặt, đang sử dụng, đang sạc hoặc ngừng phục vụ. Tương tự, một chỗ đỗ hoặc cổng sạc có thể được giữ trước, đang sử dụng hoặc không khả dụng. Một thay đổi tại Hub này có thể ảnh hưởng đến khả năng tiếp nhận phương tiện hoặc nhu cầu điều phối tại Hub khác.
+
+Do đó, bài toán không chỉ là lưu danh sách phương tiện. Hệ thống phải duy trì trạng thái nhất quán, giải quyết cạnh tranh tài nguyên, hỗ trợ nhiều quy trình nghiệp vụ liên quan và cung cấp đủ thông tin để người vận hành đưa ra quyết định trên toàn mạng lưới.
 
 \subsubsection*{Các vấn đề hiện tại}
 
-\noindent\textbf{PB-01 -- \Placeholder{Tên vấn đề}.}
-\Placeholder{Mô tả biểu hiện của vấn đề, stakeholder bị ảnh hưởng, nguyên nhân và hậu quả đối với việc di chuyển hoặc vận hành.}
+\noindent\textbf{PB-01 -- Thông tin tài nguyên bị phân tán và nhanh lỗi thời.}
+Sinh viên và nhân viên vận hành cần biết Hub nào còn xe, chỗ đỗ hoặc cổng sạc khả dụng. Nếu trạng thái được theo dõi rời rạc hoặc cập nhật chậm, người dùng có thể đến một Hub không còn khả năng phục vụ, còn đơn vị vận hành không nhận ra tình trạng thiếu hoặc dư tài nguyên kịp thời.
 
 \medskip
-\noindent\textbf{PB-02 -- \Placeholder{Tên vấn đề}.}
-\Placeholder{Mô tả biểu hiện của vấn đề, stakeholder bị ảnh hưởng, nguyên nhân và hậu quả đối với việc di chuyển hoặc vận hành.}
+\noindent\textbf{PB-02 -- Tài nguyên hữu hạn có thể bị cấp phát xung đột.}
+Nhiều sinh viên có thể cùng chọn một phương tiện, chỗ đỗ hoặc khung giờ sạc trong khoảng thời gian gần nhau. Nếu việc kiểm tra điều kiện và cập nhật trạng thái không thống nhất, hệ thống có thể xác nhận nhiều yêu cầu cho cùng một tài nguyên hoặc không giải phóng tài nguyên sau khi lượt đặt hết hiệu lực.
+
+\medskip
+\noindent\textbf{PB-03 -- Phân bố phương tiện giữa các Hub dễ mất cân bằng.}
+Nhu cầu di chuyển thay đổi theo địa điểm và thời điểm, đặc biệt tại ga Metro, ký túc xá và khu trường học. Một Hub có thể thiếu xe trong khi Hub khác tập trung quá nhiều phương tiện hoặc gần đầy chỗ đỗ. Mất cân bằng làm giảm khả năng phục vụ và có thể khiến việc trả xe không hoàn tất được.
+
+\medskip
+\noindent\textbf{PB-04 -- Năng lực sạc không đủ để phục vụ đồng thời mọi nhu cầu.}
+Số cổng sạc luôn có giới hạn, trong khi phương tiện có mức pin và thời điểm cần sử dụng khác nhau. Xử lý yêu cầu theo thứ tự đến đơn thuần có thể khiến phương tiện sắp được sử dụng không được sạc đúng lúc, làm tăng thời gian chờ và giảm số xe sẵn sàng.
+
+\medskip
+\noindent\textbf{PB-05 -- Sự cố vận hành ảnh hưởng đến nhiều quy trình liên quan.}
+Xe hỏng, cổng sạc ngừng hoạt động hoặc Hub không thể tiếp nhận thêm phương tiện đều làm thay đổi trạng thái mạng lưới. Nếu sự cố không được ghi nhận và xử lý thống nhất, hệ thống vẫn có thể đề xuất hoặc cấp phát tài nguyên không còn sử dụng được.
+
+\medskip
+\noindent\textbf{PB-06 -- Quyết định điều phối khó đánh giá trước khi áp dụng.}
+Việc chuyển xe, thay đổi lịch sạc hoặc hướng người dùng sang Hub khác có thể tạo ra tác động dây chuyền. Khi không có môi trường thử nghiệm kịch bản, nhân viên vận hành khó so sánh các phương án và phải đưa ra quyết định dựa chủ yếu trên trạng thái tức thời.
 
 \subsubsection*{Lý do cần xây dựng hệ thống}
 
-\Placeholder{Giải thích vì sao các vấn đề trên cần một hệ thống quản lý và điều phối thống nhất.}
+Các vấn đề trên liên quan trực tiếp với nhau và không thể giải quyết tốt bằng những danh sách quản lý độc lập. Một lượt đặt xe làm thay đổi khả năng phục vụ của Hub; một chuyến đi làm thay đổi vị trí phương tiện; một sự cố cổng sạc làm thay đổi lịch sạc; một Hub gần đầy có thể dẫn đến nhu cầu điều chuyển hoặc chuyển hướng người dùng. Smart E-Mobility Hub cung cấp một mô hình trạng thái chung và các quy trình phối hợp để mọi quyết định sử dụng cùng một nguồn thông tin nhất quán.
 
 \subsection{Stakeholder và nhu cầu}
+
+Stakeholder là cá nhân hoặc tổ chức sử dụng, quản lý, chịu ảnh hưởng hoặc quan tâm đến kết quả của hệ thống. Actor là một vai trò tương tác trực tiếp với phần mềm. Vì vậy, một stakeholder có thể không xuất hiện trên use-case diagram nếu không trực tiếp gửi yêu cầu hoặc nhận phản hồi từ hệ thống.
 
 \subsubsection*{Danh sách stakeholder}
 
@@ -33,155 +59,384 @@
   \caption{Stakeholder của dự án}
   \label{tab:stakeholders}
   \small
-  \begin{tabularx}{\textwidth}{|L{20mm}|L{34mm}|Y|L{28mm}|}
+  \begin{tabularx}{\textwidth}{|L{20mm}|L{34mm}|Y|L{29mm}|}
     \hline
     \rowcolor{gray!15}
     \textbf{Mã} & \centering\arraybackslash\textbf{Stakeholder} & \centering\arraybackslash\textbf{Vai trò và mối quan tâm} & \centering\arraybackslash\textbf{Actor tương ứng}\\
     \hline
-    SH-STU & Sinh viên & \Placeholder{Cần điền} & ACT-STU\\
+    SH-STU & Sinh viên & Sử dụng phương tiện dùng chung hoặc phương tiện điện cá nhân; cần tìm và sử dụng tài nguyên thuận tiện, biết trước khả năng phục vụ và nhận kết quả rõ ràng khi yêu cầu không thể thực hiện. & ACT-STU\\
     \hline
-    SH-OPR & Đơn vị vận hành & \Placeholder{Cần điền} & ACT-OPR\\
+    SH-OPR & Đơn vị vận hành & Chịu trách nhiệm duy trì hoạt động của mạng lưới; cần quan sát trạng thái, xử lý sự cố, điều phối phương tiện và sử dụng tài nguyên sạc hiệu quả. & ACT-OPR\\
     \hline
-    SH-MGT & Đơn vị quản lý & \Placeholder{Cần điền} & \Placeholder{Có/Không}\\
+    SH-MGT & Đơn vị quản lý Khu đô thị ĐHQG-HCM & Quan tâm đến khả năng phục vụ, mức sử dụng tài nguyên, tính an toàn và khả năng mở rộng của giải pháp. Không trực tiếp vận hành các luồng nghiệp vụ trong phạm vi hiện tại. & Không trực tiếp\\
     \hline
-    SH-MNT & Nhân viên kỹ thuật & \Placeholder{Cần điền} & ACT-MNT\\
+    SH-MNT & Nhân viên kỹ thuật & Tiếp nhận thông tin tài nguyên gặp lỗi, thực hiện xử lý ngoài thực tế và cập nhật kết quả để tài nguyên được đưa trở lại phục vụ khi đủ điều kiện. & ACT-MNT\\
     \hline
   \end{tabularx}
 \end{table}
 
 \subsubsection*{Stakeholder needs}
 
-\begin{longtable}{|L{23mm}|L{28mm}|L{32mm}|L{23mm}|L{23mm}|}
+\begingroup
+\small
+\begin{longtable}{|L{23mm}|L{27mm}|L{65mm}|L{24mm}|}
   \caption{Nhu cầu của stakeholder}\label{tab:stakeholder-needs}\\
   \hline
   \rowcolor{gray!15}
-  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi} & \textbf{Problem} & \textbf{Objective}\\
+  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi} & \textbf{Phân hệ liên quan}\\
   \hline
   \endfirsthead
   \hline
   \rowcolor{gray!15}
-  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi} & \textbf{Problem} & \textbf{Objective}\\
+  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi (tiếp theo)} & \textbf{Phân hệ liên quan}\\
   \hline
   \endhead
-  SN-STU-01 & SH-STU & \Placeholder{Cần viết} & PB-XX & OBJ-XX\\
+  SN-STU-01 & SH-STU & Tìm được Hub phù hợp và xem trạng thái xe, mức pin, chỗ đỗ, cổng sạc trước khi di chuyển. & SUB-HUB\\
   \hline
-  SN-OPR-01 & SH-OPR & \Placeholder{Cần viết} & PB-XX & OBJ-XX\\
+  SN-STU-02 & SH-STU & Giữ trước một phương tiện dùng chung trong thời hạn rõ ràng và có thể hủy khi kế hoạch thay đổi. & SUB-RES\\
+  \hline
+  SN-STU-03 & SH-STU & Nhận đúng phương tiện đã đặt, thực hiện chuyến đi và trả xe tại Hub có khả năng tiếp nhận. & SUB-TRIP\\
+  \hline
+  SN-STU-04 & SH-STU & Đặt và sử dụng chỗ đỗ cho phương tiện điện cá nhân mà không bị xác nhận trùng tài nguyên. & SUB-PARK\\
+  \hline
+  SN-STU-05 & SH-STU & Đăng ký nhu cầu sạc, biết lịch dự kiến và theo dõi trạng thái phiên sạc. & SUB-CHG\\
+  \hline
+  SN-OPR-01 & SH-OPR & Có góc nhìn thống nhất về trạng thái và mức sử dụng của toàn bộ Mobility Hub. & SUB-HUB, SUB-OPS\\
+  \hline
+  SN-OPR-02 & SH-OPR & Nhận biết Hub gần đầy, tài nguyên không khả dụng và các sự kiện có thể làm giảm khả năng phục vụ. & SUB-OPS\\
+  \hline
+  SN-OPR-03 & SH-OPR & Ghi nhận, theo dõi và phối hợp xử lý sự cố theo một vòng đời rõ ràng. & SUB-OPS\\
+  \hline
+  SN-OPR-04 & SH-OPR & Lập và theo dõi phương án điều chuyển phương tiện giữa các Hub khi phân bố mất cân bằng. & SUB-OPS\\
+  \hline
+  SN-OPR-05 & SH-OPR & Điều chỉnh mức ưu tiên sạc dựa trên mức pin, nhu cầu và thời điểm sử dụng dự kiến. & SUB-CHG\\
+  \hline
+  SN-OPR-06 & SH-OPR & Thử nghiệm kịch bản vận hành, so sánh tác động và nhận khuyến nghị trước khi áp dụng thay đổi thật. & SUB-SIM\\
+  \hline
+  SN-MNT-01 & SH-MNT & Nhận đủ thông tin về sự cố và cập nhật kết quả xử lý để trạng thái tài nguyên phản ánh đúng thực tế. & SUB-OPS\\
+  \hline
+  SN-MGT-01 & SH-MGT & Có một giải pháp nhất quán, có khả năng mở rộng và cung cấp cơ sở đánh giá hiệu quả khai thác tài nguyên. & Toàn hệ thống\\
   \hline
 \end{longtable}
+\endgroup
 
 \subsection{User Stories}
 
-\begin{longtable}{|L{23mm}|L{67mm}|L{25mm}|L{22mm}|}
+User story diễn đạt giá trị mà stakeholder mong muốn nhận được, chưa mô tả giao diện hoặc cách cài đặt. Một user story có thể được hiện thực bởi một hoặc nhiều use case; ngược lại, các use case hỗ trợ cùng một mục tiêu có thể cùng truy về một stakeholder need.
+
+\begingroup
+\small
+\begin{longtable}{|L{22mm}|L{72mm}|L{23mm}|L{20mm}|}
   \caption{User Stories của dự án}\label{tab:user-stories}\\
   \hline
   \rowcolor{gray!15}
-  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung} & \textbf{Need} & \textbf{Phân hệ}\\
+  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung} & \textbf{Need ID} & \textbf{Phân hệ}\\
   \hline
   \endfirsthead
   \hline
   \rowcolor{gray!15}
-  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung} & \textbf{Need} & \textbf{Phân hệ}\\
+  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)} & \textbf{Need ID} & \textbf{Phân hệ}\\
   \hline
   \endhead
-  US-HUB-01 & Là một \Placeholder{actor}, tôi muốn \Placeholder{mục tiêu} để \Placeholder{giá trị nhận được}. & SN-XX-XX & SUB-HUB\\
+  US-HUB-01 & Là sinh viên, tôi muốn tìm Hub phù hợp với vị trí và nhu cầu để không phải đến một nơi không còn khả năng phục vụ. & SN-STU-01 & SUB-HUB\\
   \hline
-  US-OPS-01 & Là một \Placeholder{actor}, tôi muốn \Placeholder{mục tiêu} để \Placeholder{giá trị nhận được}. & SN-XX-XX & SUB-OPS\\
+  US-HUB-02 & Là sinh viên, tôi muốn xem tình trạng tài nguyên và Hub thay thế để chủ động điều chỉnh kế hoạch di chuyển. & SN-STU-01 & SUB-HUB\\
+  \hline
+  US-RES-01 & Là sinh viên, tôi muốn đặt trước một phương tiện đang sẵn sàng để phương tiện được giữ cho tôi trong một khoảng thời gian xác định. & SN-STU-02 & SUB-RES\\
+  \hline
+  US-RES-02 & Là sinh viên, tôi muốn hủy lượt đặt không còn nhu cầu để tài nguyên được trả lại cho người khác sử dụng. & SN-STU-02 & SUB-RES\\
+  \hline
+  US-TRIP-01 & Là sinh viên, tôi muốn nhận đúng phương tiện đã đặt để bắt đầu chuyến đi mà không phát sinh một lượt cấp phát mới. & SN-STU-03 & SUB-TRIP\\
+  \hline
+  US-TRIP-02 & Là sinh viên, tôi muốn trả phương tiện và nhận xác nhận kết thúc chuyến đi để biết trách nhiệm sử dụng của mình đã hoàn tất. & SN-STU-03 & SUB-TRIP\\
+  \hline
+  US-PARK-01 & Là sinh viên có xe điện cá nhân, tôi muốn giữ trước chỗ đỗ tại Hub để biết phương tiện sẽ được tiếp nhận khi tôi đến. & SN-STU-04 & SUB-PARK\\
+  \hline
+  US-PARK-02 & Là sinh viên có xe điện cá nhân, tôi muốn check-in và check-out đúng lượt đặt để trạng thái chỗ đỗ được cập nhật chính xác. & SN-STU-04 & SUB-PARK\\
+  \hline
+  US-CHG-01 & Là sinh viên, tôi muốn đăng ký và theo dõi nhu cầu sạc để biết khi nào phương tiện có thể được sạc. & SN-STU-05 & SUB-CHG\\
+  \hline
+  US-CHG-02 & Là nhân viên vận hành, tôi muốn điều chỉnh ưu tiên sạc để các nhu cầu cấp thiết được phục vụ trong giới hạn công suất hiện có. & SN-OPR-05 & SUB-CHG\\
+  \hline
+  US-OPS-01 & Là nhân viên vận hành, tôi muốn theo dõi toàn mạng lưới và nhận cảnh báo quá tải để can thiệp trước khi khả năng phục vụ bị gián đoạn. & SN-OPR-01 & SUB-OPS\\
+  \hline
+  US-OPS-02 & Là nhân viên vận hành, tôi muốn ghi nhận và theo dõi sự cố để tài nguyên lỗi không tiếp tục được cấp phát. & SN-OPR-03 & SUB-OPS\\
+  \hline
+  US-OPS-03 & Là nhân viên vận hành, tôi muốn lập kế hoạch điều chuyển phương tiện để giảm chênh lệch cung cầu giữa các Hub. & SN-OPR-04 & SUB-OPS\\
+  \hline
+  US-SIM-01 & Là nhân viên vận hành, tôi muốn chạy một kịch bản giả định trên ảnh chụp trạng thái mạng lưới để đánh giá tác động mà không làm thay đổi dữ liệu thật. & SN-OPR-06 & SUB-SIM\\
+  \hline
+  US-SIM-02 & Là nhân viên vận hành, tôi muốn xem kết quả và khuyến nghị của kịch bản để có thêm cơ sở lựa chọn phương án điều phối. & SN-OPR-06 & SUB-SIM\\
   \hline
 \end{longtable}
+\endgroup
 
 \subsection{Mục tiêu dự án}
 
-\noindent\textbf{OBJ-01 -- \Placeholder{Tên mục tiêu}.}
-\Placeholder{Trình bày kết quả dự án muốn đạt, vấn đề được giải quyết và dấu hiệu dùng để đánh giá mục tiêu.}
+\noindent\textbf{OBJ-01 -- Tạo góc nhìn thống nhất về mạng lưới.}
+Hệ thống phải biểu diễn được trạng thái gần hiện tại của Hub, phương tiện, chỗ đỗ và cổng sạc, qua đó hỗ trợ cả nhu cầu tra cứu của sinh viên và nhu cầu giám sát của đơn vị vận hành.
 
 \medskip
-\noindent\textbf{OBJ-02 -- \Placeholder{Tên mục tiêu}.}
-\Placeholder{Trình bày kết quả dự án muốn đạt, vấn đề được giải quyết và dấu hiệu dùng để đánh giá mục tiêu.}
+\noindent\textbf{OBJ-02 -- Hỗ trợ trọn vẹn các hành trình sử dụng chính.}
+Sinh viên có thể tìm Hub, đặt và sử dụng phương tiện dùng chung; đồng thời có thể đặt chỗ đỗ và đăng ký sạc cho phương tiện điện cá nhân. Mỗi luồng phải có kết quả thành công, thay thế và ngoại lệ rõ ràng.
+
+\medskip
+\noindent\textbf{OBJ-03 -- Phân bổ tài nguyên nhất quán.}
+Các quy tắc đặt xe, đặt chỗ và lập lịch sạc phải ngăn một tài nguyên được xác nhận cho nhiều yêu cầu xung đột, đồng thời giải phóng tài nguyên khi quy trình bị hủy, hết hạn hoặc thất bại.
+
+\medskip
+\noindent\textbf{OBJ-04 -- Nâng cao khả năng điều phối vận hành.}
+Nhân viên vận hành có thể nhận biết tình trạng quá tải, quản lý vòng đời sự cố và xây dựng kế hoạch điều chuyển phương tiện dựa trên trạng thái chung của mạng lưới.
+
+\medskip
+\noindent\textbf{OBJ-05 -- Hỗ trợ đánh giá quyết định bằng mô phỏng.}
+Hệ thống cho phép tạo và chạy kịch bản giả định, đánh giá ảnh hưởng đến khả năng phục vụ và đưa ra khuyến nghị mà không cập nhật trực tiếp trạng thái vận hành thật.
+
+\medskip
+\noindent\textbf{OBJ-06 -- Tạo nền tảng nhất quán cho các phase tiếp theo.}
+Các khái niệm, trạng thái, ranh giới phân hệ và quy tắc nghiệp vụ của Phase 1 phải đủ rõ để nhóm tiếp tục thiết kế giao diện, behavioral diagram, kiến trúc, class và test case mà không phải diễn giải lại bài toán từ đầu.
+
+Mức độ đạt mục tiêu trong Phase 1 được đánh giá bằng khả năng truy vết từ vấn đề và stakeholder need đến user story, requirement và use case; ở phase cuối, các mục tiêu được kiểm chứng thêm qua các luồng MVP được nhóm lựa chọn.
 
 \subsection{Phạm vi dự án}
 
 \subsubsection*{Trong phạm vi}
 
 \begin{itemize}
-  \item \textbf{SCP-IN-01:} \Placeholder{Mô tả năng lực nghiệp vụ thuộc phạm vi và phân hệ chịu trách nhiệm.}
-  \item \textbf{SCP-IN-02:} \Placeholder{Bổ sung các năng lực còn lại theo bảy phân hệ.}
+  \item \textbf{SCP-IN-01:} Quản lý thông tin và trạng thái của Mobility Hub, phương tiện, chỗ đỗ và cổng sạc; cung cấp kết quả tra cứu và Hub thay thế.
+  \item \textbf{SCP-IN-02:} Tạo, xác nhận, hủy và xử lý hết hạn lượt đặt phương tiện dùng chung.
+  \item \textbf{SCP-IN-03:} Ghi nhận việc nhận xe, bắt đầu chuyến đi, trả xe và kết thúc chuyến đi.
+  \item \textbf{SCP-IN-04:} Đặt chỗ đỗ, check-in và check-out phương tiện điện cá nhân tại Hub.
+  \item \textbf{SCP-IN-05:} Tiếp nhận nhu cầu sạc, lập lịch, theo dõi phiên sạc và điều chỉnh ưu tiên khi điều kiện vận hành thay đổi.
+  \item \textbf{SCP-IN-06:} Giám sát mạng lưới, cảnh báo nguy cơ quá tải, quản lý sự cố và kế hoạch điều chuyển phương tiện.
+  \item \textbf{SCP-IN-07:} Cấu hình, chạy và phân tích kịch bản What-if; cung cấp kết quả và khuyến nghị điều phối.
+  \item \textbf{SCP-IN-08:} Tiếp nhận dữ liệu trạng thái từ nguồn IoT hoặc nguồn dữ liệu giả lập và phản ánh thay đổi vào mô hình phần mềm.
 \end{itemize}
 
 \subsubsection*{Ngoài phạm vi}
 
 \begin{itemize}
-  \item \textbf{SCP-OUT-01:} \Placeholder{Mô tả nội dung không thuộc phạm vi và giải thích lý do loại trừ.}
+  \item \textbf{SCP-OUT-01:} Thiết kế, chế tạo, lắp đặt hoặc bảo trì phần cứng cảm biến, phương tiện và cổng sạc.
+  \item \textbf{SCP-OUT-02:} Điều khiển trực tiếp khóa xe, động cơ, dòng điện sạc hoặc các cơ cấu vật lý tại Hub.
+  \item \textbf{SCP-OUT-03:} Thực hiện hành động vật lý như di chuyển xe giữa các Hub, cắm sạc, sửa xe hoặc giải phóng chỗ đỗ.
+  \item \textbf{SCP-OUT-04:} Xây dựng bản đồ 3D, dẫn đường giao thông chi tiết hoặc mô hình dự báo giao thông quy mô đô thị.
+  \item \textbf{SCP-OUT-05:} Thanh toán, định giá chuyến đi và tích hợp thực tế với hệ thống Metro, ngân hàng, SSO hoặc hệ thống quản lý sinh viên.
+  \item \textbf{SCP-OUT-06:} Xây dựng mô hình AI dự báo phức tạp; chức năng mô phỏng có thể dựa trên quy tắc và dữ liệu giả lập phù hợp với phạm vi môn học.
+  \item \textbf{SCP-OUT-07:} Triển khai vận hành thật trên toàn Khu đô thị ĐHQG-HCM hoặc cam kết các tiêu chuẩn vận hành của một hệ thống thương mại.
 \end{itemize}
 
 \subsubsection*{Phạm vi phân tích và phạm vi MVP}
 
-\Placeholder{Phân biệt toàn bộ nghiệp vụ được phân tích với các luồng được chọn để hiện thực trong MVP.}
+Phạm vi phân tích bao phủ đầy đủ bảy phân hệ và 18 use case đã thống nhất. Phạm vi này mô tả hệ thống mục tiêu để bảo đảm các phase phân tích và thiết kế không bỏ sót luồng nghiệp vụ quan trọng.
+
+MVP ở phase cuối là một tập con có khả năng chạy được của phạm vi phân tích. Nhóm sẽ ưu tiên các luồng tạo thành một kịch bản liền mạch, có thay đổi trạng thái và thể hiện được giá trị điều phối; không mặc định phải hiện thực toàn bộ 18 use case. Việc thu hẹp MVP không xóa các yêu cầu đã phân tích mà chỉ xác định nội dung được chọn để minh họa bằng sản phẩm chạy được.
 
 \subsection{System Boundary}
 
+Ranh giới hệ thống được xác định theo trách nhiệm của phần mềm, không theo vị trí vật lý của thiết bị. Phương tiện, chỗ đỗ và cổng sạc tồn tại ngoài thực tế, nhưng bản ghi trạng thái, lượt đặt, phiên sạc và quy tắc cấp phát của chúng nằm trong Smart E-Mobility Hub System.
+
 \begin{itemize}
-  \item \textbf{Phần mềm Smart E-Mobility Hub chịu trách nhiệm:} \Placeholder{Các quyết định, dữ liệu và chức năng nằm trong hệ thống.}
-  \item \textbf{Con người chịu trách nhiệm:} \Placeholder{Các hành động vật lý hoặc quyết định không được tự động hóa.}
-  \item \textbf{Hệ thống bên ngoài cung cấp:} \Placeholder{Dữ liệu và dịch vụ được xem là đầu vào, không thuộc quyền kiểm soát của nhóm.}
+  \item \textbf{Phần mềm Smart E-Mobility Hub chịu trách nhiệm:} lưu và cập nhật trạng thái nghiệp vụ; kiểm tra điều kiện; quản lý vòng đời lượt đặt, chuyến đi, yêu cầu sạc, sự cố và kế hoạch điều chuyển; tạo cảnh báo, kết quả mô phỏng và khuyến nghị.
+  \item \textbf{Con người chịu trách nhiệm:} lái, nhận, trả, di chuyển, cắm sạc hoặc sửa chữa phương tiện ngoài thực tế; nhân viên vận hành xem xét và quyết định có áp dụng khuyến nghị hay không.
+  \item \textbf{Hệ thống bên ngoài cung cấp:} \texttt{EXT-STATE} gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. Cách thiết bị tạo hoặc truyền dữ liệu nằm ngoài phạm vi.
 \end{itemize}
 
-\DiagramPlaceholder{Context diagram và ranh giới hệ thống}{fig:context-diagram}
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=0.84\textwidth]{../diagrams/plantuml/output/system-context.pdf}
+  \captionof{figure}{Sơ đồ ngữ cảnh và ranh giới Smart E-Mobility Hub System}
+  \label{fig:context-diagram}
+\end{minipage}\par\medskip
 
-\clearpage
+Đơn vị quản lý Khu đô thị ĐHQG-HCM là stakeholder nhưng chưa phải actor trong phạm vi hiện tại vì chưa có use case trao đổi trực tiếp với hệ thống. Các thiết bị vật lý cũng không được xem là actor độc lập; toàn bộ dữ liệu thiết bị đi qua hệ thống bên ngoài \texttt{EXT-STATE}. Trong mô hình use case, hệ thống bên ngoài này tham gia dưới vai trò \texttt{ACT-DAT}. Cách xác định này tránh đưa database, service nội bộ hoặc đối tượng dữ liệu lên use-case diagram như những tác nhân của hệ thống.
+
 \subsection{Phân rã hệ thống thành bảy phân hệ nghiệp vụ}
 
-Trong báo cáo này, tiền tố \texttt{SUB} là viết tắt của \textit{subsystem}. Mỗi mã \texttt{SUB-*} đại diện cho một phân hệ nghiệp vụ có phạm vi và người chịu trách nhiệm riêng. Sau phần giới thiệu này, báo cáo luôn ghi mã cùng tên đầy đủ ở tiêu đề; trong nội dung chi tiết có thể dùng mã ngắn để tránh lặp lại. Trên use-case diagram, system boundary phải ghi cả mã và tên phân hệ, không chỉ ghi một mã \texttt{SUB-*} đứng riêng.
+Tiền tố \texttt{SUB} là viết tắt của \textit{subsystem}. Mỗi mã \texttt{SUB-*} đại diện cho một phân hệ có trách nhiệm nghiệp vụ riêng. Phân rã này giúp nhóm giao việc và quản lý mã nhưng không khẳng định bảy phân hệ phải được triển khai thành bảy service độc lập.
 
-\medskip
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{../diagrams/plantuml/output/subsystem-map.pdf}
+  \caption{Bản đồ bảy phân hệ và các phụ thuộc nghiệp vụ chính}
+  \label{fig:subsystem-map}
+\end{figure}
+
 \noindent\textbf{SUB-HUB -- Tra cứu Hub và tài nguyên.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ tra cứu Hub.}
+Phân hệ sở hữu khả năng tra cứu Hub, tổng hợp trạng thái xe, chỗ đỗ và cổng sạc, đồng thời đề xuất Hub thay thế khi lựa chọn ban đầu không còn phù hợp. Phân hệ chỉ cung cấp thông tin và kết quả tra cứu; việc tạo lượt đặt thuộc SUB-RES hoặc SUB-PARK.
 
 \medskip
 \noindent\textbf{SUB-RES -- Đặt phương tiện dùng chung.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ đặt phương tiện.}
-
-\medskip
+Phân hệ quản lý vòng đời \texttt{VehicleReservation}, kiểm tra xe có thể được giữ trước, xử lý hủy và hết hạn, đồng thời bảo đảm một xe không có nhiều lượt đặt được xác nhận cùng lúc. Việc nhận xe và sử dụng xe sau khi đặt thuộc SUB-TRIP.\par\medskip
 \noindent\textbf{SUB-TRIP -- Quản lý chuyến đi.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ quản lý chuyến đi.}
+Phân hệ quản lý quá trình từ khi sinh viên nhận phương tiện đã đặt đến khi trả xe và hoàn tất chuyến đi. Phân hệ cập nhật trạng thái \texttt{Trip} và \texttt{Vehicle}, nhưng không quản lý lượt đặt chỗ đỗ cho phương tiện cá nhân.
 
 \medskip
 \noindent\textbf{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ chỗ đỗ.}
+Phân hệ quản lý \texttt{ParkingReservation}, check-in, check-out và trạng thái sử dụng chỗ đỗ của xe điện cá nhân. Chức năng này không thay thế việc kiểm tra khả năng tiếp nhận xe dùng chung khi kết thúc chuyến đi.
 
 \medskip
 \noindent\textbf{SUB-CHG -- Quản lý sạc và lịch sạc.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ sạc.}
+Phân hệ tiếp nhận \texttt{ChargingRequest}, sắp xếp ưu tiên, lập lịch và theo dõi \texttt{ChargingSession}. Phân hệ quản lý trạng thái logic và lịch sử dụng cổng sạc, không điều khiển dòng điện hoặc thao tác cắm sạc vật lý.
 
 \medskip
 \noindent\textbf{SUB-OPS -- Giám sát và điều phối vận hành.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ vận hành.}
+Phân hệ tổng hợp trạng thái mạng lưới, tạo cảnh báo, quản lý \texttt{Incident} và \texttt{RedistributionPlan}. Nhân viên vận hành dùng kết quả của phân hệ để tổ chức công việc; hành động sửa chữa hoặc vận chuyển xe ngoài thực tế không do phần mềm thực hiện.
 
 \medskip
 \noindent\textbf{SUB-SIM -- What-if Simulation và khuyến nghị.}\par
-\Placeholder{Mô tả trách nhiệm, dữ liệu chính và ranh giới của phân hệ mô phỏng.}
+Phân hệ tạo \texttt{SimulationScenario}, chạy mô phỏng trên một ảnh chụp trạng thái và sinh \texttt{Recommendation}. Dữ liệu giả định được tách khỏi trạng thái vận hành thật; khuyến nghị chỉ được áp dụng khi nhân viên vận hành xem xét và tạo hành động nghiệp vụ phù hợp.
 
 \subsection{Assumptions và Constraints}
 
+Assumption là điều nhóm tạm xem là đúng để tiếp tục phân tích; nếu assumption thay đổi, requirement hoặc use case liên quan phải được rà soát lại. Constraint là giới hạn bắt buộc mà giải pháp phải tuân theo trong phạm vi bài tập lớn.
+
 \subsubsection*{Assumptions}
 
-\noindent\textbf{ASM-GEN-01 -- \Placeholder{Tên giả định}.}
-\Placeholder{Nêu điều nhóm đang tạm xem là đúng trong quá trình phân tích. Nếu giả định không còn đúng, chỉ rõ FR, BR hoặc use case cần xem lại.}
+\noindent\textbf{ASM-GEN-01 -- Có nguồn dữ liệu trạng thái đầu vào.}
+Hệ thống nhận được dữ liệu gần hiện tại về phương tiện, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành từ cảm biến hoặc bộ sinh dữ liệu giả lập. Nếu dữ liệu không sẵn có, các chức năng tra cứu, cảnh báo và mô phỏng phải chuyển sang trạng thái dữ liệu cuối cùng đã biết hoặc báo không đủ dữ liệu.
 
 \medskip
-\noindent\textbf{ASM-GEN-02 -- \Placeholder{Tên giả định}.}
-\Placeholder{Bổ sung các giả định về dữ liệu, hạ tầng, người dùng hoặc cách vận hành có ảnh hưởng trực tiếp đến phạm vi hệ thống.}
+\noindent\textbf{ASM-GEN-02 -- Mỗi Hub và tài nguyên có định danh duy nhất.}
+Mỗi Mobility Hub, phương tiện, chỗ đỗ và cổng sạc có một mã không trùng trong phạm vi mạng lưới. Giả định này là cơ sở để đặt chỗ, cập nhật trạng thái và truy vết sự cố đúng đối tượng.
+
+\medskip
+\noindent\textbf{ASM-GEN-03 -- Người dùng đã được nhận diện theo vai trò.}
+Trong các use case nghiệp vụ, hệ thống biết người đang thao tác là Sinh viên, Nhân viên vận hành hoặc Nhân viên kỹ thuật. Cơ chế đăng nhập và tích hợp danh tính cụ thể chưa thuộc phạm vi phân tích hiện tại.
+
+\medskip
+\noindent\textbf{ASM-GEN-04 -- Mốc thời gian có thể so sánh nhất quán.}
+Các thành phần cung cấp thời gian đủ đồng bộ để xác định thời hạn lượt đặt, thứ tự sự kiện và thời điểm bắt đầu hoặc kết thúc quy trình.
+
+\medskip
+\noindent\textbf{ASM-CHG-01 -- Có dữ liệu phục vụ xếp lịch sạc.}
+Mức pin và thời điểm dự kiến cần sử dụng của phương tiện được cung cấp ở mức đủ tin cậy để hệ thống xác định độ ưu tiên. Khi thiếu dữ liệu, hệ thống phải dùng quy tắc mặc định được nêu trong business rule.
+
+\medskip
+\noindent\textbf{ASM-SIM-01 -- Mô phỏng sử dụng ảnh chụp trạng thái.}
+Mỗi lần chạy mô phỏng làm việc trên một bản sao trạng thái mạng lưới tại thời điểm bắt đầu. Thay đổi trong kịch bản không cập nhật trực tiếp dữ liệu vận hành thật.
 
 \subsubsection*{Constraints}
 
-\noindent\textbf{CON-GEN-01 -- \Placeholder{Tên ràng buộc}.}
-\Placeholder{Mô tả giới hạn bắt buộc xuất phát từ đề bài, thời gian, nguồn lực, dữ liệu hoặc công nghệ; ghi rõ nguồn của ràng buộc.}
+\noindent\textbf{CON-GEN-01 -- Trọng tâm là phần mềm, không phải phần cứng.}
+Đề tài tập trung vào quản lý trạng thái, phân bổ tài nguyên, đặt chỗ, lập lịch, điều phối, xử lý sự kiện và mô phỏng; nhóm không phải phát triển thiết bị IoT hoặc giao diện bản đồ 3D phức tạp.
 
 \medskip
-\noindent\textbf{CON-GEN-02 -- \Placeholder{Tên ràng buộc}.}
-\Placeholder{Bổ sung ràng buộc khác và ảnh hưởng của nó đến cách nhóm phân tích hoặc hiện thực hệ thống.}
+\noindent\textbf{CON-GEN-02 -- Dữ liệu triển khai có thể là dữ liệu giả lập.}
+Nhóm được phép dùng dữ liệu cảm biến thật hoặc dữ liệu mô phỏng. MVP không bắt buộc phải có database và có thể dùng dữ liệu hard-code, nhưng hành vi quan sát được vẫn phải tuân theo requirement và business rule đã công bố.
+
+\medskip
+\noindent\textbf{CON-GEN-03 -- Hệ thống có tài nguyên dùng chung và thay đổi đồng thời.}
+Các thiết kế ở phase sau phải bảo toàn tính nhất quán khi nhiều actor hoặc sự kiện cùng tác động đến một tài nguyên; không được giả định mọi thao tác luôn xảy ra tuần tự mà không có cạnh tranh.
+
+\medskip
+\noindent\textbf{CON-GEN-04 -- Phạm vi MVP bị giới hạn bởi học kỳ và nguồn lực nhóm.}
+Nhóm có bảy thành viên và phải hoàn thành nhiều submission trong một học kỳ. Vì vậy, sản phẩm demo ưu tiên một tập luồng cốt lõi có chất lượng và khả năng trình diễn tốt thay vì triển khai dàn trải toàn bộ hệ thống mục tiêu.
+
+\medskip
+\noindent\textbf{CON-GEN-05 -- Sản phẩm phải phục vụ truy vết qua nhiều phase.}
+Tên actor, mã requirement, business rule, use case, trạng thái và thuật ngữ phải được giữ ổn định để sử dụng tiếp trong UI, behavioral diagram, kiến trúc, class design và test case.
 
 \subsection{Thuật ngữ và trạng thái dùng chung}
 
-\Placeholder{Chèn bảng rút gọn từ project-conventions.md, chỉ giữ các thuật ngữ thực sự được dùng trong báo cáo.}
+\begingroup
+\small
+\begin{longtable}{|L{44mm}|L{34mm}|L{62mm}|}
+  \caption{Thuật ngữ nghiệp vụ chính}\label{tab:business-terms}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Tên chuẩn} & \centering\arraybackslash\textbf{Tên tiếng Việt} & \centering\arraybackslash\textbf{Ý nghĩa trong dự án}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Tên chuẩn} & \centering\arraybackslash\textbf{Tên tiếng Việt} & \centering\arraybackslash\textbf{Ý nghĩa trong dự án (tiếp theo)}\\
+  \hline
+  \endhead
+  \texttt{MobilityHub} & Mobility Hub & Địa điểm tập hợp phương tiện, chỗ đỗ và cổng sạc trong mạng lưới.\\
+  \hline
+  \texttt{SharedVehicle} & Phương tiện dùng chung & Phương tiện điện thuộc mạng lưới và được sinh viên đặt để sử dụng.\\
+  \hline
+  \texttt{PrivateVehicle} & Phương tiện cá nhân & Phương tiện điện của sinh viên, sử dụng dịch vụ đỗ hoặc sạc tại Hub.\\
+  \hline
+  \texttt{ParkingSpace} & Chỗ đỗ & Một vị trí đỗ cụ thể, có trạng thái và khả năng được giữ trước.\\
+  \hline
+  \texttt{ChargingPoint} & Cổng sạc & Một tài nguyên sạc cụ thể tại Hub.\\
+  \hline
+  \texttt{VehicleReservation} & Lượt đặt phương tiện & Quyền giữ trước một phương tiện dùng chung trong thời hạn xác định.\\
+  \hline
+  \texttt{ParkingReservation} & Lượt đặt chỗ đỗ & Quyền giữ trước một chỗ đỗ cho phương tiện điện cá nhân.\\
+  \hline
+  \texttt{Trip} & Chuyến đi & Khoảng thời gian từ khi sinh viên nhận xe dùng chung đến khi trả xe.\\
+  \hline
+  \texttt{ChargingRequest} & Yêu cầu sạc & Nhu cầu sạc chờ được kiểm tra và xếp lịch.\\
+  \hline
+  \texttt{ChargingSession} & Phiên sạc & Khoảng thời gian một phương tiện thực tế sử dụng cổng sạc.\\
+  \hline
+  \texttt{Incident} & Sự cố & Sự kiện làm tài nguyên hoặc quy trình không hoạt động bình thường.\\
+  \hline
+  \texttt{RedistributionPlan} & Kế hoạch điều chuyển & Kế hoạch chuyển phương tiện giữa các Hub để điều chỉnh phân bố.\\
+  \hline
+  \texttt{SimulationScenario} & Kịch bản mô phỏng & Tập giả định và tham số đầu vào của một bài toán What-if.\\
+  \hline
+  \texttt{SimulationRun} & Lần chạy mô phỏng & Một lần thực thi kịch bản trên ảnh chụp trạng thái xác định.\\
+  \hline
+  \texttt{Recommendation} & Khuyến nghị & Phương án điều phối được tạo từ trạng thái hoặc kết quả mô phỏng.\\
+  \hline
+\end{longtable}
+\endgroup
+
+Các trạng thái bên dưới là từ vựng chung được dùng trong requirement, use-case flow, state diagram, class và code. Thành viên không tự thay thế bằng từ đồng nghĩa nếu chưa cập nhật quy ước của dự án.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Trạng thái chuẩn của tài nguyên}
+  \label{tab:resource-statuses}
+  \small
+  \begin{tabularx}{\textwidth}{|L{47mm}|Y|}
+    \hline
+    \rowcolor{gray!15}
+    \centering\arraybackslash\textbf{Đối tượng} & \centering\arraybackslash\textbf{Tập trạng thái}\\
+    \hline
+    \texttt{VehicleStatus} & \texttt{Available | Reserved | InUse | Charging | OutOfService}\\
+    \hline
+    \texttt{ParkingSpaceStatus} & \texttt{Available | Reserved | Occupied | OutOfService}\\
+    \hline
+    \texttt{ChargingPointStatus} & \texttt{Available | Reserved | Charging | OutOfService}\\
+    \hline
+    \texttt{HubStatus} & \texttt{Normal | NearCapacity | Full | OutOfService}\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \captionof{table}{Trạng thái chuẩn của quy trình nghiệp vụ}
+  \label{tab:workflow-statuses}
+  \small
+  \begin{tabularx}{\linewidth}{|L{49mm}|Y|}
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Đối tượng} & \centering\arraybackslash\textbf{Tập trạng thái}\\
+  \hline
+  \texttt{VehicleReservationStatus} & \texttt{Pending | Confirmed | Fulfilled | Cancelled | Expired | Rejected}\\
+  \hline
+  \texttt{ParkingReservationStatus} & \texttt{Pending | Confirmed | CheckedIn | Completed | Cancelled | Expired | Rejected}\\
+  \hline
+  \texttt{TripStatus} & \texttt{InProgress | Completed | Interrupted}\\
+  \hline
+  \texttt{ChargingRequestStatus} & \texttt{Pending | Scheduled | Charging | Completed | Cancelled | Rejected}\\
+  \hline
+  \texttt{IncidentStatus} & \texttt{Open | Acknowledged | InProgress | Resolved | Closed}\\
+  \hline
+  \texttt{RedistributionPlanStatus} & \texttt{Draft | Recommended | Approved | InProgress | Completed | Cancelled}\\
+  \hline
+  \texttt{SimulationRunStatus} & \texttt{Draft | Running | Completed | Failed}\\
+  \hline
+  \end{tabularx}
+\end{minipage}\par\medskip
+
+Các trạng thái trong hai bảng trên là giá trị hợp lệ ở mức đặc tả, không phải danh sách chuyển trạng thái tùy ý. Điều kiện để chuyển từ trạng thái này sang trạng thái khác sẽ được ràng buộc bởi business rule và luồng use case tương ứng; state diagram ở phase sau phải giữ nguyên tên trạng thái và chỉ bổ sung transition, guard hoặc sự kiện kích hoạt.
+
+Khi nguồn dữ liệu không đủ để xác định trạng thái mới, hệ thống giữ trạng thái hợp lệ gần nhất và đánh dấu thời điểm cập nhật cuối cùng thay vì tự suy đoán. Các trạng thái kết thúc như \texttt{Completed}, \texttt{Cancelled}, \texttt{Expired}, \texttt{Rejected}, \texttt{Resolved}, \texttt{Closed} hoặc \texttt{Failed} chỉ được thay đổi khi requirement và business rule liên quan quy định rõ cơ chế mở lại hoặc tạo một quy trình mới.
 
 \clearpage

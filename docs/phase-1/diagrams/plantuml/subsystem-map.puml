@@ -1,0 +1,53 @@
+@startuml
+!pragma layout vizjs
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 12
+skinparam linetype ortho
+
+skinparam package {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  RoundCorner 8
+}
+
+package "SMART E-MOBILITY HUB SYSTEM (SEMH)" {
+  rectangle "**SUB-HUB**\nTra cứu Hub và tài nguyên" as HUB
+
+  rectangle "**SUB-RES**\nĐặt phương tiện dùng chung" as RES
+  rectangle "**SUB-PARK**\nQuản lý chỗ đỗ xe cá nhân" as PARK
+  rectangle "**SUB-CHG**\nQuản lý sạc và lịch sạc" as CHG
+
+  rectangle "**SUB-TRIP**\nQuản lý chuyến đi" as TRIP
+  rectangle "**SUB-OPS**\nGiám sát và điều phối vận hành" as OPS
+  rectangle "**SUB-SIM**\nMô phỏng và khuyến nghị" as SIM
+
+  RES -[hidden]right- PARK
+  PARK -[hidden]right- CHG
+
+  HUB -down-> RES : Chọn xe
+  HUB -down-> PARK : Chọn chỗ đỗ
+  HUB -down-> CHG : Tra cứu sạc
+
+  RES -down-> TRIP : Lượt đặt đã xác nhận
+  TRIP -down-> OPS : Trạng thái chuyến đi
+  PARK -down-> OPS : Trạng thái chỗ đỗ
+  CHG -down-> OPS : Trạng thái sạc
+
+  OPS <--> SIM : Ảnh chụp trạng thái /\nkhuyến nghị điều phối
+}
+
+@enduml
