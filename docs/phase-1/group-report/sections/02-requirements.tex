@@ -4,89 +4,390 @@
 
 \subsection{Quy ước đặc tả yêu cầu}
 
-Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể kiểm tra. Functional requirement dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, business rule dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu chất lượng dùng \texttt{NFR-[NHÓM]-[SỐ]}. Tên và mã phải khớp với \texttt{project-conventions.md}.
+Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể quan sát hoặc kiểm tra. Yêu cầu chức năng dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, quy tắc nghiệp vụ dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu phi chức năng dùng \texttt{NFR-[NHÓM]-[SỐ]}.
+
+Nội dung phải dùng đúng actor, thuật ngữ và trạng thái đã thống nhất ở Phần I, đặc biệt là Bảng~\ref{tab:business-terms}, Bảng~\ref{tab:resource-statuses} và Bảng~\ref{tab:workflow-statuses}. Các ngưỡng thời gian, dung lượng và mức pin trong business rule là quyết định nghiệp vụ của nhóm cho phạm vi bài tập; chúng không hàm ý một thiết bị hay công nghệ triển khai cụ thể.
+
+Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}). Hệ thống chỉ tiếp nhận trạng thái hoặc xác nhận từ gateway này; cách cảm biến, khóa xe hoặc cổng sạc hoạt động nằm ngoài system boundary.
 
 \subsection{Business Rules}
 
-Business rule được trình bày thành từng quy tắc độc lập để dễ đọc trong báo cáo. Mỗi quy tắc phải nói rõ điều kiện nghiệp vụ, kết quả bắt buộc và các FR/use case chịu ảnh hưởng.
+Business rule quy định điều kiện, giới hạn hoặc bất biến mà mọi luồng nghiệp vụ phải tuân theo. Business rule không thay thế functional requirement; nó ràng buộc cách requirement và use case được thực hiện.
 
-\newcommand{\BusinessRuleItem}[2]{%
-  \par\medskip
-  \noindent\textbf{BR-#1-01 -- \Placeholder{Tên quy tắc nghiệp vụ}.}
-  \Placeholder{Mô tả quy tắc của #2 dưới dạng một phát biểu rõ ràng, có điều kiện và kết quả.}
-  \textit{Liên quan: \Placeholder{FR-#1-XX; UC-#1-XX}.}
-  \par
-}
+\subsubsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
 
-\BusinessRuleItem{HUB}{SUB-HUB}
-\BusinessRuleItem{RES}{SUB-RES}
-\BusinessRuleItem{TRIP}{SUB-TRIP}
-\BusinessRuleItem{PARK}{SUB-PARK}
-\BusinessRuleItem{CHG}{SUB-CHG}
-\BusinessRuleItem{OPS}{SUB-OPS}
-\BusinessRuleItem{SIM}{SUB-SIM}
+\noindent\textbf{BR-HUB-01 -- Ghi nhận tài nguyên tại Hub.}\par
+\nopagebreak[4]
+Mỗi chỗ đỗ (\texttt{ParkingSpace}) và cổng sạc (\texttt{ChargingPoint}) chỉ thuộc một Mobility Hub. Một xe dùng chung (\texttt{SharedVehicle}) chỉ được tính vào tồn xe của một Hub khi vị trí của xe tại Hub đó đã được xác nhận. Xe ở trạng thái \texttt{InUse} không được tính là xe khả dụng của bất kỳ Hub nào.
+
+\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}; \texttt{UC-HUB-01}, \texttt{UC-HUB-02}.}
+
+\medskip
+\noindent\textbf{BR-HUB-02 -- Điều kiện hiển thị tài nguyên khả dụng.}\par
+\nopagebreak[4]
+Tài nguyên chỉ được hiển thị là khả dụng khi trạng thái hiện tại là \texttt{Available} và không có lượt giữ chỗ, phiên sử dụng hoặc sự cố đang có hiệu lực.
+
+\textit{Áp dụng cho: \texttt{FR-HUB-02}, \texttt{FR-HUB-03}; \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
+
+\subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+\noindent\textbf{BR-RES-01 -- Giới hạn lượt đặt của Sinh viên.}\par
+\nopagebreak[4]
+Mỗi Sinh viên chỉ được có tối đa một \texttt{VehicleReservation} ở trạng thái \texttt{Pending} hoặc \texttt{Confirmed} tại một thời điểm.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-02 -- Ngăn chặn đặt trùng phương tiện.}\par
+\nopagebreak[4]
+Mỗi \texttt{SharedVehicle} chỉ có tối đa một \texttt{VehicleReservation} ở trạng thái \texttt{Pending} hoặc \texttt{Confirmed}. Việc kiểm tra điều kiện và giữ xe phải được thực hiện như một thay đổi nhất quán để hai yêu cầu đồng thời không cùng được xác nhận.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{NFR-CON-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-03 -- Hết hạn lượt đặt.}\par
+\nopagebreak[4]
+Một lượt đặt đã \texttt{Confirmed} có hiệu lực trong 10 phút. Nếu Sinh viên chưa nhận xe khi hết thời hạn, lượt đặt chuyển sang \texttt{Expired}; xe trở lại \texttt{Available} nếu không có sự cố hoặc quy trình khác ngăn xe tiếp tục phục vụ.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{NIFR-RES-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-04 -- Điều kiện xe được phép đặt.}\par
+\nopagebreak[4]
+Xe chỉ được đưa vào luồng đặt khi đang ở trạng thái \texttt{Available} và mức pin không thấp hơn 30\%. Xe không đủ điều kiện vẫn có thể xuất hiện trong thông tin vận hành nhưng không thể được xác nhận cho Sinh viên.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{FR-HUB-02}; \texttt{UC-RES-01}.}
+
+\subsubsection{SUB-TRIP -- Quản lý chuyến đi}
+
+\noindent\textbf{BR-TRIP-01 -- Điều kiện bắt đầu chuyến đi.}\par
+\nopagebreak[4]
+Chuyến đi chỉ được bắt đầu khi có một \texttt{VehicleReservation} \texttt{Confirmed} còn hiệu lực, thuộc đúng Sinh viên và đúng phương tiện. Khi việc nhận xe được xác nhận, lượt đặt chuyển sang \texttt{Fulfilled}, xe chuyển sang \texttt{InUse} và chuyến đi chuyển sang \texttt{InProgress}.
+
+\textit{Áp dụng cho: \texttt{FR-TRIP-01}; \texttt{UC-TRIP-01}.}
+
+\medskip
+\noindent\textbf{BR-TRIP-02 -- Điều kiện hoàn tất chuyến đi.}\par
+\nopagebreak[4]
+Chuyến đi chỉ chuyển sang \texttt{Completed} khi xe đã được xác nhận tại một Hub hợp lệ và việc trả xe an toàn đã hoàn tất. Sau đó, trạng thái xe được xác định theo mức pin và tình trạng vận hành, không mặc định luôn trở về \texttt{Available}.
+
+\textit{Áp dụng cho: \texttt{FR-TRIP-02}; \texttt{UC-TRIP-02}.}
+
+\subsubsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+\noindent\textbf{BR-PARK-01 -- Giữ chỗ đỗ không xung đột.}\par
+\nopagebreak[4]
+Một \texttt{ParkingSpace} chỉ có tối đa một \texttt{ParkingReservation} ở trạng thái \texttt{Pending} hoặc \texttt{Confirmed}. Chỉ chỗ đỗ \texttt{Available} mới được giữ; việc kiểm tra và giữ chỗ phải ngăn hai yêu cầu đồng thời cùng được xác nhận.
+
+\textit{Áp dụng cho: \texttt{FR-PARK-01}, \texttt{NFR-CON-01}; \texttt{UC-PARK-01}.}
+
+\medskip
+\noindent\textbf{BR-PARK-02 -- Hết hạn lượt đặt chỗ đỗ.}\par
+\nopagebreak[4]
+Một lượt đặt chỗ đã \texttt{Confirmed} có hiệu lực tối đa 20 phút. Nếu hết thời hạn mà phương tiện chưa check-in, lượt đặt chuyển sang \texttt{Expired} và chỗ đỗ trở lại \texttt{Available}.
+
+\textit{Áp dụng cho: \texttt{FR-PARK-01}, \texttt{NIFR-PARK-01}; \texttt{UC-PARK-01}.}
+
+\subsubsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+
+\noindent\textbf{BR-CHG-01 -- Ưu tiên sạc.}\par
+\nopagebreak[4]
+Yêu cầu sạc của phương tiện có mức pin dưới 20\% hoặc có kế hoạch được sử dụng trong 60 phút tiếp theo được xếp ưu tiên cao hơn yêu cầu thông thường. Nếu nhiều yêu cầu có cùng mức ưu tiên, yêu cầu được xác nhận sớm hơn được xử lý trước.
+
+\textit{Áp dụng cho: \texttt{FR-CHG-01}, \texttt{FR-CHG-03}, \texttt{NIFR-CHG-01}; \texttt{UC-CHG-01}, \texttt{UC-CHG-03}.}
+
+\medskip
+\noindent\textbf{BR-CHG-02 -- Giới hạn sử dụng cổng sạc.}\par
+\nopagebreak[4]
+Mỗi \texttt{ChargingPoint} chỉ phục vụ một \texttt{ChargingSession} ở trạng thái \texttt{Charging} tại một thời điểm. Cổng sạc \texttt{OutOfService} không được cấp cho yêu cầu mới.
+
+\textit{Áp dụng cho: \texttt{FR-CHG-02}, \texttt{FR-CHG-03}, \texttt{NIFR-CHG-02}; \texttt{UC-CHG-02}, \texttt{UC-CHG-03}.}
+
+\subsubsection{SUB-OPS -- Giám sát và điều phối vận hành}
+
+\noindent\textbf{BR-OPS-01 -- Cảnh báo mất cân bằng tại Hub.}\par
+\nopagebreak[4]
+Hệ thống tạo cảnh báo khi số xe \texttt{Available} tại một Hub thấp hơn 15\% sức chứa hoặc tổng số xe đang hiện diện vượt 90\% sức chứa. Cảnh báo không tự động trở thành lệnh điều chuyển; \texttt{ACT-OPR} phải xem xét và quyết định.
+
+\textit{Áp dụng cho: \texttt{FR-OPS-01}, \texttt{FR-OPS-03}, \texttt{NIFR-OPS-02}; \texttt{UC-OPS-01}, \texttt{UC-OPS-03}.}
+
+\medskip
+\noindent\textbf{BR-OPS-02 -- Đưa tài nguyên ra khỏi phục vụ.}\par
+\nopagebreak[4]
+Phương tiện đạt mốc 1.000~km kể từ lần bảo trì gần nhất hoặc nhận sự kiện lỗi phần cứng phải chuyển sang \texttt{OutOfService}. Tài nguyên chỉ được trở lại phục vụ sau khi \texttt{ACT-MNT} xác nhận kết quả xử lý đạt yêu cầu.
+
+\textit{Áp dụng cho: \texttt{FR-OPS-02}, \texttt{NIFR-OPS-01}; \texttt{UC-OPS-02}.}
+
+\subsubsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+\noindent\textbf{BR-SIM-01 -- Cách ly dữ liệu mô phỏng.}\par
+\nopagebreak[4]
+Mỗi \texttt{SimulationRun} chỉ làm việc trên bản sao trạng thái được tạo khi bắt đầu lần chạy. Kết quả và khuyến nghị không được thay đổi trạng thái vận hành thật; mọi hành động áp dụng phải do \texttt{ACT-OPR} tạo hoặc phê duyệt qua quy trình nghiệp vụ tương ứng.
+
+\textit{Áp dụng cho: \texttt{FR-SIM-01}, \texttt{FR-SIM-02}; \texttt{UC-SIM-01}, \texttt{UC-SIM-02}.}
 
 \subsection{Functional Requirements}
 
-Các yêu cầu được nhóm theo phân hệ. Khi hoàn thiện, thành viên có thể thêm số lượng FR cần thiết nhưng không gộp nhiều trách nhiệm vào cùng một mã.
+Các functional requirement được nhóm theo phân hệ sở hữu. Mỗi yêu cầu bên dưới mô tả một năng lực quan sát được và trực tiếp truy vết tới use case tương ứng. Các thao tác tự động theo thời gian hoặc sự kiện được tách sang mục Non-interactive Functional Requirements.
 
-\newcommand{\RequirementBlock}[3]{%
-  \subsubsection{SUB-#1 -- #2}
-  \noindent\textbf{FR-#1-01.} \Placeholder{Hệ thống phải thực hiện một chức năng cụ thể của phân hệ.}
-  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
+\subsubsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
 
-  \medskip
-  \noindent\textbf{FR-#1-02.} \Placeholder{Hệ thống phải thực hiện một chức năng cụ thể khác của phân hệ.}
-  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
+\noindent\textbf{FR-HUB-01 -- Tra cứu Hub phù hợp.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-STU} tra cứu danh sách Mobility Hub theo vị trí hoặc nhu cầu sử dụng và nhận thông tin tóm tắt về khoảng cách cùng khả năng phục vụ của từng Hub.
 
-  \medskip
-  \noindent\textbf{FR-#1-03.} \Placeholder{Bổ sung hoặc bỏ yêu cầu này tùy kết quả phân tích, nhưng giữ cách đánh mã liên tục.}
-  \textit{Actor/trigger: \Placeholder{ACT hoặc sự kiện}; Use case: #3.}
-}
+\textit{Actor/trigger: \texttt{ACT-STU} khởi tạo yêu cầu tra cứu.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-01}. Hiện thực bởi: \texttt{UC-HUB-01}. Ràng buộc: \texttt{BR-HUB-01}.}
 
-\RequirementBlock{HUB}{Tra cứu Hub và tài nguyên}{UC-HUB-01--03}
-\RequirementBlock{RES}{Đặt phương tiện dùng chung}{UC-RES-01--02}
-\RequirementBlock{TRIP}{Quản lý chuyến đi}{UC-TRIP-01--02}
-\RequirementBlock{PARK}{Quản lý chỗ đỗ xe cá nhân}{UC-PARK-01--03}
-\RequirementBlock{CHG}{Quản lý sạc và lịch sạc}{UC-CHG-01--03}
-\RequirementBlock{OPS}{Giám sát và điều phối vận hành}{UC-OPS-01--03}
-\RequirementBlock{SIM}{What-if Simulation và khuyến nghị}{UC-SIM-01--02}
+\medskip
+\noindent\textbf{FR-HUB-02 -- Xem trạng thái tài nguyên tại Hub.}\par
+\nopagebreak[4]
+Hệ thống phải cung cấp trạng thái gần hiện tại của xe dùng chung, chỗ đỗ và cổng sạc tại Hub được chọn, bao gồm các thông tin cần thiết để \texttt{ACT-STU} đánh giá tài nguyên có thể phục vụ hay không.
+
+\textit{Actor/trigger: \texttt{ACT-STU} chọn một Hub.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-02}. Hiện thực bởi: \texttt{UC-HUB-02}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\medskip
+\noindent\textbf{FR-HUB-03 -- Xem Hub thay thế.}\par
+\nopagebreak[4]
+Khi Hub được chọn không còn khả năng phục vụ nhu cầu, hệ thống phải cung cấp cho \texttt{ACT-STU} danh sách Hub thay thế kèm lý do đề xuất và trạng thái tài nguyên liên quan.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu Hub thay thế hoặc Hub ban đầu không đáp ứng điều kiện.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-02}. Hiện thực bởi: \texttt{UC-HUB-03}. Ràng buộc: \texttt{BR-HUB-02}.}
+
+\subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+\noindent\textbf{FR-RES-01 -- Tạo lượt đặt phương tiện.}\par
+\nopagebreak[4]
+Khi \texttt{ACT-STU} chọn một xe đủ điều kiện, hệ thống phải tạo lượt đặt phương tiện và trả kết quả xác nhận kèm thời điểm hết hạn. Nếu xe không còn khả dụng tại thời điểm xác nhận, hệ thống phải từ chối yêu cầu và không thay đổi trạng thái xe.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu đặt một xe đã chọn.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-02}, \texttt{US-RES-01}. Hiện thực bởi: \texttt{UC-RES-01}. Ràng buộc: \texttt{BR-RES-01}--\texttt{BR-RES-04}.}
+
+\medskip
+\noindent\textbf{FR-RES-02 -- Hủy lượt đặt phương tiện.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-STU} hủy lượt đặt của chính mình khi lượt đặt đang \texttt{Pending} hoặc \texttt{Confirmed}. Sau khi hủy, lượt đặt chuyển sang \texttt{Cancelled} và xe được giải phóng nếu không có ràng buộc nghiệp vụ khác.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu hủy lượt đặt.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-02}, \texttt{US-RES-02}. Hiện thực bởi: \texttt{UC-RES-02}. Ràng buộc: \texttt{BR-RES-01}, \texttt{BR-RES-02}.}
+
+\subsubsection{SUB-TRIP -- Quản lý chuyến đi}
+
+\noindent\textbf{FR-TRIP-01 -- Nhận phương tiện và bắt đầu chuyến đi.}\par
+\nopagebreak[4]
+Hệ thống phải xác minh \texttt{ACT-STU}, phương tiện và lượt đặt còn hiệu lực; sau khi nhận được xác nhận bàn giao xe, hệ thống phải khởi tạo \texttt{Trip} với thời điểm, Hub xuất phát và trạng thái ban đầu của xe.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu nhận xe; \texttt{ACT-DAT} hỗ trợ xác nhận trạng thái bàn giao.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-03}, \texttt{US-TRIP-01}. Hiện thực bởi: \texttt{UC-TRIP-01}. Ràng buộc: \texttt{BR-TRIP-01}.}
+
+\medskip
+\noindent\textbf{FR-TRIP-02 -- Trả phương tiện và kết thúc chuyến đi.}\par
+\nopagebreak[4]
+Hệ thống phải kiểm tra Hub tiếp nhận và xác nhận trả xe; nếu đủ điều kiện, hệ thống phải hoàn tất \texttt{Trip}, ghi nhận thời gian kết thúc cùng trạng thái xe và cung cấp tóm tắt chuyến đi cho \texttt{ACT-STU}.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu trả xe; \texttt{ACT-DAT} hỗ trợ xác nhận vị trí và tình trạng trả.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-03}, \texttt{US-TRIP-02}. Hiện thực bởi: \texttt{UC-TRIP-02}. Ràng buộc: \texttt{BR-TRIP-02}.}
+
+\subsubsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+\noindent\textbf{FR-PARK-01 -- Đặt trước chỗ đỗ.}\par
+\nopagebreak[4]
+Khi \texttt{ACT-STU} chọn một Hub còn chỗ, hệ thống phải tạo \texttt{ParkingReservation} cho một chỗ đỗ \texttt{Available} và trả xác nhận kèm thời điểm hết hạn.
+
+\textit{Actor/trigger: \texttt{ACT-STU} yêu cầu đặt chỗ đỗ tại Hub đích.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-04}, \texttt{US-PARK-01}. Hiện thực bởi: \texttt{UC-PARK-01}. Ràng buộc: \texttt{BR-PARK-01}, \texttt{BR-PARK-02}.}
+
+\medskip
+\noindent\textbf{FR-PARK-02 -- Check-in phương tiện cá nhân.}\par
+\nopagebreak[4]
+Hệ thống phải xác minh lượt đặt còn hiệu lực và xác nhận phương tiện đã đến đúng chỗ đỗ; sau đó chuyển \texttt{ParkingReservation} sang \texttt{CheckedIn} và \texttt{ParkingSpace} sang \texttt{Occupied}.
+
+\textit{Actor/trigger: \texttt{ACT-STU} thực hiện check-in; \texttt{ACT-DAT} hỗ trợ xác nhận trạng thái chỗ đỗ.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-04}, \texttt{US-PARK-02}. Hiện thực bởi: \texttt{UC-PARK-02}. Ràng buộc: \texttt{BR-PARK-01}.}
+
+\medskip
+\noindent\textbf{FR-PARK-03 -- Check-out phương tiện cá nhân.}\par
+\nopagebreak[4]
+Hệ thống phải xác nhận phương tiện đã rời chỗ đỗ, chuyển \texttt{ParkingReservation} sang \texttt{Completed} và giải phóng \texttt{ParkingSpace} về \texttt{Available} nếu chỗ đỗ không có sự cố.
+
+\textit{Actor/trigger: \texttt{ACT-STU} thực hiện check-out; \texttt{ACT-DAT} hỗ trợ xác nhận trạng thái chỗ đỗ.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-04}, \texttt{US-PARK-02}. Hiện thực bởi: \texttt{UC-PARK-03}. Ràng buộc: \texttt{BR-PARK-01}.}
+
+\subsubsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+
+\noindent\textbf{FR-CHG-01 -- Đăng ký nhu cầu sạc.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-STU} hoặc \texttt{ACT-OPR} tạo \texttt{ChargingRequest} cho một phương tiện và nhận kết quả tiếp nhận, từ chối hoặc thời gian sạc dự kiến khi có đủ dữ liệu.
+
+\textit{Actor/trigger: \texttt{ACT-STU} đăng ký cho xe cá nhân hoặc \texttt{ACT-OPR} tạo nhu cầu vận hành.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-05}, \texttt{US-CHG-01}. Hiện thực bởi: \texttt{UC-CHG-01}. Ràng buộc: \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.}
+
+\medskip
+\noindent\textbf{FR-CHG-02 -- Theo dõi lịch và phiên sạc.}\par
+\nopagebreak[4]
+Hệ thống phải cung cấp trạng thái của \texttt{ChargingRequest} và \texttt{ChargingSession}, bao gồm cổng sạc được phân bổ, mức pin gần hiện tại và thời gian hoàn tất dự kiến khi dữ liệu này sẵn có.
+
+\textit{Actor/trigger: \texttt{ACT-STU} theo dõi yêu cầu của mình hoặc \texttt{ACT-OPR} theo dõi hoạt động sạc.}\par
+\textit{Nguồn gốc: \texttt{SN-STU-05}, \texttt{US-CHG-01}. Hiện thực bởi: \texttt{UC-CHG-02}. Ràng buộc: \texttt{BR-CHG-02}.}
+
+\medskip
+\noindent\textbf{FR-CHG-03 -- Điều chỉnh lịch sạc ưu tiên.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-OPR} thay đổi thứ tự xử lý các yêu cầu chưa bắt đầu, phân bổ lại cổng sạc khả dụng và ghi nhận lý do điều chỉnh. Việc điều chỉnh không được tạo ra hai phiên sạc đồng thời trên cùng một cổng.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} yêu cầu điều chỉnh lịch.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-05}, \texttt{US-CHG-02}. Hiện thực bởi: \texttt{UC-CHG-03}. Ràng buộc: \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.}
+
+\subsubsection{SUB-OPS -- Giám sát và điều phối vận hành}
+
+\noindent\textbf{FR-OPS-01 -- Giám sát mạng lưới Mobility Hub.}\par
+\nopagebreak[4]
+Hệ thống phải cung cấp cho \texttt{ACT-OPR} góc nhìn tổng hợp về trạng thái Hub, số xe khả dụng, mức sử dụng chỗ đỗ, cổng sạc, sự cố và cảnh báo mất cân bằng.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} theo dõi trạng thái vận hành.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-01}, \texttt{SN-OPR-02}, \texttt{US-OPS-01}. Hiện thực bởi: \texttt{UC-OPS-01}. Ràng buộc: \texttt{BR-OPS-01}.}
+
+\medskip
+\noindent\textbf{FR-OPS-02 -- Quản lý sự cố vận hành.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-OPR} ghi nhận, xác nhận tiếp nhận, giao xử lý và theo dõi vòng đời \texttt{Incident}; \texttt{ACT-MNT} phải có thể cập nhật kết quả khắc phục để hệ thống quyết định tài nguyên có đủ điều kiện trở lại phục vụ hay không.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} quản lý sự cố; \texttt{ACT-MNT} cập nhật kết quả xử lý.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-03}, \texttt{SN-MNT-01}, \texttt{US-OPS-02}. Hiện thực bởi: \texttt{UC-OPS-02}. Ràng buộc: \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{FR-OPS-03 -- Lập và theo dõi kế hoạch điều chuyển.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-OPR} tạo \texttt{RedistributionPlan} gồm Hub nguồn, Hub đích, danh sách phương tiện, thời gian dự kiến và trạng thái thực hiện; kế hoạch chỉ được chuyển sang \texttt{Approved} sau thao tác phê duyệt của \texttt{ACT-OPR}.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} tạo hoặc phê duyệt kế hoạch.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-04}, \texttt{US-OPS-03}. Hiện thực bởi: \texttt{UC-OPS-03}. Ràng buộc: \texttt{BR-OPS-01}.}
+
+\subsubsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+\noindent\textbf{FR-SIM-01 -- Thiết lập và chạy kịch bản mô phỏng.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép \texttt{ACT-OPR} tạo \texttt{SimulationScenario} từ các tham số giả định, chọn ảnh chụp trạng thái mạng lưới và khởi tạo \texttt{SimulationRun} mà không thay đổi dữ liệu vận hành thật.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} xác nhận chạy kịch bản.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-06}, \texttt{US-SIM-01}. Hiện thực bởi: \texttt{UC-SIM-01}. Ràng buộc: \texttt{BR-SIM-01}.}
+
+\medskip
+\noindent\textbf{FR-SIM-02 -- Phân tích kết quả và khuyến nghị.}\par
+\nopagebreak[4]
+Sau khi lần chạy hoàn tất, hệ thống phải cho phép \texttt{ACT-OPR} xem các chỉ số kết quả, so sánh với trạng thái cơ sở và xem danh sách \texttt{Recommendation}. Khuyến nghị phải nêu hành động đề xuất, đối tượng bị tác động và cơ sở từ kết quả mô phỏng.
+
+\textit{Actor/trigger: \texttt{ACT-OPR} mở kết quả của một lần chạy đã hoàn tất.}\par
+\textit{Nguồn gốc: \texttt{SN-OPR-06}, \texttt{US-SIM-02}. Hiện thực bởi: \texttt{UC-SIM-02}. Ràng buộc: \texttt{BR-SIM-01}.}
 
 \subsection{Non-interactive Functional Requirements}
 
-Các chức năng dưới đây được kích hoạt bởi sự kiện hoặc thời gian, không cần actor thao tác trực tiếp. Đây là nhóm ứng viên cho phần bonus và chỉ giữ lại những mục nhóm có thể giải thích, thiết kế và kiểm thử.
+Non-interactive functional requirement vẫn là yêu cầu chức năng, nhưng được kích hoạt bởi thời gian hoặc sự kiện thay vì thao tác trực tiếp của actor con người. Đây là nội dung bonus; nhóm chỉ giữ các yêu cầu có trigger, điều kiện, xử lý và kết quả quan sát được.
 
-\newcommand{\NIFRItem}[3]{%
-  \par\medskip
-  \noindent\textbf{NIFR-#1-01 -- #2.}
-  \Placeholder{Nêu trigger, điều kiện được kiểm tra, xử lý tự động và kết quả có thể quan sát.}
-  \textit{Phân hệ: SUB-#1; kết quả dự kiến: #3.}
-  \par
-}
+\noindent\textbf{NIFR-HUB-01 -- Cập nhật trạng thái Hub.}\par
+\nopagebreak[4]
+\textit{Trigger:} Hệ thống nhận dữ liệu trạng thái mới từ \texttt{ACT-DAT} hoặc đến chu kỳ làm mới đã cấu hình. \textit{Điều kiện:} dữ liệu hợp lệ và mới hơn trạng thái đang lưu. \textit{Xử lý:} cập nhật tài nguyên, tính lại mức sử dụng và \texttt{HubStatus}. \textit{Kết quả:} dữ liệu tra cứu và giám sát phản ánh trạng thái mới nhất đã chấp nhận.
 
-\NIFRItem{HUB}{Cập nhật trạng thái Hub}{Trạng thái tài nguyên được làm mới}
-\NIFRItem{RES}{Giải phóng lượt đặt hết hạn}{Phương tiện trở lại trạng thái sẵn sàng}
-\NIFRItem{PARK}{Giải phóng chỗ đỗ hết hạn}{Chỗ đỗ có thể được đặt lại}
-\NIFRItem{CHG}{Tính lại ưu tiên sạc}{Lịch hoặc hàng đợi sạc được cập nhật}
-\NIFRItem{OPS}{Phát hiện và mở sự cố}{Nhân viên vận hành nhận được cảnh báo}
-\NIFRItem{SIM}{Tạo khuyến nghị sau mô phỏng}{Kết quả mô phỏng có đề xuất đi kèm}
+\textit{Hỗ trợ: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-OPS-01}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\medskip
+\noindent\textbf{NIFR-RES-01 -- Giải phóng lượt đặt phương tiện hết hạn.}\par
+\nopagebreak[4]
+\textit{Trigger:} thời điểm hết hạn của lượt đặt đã đến. \textit{Điều kiện:} \texttt{VehicleReservation} vẫn \texttt{Confirmed} và chưa được dùng để nhận xe. \textit{Xử lý:} chuyển lượt đặt sang \texttt{Expired} và giải phóng xe nếu xe không bị ràng buộc bởi sự cố khác. \textit{Kết quả:} Sinh viên nhận thông báo hết hạn và xe có thể được người khác đặt khi đủ điều kiện.
+
+\textit{Hỗ trợ: \texttt{FR-RES-01}. Kích hoạt trong: \texttt{UC-RES-01}. Ràng buộc: \texttt{BR-RES-03}.}
+
+\medskip
+\noindent\textbf{NIFR-PARK-01 -- Giải phóng chỗ đỗ hết hạn.}\par
+\nopagebreak[4]
+\textit{Trigger:} thời điểm hết hạn của lượt đặt chỗ đã đến. \textit{Điều kiện:} lượt đặt chỗ vẫn \texttt{Confirmed} và chưa check-in. \textit{Xử lý:} chuyển \texttt{ParkingReservation} sang \texttt{Expired} và chỗ đỗ sang \texttt{Available}. \textit{Kết quả:} số chỗ khả dụng của Hub tăng lên và chỗ đỗ có thể được đặt lại.
+
+\textit{Hỗ trợ: \texttt{FR-PARK-01}. Kích hoạt trong: \texttt{UC-PARK-01}. Ràng buộc: \texttt{BR-PARK-02}.}
+
+\medskip
+\noindent\textbf{NIFR-CHG-01 -- Tính lại mức ưu tiên sạc.}\par
+\nopagebreak[4]
+\textit{Trigger:} hàng đợi sạc, mức pin hoặc kế hoạch sử dụng phương tiện thay đổi. \textit{Điều kiện:} có ít nhất một \texttt{ChargingRequest} chưa bắt đầu. \textit{Xử lý:} tính lại thứ tự theo \texttt{BR-CHG-01} mà không làm gián đoạn phiên đang sạc. \textit{Kết quả:} lịch dự kiến được cập nhật và có thể quan sát bởi actor liên quan.
+
+\textit{Hỗ trợ: \texttt{FR-CHG-02}, \texttt{FR-CHG-03}. Ràng buộc: \texttt{BR-CHG-01}.}
+
+\medskip
+\noindent\textbf{NIFR-CHG-02 -- Xử lý cổng sạc gặp sự cố.}\par
+\nopagebreak[4]
+\textit{Trigger:} hệ thống nhận sự kiện cổng sạc không thể tiếp tục phục vụ từ \texttt{ACT-DAT}. \textit{Điều kiện:} cổng sạc đang \texttt{Reserved} hoặc \texttt{Charging}. \textit{Xử lý:} chuyển cổng sạc sang \texttt{OutOfService}, đánh dấu phiên bị ảnh hưởng và tính lại các phân bổ chưa bắt đầu. \textit{Kết quả:} không có yêu cầu mới được gán vào cổng lỗi và actor liên quan nhận được cảnh báo.
+
+\textit{Hỗ trợ: \texttt{FR-CHG-02}, \texttt{FR-OPS-02}. Ràng buộc: \texttt{BR-CHG-02}, \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{NIFR-OPS-01 -- Phát hiện và mở sự cố.}\par
+\nopagebreak[4]
+\textit{Trigger:} hệ thống nhận sự kiện lỗi tài nguyên từ \texttt{ACT-DAT}. \textit{Điều kiện:} sự kiện hợp lệ và chưa thuộc một \texttt{Incident} đang mở. \textit{Xử lý:} chuyển tài nguyên bị ảnh hưởng sang \texttt{OutOfService} và tạo \texttt{Incident} \texttt{Open}. \textit{Kết quả:} tài nguyên không còn được cấp phát và sự cố xuất hiện trong danh sách theo dõi của \texttt{ACT-OPR}.
+
+\textit{Hỗ trợ: \texttt{FR-OPS-01}, \texttt{FR-OPS-02}. Kích hoạt trong: \texttt{UC-OPS-01}, \texttt{UC-OPS-02}. Ràng buộc: \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{NIFR-OPS-02 -- Tạo cảnh báo nguy cơ quá tải hoặc thiếu xe.}\par
+\nopagebreak[4]
+\textit{Trigger:} trạng thái tổng hợp của một Hub thay đổi. \textit{Điều kiện:} một trong các ngưỡng tại \texttt{BR-OPS-01} bị vượt qua. \textit{Xử lý:} tạo hoặc cập nhật cảnh báo cho Hub, tránh tạo nhiều cảnh báo trùng cho cùng một tình trạng. \textit{Kết quả:} \texttt{ACT-OPR} nhận được cảnh báo và có thể tạo kế hoạch điều chuyển nếu cần.
+
+\textit{Hỗ trợ: \texttt{FR-OPS-01}, \texttt{FR-OPS-03}. Kích hoạt trong: \texttt{UC-OPS-01}, \texttt{UC-OPS-03}. Ràng buộc: \texttt{BR-OPS-01}.}
+
+\medskip
+\noindent\textbf{NIFR-SIM-01 -- Tạo khuyến nghị sau mô phỏng.}\par
+\nopagebreak[4]
+\textit{Trigger:} một \texttt{SimulationRun} chuyển sang \texttt{Completed}. \textit{Điều kiện:} kết quả đủ dữ liệu để đánh giá khả năng phục vụ của các Hub. \textit{Xử lý:} phân tích Hub thiếu xe, gần đầy hoặc thiếu năng lực sạc và tạo danh sách \texttt{Recommendation}. \textit{Kết quả:} khuyến nghị được gắn với lần chạy và không làm thay đổi dữ liệu vận hành.
+
+\textit{Hỗ trợ: \texttt{FR-SIM-02}. Kích hoạt trong: \texttt{UC-SIM-02}. Ràng buộc: \texttt{BR-SIM-01}.}
 
 \subsection{Non-functional Requirements}
 
-NFR phải có tiêu chí đo và cách kiểm tra, tránh các câu chung như ``hệ thống nhanh'', ``an toàn'' hoặc ``dễ sử dụng''.
+Non-functional requirement xác định mức chất lượng mà hệ thống phải đạt được. Mỗi yêu cầu nêu rõ đối tượng áp dụng, điều kiện đo, ngưỡng chấp nhận và cách kiểm tra dự kiến. Các ngưỡng dưới đây áp dụng cho môi trường demo của nhóm, không phải cam kết vận hành thương mại.
 
-\newcommand{\NFRItem}[2]{%
-  \par\medskip
-  \noindent\textbf{NFR-#1-01 -- #2.}
-  \Placeholder{Viết yêu cầu chất lượng có ngữ cảnh, ngưỡng đo và điều kiện áp dụng.}
-  \textit{Cách kiểm tra: \Placeholder{Phép đo, test case hoặc bằng chứng đánh giá}.}
-  \par
-}
+\noindent\textbf{NFR-PERF-01 -- Hiệu năng tra cứu và đặt xe.}\par
+\nopagebreak[4]
+Với tập dữ liệu demo tối thiểu 20 Hub và 500 phương tiện, trong bài kiểm tra có 50 người dùng ảo hoạt động đồng thời, phân vị thứ 95 của thời gian phản hồi cho \texttt{FR-HUB-01} không vượt quá 2 giây và cho \texttt{FR-RES-01} không vượt quá 3 giây; tỷ lệ yêu cầu thất bại do lỗi hệ thống thấp hơn 1\%.
 
-\NFRItem{PERF}{Performance}
-\NFRItem{SEC}{Security}
-\NFRItem{CON}{Consistency}
-\NFRItem{REL}{Reliability}
-\NFRItem{USA}{Usability}
-\NFRItem{AUD}{Auditability}
-\NFRItem{MNT}{Maintainability}
+\textit{Cách kiểm tra:} chạy bài kiểm tra tải lặp lại ít nhất ba lần trong cùng môi trường, ghi p95 và tỷ lệ lỗi cho từng chức năng.
+
+\medskip
+\noindent\textbf{NFR-SEC-01 -- Kiểm soát truy cập theo vai trò.}\par
+\nopagebreak[4]
+Các chức năng xử lý sự cố, điều chỉnh lịch sạc, điều chuyển và chạy mô phỏng chỉ được thực hiện bởi actor có vai trò phù hợp. Yêu cầu bị từ chối không được làm thay đổi trạng thái nghiệp vụ hoặc làm lộ dữ liệu không thuộc phạm vi của actor.
+
+\textit{Cách kiểm tra:} thực hiện ma trận kiểm thử actor--chức năng với \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT}; đối chiếu kết quả cho phép, từ chối và trạng thái sau mỗi lần thử.
+
+\medskip
+\noindent\textbf{NFR-CON-01 -- Nhất quán khi cấp phát tài nguyên.}\par
+\nopagebreak[4]
+Khi 50 yêu cầu đồng thời cùng cố gắng đặt một xe hoặc một chỗ đỗ \texttt{Available}, chỉ một yêu cầu được xác nhận; các yêu cầu còn lại phải nhận kết quả từ chối và trạng thái cuối không được chứa nhiều lượt đặt đang hiệu lực cho cùng tài nguyên.
+
+\textit{Cách kiểm tra:} chạy kịch bản cạnh tranh tự động cho \texttt{FR-RES-01} và \texttt{FR-PARK-01}; kiểm tra số kết quả thành công, trạng thái tài nguyên và tập lượt đặt sau khi hoàn tất.
+
+\medskip
+\noindent\textbf{NFR-REL-01 -- An toàn khi nguồn dữ liệu gián đoạn.}\par
+\nopagebreak[4]
+Khi \texttt{EXT-STATE} không sẵn sàng hoặc gửi dữ liệu không hợp lệ, hệ thống không được ghi đè trạng thái hợp lệ cuối cùng và phải cho actor biết dữ liệu có thể đã cũ. Sau khi nguồn được khôi phục, trạng thái tra cứu phải được đồng bộ lại trong vòng 60 giây.
+
+\textit{Cách kiểm tra:} ngắt nguồn dữ liệu trong một kịch bản kiểm thử, gửi một bản tin sai định dạng, sau đó khôi phục nguồn; đối chiếu trạng thái trước, trong và sau sự cố cùng thời gian đồng bộ.
+
+\medskip
+\noindent\textbf{NFR-USA-01 -- Khả năng hoàn thành luồng đặt xe.}\par
+\nopagebreak[4]
+Trong một buổi thử nghiệm với 10 Sinh viên chưa từng dùng sản phẩm, ít nhất 9 người phải hoàn thành luồng ``Tra cứu Hub -- Xem xe -- Đặt xe'' mà không cần hướng dẫn; thời gian trung vị không vượt quá 60 giây và luồng chính không quá năm thao tác chọn.
+
+\textit{Cách kiểm tra:} giao cùng một nhiệm vụ cho 10 người tham gia, ghi nhận tỷ lệ hoàn thành, thời gian và số thao tác; không hỗ trợ trong khi người tham gia thực hiện luồng.
+
+\medskip
+\noindent\textbf{NFR-AUD-01 -- Truy vết thay đổi trạng thái quan trọng.}\par
+\nopagebreak[4]
+Mọi thay đổi trạng thái do tạo hoặc hủy lượt đặt, bắt đầu hoặc kết thúc chuyến đi, check-in hoặc check-out, thay đổi phiên sạc, xử lý sự cố và phê duyệt kế hoạch điều chuyển phải được ghi nhận. Mỗi bản ghi tối thiểu có thời điểm, actor hoặc nguồn kích hoạt, đối tượng, hành động, trạng thái trước, trạng thái sau và kết quả.
+
+\textit{Cách kiểm tra:} thực hiện một chuỗi giao dịch đại diện, đối chiếu từng chuyển trạng thái với bản ghi truy vết và xác nhận các bản ghi không thể bị sửa qua chức năng nghiệp vụ thông thường.
+
+\medskip
+\noindent\textbf{NFR-MNT-01 -- Khả năng bảo trì logic nghiệp vụ.}\par
+\nopagebreak[4]
+Phần cài đặt các business rule phải được tách khỏi giao diện người dùng và có bộ kiểm thử tự động. Các module thực hiện business rule cốt lõi phải đạt tối thiểu 80\% statement coverage trong báo cáo kiểm thử của bản MVP.
+
+\textit{Cách kiểm tra:} xem xét phụ thuộc giữa giao diện và logic nghiệp vụ, chạy bộ unit test và lưu báo cáo coverage của các module được xác định là cốt lõi.

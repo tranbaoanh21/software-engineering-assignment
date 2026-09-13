@@ -1,0 +1,99 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+
+' Thiết lập viền đen, nền trắng
+skinparam usecase {
+    BackgroundColor white
+    BorderColor black
+    ArrowColor black
+}
+
+skinparam actor {
+    BackgroundColor white
+    BorderColor black
+}
+
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+}
+
+skinparam package {
+    BackgroundColor white
+    BorderColor black
+}
+
+' =========================================================
+' ACTOR
+' =========================================================
+
+actor "Sinh viên" as Student
+actor "Nhân viên vận hành" as Operator
+actor "Nhân viên kỹ thuật" as Technician
+
+' =========================================================
+' HỆ THỐNG BÊN NGOÀI
+' =========================================================
+
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+' =========================================================
+' SMART E-MOBILITY HUB SYSTEM
+' =========================================================
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+
+    package "Dịch vụ di chuyển" {
+
+        usecase "Tra cứu Hub\nvà tài nguyên\n(SUB-HUB)" as UC_Hub
+
+        usecase "Đặt phương tiện\ndùng chung\n(SUB-RES)" as UC_Reservation
+
+        usecase "Quản lý\nchuyến đi\n(SUB-TRIP)" as UC_Trip
+    }
+
+    package "Dịch vụ phương tiện cá nhân" {
+
+        usecase "Quản lý chỗ đỗ\nxe cá nhân\n(SUB-PARK)" as UC_Parking
+
+        usecase "Quản lý sạc\nvà lịch sạc\n(SUB-CHG)" as UC_Charging
+    }
+
+    package "Vận hành và phân tích" {
+
+        usecase "Giám sát và điều phối\nvận hành\n(SUB-OPS)" as UC_Operation
+
+        usecase "Mô phỏng\nvà khuyến nghị\n(SUB-SIM)" as UC_Simulation
+    }
+}
+
+' =========================================================
+' LIÊN KẾT ACTOR
+' =========================================================
+
+' Sinh viên
+Student --> UC_Hub
+Student --> UC_Reservation
+Student --> UC_Trip
+Student --> UC_Parking
+Student --> UC_Charging
+
+' Nhân viên vận hành
+Operator --> UC_Charging
+Operator --> UC_Operation
+Operator --> UC_Simulation
+
+' Nhân viên kỹ thuật
+Technician --> UC_Operation
+
+' =========================================================
+' LIÊN KẾT VỚI HỆ THỐNG BÊN NGOÀI
+' =========================================================
+
+UC_Hub --> StateSource : "Trạng thái Hub"
+UC_Charging --> StateSource : "Trạng thái sạc"
+UC_Operation --> StateSource : "Sự kiện vận hành"
+
+@enduml

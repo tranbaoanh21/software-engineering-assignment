@@ -1,6 +1,10 @@
 assignment-reference.pdf
 /docs/phase-1/team-assignment.private.md
 
+# Operating-system metadata and accidental root-level build output.
+.DS_Store
+/output/
+
 # LaTeX build files and local rendering artifacts.
 *.aux
 *.fdb_latexmk

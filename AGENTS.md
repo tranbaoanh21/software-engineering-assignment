@@ -25,6 +25,8 @@ There is no application build or automated test suite yet. After compiling, insp
 
 Write direct, natural Vietnamese suitable for teammates and lecturers. Keep requirement identifiers stable, such as `FR-RES-01`, `BR-RES-01`, and `NFR-CON-01`. Use lowercase kebab-case for directories and Markdown files; use `meeting-01`, `meeting-02`, and similar chronological names. Keep one responsibility per requirement and make NFRs measurable.
 
+Before creating or editing a PlantUML diagram, read `docs/phase-1/diagrams/plantuml/README.md` and follow its shared visual and modeling rules. Keep editable `.puml` sources beside the diagram guide and regenerate both SVG and PDF vector outputs after changes.
+
 ## Commit & Pull Request Guidelines
 
 Follow the existing short imperative convention, for example `docs: add phase 1 use-case specifications`. Keep commits focused by phase or artifact. Pull requests should summarize changed deliverables, affected members, validation performed, and include rendered screenshots when diagrams or PDF layout change. Never commit private allocations, temporary LaTeX files, or credentials. Do not commit or push unless explicitly requested.

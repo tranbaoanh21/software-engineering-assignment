@@ -238,7 +238,7 @@ Ranh giới hệ thống được xác định theo trách nhiệm của phần 
 \begin{itemize}
   \item \textbf{Phần mềm Smart E-Mobility Hub chịu trách nhiệm:} lưu và cập nhật trạng thái nghiệp vụ; kiểm tra điều kiện; quản lý vòng đời lượt đặt, chuyến đi, yêu cầu sạc, sự cố và kế hoạch điều chuyển; tạo cảnh báo, kết quả mô phỏng và khuyến nghị.
   \item \textbf{Con người chịu trách nhiệm:} lái, nhận, trả, di chuyển, cắm sạc hoặc sửa chữa phương tiện ngoài thực tế; nhân viên vận hành xem xét và quyết định có áp dụng khuyến nghị hay không.
-  \item \textbf{Hệ thống bên ngoài cung cấp:} \texttt{EXT-STATE} gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. Cách thiết bị tạo hoặc truyền dữ liệu nằm ngoài phạm vi.
+  \item \textbf{Hệ thống bên ngoài cung cấp:} \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. Cách thiết bị tạo hoặc truyền dữ liệu nằm ngoài phạm vi.
 \end{itemize}
 
 \noindent\begin{minipage}{\linewidth}
@@ -248,18 +248,11 @@ Ranh giới hệ thống được xác định theo trách nhiệm của phần 
   \label{fig:context-diagram}
 \end{minipage}\par\medskip
 
-Đơn vị quản lý Khu đô thị ĐHQG-HCM là stakeholder nhưng chưa phải actor trong phạm vi hiện tại vì chưa có use case trao đổi trực tiếp với hệ thống. Các thiết bị vật lý cũng không được xem là actor độc lập; toàn bộ dữ liệu thiết bị đi qua hệ thống bên ngoài \texttt{EXT-STATE}. Trong mô hình use case, hệ thống bên ngoài này tham gia dưới vai trò \texttt{ACT-DAT}. Cách xác định này tránh đưa database, service nội bộ hoặc đối tượng dữ liệu lên use-case diagram như những tác nhân của hệ thống.
+Đơn vị quản lý Khu đô thị ĐHQG-HCM là stakeholder nhưng chưa phải actor trong phạm vi hiện tại vì chưa có use case trao đổi trực tiếp với hệ thống. Các thiết bị vật lý cũng không được xem là actor độc lập; toàn bộ dữ liệu thiết bị đi qua \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}). Trong mô hình use case, hệ thống bên ngoài này tham gia dưới vai trò \texttt{ACT-DAT}. Cách xác định này tránh đưa database, service nội bộ hoặc đối tượng dữ liệu lên use-case diagram như những tác nhân của hệ thống.
 
 \subsection{Phân rã hệ thống thành bảy phân hệ nghiệp vụ}
 
 Tiền tố \texttt{SUB} là viết tắt của \textit{subsystem}. Mỗi mã \texttt{SUB-*} đại diện cho một phân hệ có trách nhiệm nghiệp vụ riêng. Phân rã này giúp nhóm giao việc và quản lý mã nhưng không khẳng định bảy phân hệ phải được triển khai thành bảy service độc lập.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.78\textwidth]{../diagrams/plantuml/output/subsystem-map.pdf}
-  \caption{Bản đồ bảy phân hệ và các phụ thuộc nghiệp vụ chính}
-  \label{fig:subsystem-map}
-\end{figure}
 
 \noindent\textbf{SUB-HUB -- Tra cứu Hub và tài nguyên.}\par
 Phân hệ sở hữu khả năng tra cứu Hub, tổng hợp trạng thái xe, chỗ đỗ và cổng sạc, đồng thời đề xuất Hub thay thế khi lựa chọn ban đầu không còn phù hợp. Phân hệ chỉ cung cấp thông tin và kết quả tra cứu; việc tạo lượt đặt thuộc SUB-RES hoặc SUB-PARK.
@@ -285,6 +278,14 @@ Phân hệ tổng hợp trạng thái mạng lưới, tạo cảnh báo, quản 
 \medskip
 \noindent\textbf{SUB-SIM -- What-if Simulation và khuyến nghị.}\par
 Phân hệ tạo \texttt{SimulationScenario}, chạy mô phỏng trên một ảnh chụp trạng thái và sinh \texttt{Recommendation}. Dữ liệu giả định được tách khỏi trạng thái vận hành thật; khuyến nghị chỉ được áp dụng khi nhân viên vận hành xem xét và tạo hành động nghiệp vụ phù hợp.
+
+\medskip
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=0.66\textwidth]{../diagrams/plantuml/output/subsystem-map.pdf}
+  \captionof{figure}{Bản đồ bảy phân hệ và các phụ thuộc nghiệp vụ chính}
+  \label{fig:subsystem-map}
+\end{minipage}\par\medskip
 
 \subsection{Assumptions và Constraints}
 
@@ -425,6 +426,8 @@ Các trạng thái bên dưới là từ vựng chung được dùng trong requi
   \texttt{TripStatus} & \texttt{InProgress | Completed | Interrupted}\\
   \hline
   \texttt{ChargingRequestStatus} & \texttt{Pending | Scheduled | Charging | Completed | Cancelled | Rejected}\\
+  \hline
+  \texttt{ChargingSessionStatus} & \texttt{Ready | Charging | Paused | Completed | Interrupted | Failed}\\
   \hline
   \texttt{IncidentStatus} & \texttt{Open | Acknowledged | InProgress | Resolved | Closed}\\
   \hline

@@ -30,11 +30,11 @@ actor "Nhân viên kỹ thuật\n(ACT-MNT)" as ACT_MNT
 
 rectangle "<<System>>\n**SMART E-MOBILITY HUB SYSTEM**\n(SEMH)\n\nQuản lý trạng thái, đặt và sử dụng tài nguyên;\ngiám sát, điều phối và mô phỏng" as SEMH
 
-rectangle "<<External System>>\nNguồn dữ liệu trạng thái\n(EXT-STATE / ACT-DAT)" as EXT_STATE
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as EXT_STATE
 
-ACT_STU -right- SEMH : Tra cứu, đặt và\nsử dụng tài nguyên
-SEMH -right- ACT_OPR : Giám sát, điều phối\nvà mô phỏng
-SEMH -right- ACT_MNT : Thông tin sự cố và\nkết quả xử lý
+ACT_STU <-right-> SEMH : Yêu cầu tra cứu, đặt và sử dụng /\ntrạng thái và kết quả
+SEMH <-right-> ACT_OPR : Cảnh báo, khuyến nghị /\nlệnh vận hành và mô phỏng
+SEMH <-right-> ACT_MNT : Thông tin sự cố /\nkết quả xử lý
 EXT_STATE -up-> SEMH : Trạng thái tài nguyên\nvà sự kiện vận hành
 
 @enduml

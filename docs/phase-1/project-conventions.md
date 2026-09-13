@@ -63,9 +63,9 @@ Quy tắc sử dụng actor:
 
 | Mã | Tên | Vai trò |
 |---|---|---|
-| `EXT-STATE` | State Data Source | Cung cấp trạng thái xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. |
+| `EXT-STATE` | IoT & State Data Gateway | Cung cấp trạng thái xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. |
 
-Dữ liệu của `EXT-STATE` có thể đến từ cảm biến thật hoặc dữ liệu mô phỏng. Không mô tả phần cứng cụ thể nếu đề tài chưa yêu cầu.
+`EXT-STATE` là cổng giao tiếp trừu tượng giữa SEMH và lớp thiết bị/dữ liệu bên ngoài. Dữ liệu có thể đến từ cảm biến thật hoặc nguồn mô phỏng. Không tách từng cảm biến, khóa xe hay cổng sạc thành actor khi đề tài chưa yêu cầu tích hợp phần cứng cụ thể.
 
 ## 4. Thuật ngữ nghiệp vụ chính
 
@@ -108,6 +108,7 @@ VehicleReservationStatus = Pending | Confirmed | Fulfilled | Cancelled | Expired
 ParkingReservationStatus = Pending | Confirmed | CheckedIn | Completed | Cancelled | Expired | Rejected
 TripStatus = InProgress | Completed | Interrupted
 ChargingRequestStatus = Pending | Scheduled | Charging | Completed | Cancelled | Rejected
+ChargingSessionStatus = Ready | Charging | Paused | Completed | Interrupted | Failed
 IncidentStatus = Open | Acknowledged | InProgress | Resolved | Closed
 RedistributionPlanStatus = Draft | Recommended | Approved | InProgress | Completed | Cancelled
 SimulationRunStatus = Draft | Running | Completed | Failed
