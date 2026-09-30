@@ -1,0 +1,114 @@
+\subsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+SUB-SIM cho phép Nhân viên vận hành thiết lập giả định, chạy \texttt{SimulationRun} trên bản sao trạng thái mạng lưới và xem \texttt{Recommendation}. Mọi dữ liệu mô phỏng được cách ly khỏi vận hành thật; khuyến nghị chỉ là cơ sở ra quyết định. Nếu muốn áp dụng, actor phải khởi tạo và phê duyệt quy trình nghiệp vụ tương ứng, chẳng hạn \texttt{UC-OPS-03}.
+
+\subsubsection{UC-SIM-01 -- Chạy kịch bản What-if Simulation}
+
+\UseCaseDiagram{uc-sim-01.pdf}{UC-SIM-01}{Chạy kịch bản What-if Simulation}{fig:uc-sim-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-SIM-01 -- Chạy kịch bản What-if Simulation}\label{tab:spec-UC-SIM-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-SIM-01\\\hline
+  Use Case Name & Chạy kịch bản What-if Simulation\\\hline
+  Owning Subsystem & SUB-SIM\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp.\\\hline
+  Description / Goal & Cho phép Nhân viên vận hành tạo \texttt{SimulationScenario}, chọn trạng thái cơ sở và chạy mô phỏng trên snapshot cô lập để quan sát tác động mà không thay đổi dữ liệu vận hành thật.\\\hline
+  Trigger & Nhân viên vận hành chọn tạo kịch bản mới hoặc chạy một kịch bản nháp.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền chạy mô phỏng.\newline
+    \textbf{2.} Hệ thống có trạng thái mạng lưới hợp lệ để tạo snapshot và các tham số nằm trong miền cho phép.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{SimulationScenario}, snapshot đầu vào, \texttt{SimulationRun} \texttt{Completed} cùng kết quả được lưu; dữ liệu vận hành thật không thay đổi.\newline
+    \textbf{Thất bại:} Lần chạy không sinh kết quả dùng để ra quyết định; trạng thái thật được bảo toàn và lỗi được ghi nhận.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành tạo kịch bản và đặt tên, mục tiêu phân tích.\newline
+    \textbf{2.} Hệ thống hiển thị các nhóm giả định có thể cấu hình như nhu cầu, khung thời gian, năng lực Hub hoặc tài nguyên tạm ngưng.\newline
+    \textbf{3.} Nhân viên nhập tham số, chọn phạm vi Hub và trạng thái cơ sở.\newline
+    \textbf{4.} Hệ thống kiểm tra tính đầy đủ, kiểu dữ liệu, miền giá trị và các mâu thuẫn giữa tham số.\newline
+    \textbf{5.} Nhân viên xác nhận chạy mô phỏng.\newline
+    \textbf{6.} Hệ thống tạo snapshot bất biến của trạng thái cơ sở, tạo \texttt{SimulationRun} \texttt{Running} và liên kết nó với kịch bản.\newline
+    \textbf{7.} Hệ thống thực thi các bước mô phỏng chỉ trên snapshot, hiển thị tiến độ và không ghi vào trạng thái vận hành.\newline
+    \textbf{8.} Hệ thống lưu chỉ số kết quả, chuyển lần chạy sang \texttt{Completed} và thông báo có thể phân tích.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Lưu kịch bản nháp.} \textit{Rẽ từ bước 3.} Actor lưu \texttt{SimulationScenario} và kết thúc; chưa tạo \texttt{SimulationRun}.\newline
+    \textbf{AF-02 -- Dùng lại kịch bản.} \textit{Thay cho bước 1--3.} Actor sao chép một kịch bản cũ, điều chỉnh tham số và tiếp tục bước 4; lần chạy mới vẫn có snapshot riêng.\newline
+    \textbf{AF-03 -- Chọn mốc trạng thái cơ sở khác.} \textit{Tại bước 3.} Actor chọn mốc hợp lệ khác; hệ thống cập nhật phạm vi dữ liệu và quay lại bước 4.\newline
+    \textbf{AF-04 -- Xem tiến độ sau.} \textit{Tại bước 7.} Actor rời màn hình; lần chạy tiếp tục \texttt{Running} và có thể được mở lại.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Tham số không hợp lệ.} \textit{Tại bước 4.} Hệ thống chỉ rõ giá trị sai hoặc mâu thuẫn, không tạo lần chạy và cho phép sửa.\newline
+    \textbf{EF-02 -- Không thể tạo snapshot.} \textit{Tại bước 6.} Hệ thống không bắt đầu mô phỏng, thông báo phạm vi dữ liệu thiếu và bảo toàn dữ liệu thật.\newline
+    \textbf{EF-03 -- Tiến trình mô phỏng lỗi.} \textit{Tại bước 7 hoặc 8.} Hệ thống chuyển \texttt{SimulationRun} sang \texttt{Failed}, lưu nguyên nhân và không tạo khuyến nghị từ kết quả chưa hoàn tất.\\\hline
+  Related Requirements & \texttt{FR-SIM-01}; \texttt{NFR-SEC-01}.\\\hline
+  Related Business Rules & \texttt{BR-SIM-01}.\\\hline
+  Dependencies & Dùng snapshot từ trạng thái mạng lưới đã được SEMH chấp nhận. Kết quả \texttt{Completed} là đầu vào cho \texttt{NIFR-SIM-01} và \texttt{UC-SIM-02}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-SIM-02 -- Phân tích kết quả và khuyến nghị điều phối}
+
+\UseCaseDiagram{uc-sim-02.pdf}{UC-SIM-02}{Phân tích kết quả và khuyến nghị điều phối}{fig:uc-sim-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-SIM-02 -- Phân tích kết quả và khuyến nghị điều phối}\label{tab:spec-UC-SIM-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-SIM-02\\\hline
+  Use Case Name & Phân tích kết quả và khuyến nghị điều phối\\\hline
+  Owning Subsystem & SUB-SIM\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp.\\\hline
+  Description / Goal & Cho phép Nhân viên vận hành xem chỉ số của lần chạy đã hoàn tất, so sánh với trạng thái cơ sở và đánh giá \texttt{Recommendation} trước khi quyết định có khởi tạo hành động nghiệp vụ hay không.\\\hline
+  Trigger & Nhân viên vận hành mở kết quả của một \texttt{SimulationRun} \texttt{Completed}.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền xem kết quả mô phỏng.\newline
+    \textbf{2.} Lần chạy được chọn ở trạng thái \texttt{Completed}, có snapshot cơ sở và kết quả để đối chiếu.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Actor xem được chỉ số, chênh lệch và, nếu có khuyến nghị, cơ sở cùng tác động dự kiến của từng khuyến nghị; không dữ liệu vận hành nào tự động thay đổi.\newline
+    \textbf{Thất bại:} Không hiển thị khuyến nghị không có đủ cơ sở; trạng thái thật và kết quả đã lưu được bảo toàn.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành chọn một lần chạy \texttt{Completed}.\newline
+    \textbf{2.} Hệ thống truy xuất kịch bản, tham số, snapshot cơ sở và bộ kết quả của lần chạy.\newline
+    \textbf{3.} Hệ thống kiểm tra tính đầy đủ và liên kết của dữ liệu phân tích.\newline
+    \textbf{4.} Hệ thống hiển thị các chỉ số theo Hub và theo thời gian, đồng thời so sánh với giá trị cơ sở.\newline
+    \textbf{5.} Hệ thống truy xuất các \texttt{Recommendation} do \texttt{NIFR-SIM-01} tạo cho lần chạy.\newline
+    \textbf{6.} Hệ thống hiển thị hành động đề xuất, Hub và tài nguyên bị tác động, chỉ số làm cơ sở và tác động dự kiến.\newline
+    \textbf{7.} Nhân viên chọn một khuyến nghị để xem chi tiết và đánh giá.\newline
+    \textbf{8.} Hệ thống nhắc rằng khuyến nghị không tự áp dụng; actor có thể kết thúc hoặc chủ động mở quy trình nghiệp vụ phù hợp.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Không phát sinh khuyến nghị.} \textit{Tại bước 5.} Hệ thống vẫn hiển thị kết quả và nêu rằng không phát hiện điều kiện đủ để tạo khuyến nghị.\newline
+    \textbf{AF-02 -- Lọc theo Hub hoặc chỉ số.} \textit{Rẽ từ bước 4.} Actor thay bộ lọc; hệ thống cập nhật phần so sánh và danh sách khuyến nghị.\newline
+    \textbf{AF-03 -- Tạo kế hoạch điều chuyển.} \textit{Rẽ từ bước 8.} Actor chọn áp dụng một khuyến nghị điều chuyển; hệ thống mở \texttt{UC-OPS-03} với dữ liệu đề xuất được điền trước, nhưng actor vẫn phải xem lại và phê duyệt.\newline
+    \textbf{AF-04 -- Xem lại giả định.} \textit{Rẽ từ bước 7.} Actor mở thông tin kịch bản và snapshot để hiểu phạm vi, sau đó quay lại kết quả mà không chạy lại.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Lần chạy chưa hoàn tất.} \textit{Tại bước 1.} Hệ thống không cho phép phân tích kết quả chưa hoàn chỉnh và hiển thị trạng thái \texttt{Running} hoặc \texttt{Failed}.\newline
+    \textbf{EF-02 -- Dữ liệu kết quả thiếu hoặc sai liên kết.} \textit{Tại bước 3.} Hệ thống dừng phân tích, không tạo thêm khuyến nghị và ghi nhận lỗi dữ liệu.\newline
+    \textbf{EF-03 -- Không thể mở quy trình áp dụng.} \textit{Tại AF-03.} Hệ thống giữ nguyên khuyến nghị và dữ liệu thật, thông báo lỗi; không tạo kế hoạch nửa chừng.\\\hline
+  Related Requirements & \texttt{FR-SIM-02}; \texttt{NIFR-SIM-01}; \texttt{NFR-SEC-01}.\\\hline
+  Related Business Rules & \texttt{BR-SIM-01}.\\\hline
+  Dependencies & Phân tích kết quả từ \texttt{UC-SIM-01}; khuyến nghị do \texttt{NIFR-SIM-01} tạo. Việc áp dụng khuyến nghị điều chuyển phải đi qua \texttt{UC-OPS-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage

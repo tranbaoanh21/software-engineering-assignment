@@ -1,14 +1,13 @@
 \clearpage
 \section{Yêu cầu hệ thống}
-\OwnerNote{Nguyễn Quốc Trung -- 2413707 (phụ trách toàn bộ Phần II)}
 
 \subsection{Quy ước đặc tả yêu cầu}
 
 Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể quan sát hoặc kiểm tra. Yêu cầu chức năng dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, quy tắc nghiệp vụ dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu phi chức năng dùng \texttt{NFR-[NHÓM]-[SỐ]}.
 
-Nội dung phải dùng đúng actor, thuật ngữ và trạng thái đã thống nhất ở Phần I, đặc biệt là Bảng~\ref{tab:business-terms}, Bảng~\ref{tab:resource-statuses} và Bảng~\ref{tab:workflow-statuses}. Các ngưỡng thời gian, dung lượng và mức pin trong business rule là quyết định nghiệp vụ của nhóm cho phạm vi bài tập; chúng không hàm ý một thiết bị hay công nghệ triển khai cụ thể.
+Nội dung phải dùng đúng actor, thuật ngữ và trạng thái đã thống nhất ở Phần I, đặc biệt là các bảng thuật ngữ nghiệp vụ, trạng thái tài nguyên và trạng thái quy trình dùng chung. Các ngưỡng thời gian, dung lượng và mức pin trong business rule là quyết định nghiệp vụ của nhóm cho phạm vi bài tập; chúng không hàm ý một thiết bị hay công nghệ triển khai cụ thể.
 
-Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}). Hệ thống chỉ tiếp nhận trạng thái hoặc xác nhận từ gateway này; cách cảm biến, khóa xe hoặc cổng sạc hoạt động nằm ngoài system boundary.
+Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}); \texttt{ACT-MAP} là vai trò của \textit{Map \& Geolocation Service} (\texttt{EXT-MAP}). Hệ thống chỉ tiếp nhận dữ liệu trạng thái hoặc kết quả địa lý từ các hệ thống ngoài; cách cảm biến, khóa xe, cổng sạc hoặc nền tảng bản đồ hoạt động nằm ngoài system boundary.
 
 \subsection{Business Rules}
 
@@ -20,14 +19,16 @@ Business rule quy định điều kiện, giới hạn hoặc bất biến mà m
 \nopagebreak[4]
 Mỗi chỗ đỗ (\texttt{ParkingSpace}) và cổng sạc (\texttt{ChargingPoint}) chỉ thuộc một Mobility Hub. Một xe dùng chung (\texttt{SharedVehicle}) chỉ được tính vào tồn xe của một Hub khi vị trí của xe tại Hub đó đã được xác nhận. Xe ở trạng thái \texttt{InUse} không được tính là xe khả dụng của bất kỳ Hub nào.
 
-\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}; \texttt{UC-HUB-01}, \texttt{UC-HUB-02}.}
+\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03};\newline
+\texttt{UC-HUB-01}, \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
 
 \medskip
 \noindent\textbf{BR-HUB-02 -- Điều kiện hiển thị tài nguyên khả dụng.}\par
 \nopagebreak[4]
 Tài nguyên chỉ được hiển thị là khả dụng khi trạng thái hiện tại là \texttt{Available} và không có lượt giữ chỗ, phiên sử dụng hoặc sự cố đang có hiệu lực.
 
-\textit{Áp dụng cho: \texttt{FR-HUB-02}, \texttt{FR-HUB-03}; \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
+\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03};\newline
+\texttt{UC-HUB-01}, \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
 
 \subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
 
@@ -56,7 +57,7 @@ Một lượt đặt đã \texttt{Confirmed} có hiệu lực trong 10 phút. N�
 \nopagebreak[4]
 Xe chỉ được đưa vào luồng đặt khi đang ở trạng thái \texttt{Available} và mức pin không thấp hơn 30\%. Xe không đủ điều kiện vẫn có thể xuất hiện trong thông tin vận hành nhưng không thể được xác nhận cho Sinh viên.
 
-\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{FR-HUB-02}; \texttt{UC-RES-01}.}
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{FR-HUB-02}; \texttt{UC-RES-01}, \texttt{UC-HUB-02}.}
 
 \subsubsection{SUB-TRIP -- Quản lý chuyến đi}
 
@@ -137,7 +138,7 @@ Các functional requirement được nhóm theo phân hệ sở hữu. Mỗi yê
 Hệ thống phải cho phép \texttt{ACT-STU} tra cứu danh sách Mobility Hub theo vị trí hoặc nhu cầu sử dụng và nhận thông tin tóm tắt về khoảng cách cùng khả năng phục vụ của từng Hub.
 
 \textit{Actor/trigger: \texttt{ACT-STU} khởi tạo yêu cầu tra cứu.}\par
-\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-01}. Hiện thực bởi: \texttt{UC-HUB-01}. Ràng buộc: \texttt{BR-HUB-01}.}
+\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-01}. Hiện thực bởi: \texttt{UC-HUB-01}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
 
 \medskip
 \noindent\textbf{FR-HUB-02 -- Xem trạng thái tài nguyên tại Hub.}\par
@@ -153,7 +154,7 @@ Hệ thống phải cung cấp trạng thái gần hiện tại của xe dùng c
 Khi Hub được chọn không còn khả năng phục vụ nhu cầu, hệ thống phải cung cấp cho \texttt{ACT-STU} danh sách Hub thay thế kèm lý do đề xuất và trạng thái tài nguyên liên quan.
 
 \textit{Actor/trigger: \texttt{ACT-STU} yêu cầu Hub thay thế hoặc Hub ban đầu không đáp ứng điều kiện.}\par
-\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-02}. Hiện thực bởi: \texttt{UC-HUB-03}. Ràng buộc: \texttt{BR-HUB-02}.}
+\textit{Nguồn gốc: \texttt{SN-STU-01}, \texttt{US-HUB-02}. Hiện thực bởi: \texttt{UC-HUB-03}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
 
 \subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
 
@@ -289,7 +290,7 @@ Non-interactive functional requirement vẫn là yêu cầu chức năng, nhưng
 \nopagebreak[4]
 \textit{Trigger:} Hệ thống nhận dữ liệu trạng thái mới từ \texttt{ACT-DAT} hoặc đến chu kỳ làm mới đã cấu hình. \textit{Điều kiện:} dữ liệu hợp lệ và mới hơn trạng thái đang lưu. \textit{Xử lý:} cập nhật tài nguyên, tính lại mức sử dụng và \texttt{HubStatus}. \textit{Kết quả:} dữ liệu tra cứu và giám sát phản ánh trạng thái mới nhất đã chấp nhận.
 
-\textit{Hỗ trợ: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-OPS-01}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+\textit{Hỗ trợ: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03}, \texttt{FR-OPS-01}. Ràng buộc: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
 
 \medskip
 \noindent\textbf{NIFR-RES-01 -- Giải phóng lượt đặt phương tiện hết hạn.}\par

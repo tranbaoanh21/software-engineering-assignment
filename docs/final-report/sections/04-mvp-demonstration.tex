@@ -1,0 +1,32 @@
+\section{MVP Implementation và Working Demonstration}
+
+\subsection{Phạm vi MVP và tech stack}
+
+Liệt kê frontend, backend, database, map, IoT data simulator/gateway, simulation engine và hạ tầng chạy. Với mỗi thành phần, nêu phiên bản, trách nhiệm và lý do cần thiết; không biến phần này thành danh sách logo công nghệ.
+
+\subsection{Hướng dẫn cài đặt và chạy}
+
+Ghi prerequisites, cấu hình môi trường, lệnh build/start, migration/seed, tài khoản demo, URL/port, health check và cách dừng hệ thống. Một thành viên khác phải có thể làm lại từ máy sạch.
+
+\subsection{Luồng dữ liệu IoT giả lập}
+
+Mô tả nguồn dataset, device simulator, tần suất phát event, schema, gateway/stream processor nếu có, backend ingestion, lưu trữ và cách frontend nhận cập nhật. Ghi rõ thành phần nào là bắt buộc cho MVP và thành phần nào chỉ phục vụ điểm cộng real-time.
+
+\subsection{Kịch bản demonstration}
+
+\begin{longtable}{|C{13mm}|L{27mm}|L{37mm}|L{31mm}|L{27mm}|}
+  \caption{Kịch bản working demonstration}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Bước} & \textbf{Use case/Screen} & \textbf{Thao tác và dữ liệu chuẩn bị} & \textbf{Kết quả phải quan sát được} & \textbf{Evidence}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Bước} & \textbf{Use case/Screen} & \textbf{Thao tác và dữ liệu chuẩn bị} & \textbf{Kết quả phải quan sát được} & \textbf{Evidence}\\\hline
+  \endhead
+  1 & \texttt{UC-*}/\texttt{SCR-*} & Thao tác ngắn, deterministic & Trạng thái, dữ liệu hoặc log xác nhận thành công & Hình, log hoặc test\\\hline
+\end{longtable}
+
+\subsection{Evidence, giới hạn và phương án fallback}
+
+Chuẩn bị seed data và video dự phòng khi mạng hoặc external service không ổn định. Ghi rõ chức năng mô phỏng, hard-coded hoặc chưa hiện thực để demonstration trung thực với sản phẩm.

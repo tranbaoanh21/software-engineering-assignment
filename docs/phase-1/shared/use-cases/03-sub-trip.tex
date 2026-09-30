@@ -1,0 +1,116 @@
+\subsection{SUB-TRIP -- Quản lý chuyến đi}
+
+SUB-TRIP quản lý quá trình sử dụng xe dùng chung từ lúc Sinh viên nhận đúng phương tiện đã đặt đến khi trả xe an toàn tại một Mobility Hub hợp lệ. Phân hệ chuyển \texttt{VehicleReservation} sang \texttt{Fulfilled}, quản lý vòng đời \texttt{Trip} và cập nhật \texttt{SharedVehicle}; việc tạo hoặc hủy lượt đặt vẫn thuộc SUB-RES, còn việc thu thập tín hiệu vị trí, khóa và trạng thái vật lý được hỗ trợ bởi \texttt{EXT-STATE}.
+
+\subsubsection{UC-TRIP-01 -- Nhận phương tiện đã đặt}
+
+\UseCaseDiagram{uc-trip-01.pdf}{UC-TRIP-01}{Nhận phương tiện đã đặt}{fig:uc-trip-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-TRIP-01 -- Nhận phương tiện đã đặt}\label{tab:spec-UC-TRIP-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-TRIP-01\\\hline
+  Use Case Name & Nhận phương tiện đã đặt\\\hline
+  Owning Subsystem & SUB-TRIP\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Cho phép Sinh viên nhận đúng xe của một \texttt{VehicleReservation} \texttt{Confirmed} còn hiệu lực, hoàn tất bàn giao và bắt đầu một \texttt{Trip} mà không tạo lượt cấp phát mới.\\\hline
+  Trigger & Sinh viên có mặt tại Hub, chọn nhận xe và cung cấp định danh của phương tiện đã đặt.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên đã được nhận diện và có một lượt đặt \texttt{Confirmed} chưa hết hạn.\newline
+    \textbf{2.} Lượt đặt thuộc đúng Sinh viên, đúng xe và đúng Hub nhận xe.\newline
+    \textbf{3.} Chưa có \texttt{Trip} \texttt{InProgress} được tạo từ lượt đặt này.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{VehicleReservation} chuyển sang \texttt{Fulfilled}, xe chuyển sang \texttt{InUse} và một \texttt{Trip} \texttt{InProgress} được tạo với thời điểm, Hub xuất phát và trạng thái xe ban đầu.\newline
+    \textbf{Thất bại:} Không có chuyến đi mới; lượt đặt và xe giữ nguyên trạng thái hợp lệ trước yêu cầu, trừ khi một tiến trình hợp lệ khác đã cập nhật chúng.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên mở lượt đặt đã xác nhận và yêu cầu nhận xe.\newline
+    \textbf{2.} Hệ thống yêu cầu Sinh viên xác định xe, chẳng hạn bằng mã xe hoặc mã QR.\newline
+    \textbf{3.} Sinh viên cung cấp định danh phương tiện.\newline
+    \textbf{4.} Hệ thống xác minh lượt đặt còn hiệu lực, thuộc đúng Sinh viên và khớp đúng phương tiện theo \texttt{BR-TRIP-01}.\newline
+    \textbf{5.} Hệ thống nhận xác nhận bàn giao và trạng thái hiện tại của xe từ \texttt{ACT-DAT}.\newline
+    \textbf{6.} Trong cùng một thao tác nhất quán, hệ thống chuyển lượt đặt sang \texttt{Fulfilled}, xe sang \texttt{InUse} và tạo \texttt{Trip} \texttt{InProgress}.\newline
+    \textbf{7.} Hệ thống ghi thời điểm bắt đầu, Hub xuất phát, mức pin và trạng thái xe ban đầu.\newline
+    \textbf{8.} Hệ thống hiển thị xác nhận bắt đầu chuyến đi và thông tin cần thiết trong quá trình sử dụng.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Nhập mã xe thủ công.} \textit{Rẽ từ bước 2.} Nếu không thể quét mã, Sinh viên nhập mã xe; hệ thống tiếp tục từ bước 4.\newline
+    \textbf{AF-02 -- Lượt đặt vừa hết hạn.} \textit{Tại bước 4.} Hệ thống từ chối nhận xe, hiển thị trạng thái \texttt{Expired} và cung cấp hành động quay lại tra cứu phương tiện.\newline
+    \textbf{AF-03 -- Xe không đúng với lượt đặt.} \textit{Tại bước 4.} Hệ thống không bàn giao xe, hiển thị thông tin nhận diện của xe đã đặt và cho phép Sinh viên kiểm tra lại.\newline
+    \textbf{AF-04 -- Xe phát sinh sự cố trước bàn giao.} \textit{Tại bước 5.} Hệ thống không tạo chuyến đi, giữ xe ngoài luồng sử dụng và thông báo Sinh viên chọn phương án khác.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Không nhận được xác nhận bàn giao.} \textit{Tại bước 5.} Hệ thống không suy đoán rằng xe đã được nhận, giữ lượt đặt ở trạng thái hiện tại và hướng dẫn thử lại hoặc liên hệ vận hành.\newline
+    \textbf{EF-02 -- Cập nhật trạng thái không hoàn tất.} \textit{Tại bước 6.} Hệ thống hoàn tác thay đổi để không tồn tại \texttt{Trip} \texttt{InProgress} nếu lượt đặt chưa \texttt{Fulfilled} hoặc xe chưa \texttt{InUse}.\newline
+    \textbf{EF-03 -- Mất phản hồi sau khi gửi yêu cầu.} \textit{Tại bước 8.} Hệ thống đọc lại theo mã lượt đặt; nếu chuyến đi đã được tạo, hệ thống hiển thị chuyến đi đó thay vì tạo bản ghi thứ hai.\\\hline
+  Related Requirements & \texttt{FR-TRIP-01}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-TRIP-01}, \texttt{BR-RES-03}.\\\hline
+  Dependencies & Nhận \texttt{VehicleReservation} từ \texttt{UC-RES-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}; chuyến đi được hoàn tất bởi \texttt{UC-TRIP-02}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-TRIP-02 -- Trả phương tiện và kết thúc chuyến đi}
+
+\UseCaseDiagram{uc-trip-02.pdf}{UC-TRIP-02}{Trả phương tiện và kết thúc chuyến đi}{fig:uc-trip-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-TRIP-02 -- Trả phương tiện và kết thúc chuyến đi}\label{tab:spec-UC-TRIP-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-TRIP-02\\\hline
+  Use Case Name & Trả phương tiện và kết thúc chuyến đi\\\hline
+  Owning Subsystem & SUB-TRIP\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Cho phép Sinh viên trả xe dùng chung tại một Mobility Hub hợp lệ, xác nhận việc khóa hoặc bàn giao an toàn, hoàn tất chuyến đi và nhận bản tóm tắt sử dụng.\\\hline
+  Trigger & Sinh viên đưa xe đến Hub và gửi yêu cầu kết thúc chuyến đi.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên có một \texttt{Trip} \texttt{InProgress} gắn với xe đang trả.\newline
+    \textbf{2.} Xe đang ở trạng thái \texttt{InUse}.\newline
+    \textbf{3.} Hệ thống có thể xác định Hub và nhận trạng thái trả xe.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{Trip} chuyển sang \texttt{Completed}; thời điểm, Hub đích và trạng thái kết thúc được lưu. Xe chuyển sang trạng thái phù hợp với mức pin và tình trạng vận hành.\newline
+    \textbf{Thất bại:} \texttt{Trip} vẫn \texttt{InProgress}, xe không bị hiển thị là đã trả và Sinh viên nhận hướng dẫn khắc phục.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên chọn kết thúc chuyến đi tại Hub đang đến.\newline
+    \textbf{2.} Hệ thống xác minh chuyến đi thuộc Sinh viên và đang \texttt{InProgress}.\newline
+    \textbf{3.} Hệ thống xác định Hub tiếp nhận và kiểm tra Hub hợp lệ.\newline
+    \textbf{4.} Sinh viên thực hiện thao tác trả, khóa hoặc gắn xe vào vị trí tiếp nhận theo hướng dẫn.\newline
+    \textbf{5.} Hệ thống nhận xác nhận vị trí và trạng thái trả xe an toàn từ \texttt{ACT-DAT}.\newline
+    \textbf{6.} Hệ thống ghi nhận Hub đích, thời điểm kết thúc, thời lượng, trạng thái và mức pin cuối chuyến.\newline
+    \textbf{7.} Hệ thống chuyển \texttt{Trip} sang \texttt{Completed} và xác định trạng thái tiếp theo của xe theo \texttt{BR-TRIP-02}.\newline
+    \textbf{8.} Hệ thống hiển thị xác nhận hoàn tất cùng bản tóm tắt chuyến đi.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Xe cần sạc sau khi trả.} \textit{Tại bước 7.} Nếu mức pin không đáp ứng điều kiện phục vụ nhưng xe không có sự cố, hệ thống không chuyển xe sang \texttt{Available} và ghi nhận trạng thái phù hợp cho quy trình sạc.\newline
+    \textbf{AF-02 -- Xe cần kiểm tra kỹ thuật.} \textit{Tại bước 5 hoặc 7.} Hệ thống hoàn tất chuyến đi nếu việc trả an toàn đã được xác nhận, nhưng chuyển xe sang \texttt{OutOfService} và không cấp phát lại.\newline
+    \textbf{AF-03 -- Sinh viên hủy thao tác trước khi trả.} \textit{Rẽ từ bước 4.} Use case kết thúc, chuyến đi tiếp tục \texttt{InProgress} và không có trạng thái nào bị thay đổi.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Hub không hợp lệ hoặc không thể tiếp nhận.} \textit{Tại bước 3.} Hệ thống không kết thúc chuyến đi, giải thích nguyên nhân và yêu cầu Sinh viên chọn Hub hợp lệ khác.\newline
+    \textbf{EF-02 -- Không xác nhận được việc trả xe an toàn.} \textit{Tại bước 5.} Hệ thống giữ chuyến đi \texttt{InProgress}, không chuyển xe sang \texttt{Available} và hướng dẫn kiểm tra lại khóa hoặc vị trí xe.\newline
+    \textbf{EF-03 -- Không thể hoàn tất cập nhật nhất quán.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi để trạng thái \texttt{Trip} và xe không mâu thuẫn, ghi nhận lỗi và cho phép thử lại.\\\hline
+  Related Requirements & \texttt{FR-TRIP-02}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-TRIP-02}, \texttt{BR-RES-04}, \texttt{BR-OPS-02}.\\\hline
+  Dependencies & Hoàn tất chuyến đi được tạo bởi \texttt{UC-TRIP-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}. Xe cần sạc được chuyển tiếp tới nghiệp vụ SUB-CHG, còn xe lỗi được theo dõi bởi SUB-OPS.\\\hline
+\end{longtable}
+\normalsize
+\clearpage
+
+\clearpage

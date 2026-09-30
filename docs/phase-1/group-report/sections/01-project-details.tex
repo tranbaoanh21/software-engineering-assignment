@@ -1,5 +1,4 @@
 \section{Tổng quan và đặc tả dự án}
-\OwnerNote{Trần Nhật Bảo Anh -- 2410155 (toàn bộ Phần I; kiểm soát nội dung toàn báo cáo)}
 
 \subsection{Giới thiệu đề tài}
 
@@ -238,17 +237,17 @@ Ranh giới hệ thống được xác định theo trách nhiệm của phần 
 \begin{itemize}
   \item \textbf{Phần mềm Smart E-Mobility Hub chịu trách nhiệm:} lưu và cập nhật trạng thái nghiệp vụ; kiểm tra điều kiện; quản lý vòng đời lượt đặt, chuyến đi, yêu cầu sạc, sự cố và kế hoạch điều chuyển; tạo cảnh báo, kết quả mô phỏng và khuyến nghị.
   \item \textbf{Con người chịu trách nhiệm:} lái, nhận, trả, di chuyển, cắm sạc hoặc sửa chữa phương tiện ngoài thực tế; nhân viên vận hành xem xét và quyết định có áp dụng khuyến nghị hay không.
-  \item \textbf{Hệ thống bên ngoài cung cấp:} \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. Cách thiết bị tạo hoặc truyền dữ liệu nằm ngoài phạm vi.
+  \item \textbf{Hệ thống bên ngoài cung cấp:} \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. \textit{Map \& Geolocation Service} (\texttt{EXT-MAP}) chuẩn hóa vị trí, tính khoảng cách và xác định vùng Hub lân cận. Cách thiết bị tạo hoặc truyền dữ liệu và cách dịch vụ bản đồ xây dựng dữ liệu địa lý nằm ngoài phạm vi.
 \end{itemize}
 
 \noindent\begin{minipage}{\linewidth}
   \centering
-  \includegraphics[width=0.84\textwidth]{../diagrams/plantuml/output/system-context.pdf}
+  \includegraphics[width=\linewidth,height=0.42\textheight,keepaspectratio]{\PhaseOneDiagramPath/system-context.pdf}
   \captionof{figure}{Sơ đồ ngữ cảnh và ranh giới Smart E-Mobility Hub System}
   \label{fig:context-diagram}
 \end{minipage}\par\medskip
 
-Đơn vị quản lý Khu đô thị ĐHQG-HCM là stakeholder nhưng chưa phải actor trong phạm vi hiện tại vì chưa có use case trao đổi trực tiếp với hệ thống. Các thiết bị vật lý cũng không được xem là actor độc lập; toàn bộ dữ liệu thiết bị đi qua \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}). Trong mô hình use case, hệ thống bên ngoài này tham gia dưới vai trò \texttt{ACT-DAT}. Cách xác định này tránh đưa database, service nội bộ hoặc đối tượng dữ liệu lên use-case diagram như những tác nhân của hệ thống.
+Đơn vị quản lý Khu đô thị ĐHQG-HCM là stakeholder nhưng chưa phải actor trong phạm vi hiện tại vì chưa có use case trao đổi trực tiếp với hệ thống. Các thiết bị vật lý cũng không được xem là actor độc lập; toàn bộ dữ liệu thiết bị đi qua \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) dưới vai trò \texttt{ACT-DAT}. Dịch vụ bản đồ và định vị tham gia các use case của SUB-HUB dưới vai trò \texttt{ACT-MAP}, tương ứng với \texttt{EXT-MAP}. Cách xác định này tránh đưa database, service nội bộ hoặc đối tượng dữ liệu lên use-case diagram như những tác nhân của hệ thống.
 
 \subsection{Phân rã hệ thống thành bảy phân hệ nghiệp vụ}
 
@@ -282,7 +281,7 @@ Phân hệ tạo \texttt{SimulationScenario}, chạy mô phỏng trên một ả
 \medskip
 \noindent\begin{minipage}{\linewidth}
   \centering
-  \includegraphics[width=0.66\textwidth]{../diagrams/plantuml/output/subsystem-map.pdf}
+  \includegraphics[width=0.66\textwidth]{\PhaseOneDiagramPath/subsystem-map.pdf}
   \captionof{figure}{Bản đồ bảy phân hệ và các phụ thuộc nghiệp vụ chính}
   \label{fig:subsystem-map}
 \end{minipage}\par\medskip

@@ -1,0 +1,37 @@
+\section{Baseline và quy ước thiết kế Submission 3}
+
+Submission 3 chuyển các requirement, use case, giao diện và behavioral diagram đã khóa ở hai submission trước thành thiết kế có thể hiện thực. Mọi component, class và method phải có lý do tồn tại từ trách nhiệm nghiệp vụ hoặc yêu cầu chất lượng; không thêm feature mới trực tiếp trong tài liệu thiết kế.
+
+\subsection{Nguồn đầu vào bắt buộc}
+
+\begin{longtable}{|L{35mm}|L{50mm}|L{48mm}|}
+  \caption{Nguồn truy vết cho Submission 3}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Nguồn} & \textbf{Thông tin sử dụng} & \textbf{Artefact thiết kế chịu ảnh hưởng}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Nguồn} & \textbf{Thông tin sử dụng} & \textbf{Artefact thiết kế chịu ảnh hưởng}\\\hline
+  \endhead
+  Submission 1 & Actor, FR, BR, NIFR, NFR, use-case flow và trạng thái & Component, class, method, interface và constraint\\\hline
+  Submission 2 & Screen ID, sequence, activity và state chart & Boundary class, application service, domain behavior và event flow\\\hline
+  Quyết định công nghệ & Stack, cách deploy, data store và tích hợp external system & Deployment view và implementation view\\\hline
+\end{longtable}
+
+\subsection{Architectural drivers}
+
+Chọn các requirement tác động mạnh đến kiến trúc, chẳng hạn tính nhất quán khi đặt tài nguyên, độ trễ tra cứu Hub, khả năng nhận dữ liệu IoT giả lập, audit log, phục hồi lỗi và cô lập môi trường mô phỏng. Với mỗi driver cần ghi mã nguồn, quyết định thiết kế, trade-off và cách kiểm chứng.
+
+\subsection{Quy ước mã artefact}
+
+\begin{itemize}
+  \item Deployment node: \texttt{NODE-*}; deployable artifact: \texttt{ART-*}.
+  \item Component/module: \texttt{CMP-*}; interface: \texttt{IF-*}.
+  \item Class diagram: \texttt{CD-SUB-*}; class và method giữ tên nhất quán trong code.
+  \item Test case bonus: \texttt{TC-[SUB]-[SỐ]} và truy vết về \texttt{UC-*}/\texttt{FR-*}/\texttt{NFR-*}.
+\end{itemize}
+
+\subsection{Tiêu chí hoàn tất}
+
+Thiết kế hoàn tất khi các view không mâu thuẫn nhau, mỗi class có trách nhiệm rõ, toàn bộ method trong class diagram được mô tả, external system có adapter/interface tương ứng và nhóm có thể chỉ ra đường truy vết từ requirement đến module, class và method.

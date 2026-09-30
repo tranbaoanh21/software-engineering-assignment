@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Theo dõi lịch và\nphiên sạc\n(UC-CHG-02)" as UC_Monitor
+  usecase "Truy xuất yêu cầu và\nphiên sạc liên quan" as UC_Retrieve
+  usecase "Tổng hợp trạng thái\nvà mức pin" as UC_Status
+  usecase "Ước tính thời điểm\nhoàn tất" as UC_Estimate
+  usecase "Làm mới trạng thái" as UC_Refresh
+}
+
+Student -down-> UC_Monitor
+Operator --> UC_Monitor
+UC_Monitor ..> UC_Retrieve : <<include>>
+UC_Monitor ..> UC_Status : <<include>>
+UC_Estimate .right.> UC_Monitor : <<extend>>\n[Đủ dữ liệu ước tính]
+UC_Refresh .left.> UC_Monitor : <<extend>>\n[Yêu cầu làm mới]
+UC_Status --> StateSource : Telemetry sạc và\nmức pin
+@enduml

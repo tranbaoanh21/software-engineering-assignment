@@ -87,10 +87,10 @@ Nhóm thống nhất báo cáo Submission 1 gồm ba phần chính:
 \begin{enumerate}
   \item \textbf{Project Details Specification:} bối cảnh, vấn đề, stakeholder, user story, mục tiêu, phạm vi, system boundary, assumption, constraint và thuật ngữ chung.
   \item \textbf{Yêu cầu hệ thống:} business rule, functional requirement theo từng phân hệ, non-interactive functional requirement và non-functional requirement.
-  \item \textbf{Use-case Model và Use-case Scenario:} actor catalog, sơ đồ use case toàn hệ thống, sơ đồ của bảy phân hệ và đặc tả đầy đủ 18 use case.
+  \item \textbf{Use-case Model và Use-case Scenario:} actor catalog, danh mục 18 use case, một sơ đồ use case toàn hệ thống, 18 sơ đồ chi tiết và 18 Use Case Specification tương ứng.
 \end{enumerate}
 
-Bảy use case trọng tâm vẫn được dùng làm phần cá nhân của bảy thành viên. Trong group work, mỗi người phải hoàn thiện tất cả use case thuộc phân hệ mình, không chỉ use case trọng tâm.
+Báo cáo cá nhân của từng thành viên phản ánh toàn bộ phần việc được giao, gồm phần lớn của báo cáo nếu có và toàn bộ nội dung use case thuộc phân hệ tương ứng. Nội dung này được tổng hợp nguyên tắc vào group work nên được phép trùng với phần tương ứng trong báo cáo nhóm.
 
 \subsection{Phạm vi What-if Simulation và MVP}
 
@@ -104,7 +104,7 @@ Tất cả thành viên sử dụng cùng danh sách actor, tên phân hệ và 
 
 \section{PHÂN CÔNG CÔNG VIỆC}
 
-Nhóm chia công việc theo hai lớp. Ba phần lớn của báo cáo được giao tập trung cho một người phụ trách để tránh nội dung bị chia nhỏ. Song song đó, mỗi thành viên nhận trọn một phân hệ, bao gồm phạm vi, actor, FR, BR, sơ đồ phân hệ và toàn bộ use-case specification của phân hệ đó.
+Nhóm chia công việc theo hai lớp. Ba phần lớn của báo cáo được giao tập trung cho một người phụ trách để tránh nội dung bị chia nhỏ. Song song đó, mỗi thành viên nhận trọn một phân hệ và hoàn thiện phần giới thiệu phân hệ, các sơ đồ use case chi tiết cùng toàn bộ Use Case Specification của phân hệ đó.
 
 \subsection{Phụ trách các phần chính của báo cáo}
 
@@ -140,14 +140,13 @@ Nhóm chia công việc theo hai lớp. Ba phần lớn của báo cáo được
 \begingroup
 \footnotesize
 \renewcommand{\arraystretch}{1.0}
-\begin{longtable}{|C{7mm}|L{32mm}|L{23mm}|L{50mm}|L{23mm}|}
+\begin{longtable}{|C{9mm}|L{39mm}|L{27mm}|L{67mm}|}
   \hline
   \rowcolor{gray!15}
   \textbf{STT} &
   \centering\arraybackslash\textbf{Thành viên} &
   \centering\arraybackslash\textbf{Phân hệ} &
-  \centering\arraybackslash\textbf{Use case phải hoàn thiện} &
-  \centering\arraybackslash\textbf{UC trọng tâm}\\
+  \centering\arraybackslash\textbf{Use case phải hoàn thiện}\\
   \hline
   \endfirsthead
   \hline
@@ -155,49 +154,38 @@ Nhóm chia công việc theo hai lớp. Ba phần lớn của báo cáo được
   \textbf{STT} &
   \centering\arraybackslash\textbf{Thành viên} &
   \centering\arraybackslash\textbf{Phân hệ} &
-  \centering\arraybackslash\textbf{Use case phải hoàn thiện} &
-  \centering\arraybackslash\textbf{UC trọng tâm}\\
+  \centering\arraybackslash\textbf{Use case phải hoàn thiện}\\
   \hline
   \endhead
   1 & Nguyễn Quốc Trung & SUB-HUB &
-  UC-HUB-01, UC-HUB-02, UC-HUB-03 & UC-HUB-01\\
+  UC-HUB-01, UC-HUB-02, UC-HUB-03\\
   \hline
   2 & Phan Võ Bảo Trâm & SUB-RES &
-  UC-RES-01, UC-RES-02 & UC-RES-01\\
+  UC-RES-01, UC-RES-02\\
   \hline
   3 & Lê Nguyễn Tường Vi & SUB-TRIP &
-  UC-TRIP-01, UC-TRIP-02 & UC-TRIP-02\\
+  UC-TRIP-01, UC-TRIP-02\\
   \hline
   4 & Nguyễn Ngọc Hân & SUB-PARK &
-  UC-PARK-01, UC-PARK-02, UC-PARK-03 & UC-PARK-01\\
+  UC-PARK-01, UC-PARK-02, UC-PARK-03\\
   \hline
   5 & Trần Thị Hương Giang & SUB-CHG &
-  UC-CHG-01, UC-CHG-02, UC-CHG-03 & UC-CHG-01\\
+  UC-CHG-01, UC-CHG-02, UC-CHG-03\\
   \hline
   6 & Nguyễn Thị Minh Anh & SUB-OPS &
-  UC-OPS-01, UC-OPS-02, UC-OPS-03 & UC-OPS-02\\
+  UC-OPS-01, UC-OPS-02, UC-OPS-03\\
   \hline
   7 & Trần Nhật Bảo Anh & SUB-SIM &
-  UC-SIM-01, UC-SIM-02 & UC-SIM-01\\
+  UC-SIM-01, UC-SIM-02\\
   \hline
 \end{longtable}
 \endgroup
 
-\noindent Tổng cộng, group work có một use-case diagram toàn hệ thống, bảy use-case diagram cấp phân hệ và 18 use-case specification. Bảy use case trọng tâm là nội dung đại diện cho individual work của từng thành viên:
-
-\begin{itemize}
-  \item \texttt{UC-HUB-01}: Tra cứu Hub phù hợp;
-  \item \texttt{UC-RES-01}: Đặt phương tiện dùng chung;
-  \item \texttt{UC-TRIP-02}: Trả phương tiện và kết thúc chuyến đi;
-  \item \texttt{UC-PARK-01}: Đặt chỗ đỗ cho xe cá nhân;
-  \item \texttt{UC-CHG-01}: Đăng ký nhu cầu sạc;
-  \item \texttt{UC-OPS-02}: Xử lý sự cố vận hành;
-  \item \texttt{UC-SIM-01}: Chạy kịch bản What-if Simulation.
-\end{itemize}
+\noindent Tổng cộng, group work có một use-case diagram toàn hệ thống, 18 use-case diagram chi tiết và 18 Use Case Specification. Mỗi individual report chứa đầy đủ phần việc của thành viên tương ứng; group report tổng hợp lại chính các nội dung đã được duyệt từ bảy báo cáo cá nhân.
 
 \section{YÊU CẦU BÀN GIAO VÀ TIẾN ĐỘ}
 
-Mỗi người gửi một gói nội dung hoàn chỉnh cho phân hệ mình phụ trách. Gói bàn giao phải có phạm vi, actor, đầu vào và đầu ra, FR, BR, use-case diagram, đặc tả tất cả use case, dependency, trạng thái nghiệp vụ và câu hỏi còn mở. Thành viên tự đối chiếu mã và thuật ngữ với tài liệu quy ước trước khi gửi.
+Mỗi người gửi một gói nội dung hoàn chỉnh đúng phạm vi được phân công. Người phụ trách Phần I, Phần II hoặc mô hình use case toàn hệ thống phải bàn giao trọn phần đó; mỗi chủ sở hữu phân hệ phải bàn giao phần giới thiệu phân hệ, actor, dependency, sơ đồ chi tiết và đặc tả tất cả use case thuộc phân hệ. Thành viên tự đối chiếu mã và thuật ngữ với tài liệu quy ước trước khi gửi.
 
 \begin{table}[htbp]
   \centering
@@ -232,7 +220,7 @@ Mỗi người gửi một gói nội dung hoàn chỉnh cho phân hệ mình ph
 
 \begin{itemize}
   \item \textbf{Nội dung giữa các phân hệ không khớp:} mọi người phải dùng đúng actor, mã, trạng thái và dependency đã thống nhất; không tự đổi thuật ngữ riêng.
-  \item \textbf{Chỉ làm use case trọng tâm:} use case trọng tâm dùng cho individual work, nhưng group work phải có đầy đủ 18 use case.
+  \item \textbf{Bỏ sót use case trong phân hệ:} mỗi thành viên phải hoàn thiện đầy đủ các use case thuộc phân hệ được giao; group work phải tổng hợp đủ 18 use case của toàn hệ thống.
   \item \textbf{Requirement và use case không liên kết:} mỗi FR và BR phải được đối chiếu với use case liên quan trước khi bàn giao.
   \item \textbf{Nội dung gửi trễ:} các mốc nội bộ được đặt trước hạn nộp chính thức; thành viên phải báo sớm nếu có nguy cơ chậm tiến độ.
   \item \textbf{Thiếu minh chứng sử dụng AI:} khi thực sự dùng AI, thành viên cần lưu prompt và ghi lại phần đã kiểm tra, chỉnh sửa ngay trong quá trình làm.
@@ -240,6 +228,6 @@ Mỗi người gửi một gói nội dung hoàn chỉnh cho phân hệ mình ph
 
 \section{KẾT LUẬN BUỔI HỌP}
 
-Kết thúc buổi họp, các vấn đề tồn đọng sau buổi 01 đã được làm rõ. Nhóm đã thống nhất cách nộp bài, cấu trúc Submission 1, phạm vi của bảy phân hệ, danh mục 18 use case và bảy use case trọng tâm. Công việc đã được giao theo từng phần lớn và từng gói phân hệ, có người chịu trách nhiệm và mốc bàn giao cụ thể. Các thành viên bắt đầu thực hiện phần việc từ ngày 11/09/2026.
+Kết thúc buổi họp, các vấn đề tồn đọng sau buổi 01 đã được làm rõ. Nhóm đã thống nhất cách nộp bài, cấu trúc Submission 1, phạm vi của bảy phân hệ và danh mục 18 use case cần hoàn thiện. Công việc đã được giao theo từng phần lớn và từng gói phân hệ, có người chịu trách nhiệm và mốc bàn giao cụ thể. Các thành viên bắt đầu thực hiện phần việc từ ngày 11/09/2026.
 
 \end{document}

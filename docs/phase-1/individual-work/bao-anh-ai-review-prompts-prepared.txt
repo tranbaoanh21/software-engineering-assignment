@@ -1,0 +1,249 @@
+Bộ prompt review Submission 1 - Smart E-Mobility Hub
+
+User: Anonymous
+Prepared: 9/25/2026
+Document type: Prepared Prompt Draft - Not an exported conversation
+Link: Not applicable
+
+NOTICE: Tài liệu này chỉ là danh sách prompt chuẩn bị trước, không phải lịch sử do ChatGPT Exporter tạo ra. Chỉ giữ trong bản export nộp giảng viên những prompt đã thực sự gửi, đọc phản hồi và dùng để review hoặc chỉnh sửa bài.
+
+
+## Prompt:
+Prepared order: 01
+[Bài tập lớn môn Công nghệ phần mềm]
+
+Tôi là nhóm trưởng của nhóm làm đề tài Smart E-Mobility Hub. Tôi đang cần hiểu chính xác Submission 1 yêu cầu nhóm phân tích đến mức nào trước khi chia việc cho bảy thành viên.
+
+Bạn hãy đọc kỹ đề và tách giúp tôi những nội dung bắt buộc của phần group work và individual work. Chỉ dựa vào đề bài, nếu có chỗ nào đề không nói rõ thì đánh dấu để nhóm hỏi giảng viên, đừng tự suy diễn thành yêu cầu bắt buộc.
+
+
+## Prompt:
+Prepared order: 02
+
+Tôi đã hiểu là Submission 1 cần project details specification, requirement và use case. Nhưng tôi vẫn hơi rối giữa project details specification với requirement specification, vì cả hai đều nói về hệ thống cần làm gì.
+
+Bạn giải thích giúp tôi ranh giới giữa hai phần này bằng chính ví dụ Smart E-Mobility Hub. Tôi muốn biết thông tin nào nên nằm ở bối cảnh, problem, stakeholder, objective, scope và thông tin nào phải chuyển xuống FR hoặc BR, tránh viết trùng hai lần.
+
+
+## Prompt:
+Prepared order: 03
+[Bản nháp Phần I]
+
+Tôi là nhóm trưởng của nhóm làm đề tài Smart E-Mobility Hub, trong báo cáo này tôi phụ trách Phần I Tổng quan và đặc tả dự án, ngoài ra tôi còn là người tổng hợp bài của các thành viên. Tôi đã viết xong bản hiện tại nhưng tôi chưa chắc cách chia nội dung như vậy đã đúng với project details specification chưa.
+
+Bạn hãy đọc riêng Phần I trước và nhận xét giúp tôi. Tôi muốn biết phần bối cảnh, vấn đề, stakeholder, user story, mục tiêu, phạm vi, system boundary, assumption và constraint đã nối với nhau hợp lý chưa. Chỗ nào tôi đang nói trùng, chỗ nào đang nhảy sang requirement hoặc thiết kế quá sớm thì chỉ rõ cho tôi. Bạn đừng viết lại toàn bộ, tôi chỉ cần biết nội dung hiện tại có vấn đề gì và nên sửa ít nhất như thế nào.
+
+
+## Prompt:
+Prepared order: 04
+
+Từ từ, ở phần bối cảnh tôi đang nói sinh viên khó biết Hub nào còn xe, chỗ đỗ hay cổng sạc, còn nhân viên vận hành khó theo dõi toàn mạng lưới. Sau đó tôi mới dẫn sang lý do cần một hệ thống quản lý chung.
+
+Nhóm tôi không có số liệu khảo sát thực tế, vậy nếu viết như trên có bị xem là tự khẳng định hiện trạng không? Bạn chỉ giúp câu nào là bối cảnh, câu nào là problem statement, câu nào đã nói sang solution. Không tự thêm số liệu hay nguồn bên ngoài cho tôi.
+
+
+## Prompt:
+Prepared order: 05
+
+Trong stakeholder catalog tôi có Sinh viên, Nhân viên vận hành, Nhân viên kỹ thuật và Đơn vị quản lý Khu đô thị ĐHQG-HCM. Nhưng trong use-case diagram tôi không để đơn vị quản lý thành actor vì hiện chưa có use case nào họ trực tiếp thao tác.
+
+Tôi hiểu stakeholder không nhất thiết phải là actor như vậy có đúng không? Kiểm tra giúp tôi các stakeholder need hiện tại có thực sự là nhu cầu hay có câu đang viết giống functional requirement. Nếu có thì dẫn đúng mã, đừng đổi mã của nhóm tôi.
+
+
+## Prompt:
+Prepared order: 06
+
+Tôi đang tách stakeholder need và user story thành hai bảng riêng. Need ghi điều stakeholder cần, còn user story theo dạng "Là..., tôi muốn..., để...". Nhưng khi đọc lại thì một số dòng gần như lặp lại nhau.
+
+Hai bảng này có cần giữ cả hai không? Nếu giữ thì chúng phải khác nhau ở mức độ nào? Hãy lấy vài dòng trong bản hiện tại để chỉ ra chỗ trùng hoặc sai cấp độ, chỉ đề xuất sửa tối thiểu.
+
+
+## Prompt:
+Prepared order: 07
+
+Tôi còn chưa chắc về phạm vi phân tích và phạm vi MVP. Submission 1 của nhóm phân tích bảy phân hệ với 18 use case, nhưng đến phase cài đặt thì khó làm đầy đủ như một hệ thống thương mại.
+
+Nếu tôi ghi rõ bảy phân hệ thuộc phạm vi phân tích, còn MVP sau này chọn một số luồng cốt lõi để demo thì có mâu thuẫn không? Bạn xem giúp phần objective, in-scope, out-of-scope hiện tại có chỗ nào đá nhau không. Chưa cần chọn MVP thay nhóm tôi.
+
+
+## Prompt:
+Prepared order: 08
+[Context Diagram hiện tại]
+
+Tôi đang xem Smart E-Mobility Hub System là phần mềm quản lý trạng thái, việc đặt và sử dụng tài nguyên, giám sát, điều phối và mô phỏng. Còn hành động lái xe, cắm sạc, di chuyển xe hay sửa chữa ngoài thực tế không do phần mềm thực hiện.
+
+Bạn xem cách xác định system boundary này có đúng không. Tôi sợ bài đang mô tả hệ thống như có thể tự sửa xe hoặc tự vận chuyển xe. Hãy chỉ rõ câu nào dễ gây hiểu lầm và cần đổi từ gì, chưa vẽ lại hình.
+
+
+## Prompt:
+Prepared order: 09
+
+Ban đầu tôi chỉ ghi external system là Nguồn dữ liệu trạng thái. Sau đó nhóm thống nhất tên IoT & State Data Gateway, mã EXT-STATE, còn khi tham gia use case thì dùng actor code ACT-DAT. Mục đích là gom dữ liệu của cảm biến, khóa xe, chỗ đỗ và cổng sạc qua một gateway, không vẽ mỗi thiết bị thành một actor.
+
+Cách gom như vậy có hợp lý không, hay EXT-STATE đang gồm quá nhiều thứ khác nhau? Ngoài ra EXT-STATE và ACT-DAT là hai đối tượng hay chỉ là hai mã dùng trong hai ngữ cảnh? Giải thích giúp để tôi còn thuyết trình, không tự thêm thiết bị mới.
+
+
+## Prompt:
+Prepared order: 10
+[Context Diagram và mô tả boundary]
+
+Bạn kiểm tra giúp tôi hướng mũi tên trong context diagram. Actor con người gửi yêu cầu và nhận kết quả, Map Service có trao đổi hai chiều, còn IoT Gateway chủ yếu gửi trạng thái và sự kiện vào SEMH.
+
+Tôi không chắc context diagram có cần biểu diễn từng request và response bằng hai mũi tên hay chỉ cần thể hiện quan hệ giao tiếp. Hãy nhận xét trên hình hiện tại, nếu nhãn luồng nào quá dài hoặc sai ý thì chỉ ra cụ thể.
+
+
+## Prompt:
+Prepared order: 11
+
+Sau khi chốt boundary, nhóm tôi chia hệ thống thành SUB-HUB, SUB-RES, SUB-TRIP, SUB-PARK, SUB-CHG, SUB-OPS và SUB-SIM. Tôi hiểu đây là các phân hệ nghiệp vụ để chia trách nhiệm và quản lý bài làm, không có nghĩa sau này phải code thành bảy service riêng.
+
+Bạn đọc phần mô tả bảy phân hệ và xem có trách nhiệm nào chồng lấn không. Ví dụ SUB-HUB chỉ tra cứu tài nguyên, tạo lượt đặt xe là SUB-RES; SUB-SIM sinh khuyến nghị còn quyết định điều phối thật là SUB-OPS. Chỉ đề xuất chỉnh ranh giới nếu thực sự có xung đột, đừng chuyển thành kiến trúc microservices.
+
+
+## Prompt:
+Prepared order: 12
+[Sơ đồ bảy phân hệ]
+
+Nội dung bảy phân hệ tôi thấy tạm ổn, nhưng dependency diagram đang có khá nhiều mũi tên. Tôi không muốn mũi tên chỉ có nghĩa chung chung là "có liên quan".
+
+Bạn xem từng mũi tên và giải thích nguồn cung cấp thông tin hay gọi nghiệp vụ gì cho đích. Nếu mũi tên nào sai chiều, trùng hoặc không cần thiết thì nói rõ. Chỉ review dependency nghiệp vụ, chưa bàn database hay API.
+
+
+## Prompt:
+Prepared order: 13
+
+Tôi đang dùng Phần I làm baseline cho các thành viên viết Phần II và III, nên tôi chốt luôn bảng thuật ngữ và trạng thái chung. Ví dụ VehicleStatus có Available, Reserved, InUse, Charging, OutOfService; Reservation, Trip, ChargingSession, Incident và SimulationRun cũng có tập trạng thái riêng.
+
+Việc đưa các state vào Phần I có bị quá chi tiết không? Bạn đối chiếu giúp tôi với requirement và use case hiện tại. Có state nào được khai báo nhưng không dùng, hoặc trong các phần sau xuất hiện state chưa có trong baseline không? Nếu đề xuất thêm hoặc bỏ thì giải thích luôn sự kiện đi vào, đi ra của state đó.
+
+
+## Prompt:
+Prepared order: 14
+[Phần II Yêu cầu hệ thống]
+
+Tôi vừa nhận phần Business Rule, Functional Requirement, NIFR và NFR do thành viên tổng hợp. Tôi cần kiểm tra phần này trước khi cho cả nhóm dùng làm baseline viết use case.
+
+Bạn hãy tìm requirement nào mâu thuẫn, trùng nghiệp vụ, không kiểm chứng được hoặc dùng thuật ngữ không thống nhất. Với mỗi vấn đề hãy ghi mã, nội dung hiện tại, lý do có vấn đề và cách sửa ít nhất. Không viết thêm một loạt chức năng mới ngoài phạm vi đề.
+
+
+## Prompt:
+Prepared order: 15
+
+Tôi muốn chốt lại cách phân biệt BR và FR trong bài. Ví dụ "mỗi sinh viên chỉ có một lượt đặt xe có hiệu lực" là BR, còn "hệ thống cho phép sinh viên tạo lượt đặt" là FR. Cách hiểu này có đúng không?
+
+Bạn rà các BR và FR hiện tại xem có BR nào chưa được phản ánh trong FR, hoặc FR nào không có nguồn nghiệp vụ rõ ràng. Tôi chỉ cần kiểm tra traceability, chưa cần viết use case.
+
+
+## Prompt:
+Prepared order: 16
+
+Nhóm tôi tách Non-interactive Functional Requirement vì có những xử lý do timer hoặc sự kiện IoT kích hoạt, ví dụ giải phóng lượt đặt hết hạn hay tạo Incident khi nhận lỗi tài nguyên. Tôi hiểu đây vẫn là functional requirement, không phải non-functional requirement.
+
+Bạn xem các NIFR hiện tại đã có đủ trigger, condition, processing và observable result chưa. NIFR nào thực ra chỉ là một bước bên trong FR, hoặc đang trùng với BR thì chỉ rõ cho tôi.
+
+
+## Prompt:
+Prepared order: 17
+
+Tôi thấy NFR dễ bị viết kiểu chung chung như "hệ thống nhanh, an toàn, dễ sử dụng". Trong bài hiện tại nhóm đã cố đưa metric, điều kiện đo, ngưỡng chấp nhận và cách kiểm tra.
+
+Bạn rà giúp tôi từng NFR xem có đo được trong phạm vi bài tập lớn không. Nếu con số nào không có cơ sở hoặc khó test, hãy nói rõ nên đổi điều kiện kiểm tra như thế nào. Không biến các ngưỡng demo thành cam kết vận hành thương mại.
+
+
+## Prompt:
+Prepared order: 18
+[Ba phần của báo cáo hiện tại]
+
+Giờ tôi muốn kiểm tra chuỗi truy vết của bài. Nhóm tôi đang hiểu là Problem -> Stakeholder Need -> User Story -> Functional Requirement -> Use Case. Business Rule ràng buộc hành vi, NIFR xử lý tự động, còn NFR quy định thuộc tính chất lượng.
+
+Bạn rà giúp có mã nào bị gãy chuỗi không: FR không có user story, UC không có FR, BR không xuất hiện trong flow, hay user story không được hiện thực. Ghi rõ mã và chỗ liên quan, chỉ đề xuất thay đổi tối thiểu và không tự đổi hệ thống mã.
+
+
+## Prompt:
+Prepared order: 19
+[Use-case Diagram toàn hệ thống]
+
+Tôi đang vẽ diagram toàn hệ thống theo mức khái quát, bên trong boundary chỉ có bảy nhóm chức năng mang mã SUB-HUB, SUB-RES, SUB-TRIP, SUB-PARK, SUB-CHG, SUB-OPS và SUB-SIM. Tôi không đưa cả 18 use case vào vì hình sẽ rất rối.
+
+Vẽ như vậy có còn được gọi là use-case diagram toàn hệ thống không, hay bảy hình elip dễ bị hiểu là bảy use case cụ thể? Bạn kiểm tra actor nối với từng SUB, external system và system boundary. Chỉ góp ý nội dung và khả năng đọc, đừng thêm actor chỉ để hình trông nhiều hơn.
+
+
+## Prompt:
+Prepared order: 20
+
+Tôi đang phân vân có cần use-case diagram riêng cho từng phân hệ, rồi lại có diagram chi tiết cho từng use case hay không. Nếu làm cả hai thì bài rất dài và có thể lặp thông tin.
+
+Nhóm hiện dự kiến giữ một diagram toàn hệ thống và 18 diagram chi tiết tương ứng 18 specification, bỏ bảy diagram trung gian của subsystem. Cách này có làm thiếu thông tin không? Hãy đánh giá theo mục đích của mỗi loại hình, không dựa vào tiêu chí càng nhiều hình càng tốt.
+
+
+## Prompt:
+Prepared order: 21
+[Một use-case diagram và bảng specification tương ứng]
+
+Bạn đối chiếu diagram với specification giúp tôi. Actor nào là primary, actor nào là supporting, quan hệ include và extend có đúng ngữ nghĩa không, và các use case con trong hình có thực sự xuất hiện trong main flow không?
+
+Tôi không cần bạn làm hình phức tạp hơn cho đẹp. Nếu component nào chỉ là bước xử lý nội bộ, database hoặc service bên trong mà không nên đặt thành actor/use case thì chỉ rõ cho tôi.
+
+
+## Prompt:
+Prepared order: 22
+[Bản nháp một Use Case Specification]
+
+Tôi muốn review logic của use case này chứ không nhờ viết lại. Bạn kiểm tra trigger, precondition, postcondition và main flow có nối được với nhau không. Trong main flow, mỗi bước có nói rõ actor hay hệ thống là bên thực hiện không, có bước nào nhảy cóc hoặc đi quá sâu vào UI/thuật toán không?
+
+Kiểm tra luôn alternative flow có vẫn đạt được mục tiêu hay không, exception flow có nói trạng thái dữ liệu sau lỗi không. Mỗi nhận xét hãy dẫn đúng bước, không tự bổ sung chức năng ngoài phạm vi.
+
+
+## Prompt:
+Prepared order: 23
+
+Tôi đang rối một trường hợp: hệ thống không lấy được dữ liệu IoT mới nhất nhưng vẫn có snapshot hợp lệ của lần đồng bộ trước. Nếu hiển thị dữ liệu cũ kèm thời điểm cập nhật thì actor vẫn xem được thông tin, như vậy có còn là exception không?
+
+Bạn phân biệt giúp khi nào nên là alternative flow, khi nào phải là exception flow, dựa trên việc mục tiêu use case có đạt được hay không. Xem thêm cách này có khớp NFR về an toàn khi nguồn dữ liệu gián đoạn không.
+
+
+## Prompt:
+Prepared order: 24
+
+Phần cá nhân của tôi là SUB-SIM, gồm UC-SIM-01 Chạy kịch bản What-if Simulation và UC-SIM-02 Phân tích kết quả và khuyến nghị điều phối. Tôi không định làm AI hay mô hình dự báo phức tạp, mô phỏng có thể chạy trên dữ liệu giả lập và quy tắc rõ ràng.
+
+Tôi chia thành hai use case như vậy có chồng lấn không? UC-SIM-01 nên kết thúc ở việc SimulationRun hoàn tất và lưu kết quả, còn UC-SIM-02 bắt đầu khi actor mở kết quả để phân tích, tôi hiểu vậy đúng chưa? Kiểm tra thêm FR-SIM-02 và NIFR-SIM-01 có đang nói trùng việc tạo Recommendation không.
+
+
+## Prompt:
+Prepared order: 25
+[Bản nháp UC-SIM-01 và diagram]
+
+Tôi đã viết UC-SIM-01 theo hướng nhân viên vận hành nhập giả định, chọn phạm vi Hub, hệ thống kiểm tra tham số, tạo snapshot cô lập rồi mới chạy SimulationRun. Bạn rà từng bước giúp tôi xem actor và system đã xen kẽ hợp lý chưa.
+
+Diagram có các include: thiết lập tham số, tạo snapshot, thực thi SimulationRun và lưu kết quả. Những phần này có thực sự là use case được include hay chỉ là bước xử lý? Hãy đánh giá tính nhất quán giữa hình và bảng, chưa cần vẽ lại.
+
+
+## Prompt:
+Prepared order: 26
+[Bản nháp UC-SIM-02 và diagram]
+
+Ở UC-SIM-02 tôi có trường hợp SimulationRun đã Completed và có chỉ số kết quả, nhưng không sinh Recommendation vì không Hub nào vượt ngưỡng. Theo tôi use case vẫn thành công vì actor vẫn xem được kết quả, trường hợp này nên là alternative flow chứ không phải exception, đúng không?
+
+Còn lần chạy chưa Completed, kết quả bị thiếu, snapshot sai liên kết hoặc actor không có quyền xem thì nên xử lý ra sao? Kiểm tra luôn quan hệ với UC-OPS-03: recommendation chỉ điền trước dữ liệu cho kế hoạch, không được tự áp dụng.
+
+
+## Prompt:
+Prepared order: 27
+[PDF báo cáo sau khi ghép nội dung bảy thành viên]
+
+Tôi đã ghép phần của bảy thành viên thành một báo cáo chung. Bây giờ tôi muốn review với vai trò nhóm trưởng, không nhờ bạn viết lại toàn bộ.
+
+Bạn tìm các chỗ mâu thuẫn giữa Phần I, II và III, ưu tiên actor, system boundary, tên phân hệ, thuật ngữ, state, mã FR/BR/NIFR/NFR/UC và nội dung giữa diagram với specification. Xếp lỗi nghiêm trọng trước, sau đó mới tới chỗ trùng lặp hoặc khó đọc. Mỗi vấn đề phải ghi rõ vị trí, lý do và cách sửa tối thiểu; nếu chỉ là gợi ý trình bày thì nói rõ để tôi tự quyết định.
+
+
+## Prompt:
+Prepared order: 28
+[PDF Submission 1 bản dự kiến nộp]
+
+Đây là lần kiểm tra cuối trước khi nhóm tôi nộp Submission 1. Bạn không chỉnh sửa hay viết thêm nội dung ngay, chỉ lập danh sách vấn đề nếu có.
+
+Hãy kiểm tra báo cáo có còn placeholder, ghi chú nội bộ, tên người phụ trách nằm sai chỗ, mã không nhất quán, hình hoặc bảng không được tham chiếu, diagram khó đọc, bảng bị cắt trang hoặc nội dung nào còn mang giọng văn nháp. Sau đó đếm giúp tôi số use case trong danh mục, số diagram chi tiết và số bảng specification xem có đủ 18 hay không.
+
+
+Prepared prompt draft. This file was not generated by ChatGPT Exporter.

@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+
+rectangle "<<External System>>\nMap & Geolocation Service\n(EXT-MAP / ACT-MAP)" as MapSource
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Tra cứu Hub phù hợp\n(UC-HUB-01)" as UC_Search
+  usecase "Xác định khu vực\ntra cứu" as UC_Area
+  usecase "Tổng hợp khả năng\nphục vụ của Hub" as UC_Capacity
+  usecase "Lọc theo nhu cầu\nsử dụng" as UC_Filter
+}
+
+Student -down-> UC_Search
+
+UC_Search ..> UC_Area : <<include>>
+UC_Search ..> UC_Capacity : <<include>>
+UC_Filter .right.> UC_Search : <<extend>>\n[Thêm tiêu chí]
+
+UC_Area --> MapSource : Chuẩn hóa vị trí\nvà tính khoảng cách
+UC_Capacity --> StateSource : Trạng thái Hub\nđã cập nhật
+
+@enduml

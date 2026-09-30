@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Trả phương tiện và\nkết thúc chuyến đi\n(UC-TRIP-02)" as UC_End
+  usecase "Xác minh Hub và\nđiều kiện tiếp nhận" as UC_Accept
+  usecase "Xác nhận khóa / trả xe\nan toàn" as UC_Return
+  usecase "Hoàn tất Trip và\ntạo tóm tắt chuyến đi" as UC_Complete
+  usecase "Xác định trạng thái\ntiếp theo của xe" as UC_VehicleState
+}
+
+Student -down-> UC_End
+UC_End ..> UC_Accept : <<include>>
+UC_End ..> UC_Return : <<include>>
+UC_End ..> UC_Complete : <<include>>
+UC_End ..> UC_VehicleState : <<include>>
+UC_Return --> StateSource : Vị trí và trạng thái\ntrả xe
+@enduml

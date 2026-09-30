@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Điều chỉnh lịch sạc\nưu tiên\n(UC-CHG-03)" as UC_Adjust
+  usecase "Xác minh quyền và\nphạm vi điều chỉnh" as UC_Authorize
+  usecase "Kiểm tra ưu tiên và\ncổng sạc khả dụng" as UC_Check
+  usecase "Tính lại lịch chưa\nbắt đầu" as UC_Replan
+  usecase "Ghi nhận lý do và\nkết quả điều chỉnh" as UC_Audit
+}
+
+Operator -down-> UC_Adjust
+UC_Adjust ..> UC_Authorize : <<include>>
+UC_Adjust ..> UC_Check : <<include>>
+UC_Adjust ..> UC_Replan : <<include>>
+UC_Adjust ..> UC_Audit : <<include>>
+@enduml

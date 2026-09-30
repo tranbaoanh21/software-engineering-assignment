@@ -1,0 +1,38 @@
+\section{Deployment View}
+
+Deployment view mô tả các node chạy hệ thống, artefact được triển khai trên từng node và kết nối giữa chúng. Nhóm cần trình bày riêng cấu hình local/Docker dùng để chấm bài và phương án production nếu hai môi trường khác nhau.
+
+\subsection{Mục tiêu và giả định triển khai}
+
+Nêu số lượng người dùng dự kiến, điều kiện mạng, phạm vi dữ liệu IoT giả lập, cách quản lý cấu hình và các giả định liên quan đến dịch vụ bản đồ hoặc nền tảng cloud.
+
+\subsection{Node catalog}
+
+\begin{longtable}{|L{25mm}|L{32mm}|L{43mm}|L{35mm}|}
+  \caption{Danh mục deployment node}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Node ID} & \textbf{Node} & \textbf{Artefact/Service chạy trên node} & \textbf{Cấu hình và trách nhiệm}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Node ID} & \textbf{Node} & \textbf{Artefact/Service chạy trên node} & \textbf{Cấu hình và trách nhiệm}\\\hline
+  \endhead
+  \texttt{NODE-*} & Tên node & \texttt{ART-*} hoặc service & Runtime, port, storage, scaling và health check\\\hline
+\end{longtable}
+
+\subsection{Deployment diagram}
+
+\ArtifactBrief{DEPLOYMENT DIAGRAM}{DEP-SEMH-01}{Thể hiện client, frontend, backend, database, IoT data source/gateway, map service và hạ tầng mô phỏng; ghi protocol và hướng kết nối.}{Deployment view của Smart E-Mobility Hub}
+
+\subsection{Local/Docker deployment}
+
+Mô tả container/service, port, volume, biến môi trường, thứ tự khởi động, seed data, health check và lệnh chạy. Đây là cấu hình tối thiểu phải tái tạo được trên máy chấm bài.
+
+\subsection{Production deployment và vận hành}
+
+Nếu nhóm triển khai server hoặc luồng IoT real-time để lấy điểm cộng, trình bày điểm khác so với local: ingress/TLS, secret, logging, monitoring, backup, recovery và giới hạn tài nguyên. Không mô tả dịch vụ cloud chưa thực sự dùng như một phần đã hoàn thành.
+
+\subsection{Bảo mật và failure handling}
+
+Ghi trust boundary, quyền truy cập database, mã hóa đường truyền, retry/timeout với external system, xử lý dữ liệu IoT đến trễ hoặc trùng, và hành vi khi map/IoT service mất kết nối.

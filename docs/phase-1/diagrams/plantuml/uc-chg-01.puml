@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Đăng ký nhu cầu sạc\n(UC-CHG-01)" as UC_Register
+  usecase "Xác minh phương tiện và\ndữ liệu yêu cầu" as UC_Validate
+  usecase "Xác định mức ưu tiên\nban đầu" as UC_Priority
+  usecase "Ghi nhận yêu cầu và\nước tính lịch sạc" as UC_Record
+}
+
+Student -down-> UC_Register
+Operator --> UC_Register
+UC_Register ..> UC_Validate : <<include>>
+UC_Register ..> UC_Priority : <<include>>
+UC_Register ..> UC_Record : <<include>>
+UC_Validate --> StateSource : Mức pin và trạng thái\nphương tiện
+@enduml

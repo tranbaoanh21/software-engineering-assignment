@@ -4,9 +4,13 @@
 
 ## Điều hướng tài liệu
 
-- [Báo cáo chính Phase 1](docs/phase-1/group-report/output/pdf/phase-1-group-report-outline.pdf): bản khung báo cáo nhóm đang được hoàn thiện;
+- [Báo cáo chính Phase 1](docs/phase-1/group-report/output/pdf/phase-1-group-report-outline.pdf): bản báo cáo Submission 1 đã hoàn thiện;
+- [Khung báo cáo Phase 2](docs/phase-2/group-report/output/pdf/phase-2-group-report-outline.pdf): cấu trúc UI design và behavioral diagrams;
+- [Khung báo cáo Phase 3](docs/phase-3/group-report/output/pdf/phase-3-group-report-outline.pdf): cấu trúc deployment view, implementation view, class/method design và test case bonus;
+- [Khung Final Report](docs/final-report/output/pdf/final-report-outline.pdf): cấu trúc hợp nhất ba submission, MVP demonstration và khai báo AI;
 - [Biên bản họp nhóm buổi 01](docs/meeting-minutes/phase-1/meeting-01/output/pdf/meeting-minutes-01.pdf): buổi tìm hiểu đề tài và xác định các vấn đề cần làm rõ;
 - [Biên bản họp nhóm buổi 02](docs/meeting-minutes/phase-1/meeting-02/output/pdf/meeting-minutes-02.pdf): kết quả làm rõ yêu cầu và phân công công việc Phase 1;
+- [Biên bản họp nhóm buổi 03](docs/meeting-minutes/phase-1/meeting-03/output/pdf/meeting-minutes-03.pdf): rà soát khó khăn và thống nhất hướng hoàn thiện Submission 1;
 - [`docs/phase-1/README.md`](docs/phase-1/README.md): yêu cầu và quy trình thực hiện Phase 1;
 - [`general-knowledge.md`](general-knowledge.md): kiến thức chung cho toàn bộ bài tập lớn;
 - [Đề bài gốc](BTL_SoftwareEngineering_HK261_v1.pdf).
@@ -175,6 +179,20 @@ Các tài liệu use-case, sequence diagram, class diagram và phần cài đặ
 
 Đề cho phép dùng dữ liệu giả lập. Phần demo MVP có thể dùng dữ liệu viết trực tiếp trong mã nguồn và không bắt buộc có database. Trước hết, nhóm cần làm rõ nghiệp vụ và xây dựng được các luồng demo chạy nhất quán; công nghệ sẽ được chọn theo phạm vi MVP.
 
+### Hướng dẫn bổ sung từ giảng viên về phạm vi
+
+Nhóm được phép bổ sung vai trò hoặc chức năng ngoài những nội dung được nêu trực tiếp trong đề, nhưng phần mở rộng phải hợp lý và được thực hiện xuyên suốt. Một vai trò hoặc chức năng đã thêm cần xuất hiện đầy đủ trong quá trình phân tích yêu cầu, thiết kế, các sơ đồ UML liên quan, phần hiện thực, kiểm thử và báo cáo. Vì vậy, nhóm chỉ nên mở rộng khi có thể tiếp tục phát triển nội dung đó ở các phase sau, không thêm chức năng chỉ để sơ đồ hoặc báo cáo trông nhiều hơn.
+
+Những vai trò và chức năng đã được đề bài yêu cầu rõ ràng là phạm vi tối thiểu bắt buộc, không được tự ý loại bỏ. Khi rà soát bài của từng thành viên, nhóm phải đối chiếu lại đề gốc để tránh bỏ sót actor, luồng nghiệp vụ hoặc trách nhiệm của hệ thống.
+
+### Dữ liệu IoT giả lập và ranh giới hệ thống
+
+Dữ liệu IoT có thể được giả lập, nhưng vẫn phải được phân tích và thiết kế như một luồng dữ liệu thực. Nguồn phát sinh dữ liệu cảm biến nằm bên ngoài Smart E-Mobility Hub và có thể được mô hình hóa như một actor hoặc external system gửi dữ liệu vào hệ thống. Bên trong hệ thống vẫn cần các lớp và chức năng để tiếp nhận, kiểm tra, quản lý, lưu trữ và đồng bộ dữ liệu trạng thái.
+
+Tùy phạm vi của từng phân hệ, dữ liệu này có thể bao gồm vị trí và mức pin của xe, trạng thái chỗ đỗ, trạng thái cổng sạc hoặc sự kiện vận hành tại Hub. Việc dùng dữ liệu giả không loại bỏ trách nhiệm thiết kế các thành phần xử lý dữ liệu tương ứng trong use case, sequence diagram, class diagram, phần hiện thực và kiểm thử.
+
+Giảng viên cung cấp nguồn [Connected Vehicles Dataset](https://iotdataset.com/topic/connected-vehicles) để nhóm tham khảo dữ liệu mẫu. Việc xây dựng luồng xử lý IoT theo thời gian thực không phải yêu cầu cốt lõi, nhưng nếu thực hiện được, nhóm sẽ được cộng **0,25 điểm** vào tổng điểm bài tập lớn. [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-get-started-with-azure-stream-analytics-to-process-data-from-iot-devices) là một giải pháp có thể tham khảo để mô phỏng và xử lý dòng dữ liệu cảm biến, đặc biệt hữu ích cho chức năng What-if Simulation.
+
 ## 7. Các yêu cầu phi chức năng
 
 Trong Submission #1, nhóm phải xác định các yêu cầu phi chức năng chung cho toàn hệ thống. Phần này cần xem xét:
@@ -282,6 +300,17 @@ Các điểm cần nhớ:
 - Phần trình bày nên nêu những bài học mà nhóm rút ra trong quá trình làm dự án.
 
 MVP không cần bao phủ mọi tình huống có thể xảy ra, nhưng các luồng được chọn để demo phải chạy liền mạch và thể hiện được giá trị cốt lõi của hệ thống. Một giao diện nhiều màn hình nhưng không có logic trạng thái nhất quán sẽ không thể hiện tốt trọng tâm của đề tài.
+
+### Mức triển khai cơ bản và phần điểm cộng
+
+Ứng dụng chạy local hoặc được đóng gói bằng Docker đã đáp ứng yêu cầu triển khai cơ bản của bài tập lớn. Deploy ứng dụng lên một server riêng nhưng không kết hợp luồng dữ liệu IoT theo thời gian thực không tạo khác biệt đáng kể so với bản Docker và không được tính điểm cộng.
+
+Theo hướng dẫn của giảng viên, nhóm có thể nhận các mức điểm cộng sau:
+
+- **0,25 điểm** nếu hiện thực được luồng xử lý dữ liệu IoT theo thời gian thực;
+- **0,25 điểm** nếu deploy ứng dụng trên server do nhóm thiết lập và kết hợp với luồng dữ liệu IoT theo thời gian thực.
+
+Hai hạng mục trên là phần mở rộng. Nhóm chỉ nên thực hiện sau khi các yêu cầu cốt lõi, UML, MVP và kiểm thử chính đã hoàn chỉnh.
 
 ## 11. Quy định về sử dụng Generative AI
 

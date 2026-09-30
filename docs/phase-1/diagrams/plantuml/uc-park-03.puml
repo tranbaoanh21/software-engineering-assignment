@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Check-out phương tiện\ncá nhân\n(UC-PARK-03)" as UC_CheckOut
+  usecase "Xác minh lượt đỗ\nđang CheckedIn" as UC_Reservation
+  usecase "Xác nhận phương tiện\nđã rời chỗ đỗ" as UC_Departure
+  usecase "Hoàn tất lượt đỗ và\ngiải phóng chỗ" as UC_Release
+}
+
+Student -down-> UC_CheckOut
+UC_CheckOut ..> UC_Reservation : <<include>>
+UC_CheckOut ..> UC_Departure : <<include>>
+UC_CheckOut ..> UC_Release : <<include>>
+UC_Departure --> StateSource : Trạng thái cảm biến\nchỗ đỗ
+@enduml

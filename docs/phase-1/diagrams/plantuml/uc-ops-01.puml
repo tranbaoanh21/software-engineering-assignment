@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Giám sát mạng lưới\nMobility Hub\n(UC-OPS-01)" as UC_Monitor
+  usecase "Tổng hợp trạng thái\nHub và tài nguyên" as UC_Aggregate
+  usecase "Hiển thị cảnh báo\nmất cân bằng" as UC_Alert
+  usecase "Theo dõi sự cố\nđang mở" as UC_Incident
+  usecase "Xem chi tiết Hub,\ncảnh báo hoặc sự cố" as UC_Detail
+}
+
+Operator -down-> UC_Monitor
+UC_Monitor ..> UC_Aggregate : <<include>>
+UC_Monitor ..> UC_Alert : <<include>>
+UC_Monitor ..> UC_Incident : <<include>>
+UC_Detail ..> UC_Monitor : <<extend>>\n[Chọn một mục]
+UC_Aggregate --> StateSource : Trạng thái tài nguyên\nvà sự kiện vận hành
+@enduml

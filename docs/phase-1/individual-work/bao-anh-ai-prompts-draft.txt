@@ -1,0 +1,103 @@
+BỘ PROMPT DỰ THẢO CỦA BẢO ANH - PHASE 1
+
+Đây là các prompt để tôi dùng trong một cuộc trò chuyện review báo cáo. Chỉ prompt nào đã thực sự gửi, đọc phản hồi và dùng để chỉnh bài mới được giữ trong bản export nộp giảng viên.
+
+
+PROMPT 1
+[Đính kèm báo cáo Phase 1 hiện tại]
+
+Tôi là nhóm trưởng của nhóm làm đề tài Smart E-Mobility Hub, trong báo cáo này tôi phụ trách Phần I Tổng quan và đặc tả dự án, ngoài ra tôi còn là người tổng hợp bài của các thành viên. Tôi đã viết xong bản hiện tại nhưng tôi chưa chắc cách chia nội dung như vậy đã đúng với project details specification chưa.
+
+Bạn hãy đọc riêng Phần I trước và nhận xét giúp tôi. Tôi muốn biết phần bối cảnh, vấn đề, stakeholder, user story, mục tiêu, phạm vi, system boundary, assumption và constraint đã nối với nhau hợp lý chưa. Chỗ nào tôi đang nói trùng, chỗ nào đang nhảy sang requirement hoặc thiết kế quá sớm thì chỉ rõ cho tôi. Bạn đừng viết lại toàn bộ, tôi chỉ cần biết nội dung hiện tại có vấn đề gì và nên sửa ít nhất như thế nào.
+
+
+PROMPT 2
+
+Từ từ, ở phần bối cảnh tôi đang nói việc sinh viên khó biết Hub nào còn xe, còn chỗ đỗ hay cổng sạc, còn nhân viên vận hành thì khó theo dõi mạng lưới và điều phối tài nguyên. Sau đó tôi mới dẫn sang lý do cần xây dựng một hệ thống chung.
+
+Tôi đang thắc mắc phần này có bị viết theo kiểu tự suy diễn hiện trạng quá nhiều không, vì nhóm tôi không có số liệu khảo sát thực tế. Trong trường hợp này nên viết bối cảnh và problem statement ở mức nào để vẫn thuyết phục nhưng không biến giả định thành sự thật? Bạn hãy chỉ ra câu nào trong bản của tôi đang là bối cảnh, câu nào là vấn đề, câu nào đã nói sang giải pháp. Không tự thêm số liệu hay dẫn chứng bên ngoài cho tôi.
+
+
+PROMPT 3
+
+Ở phần stakeholder tôi có Sinh viên, Nhân viên vận hành, Nhân viên kỹ thuật và Đơn vị quản lý Khu đô thị ĐHQG-HCM. Nhưng khi vẽ use-case diagram thì tôi chỉ để ba actor con người đầu tiên, còn đơn vị quản lý không xuất hiện vì hiện tại chưa có use case nào mà đơn vị này trực tiếp thao tác với phần mềm.
+
+Tôi hiểu stakeholder không nhất thiết phải là actor như vậy có đúng không? Ngoài ra bạn kiểm tra giúp tôi stakeholder need và user story hiện tại có bị lẫn với functional requirement không. Tôi sợ một số need đang viết giống chức năng hệ thống phải làm chứ không còn là nhu cầu của stakeholder. Nếu có thì dẫn đúng mã cho tôi, không tự đổi mã hoặc viết lại cả bảng.
+
+
+PROMPT 4
+
+Tôi còn một chỗ chưa chắc là phạm vi phân tích và phạm vi MVP. Submission 1 của nhóm tôi phân tích toàn bộ hệ thống với bảy phân hệ và 18 use case, nhưng tới phase cài đặt thì nhóm không thể làm hoàn chỉnh tất cả như một hệ thống thương mại.
+
+Nếu tôi ghi rõ là bảy phân hệ thuộc phạm vi phân tích, còn MVP sau này chỉ chọn một số luồng cốt lõi để demo thì có bị xem là mâu thuẫn không? Tôi nên phân biệt hai khái niệm này như thế nào để cô không hiểu rằng nhóm đang cắt bớt nội dung Submission 1, nhưng cũng không cam kết triển khai quá khả năng? Hãy xem phần in-scope, out-of-scope và các mục tiêu tôi đã viết có chỗ nào đá nhau không, chỉ đề xuất cách sửa chứ chưa chọn MVP thay nhóm tôi.
+
+
+PROMPT 5
+[Đính kèm Context Diagram]
+
+Ở system boundary, tôi đang xem Smart E-Mobility Hub System là phần mềm chịu trách nhiệm quản lý trạng thái, đặt và sử dụng tài nguyên, giám sát, điều phối và mô phỏng. Còn hành động lái xe, cắm sạc, di chuyển xe hay sửa chữa ngoài thực tế là do con người thực hiện.
+
+Ban đầu tôi chỉ ghi external là Nguồn dữ liệu trạng thái, sau đó tôi đổi tên thành IoT & State Data Gateway, mã EXT-STATE và khi tham gia use case thì mang vai trò ACT-DAT. Ý của tôi là gom dữ liệu từ cảm biến, khóa xe, chỗ đỗ và cổng sạc qua một gateway, không vẽ từng thiết bị thành actor. Cách hiểu như vậy có hợp lý không, hay tôi đang gom quá nhiều thứ khác nhau vào một external system?
+
+Bạn xem luôn giúp tôi hướng mũi tên trong hình. Với actor con người tôi dùng hai chiều vì họ gửi yêu cầu và nhận kết quả, còn EXT-STATE chỉ có mũi tên trạng thái vào SEMH. Hãy nhận xét đúng sai từ mô hình hiện tại, chưa vẽ lại sơ đồ cho tôi.
+
+
+PROMPT 6
+
+Sau khi chốt boundary, nhóm tôi chia hệ thống thành SUB-HUB, SUB-RES, SUB-TRIP, SUB-PARK, SUB-CHG, SUB-OPS và SUB-SIM. Tôi hiểu đây là bảy phân hệ nghiệp vụ để chia trách nhiệm và quản lý bài làm, không có nghĩa sau này phải code thành bảy service riêng.
+
+Bạn đọc phần mô tả bảy phân hệ và xem có trách nhiệm nào đang chồng lấn không. Ví dụ SUB-HUB chỉ tra cứu tài nguyên, còn tạo lượt đặt xe là SUB-RES; SUB-SIM chỉ sinh khuyến nghị, còn quyết định điều phối thật thuộc SUB-OPS. Cách chia này có ổn không? Nếu sơ đồ dependency hiện tại có mũi tên nào sai chiều hoặc nhãn chưa rõ thì chỉ ra cụ thể, nhưng đừng chuyển phần này thành sơ đồ kiến trúc hay đề xuất microservices.
+
+
+PROMPT 7
+
+Tôi đang dùng Phần I làm baseline cho các bạn viết Phần II và III, nên tôi có chốt bảng thuật ngữ và trạng thái chung. Ví dụ VehicleStatus có Available, Reserved, InUse, Charging, OutOfService; các đối tượng Reservation, Trip, ChargingSession, Incident hay SimulationRun cũng có tập trạng thái riêng.
+
+Nhưng tôi chưa chắc việc đưa hết các state vào Phần I có bị quá chi tiết không, hay lại cần thiết để tránh mỗi thành viên dùng một từ khác nhau. Bạn hãy đối chiếu các bảng này với requirement và use case hiện tại. Có state nào được nêu ra nhưng không bao giờ dùng, hoặc trong requirement lại xuất hiện state không có trong baseline không? Nếu bạn cho rằng phải thêm hoặc bỏ một state thì giải thích luôn nó đi vào bằng sự kiện gì, đi ra bằng sự kiện gì, chứ đừng chỉ đề xuất tên.
+
+
+PROMPT 8
+[Đính kèm ba phần của báo cáo]
+
+Giờ tôi muốn kiểm tra mối liên hệ giữa ba phần. Hiện tại nhóm tôi đang hiểu chuỗi truy vết là Problem -> Stakeholder Need -> User Story -> Functional Requirement -> Use Case. Business Rule dùng để ràng buộc hành vi, còn Non-functional Requirement là các thuộc tính chất lượng có thể kiểm tra.
+
+Bạn xem cách hiểu này có đúng không, sau đó rà giúp tôi xem trong bài có mã nào bị gãy chuỗi không. Tôi đặc biệt muốn biết có FR nào không có nguồn từ user story, UC nào không có FR, hoặc BR nào ghi ra nhưng không được phản ánh trong luồng hay không. Nếu phát hiện thì ghi rõ mã và chỗ mâu thuẫn cho tôi, chỉ đề xuất chỉnh tối thiểu chứ chưa tự gộp, tách hay đổi mã.
+
+
+PROMPT 9
+[Đính kèm Use-case Diagram toàn hệ thống]
+
+Tôi đang vẽ use-case diagram toàn hệ thống theo kiểu khái quát, bên trong boundary chỉ có bảy nhóm chức năng mang mã SUB-HUB, SUB-RES, SUB-TRIP, SUB-PARK, SUB-CHG, SUB-OPS và SUB-SIM. 18 use case chi tiết sẽ nằm trong danh mục và các phần đặc tả phía sau, tôi không đưa hết vào hình này vì sợ quá rối.
+
+Vẽ như vậy có còn được gọi là use-case diagram toàn hệ thống không, hay bảy hình elip này dễ bị hiểu là bảy use case cụ thể? Tôi muốn giữ cách trình bày gọn giống bài reference nhưng vẫn phải đúng ngữ nghĩa. Bạn hãy nhận xét nội dung trước, sau đó xem actor nối với các SUB đã đúng chưa, EXT-STATE đặt bên ngoài có hợp lý không và đường nối nào đang gây khó đọc. Không tự thêm actor hay external system chỉ để sơ đồ trông nhiều hơn.
+
+
+PROMPT 10
+
+Phần cá nhân của tôi là SUB-SIM, gồm UC-SIM-01 Chạy kịch bản What-if Simulation và UC-SIM-02 Phân tích kết quả và khuyến nghị điều phối. Tôi không định làm AI hay mô hình dự báo phức tạp, mô phỏng có thể dựa trên dữ liệu giả lập và các quy tắc rõ ràng. Tôi cũng có BR-SIM-01 quy định môi trường mô phỏng không được làm thay đổi dữ liệu vận hành thật và recommendation không được tự động áp dụng.
+
+Tôi chia thành hai use case như vậy có bị chồng lấn không? Vì khi UC-SIM-01 chạy xong thì hệ thống đã phải có kết quả, còn UC-SIM-02 lại xem kết quả và recommendation. Bạn làm rõ giúp tôi điểm kết thúc của UC-SIM-01 và điểm bắt đầu của UC-SIM-02 nên ở đâu. Ngoài ra FR-SIM-02 và NIFR-SIM-01 có đang nói cùng một việc là tạo recommendation không? Chỉ phân tích baseline và đề xuất cách tách trách nhiệm, chưa viết use-case specification thay tôi.
+
+
+PROMPT 11
+[Đính kèm bản nháp UC-SIM-01]
+
+Tôi đã tự viết luồng chính cho UC-SIM-01 theo hướng nhân viên vận hành chọn snapshot trạng thái mạng lưới, nhập tham số cho kịch bản, hệ thống kiểm tra dữ liệu, cho xác nhận rồi chạy mô phỏng. Tôi chưa chắc main flow như vậy đã xen kẽ đúng hành động actor và phản hồi hệ thống chưa, và có bị đi sâu vào giao diện hay thuật toán không.
+
+Bạn đọc bản nháp và nhận xét từng bước giúp tôi. Luồng thay thế phải vẫn đạt được mục tiêu còn luồng ngoại lệ là không hoàn tất bình thường, tôi hiểu như vậy có đúng không? Kiểm tra luôn mỗi luồng rẽ đã nói rõ rẽ từ bước nào và quay lại đâu chưa. Không viết lại cả use case, chỉ trích đúng chỗ có vấn đề và gợi ý tôi sửa.
+
+
+PROMPT 12
+
+Ở UC-SIM-02 tôi đang bị rối giữa alternative flow và exception flow. Ví dụ SimulationRun đã Completed và vẫn có các chỉ số kết quả, nhưng hệ thống không sinh được recommendation vì không có Hub nào vượt ngưỡng. Trường hợp này theo tôi vẫn xem được kết quả nên use case không thất bại, như vậy nên là alternative flow hay chỉ là một kết quả bình thường trong main flow?
+
+Còn các trường hợp SimulationRun chưa Completed, file kết quả bị thiếu, snapshot không còn truy xuất được hoặc actor không có quyền xem thì có phải exception không? Hãy phân loại từng trường hợp và giải thích dựa trên mục tiêu của use case, đừng tự thêm chức năng tự động áp dụng recommendation hay tạo lệnh điều phối thật.
+
+
+PROMPT 13
+[Đính kèm PDF sau khi tôi đã ghép nội dung của cả nhóm]
+
+Tôi đã ghép phần của bảy thành viên vào cùng một báo cáo. Bây giờ tôi muốn review lại với vai trò nhóm trưởng chứ không muốn nhờ viết lại bài. Bạn hãy đọc toàn bộ và tìm các chỗ mâu thuẫn giữa Phần I, II và III, nhất là actor, tên phân hệ, thuật ngữ, state, mã FR/BR/UC và nội dung giữa diagram với specification.
+
+Tôi cần bạn ưu tiên lỗi nghiêm trọng trước, ví dụ requirement không kiểm tra được, use case vi phạm business rule, mã không truy vết được hoặc cùng một đối tượng nhưng mỗi phần gọi một tên. Sau đó mới nói đến chỗ trùng lặp hay khó đọc. Mỗi vấn đề hãy ghi rõ nằm ở đâu, vì sao là lỗi và sửa tối thiểu như thế nào. Nếu chỉ là gợi ý cách trình bày chứ không phải lỗi thì nói rõ để tôi tự quyết định.
+

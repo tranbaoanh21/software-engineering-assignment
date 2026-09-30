@@ -1,0 +1,51 @@
+\section{Development/Implementation View}
+
+Implementation view mô tả cách mã nguồn được chia thành module/package, dependency được phép và vị trí hiện thực các trách nhiệm từ Phase 1-2. View này phải đủ rõ để bảy thành viên phát triển song song mà không tạo vòng phụ thuộc hoặc trùng business logic.
+
+\subsection{Kiến trúc tổng thể}
+
+Nêu architectural style đã chọn và lý do. Với modular monolith hoặc layered architecture, cần làm rõ presentation, application, domain và infrastructure; với service tách rời, cần chỉ ra contract, ownership dữ liệu và failure boundary.
+
+\ArtifactBrief{IMPLEMENTATION VIEW}{IMP-SEMH-01}{Thể hiện module/package chính, dependency direction, shared kernel và adapter kết nối external system.}{Development/Implementation view tổng thể}
+
+\subsection{Danh mục component và interface}
+
+\begin{longtable}{|L{25mm}|L{32mm}|L{38mm}|L{41mm}|}
+  \caption{Danh mục component/module}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Component ID} & \textbf{Module} & \textbf{Interface cung cấp/sử dụng} & \textbf{Trách nhiệm và truy vết}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Component ID} & \textbf{Module} & \textbf{Interface cung cấp/sử dụng} & \textbf{Trách nhiệm và truy vết}\\\hline
+  \endhead
+  \texttt{CMP-*} & Tên module/package & \texttt{IF-*}, API hoặc event & UC/FR/BR/NFR được hiện thực\\\hline
+\end{longtable}
+
+\subsection{Phân rã theo bảy phân hệ}
+
+\subsubsection{SUB-HUB - Tra cứu Hub và tài nguyên}
+Chỉ ra module tra cứu, nguồn vị trí/bản đồ, repository snapshot và adapter dữ liệu trạng thái.
+
+\subsubsection{SUB-RES - Đặt phương tiện dùng chung}
+Chỉ ra transaction boundary, kiểm soát concurrent reservation, timeout và giải phóng tài nguyên.
+
+\subsubsection{SUB-TRIP - Quản lý chuyến đi}
+Chỉ ra module bắt đầu/kết thúc chuyến, xác nhận khóa xe và cập nhật trạng thái phương tiện.
+
+\subsubsection{SUB-PARK - Quản lý chỗ đỗ xe cá nhân}
+Chỉ ra module reservation/check-in/check-out và adapter nhận dữ liệu cảm biến chỗ đỗ.
+
+\subsubsection{SUB-CHG - Quản lý sạc và lịch sạc}
+Chỉ ra scheduler, charging queue, session monitoring và adapter trụ sạc giả lập.
+
+\subsubsection{SUB-OPS - Giám sát và điều phối vận hành}
+Chỉ ra dashboard query, incident handling, redistribution plan và audit trail.
+
+\subsubsection{SUB-SIM - What-if Simulation và khuyến nghị}
+Chỉ ra scenario configuration, snapshot isolation, simulation engine, result analysis và recommendation.
+
+\subsection{Cross-cutting concerns}
+
+Mô tả authentication/authorization, validation, transaction, logging, audit, error model, configuration, time handling và event/data ingestion. Business rule phải nằm ở domain/application layer thay vì bị lặp trong UI hoặc controller.

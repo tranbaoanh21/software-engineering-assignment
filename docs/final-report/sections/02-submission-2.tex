@@ -1,0 +1,41 @@
+\section{Phân tích và thiết kế tích hợp theo use case}
+
+Mỗi use case dưới đây là một gói nội dung xuyên suốt ba submission. Khi hoàn thiện Final, thay các khung bằng artefact cuối cùng nhưng giữ nguyên thứ tự: đặc tả và truy vết, UI, activity/sequence, state, class/method, test và demonstration.
+
+\subsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
+\IntegratedUseCase{UC-HUB-01}{Tra cứu Hub phù hợp}{SCR-STU-HUB-SEARCH}{STM-VEHICLE / STM-PARKING-SPACE / STM-CHARGING-POINT}{FR-HUB-01; BR-HUB-01/02; NIFR-HUB-01; EXT-MAP; EXT-STATE}{SUB-HUB}
+\IntegratedUseCase{UC-HUB-02}{Xem trạng thái tài nguyên tại Hub}{SCR-STU-HUB-DETAIL}{STM-VEHICLE / STM-PARKING-SPACE / STM-CHARGING-POINT}{FR-HUB-02; BR-HUB-01/02; NFR-REL-01; EXT-STATE}{SUB-HUB}
+\IntegratedUseCase{UC-HUB-03}{Xem Hub thay thế}{SCR-STU-HUB-ALT}{STM-VEHICLE / STM-PARKING-SPACE / STM-CHARGING-POINT}{FR-HUB-03; BR-HUB-01/02; EXT-MAP; EXT-STATE}{SUB-HUB}
+
+\clearpage
+\subsection{SUB-RES -- Đặt phương tiện dùng chung}
+\IntegratedUseCase{UC-RES-01}{Đặt phương tiện dùng chung}{SCR-STU-RES-DETAIL}{STM-VEHICLE-RESERVATION / STM-VEHICLE}{FR-RES-01; BR-RES-01--04; NFR-CON-01}{SUB-RES}
+\IntegratedUseCase{UC-RES-02}{Hủy lượt đặt phương tiện}{SCR-STU-RES-DETAIL}{STM-VEHICLE-RESERVATION / STM-VEHICLE}{FR-RES-02; BR-RES-01--03; NIFR-RES-01}{SUB-RES}
+
+\clearpage
+\subsection{SUB-TRIP -- Quản lý chuyến đi}
+\IntegratedUseCase{UC-TRIP-01}{Nhận phương tiện đã đặt}{SCR-STU-TRIP}{STM-TRIP / STM-VEHICLE}{FR-TRIP-01; BR-TRIP-01; BR-RES-03; EXT-STATE}{SUB-TRIP}
+\IntegratedUseCase{UC-TRIP-02}{Trả phương tiện và kết thúc chuyến đi}{SCR-STU-TRIP}{STM-TRIP / STM-VEHICLE}{FR-TRIP-02; BR-TRIP-02; BR-RES-04; EXT-STATE}{SUB-TRIP}
+
+\clearpage
+\subsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+\IntegratedUseCase{UC-PARK-01}{Đặt chỗ đỗ cho xe cá nhân}{SCR-STU-PARK}{STM-PARKING-RESERVATION / STM-PARKING-SPACE}{FR-PARK-01; BR-PARK-01/02; NFR-CON-01}{SUB-PARK}
+\IntegratedUseCase{UC-PARK-02}{Check-in phương tiện cá nhân}{SCR-STU-PARK}{STM-PARKING-RESERVATION / STM-PARKING-SPACE}{FR-PARK-02; BR-PARK-01/02; EXT-STATE}{SUB-PARK}
+\IntegratedUseCase{UC-PARK-03}{Check-out phương tiện cá nhân}{SCR-STU-PARK}{STM-PARKING-RESERVATION / STM-PARKING-SPACE}{FR-PARK-03; BR-PARK-01; EXT-STATE}{SUB-PARK}
+
+\clearpage
+\subsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+\IntegratedUseCase{UC-CHG-01}{Đăng ký nhu cầu sạc}{SCR-STU-CHG / SCR-OPR-CHG}{STM-CHARGING-REQUEST / STM-CHARGING-SESSION / STM-CHARGING-POINT}{FR-CHG-01; BR-CHG-01/02; EXT-STATE}{SUB-CHG}
+\IntegratedUseCase{UC-CHG-02}{Theo dõi lịch và phiên sạc}{SCR-STU-CHG / SCR-OPR-CHG}{STM-CHARGING-REQUEST / STM-CHARGING-SESSION / STM-CHARGING-POINT}{FR-CHG-02; BR-CHG-01/02; NIFR-CHG-01/02}{SUB-CHG}
+\IntegratedUseCase{UC-CHG-03}{Điều chỉnh lịch sạc ưu tiên}{SCR-OPR-CHG}{STM-CHARGING-REQUEST / STM-CHARGING-SESSION}{FR-CHG-03; BR-CHG-01/02; NIFR-CHG-01}{SUB-CHG}
+
+\clearpage
+\subsection{SUB-OPS -- Giám sát và điều phối vận hành}
+\IntegratedUseCase{UC-OPS-01}{Giám sát mạng lưới Mobility Hub}{SCR-OPR-DASHBOARD}{STM-VEHICLE / STM-PARKING-SPACE / STM-CHARGING-POINT}{FR-OPS-01; BR-OPS-01/02; NIFR-OPS-01/02; EXT-STATE}{SUB-OPS}
+\IntegratedUseCase{UC-OPS-02}{Xử lý sự cố vận hành}{SCR-OPR-INCIDENT}{STM-INCIDENT}{FR-OPS-02; BR-OPS-02; NIFR-OPS-01; ACT-MNT}{SUB-OPS}
+\IntegratedUseCase{UC-OPS-03}{Điều phối phương tiện giữa các Hub}{SCR-OPR-REDIST}{STM-REDISTRIBUTION / STM-VEHICLE}{FR-OPS-03; BR-OPS-01; NIFR-OPS-02}{SUB-OPS}
+
+\clearpage
+\subsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+\IntegratedUseCase{UC-SIM-01}{Chạy kịch bản What-if Simulation}{SCR-OPR-SIM-CONFIG}{STM-SIMULATION-RUN}{FR-SIM-01; BR-SIM-01}{SUB-SIM}
+\IntegratedUseCase{UC-SIM-02}{Phân tích kết quả và khuyến nghị điều phối}{SCR-OPR-SIM-RESULT}{STM-SIMULATION-RUN / STM-REDISTRIBUTION}{FR-SIM-02; BR-SIM-01; NIFR-SIM-01}{SUB-SIM}

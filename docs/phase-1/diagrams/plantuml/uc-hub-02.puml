@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Xem trạng thái tài nguyên\ntại Hub\n(UC-HUB-02)" as UC_View
+  usecase "Truy xuất trạng thái\nđã được chấp nhận" as UC_State
+  usecase "Đánh giá khả năng\nphục vụ hiện tại" as UC_Evaluate
+  usecase "Làm mới trạng thái" as UC_Refresh
+  usecase "Xem Hub thay thế\n(UC-HUB-03)" as UC_Alternative
+}
+
+Student -down-> UC_View
+Student --> UC_Refresh
+
+UC_View ..> UC_State : <<include>>
+UC_View ..> UC_Evaluate : <<include>>
+UC_Refresh .right.> UC_View : <<extend>>\n[Yêu cầu làm mới]
+UC_Alternative .left.> UC_View : <<extend>>\n[Hub không đáp ứng]
+
+UC_State --> StateSource : Dữ liệu trạng thái\nvà thời điểm cập nhật
+
+@enduml

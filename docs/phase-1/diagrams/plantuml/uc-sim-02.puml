@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Phân tích kết quả và\nkhuyến nghị điều phối\n(UC-SIM-02)" as UC_Analyze
+  usecase "Truy xuất kết quả\nSimulationRun" as UC_Result
+  usecase "So sánh chỉ số kịch bản\nvới trạng thái cơ sở" as UC_Compare
+  usecase "Xem cơ sở và tác động\ncủa Recommendation" as UC_Recommendation
+  usecase "Điều phối phương tiện\ngiữa các Hub\n(UC-OPS-03)" as UC_CreatePlan
+}
+
+Operator -down-> UC_Analyze
+UC_Analyze ..> UC_Result : <<include>>
+UC_Analyze ..> UC_Compare : <<include>>
+UC_Recommendation .right.> UC_Analyze : <<extend>>\n[Có Recommendation]
+UC_CreatePlan ..> UC_Analyze : <<extend>>\n[Chọn áp dụng]
+@enduml

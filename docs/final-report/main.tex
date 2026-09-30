@@ -1,0 +1,105 @@
+\documentclass[12pt,a4paper]{article}
+
+\newcommand{\HCMUTAssetPath}{../../assets}
+\input{../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{3em}
+
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \footnotesize\ttfamily Trường Đại Học Bách Khoa - ĐHQG TP.HCM\\[-1pt]
+      \footnotesize\ttfamily Khoa Khoa học và kỹ thuật máy tính
+    \end{tabular}
+  \end{tabular}%
+}
+\fancyfoot[L]{\scriptsize\ttfamily Final Report - Smart E-Mobility Hub\\Niên khoá \AcademicYear}
+\fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
+
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\listfigurename}{Danh sách hình}
+\renewcommand{\listtablename}{Danh sách bảng}
+\makeatletter
+\renewcommand{\@pnumwidth}{2.8em}
+\renewcommand*\l@section[2]{%
+  \ifnum\c@tocdepth>\z@
+    \addpenalty{\@secpenalty}\addvspace{0.3em \@plus\p@}%
+    \setlength\@tempdima{3.0em}%
+    \begingroup
+      \parindent\z@ \rightskip\@pnumwidth \parfillskip-\@pnumwidth
+      \leavevmode\bfseries \advance\leftskip\@tempdima \hskip-\leftskip
+      #1\nobreak\hfill\nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+    \endgroup
+  \fi
+}
+\renewcommand*\l@subsection{\@dottedtocline{2}{1.55em}{2.25em}}
+\renewcommand*\l@subsubsection{\@dottedtocline{3}{4.1em}{3.2em}}
+\renewcommand*\l@paragraph{\@dottedtocline{4}{7.3em}{4.0em}}
+\renewcommand\paragraph{%
+  \@startsection{paragraph}{4}{\z@}{1.0ex \@plus 0.4ex \@minus 0.2ex}{0.35ex \@plus 0.1ex}{\normalfont\normalsize\bfseries}}
+\newcommand{\ReferenceTableOfContents}{%
+  \begingroup
+    \setstretch{1.0}\fontsize{9pt}{10.7pt}\selectfont
+    \section*{\normalfont\Large Mục lục}\vspace{-0.45em}\@starttoc{toc}%
+  \endgroup
+}
+\makeatother
+
+\newcommand{\IntegratedUseCase}[6]{%
+  \subsubsection{#1 -- #2}
+  \paragraph{Đặc tả Use Case và truy vết}
+  \begin{sloppypar}Trình bày phiên bản cuối của đặc tả \texttt{#1}, bao gồm actor, mục tiêu, trigger, precondition, postcondition, main flow, alternative flow và exception flow. Các mã cần đối chiếu: #5.\end{sloppypar}
+  \paragraph{Thiết kế giao diện}
+  \begin{sloppypar}Trình bày UI mockup và ảnh giao diện hiện thực của các màn hình #3. Bao phủ happy path và các trạng thái loading, empty, validation, stale-data hoặc lỗi khi có liên quan.\end{sloppypar}
+  \paragraph{Biểu đồ hoạt động}
+  Trình bày \texttt{ACT-#1}; guard, nhánh lỗi và điểm kết thúc phải khớp đặc tả use case cùng business rule.
+  \paragraph{Biểu đồ tuần tự}
+  Trình bày \texttt{SEQ-#1}; actor, boundary, service, repository và external adapter phải phản ánh implementation cuối cùng.
+  \paragraph{Biểu đồ trạng thái liên quan}
+  \begin{sloppypar}Các state chart liên quan: #4. Đặt hình tại UC sở hữu chính; nếu đã xuất hiện trước đó thì dẫn chiếu số hình và giải thích transition do \texttt{#1} kích hoạt.\end{sloppypar}
+  \paragraph{Biểu đồ lớp và đặc tả phương thức}
+  Trình bày phần class diagram \texttt{CD-#6} liên quan đến \texttt{#1}; mô tả lớp, trách nhiệm, method/interface, input/output, lỗi, side effect và transaction boundary.
+  \paragraph{Kiểm thử, hiện thực và demonstration}
+  Trình bày \texttt{TC-#1} và \texttt{DEMO-#1}: dữ liệu kiểm thử, expected/actual result, evidence, ảnh giao diện chạy thật hoặc log/API. Phân biệt rõ nội dung đã hiện thực với nội dung mô phỏng.
+}
+
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section*{Danh sách thành viên và đóng góp}
+\small
+\begin{center}
+\begin{tabularx}{0.95\textwidth}{|C{9mm}|L{43mm}|C{25mm}|Y|}
+  \hline
+  \rowcolor{gray!15}
+  \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} & \textbf{MSSV} & \centering\arraybackslash\textbf{Đóng góp xuyên suốt dự án}\\\hline
+  1 & Nguyễn Quốc Trung & 2413707 & Hoàn thiện SUB-HUB từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  2 & Phan Võ Bảo Trâm & 2413576 & Hoàn thiện SUB-RES từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  3 & Lê Nguyễn Tường Vi & 2413937 & Hoàn thiện SUB-TRIP từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  4 & Nguyễn Ngọc Hân & 2410951 & Hoàn thiện SUB-PARK từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  5 & Trần Thị Hương Giang & 2410845 & Hoàn thiện SUB-CHG từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  6 & Nguyễn Thị Minh Anh & 2410126 & Hoàn thiện SUB-OPS từ đặc tả đến UI, thiết kế, kiểm thử và evidence hiện thực\\\hline
+  7 & Trần Nhật Bảo Anh & 2410155 & Hoàn thiện SUB-SIM; tích hợp hệ thống, kiểm soát tính nhất quán và final demonstration\\\hline
+\end{tabularx}
+\end{center}
+\normalsize
+
+Mỗi thành viên rà soát xuyên suốt artefact của phân hệ mình từ Submission 1 đến implementation cuối, cập nhật sai khác giữa thiết kế và code, đồng thời cung cấp test result và evidence cho kịch bản demonstration. Nhóm trưởng chịu trách nhiệm ghép nội dung cấp hệ thống và kiểm tra toàn bộ đường truy vết.
+
+\clearpage\ReferenceTableOfContents
+\clearpage\listoffigures
+\clearpage\listoftables
+
+\clearpage\input{sections/00-executive-summary}
+\clearpage\input{sections/01-submission-1}
+\clearpage\input{sections/02-submission-2}
+\clearpage\input{sections/03-submission-3}
+\clearpage\input{sections/04-mvp-demonstration}
+\clearpage\input{sections/05-ai-disclosure}
+\clearpage\input{sections/06-lessons-and-appendices}
+
+\end{document}

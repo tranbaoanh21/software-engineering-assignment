@@ -1,0 +1,168 @@
+\subsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
+
+SUB-HUB cung cấp khả năng xác định Hub phù hợp, xem trạng thái tài nguyên tại một Hub và nhận danh sách Hub thay thế khi lựa chọn ban đầu không đáp ứng nhu cầu. Phân hệ sử dụng dữ liệu vị trí từ \texttt{EXT-MAP} và trạng thái tài nguyên đã được SEMH chấp nhận từ \texttt{EXT-STATE}; quyết định Hub có khả năng phục vụ vẫn do các business rule của SEMH xác định. SUB-HUB chỉ cung cấp thông tin và kết quả tra cứu, không tạo lượt đặt phương tiện, chỗ đỗ hoặc lịch sạc.
+
+\subsubsection{UC-HUB-01 -- Tra cứu Hub phù hợp}
+
+\UseCaseDiagram{uc-hub-01.pdf}{UC-HUB-01}{Tra cứu Hub phù hợp}{fig:uc-hub-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-HUB-01 -- Tra cứu Hub phù hợp}\label{tab:spec-UC-HUB-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-HUB-01\\\hline
+  Use Case Name & Tra cứu Hub phù hợp\\\hline
+  Owning Subsystem & SUB-HUB\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-MAP}, \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Cho phép Sinh viên tra cứu Mobility Hub theo vị trí và nhu cầu sử dụng, sau đó nhận danh sách Hub được xếp theo mức phù hợp kèm khoảng cách, khả năng phục vụ và thời điểm cập nhật trạng thái.\\\hline
+  Trigger & Sinh viên mở chức năng tra cứu và gửi yêu cầu tìm Hub.\\\hline
+  Preconditions &
+    \textbf{1.} Chức năng tra cứu của SEMH đang sẵn sàng.\newline
+    \textbf{2.} Danh mục Mobility Hub đã được cấu hình trong hệ thống.\newline
+    \textbf{3.} Hệ thống có trạng thái hợp lệ gần nhất của các Hub hoặc có thể đánh dấu rõ dữ liệu chưa sẵn sàng.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Danh sách Hub phù hợp hoặc kết quả rỗng hợp lệ được hiển thị cùng tiêu chí tra cứu và thời điểm cập nhật.\newline
+    \textbf{Thất bại:} Không có trạng thái nghiệp vụ nào bị thay đổi; tiêu chí đã nhập được giữ lại khi có thể và Sinh viên nhận thông báo lỗi cùng hành động tiếp theo.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên mở chức năng tra cứu Hub.\newline
+    \textbf{2.} Hệ thống hiển thị lựa chọn dùng vị trí hiện tại hoặc nhập một vị trí cần tra cứu.\newline
+    \textbf{3.} Sinh viên cung cấp vị trí và có thể chọn nhu cầu về xe dùng chung, chỗ đỗ hoặc cổng sạc.\newline
+    \textbf{4.} Hệ thống sử dụng \texttt{EXT-MAP} để chuẩn hóa vị trí, xác định vùng tìm kiếm và tính khoảng cách.\newline
+    \textbf{5.} Hệ thống lấy danh mục Hub cùng trạng thái hợp lệ gần nhất, sau đó xác định tài nguyên khả dụng theo \texttt{BR-HUB-01} và \texttt{BR-HUB-02}.\newline
+    \textbf{6.} Hệ thống lọc và xếp hạng các Hub theo khoảng cách và mức đáp ứng nhu cầu.\newline
+    \textbf{7.} Hệ thống hiển thị kết quả trên bản đồ hoặc danh sách, gồm tên Hub, khoảng cách, \texttt{HubStatus}, số tài nguyên khả dụng và thời điểm cập nhật.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Nhập vị trí thủ công.} \textit{Rẽ từ bước 3.} Sinh viên nhập địa chỉ hoặc chọn một vị trí khác; hệ thống chuẩn hóa vị trí rồi tiếp tục từ bước 4.\newline
+    \textbf{AF-02 -- Thay đổi tiêu chí lọc.} \textit{Rẽ từ bước 3 hoặc 7.} Sinh viên thêm, bỏ hoặc điều chỉnh tiêu chí; hệ thống thực hiện lại bước 5--7 trên cùng khu vực.\newline
+    \textbf{AF-03 -- Không có Hub phù hợp.} \textit{Tại bước 6.} Hệ thống trả kết quả rỗng, nêu tiêu chí chưa được đáp ứng và cho phép mở rộng vùng hoặc giảm điều kiện lọc.\newline
+    \textbf{AF-04 -- Dữ liệu trạng thái có thể đã cũ.} \textit{Tại bước 5.} Hệ thống dùng trạng thái hợp lệ gần nhất, hiển thị cảnh báo và thời điểm cập nhật theo \texttt{NFR-REL-01}, sau đó tiếp tục bước 6.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Không xác định được vị trí.} \textit{Tại bước 3 hoặc 4.} Nếu quyền vị trí bị từ chối hoặc dịch vụ định vị không trả kết quả, hệ thống yêu cầu nhập vị trí thủ công; use case kết thúc nếu Sinh viên không cung cấp vị trí thay thế.\newline
+    \textbf{EF-02 -- Vị trí nhập không hợp lệ.} \textit{Tại bước 4.} Hệ thống thông báo không thể nhận diện vị trí và quay lại bước 3.\newline
+    \textbf{EF-03 -- Không thể tải dữ liệu tra cứu.} \textit{Tại bước 5.} Hệ thống giữ tiêu chí đã nhập, thông báo không thể hoàn tất yêu cầu và cho phép thử lại.\\\hline
+  Related Requirements & \texttt{FR-HUB-01}; \texttt{NIFR-HUB-01}; \texttt{NFR-PERF-01}, \texttt{NFR-REL-01}, \texttt{NFR-USA-01}.\\\hline
+  Related Business Rules & \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.\\\hline
+  Dependencies & \texttt{EXT-MAP}/\texttt{ACT-MAP}; \texttt{EXT-STATE}/\texttt{ACT-DAT}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-HUB-02 -- Xem trạng thái tài nguyên tại Hub}
+
+\UseCaseDiagram{uc-hub-02.pdf}{UC-HUB-02}{Xem trạng thái tài nguyên tại Hub}{fig:uc-hub-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-HUB-02 -- Xem trạng thái tài nguyên tại Hub}\label{tab:spec-UC-HUB-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-HUB-02\\\hline
+  Use Case Name & Xem trạng thái tài nguyên tại Hub\\\hline
+  Owning Subsystem & SUB-HUB\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Cho phép Sinh viên xem trạng thái gần hiện tại của một Mobility Hub, gồm xe dùng chung, chỗ đỗ, cổng sạc và các thông tin cần thiết để đánh giá Hub có đáp ứng nhu cầu hay không.\\\hline
+  Trigger & Sinh viên chọn một Hub từ kết quả của \texttt{UC-HUB-01}, danh sách Hub thay thế hoặc một liên kết Hub hợp lệ khác.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên đã xác định một Mobility Hub cần xem.\newline
+    \textbf{2.} Hub có mã định danh hợp lệ trong SEMH.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Thông tin Hub và trạng thái tài nguyên được hiển thị cùng thời điểm cập nhật; không có tài nguyên nào bị giữ hoặc thay đổi trạng thái.\newline
+    \textbf{Thất bại:} Hệ thống không thay đổi dữ liệu nghiệp vụ, giữ màn hình trước đó khi có thể và thông báo nguyên nhân không thể tải thông tin.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên chọn một Mobility Hub và yêu cầu xem chi tiết.\newline
+    \textbf{2.} Hệ thống kiểm tra mã Hub và lấy thông tin mô tả của Hub.\newline
+    \textbf{3.} Hệ thống truy xuất trạng thái hợp lệ gần nhất của xe dùng chung, chỗ đỗ và cổng sạc cùng thời điểm cập nhật.\newline
+    \textbf{4.} Hệ thống áp dụng \texttt{BR-HUB-01}, \texttt{BR-HUB-02} và các điều kiện liên quan để tính số tài nguyên có thể phục vụ.\newline
+    \textbf{5.} Hệ thống hiển thị \texttt{HubStatus}, sức chứa, số tài nguyên theo trạng thái, thông tin pin cần thiết và cảnh báo đang có hiệu lực.\newline
+    \textbf{6.} Sinh viên xem thông tin; use case kết thúc mà không thay đổi trạng thái tài nguyên.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Làm mới trạng thái.} \textit{Rẽ từ bước 6.} Sinh viên yêu cầu làm mới; hệ thống thực hiện lại bước 3--5 bằng trạng thái mới nhất đã được chấp nhận.\newline
+    \textbf{AF-02 -- Dữ liệu có thể đã cũ.} \textit{Tại bước 3.} Nếu \texttt{EXT-STATE} gián đoạn nhưng còn trạng thái hợp lệ trước đó, hệ thống hiển thị dữ liệu này kèm cảnh báo và thời điểm cập nhật, rồi tiếp tục bước 4.\newline
+    \textbf{AF-03 -- Hub không đáp ứng nhu cầu.} \textit{Tại bước 4.} Hệ thống vẫn hiển thị trạng thái thực tế, nêu lý do không đáp ứng và cung cấp hành động mở \texttt{UC-HUB-03}.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Hub không tồn tại.} \textit{Tại bước 2.} Hệ thống thông báo Hub không còn trong danh mục và cho phép quay về \texttt{UC-HUB-01}.\newline
+    \textbf{EF-02 -- Chưa có trạng thái tài nguyên hợp lệ.} \textit{Tại bước 3.} Hệ thống hiển thị thông tin Hub nhưng đánh dấu trạng thái tài nguyên chưa sẵn sàng; Sinh viên có thể thử lại hoặc tìm Hub khác.\newline
+    \textbf{EF-03 -- Không thể tải thông tin Hub.} \textit{Tại bước 2 hoặc 3.} Hệ thống thông báo lỗi, giữ lựa chọn hiện tại và cho phép thử lại.\\\hline
+  Related Requirements & \texttt{FR-HUB-02}; \texttt{NIFR-HUB-01}; \texttt{NFR-REL-01}, \texttt{NFR-USA-01}.\\\hline
+  Related Business Rules & \texttt{BR-HUB-01}, \texttt{BR-HUB-02}, \texttt{BR-RES-04}.\\\hline
+  Dependencies & \texttt{EXT-STATE}/\texttt{ACT-DAT}; có thể được mở từ \texttt{UC-HUB-01}, \texttt{UC-HUB-03} và có thể khởi tạo \texttt{UC-HUB-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-HUB-03 -- Xem Hub thay thế}
+
+\UseCaseDiagram{uc-hub-03.pdf}{UC-HUB-03}{Xem Hub thay thế}{fig:uc-hub-03}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-HUB-03 -- Xem Hub thay thế}\label{tab:spec-UC-HUB-03}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-HUB-03\\\hline
+  Use Case Name & Xem Hub thay thế\\\hline
+  Owning Subsystem & SUB-HUB\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-MAP}, \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Cung cấp danh sách Hub thay thế có khả năng đáp ứng nhu cầu khi Sinh viên chủ động yêu cầu hoặc Hub đang xem không còn phù hợp; mỗi đề xuất phải có khoảng cách, trạng thái tài nguyên và lý do được gợi ý.\\\hline
+  Trigger & Sinh viên yêu cầu Hub thay thế, hoặc từ \texttt{UC-HUB-02} khi Hub đang xem không đáp ứng nhu cầu đã xác định.\\\hline
+  Preconditions &
+    \textbf{1.} Hệ thống biết vị trí tham chiếu từ Hub đang xem hoặc vị trí tra cứu của Sinh viên.\newline
+    \textbf{2.} Nhu cầu chưa được đáp ứng đã được xác định, chẳng hạn cần xe dùng chung, chỗ đỗ hoặc cổng sạc khả dụng.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Danh sách Hub thay thế hoặc kết quả rỗng hợp lệ được hiển thị cùng lý do đề xuất và thời điểm cập nhật; không có tài nguyên nào được giữ trước.\newline
+    \textbf{Thất bại:} Hub ban đầu và dữ liệu nghiệp vụ không thay đổi; Sinh viên nhận thông báo và có thể quay lại màn hình trước.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên yêu cầu xem Hub thay thế hoặc chấp nhận gợi ý tìm Hub khác từ \texttt{UC-HUB-02}.\newline
+    \textbf{2.} Hệ thống xác định vị trí tham chiếu, nhu cầu chưa được đáp ứng và phạm vi tìm kiếm ban đầu.\newline
+    \textbf{3.} Hệ thống sử dụng \texttt{EXT-MAP} để xác định các Hub lân cận và khoảng cách đến từng Hub.\newline
+    \textbf{4.} Hệ thống lấy trạng thái hợp lệ gần nhất của các Hub ứng viên.\newline
+    \textbf{5.} Hệ thống loại các Hub \texttt{OutOfService} hoặc không có tài nguyên đáp ứng nhu cầu theo \texttt{BR-HUB-02}.\newline
+    \textbf{6.} Hệ thống xếp hạng các Hub còn lại theo khoảng cách và mức đáp ứng, đồng thời tạo lý do đề xuất.\newline
+    \textbf{7.} Hệ thống hiển thị danh sách Hub thay thế với khoảng cách, tài nguyên liên quan, lý do đề xuất và thời điểm cập nhật.\newline
+    \textbf{8.} Use case kết thúc sau khi Sinh viên nhận được danh sách; nếu chọn một Hub để xem chi tiết, hệ thống chuyển tiếp sang \texttt{UC-HUB-02} theo AF-03.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Mở rộng phạm vi tìm kiếm.} \textit{Rẽ từ bước 5.} Nếu không có Hub phù hợp, Sinh viên đồng ý mở rộng bán kính; hệ thống thực hiện lại bước 3--7.\newline
+    \textbf{AF-02 -- Điều chỉnh nhu cầu.} \textit{Rẽ từ bước 5 hoặc 7.} Sinh viên giảm hoặc thay đổi tiêu chí; hệ thống thực hiện lại bước 4--7.\newline
+    \textbf{AF-03 -- Xem chi tiết Hub thay thế.} \textit{Rẽ từ bước 7.} Sinh viên chọn một Hub; hệ thống khởi tạo \texttt{UC-HUB-02} cho Hub đó.\newline
+    \textbf{AF-04 -- Dữ liệu có thể đã cũ.} \textit{Tại bước 4.} Hệ thống dùng trạng thái hợp lệ gần nhất, gắn cảnh báo và thời điểm cập nhật trước khi tiếp tục đánh giá.\newline
+    \textbf{AF-05 -- Không tiếp tục chọn Hub.} \textit{Tại bước 7.} Sinh viên đóng danh sách; use case kết thúc mà không thay đổi dữ liệu.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Không xác định được vùng lân cận.} \textit{Tại bước 3.} Hệ thống thông báo không thể tính khoảng cách, giữ thông tin Hub ban đầu và cho phép thử lại.\newline
+    \textbf{EF-02 -- Không có trạng thái hợp lệ để đánh giá.} \textit{Tại bước 4.} Hệ thống không đưa Hub chưa xác định trạng thái vào danh sách và thông báo nếu không còn ứng viên có thể đánh giá.\newline
+    \textbf{EF-03 -- Không thể tải danh sách thay thế.} \textit{Tại bước 3 hoặc 4.} Hệ thống thông báo lỗi, không thay đổi lựa chọn hiện tại và cho phép thử lại.\\\hline
+  Related Requirements & \texttt{FR-HUB-03}; \texttt{NIFR-HUB-01}; \texttt{NFR-REL-01}, \texttt{NFR-USA-01}.\\\hline
+  Related Business Rules & \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.\\\hline
+  Dependencies & \texttt{EXT-MAP}/\texttt{ACT-MAP}; \texttt{EXT-STATE}/\texttt{ACT-DAT}; mở từ và có thể chuyển sang \texttt{UC-HUB-02}.\\\hline
+\end{longtable}
+\normalsize
+\clearpage
+
+\clearpage

@@ -1,0 +1,42 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Chạy kịch bản\nWhat-if Simulation\n(UC-SIM-01)" as UC_Run
+  usecase "Thiết lập giả định\nvà tham số" as UC_Configure
+  usecase "Tạo snapshot trạng thái\ncô lập" as UC_Snapshot
+  usecase "Thực thi và theo dõi\nSimulationRun" as UC_Execute
+  usecase "Lưu kết quả\nmô phỏng" as UC_Save
+}
+
+Operator -down-> UC_Run
+UC_Run ..> UC_Configure : <<include>>
+UC_Run ..> UC_Snapshot : <<include>>
+UC_Run ..> UC_Execute : <<include>>
+UC_Run ..> UC_Save : <<include>>
+@enduml

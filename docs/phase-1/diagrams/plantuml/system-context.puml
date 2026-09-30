@@ -1,15 +1,14 @@
 @startuml
-!pragma layout elk
-left to right direction
+!include <C4/C4_Context>
+
+LAYOUT_LANDSCAPE()
 
 skinparam backgroundColor white
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam defaultFontSize 15
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 13
+skinparam defaultFontSize 14
 skinparam linetype ortho
+skinparam actorStyle stickman
 
 skinparam actor {
   BackgroundColor white
@@ -17,24 +16,37 @@ skinparam actor {
   FontColor black
 }
 
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  RoundCorner 8
-}
+' Giữ phong cách đen -- trắng thống nhất với báo cáo.
+UpdateElementStyle("person", $bgColor="white", $fontColor="black", $borderColor="black")
+UpdateElementStyle("system", $bgColor="white", $fontColor="black", $borderColor="black")
+UpdateElementStyle("external_system", $bgColor="white", $fontColor="black", $borderColor="black")
+UpdateRelStyle("relationship", $textColor="black", $lineColor="black")
 
+' Cột trái: các actor con người.
 actor "Sinh viên\n(ACT-STU)" as ACT_STU
 actor "Nhân viên vận hành\n(ACT-OPR)" as ACT_OPR
 actor "Nhân viên kỹ thuật\n(ACT-MNT)" as ACT_MNT
 
-rectangle "<<System>>\n**SMART E-MOBILITY HUB SYSTEM**\n(SEMH)\n\nQuản lý trạng thái, đặt và sử dụng tài nguyên;\ngiám sát, điều phối và mô phỏng" as SEMH
+' Trung tâm: toàn bộ hệ thống nằm trong phạm vi xây dựng.
+System(SEMH, "SMART E-MOBILITY HUB SYSTEM", "SEMH\nQuản lý trạng thái, đặt và sử dụng tài nguyên;\ngiám sát, điều phối và mô phỏng")
 
-rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as EXT_STATE
+' Cột phải: các hệ thống ngoài phạm vi.
+System_Ext(EXT_MAP, "Map & Geolocation Service", "EXT-MAP / ACT-MAP")
+System_Ext(EXT_STATE, "IoT & State Data Gateway", "EXT-STATE / ACT-DAT")
 
-ACT_STU <-right-> SEMH : Yêu cầu tra cứu, đặt và sử dụng /\ntrạng thái và kết quả
-SEMH <-right-> ACT_OPR : Cảnh báo, khuyến nghị /\nlệnh vận hành và mô phỏng
-SEMH <-right-> ACT_MNT : Thông tin sự cố /\nkết quả xử lý
-EXT_STATE -up-> SEMH : Trạng thái tài nguyên\nvà sự kiện vận hành
+' Khóa bố cục ba cột, ưu tiên khổ ngang.
+Lay_D(ACT_STU, ACT_OPR)
+Lay_D(ACT_OPR, ACT_MNT)
+Lay_R(ACT_OPR, SEMH)
+Lay_D(EXT_MAP, EXT_STATE)
+Lay_R(SEMH, EXT_MAP)
+
+' Luồng trao đổi qua ranh giới hệ thống.
+BiRel_R(ACT_STU, SEMH, "Yêu cầu tra cứu, đặt và sử dụng /\ntrạng thái và kết quả")
+BiRel_R(ACT_OPR, SEMH, "Cảnh báo, khuyến nghị /\nlệnh vận hành và mô phỏng")
+BiRel_R(ACT_MNT, SEMH, "Thông tin sự cố /\nkết quả xử lý")
+
+BiRel_R(SEMH, EXT_MAP, "Vị trí, khoảng cách /\nyêu cầu chuẩn hóa và vùng tìm kiếm")
+Rel_L(EXT_STATE, SEMH, "Trạng thái tài nguyên\nvà sự kiện vận hành")
 
 @enduml

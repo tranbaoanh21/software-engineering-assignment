@@ -1,0 +1,115 @@
+\subsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+SUB-RES quản lý vòng đời của \texttt{VehicleReservation} từ lúc Sinh viên yêu cầu giữ một xe đến khi lượt đặt được nhận xe, bị hủy hoặc hết hạn. Phân hệ kiểm tra đồng thời điều kiện của Sinh viên và phương tiện, giữ xe bằng một thay đổi nhất quán và trả thời điểm hết hạn rõ ràng. SUB-RES sử dụng trạng thái phương tiện đã được SEMH chấp nhận; phân hệ không trực tiếp thu thập dữ liệu IoT và không xử lý việc bàn giao, mở khóa hoặc bắt đầu chuyến đi thuộc SUB-TRIP.
+
+\subsubsection{UC-RES-01 -- Đặt phương tiện dùng chung}
+
+\UseCaseDiagram{uc-res-01.pdf}{UC-RES-01}{Đặt phương tiện dùng chung}{fig:uc-res-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-RES-01 -- Đặt phương tiện dùng chung}\label{tab:spec-UC-RES-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-RES-01\\\hline
+  Use Case Name & Đặt phương tiện dùng chung\\\hline
+  Owning Subsystem & SUB-RES\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp; use case sử dụng trạng thái phương tiện đã được SEMH chấp nhận.\\\hline
+  Description / Goal & Cho phép Sinh viên giữ trước một xe dùng chung đủ điều kiện trong 10 phút, nhận xác nhận cùng thời điểm hết hạn và bảo đảm xe không thể được xác nhận đồng thời cho người khác.\\\hline
+  Trigger & Sinh viên chọn một xe dùng chung và gửi yêu cầu đặt xe.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên đã được hệ thống nhận diện và có quyền sử dụng chức năng đặt xe.\newline
+    \textbf{2.} Xe được chọn thuộc một Mobility Hub hợp lệ và có mã định danh trong SEMH.\newline
+    \textbf{3.} Hệ thống có trạng thái hợp lệ của Sinh viên, xe và các lượt đặt đang có hiệu lực để kiểm tra tại thời điểm xác nhận.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Một \texttt{VehicleReservation} \texttt{Confirmed} thuộc Sinh viên và xe được tạo với thời điểm hết hạn sau 10 phút; xe chuyển từ \texttt{Available} sang \texttt{Reserved}.\newline
+    \textbf{Thất bại:} Không có lượt đặt mới được xác nhận, trạng thái xe không bị thay đổi bởi yêu cầu thất bại và Sinh viên nhận được lý do từ chối.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên xem xe đã chọn, điều kiện sử dụng và thời hạn giữ xe.\newline
+    \textbf{2.} Sinh viên xác nhận yêu cầu đặt phương tiện.\newline
+    \textbf{3.} Hệ thống xác minh Sinh viên và kiểm tra Sinh viên không có \texttt{VehicleReservation} \texttt{Pending} hoặc \texttt{Confirmed} theo \texttt{BR-RES-01}.\newline
+    \textbf{4.} Trong cùng một thao tác nhất quán, hệ thống kiểm tra xe đang \texttt{Available}, mức pin không thấp hơn 30\% và chưa có lượt đặt hiệu lực theo \texttt{BR-RES-02} và \texttt{BR-RES-04}.\newline
+    \textbf{5.} Hệ thống tạo \texttt{VehicleReservation}, giữ xe bằng cách chuyển xe sang \texttt{Reserved} và chuyển lượt đặt sang \texttt{Confirmed}.\newline
+    \textbf{6.} Hệ thống thiết lập thời điểm hết hạn bằng thời điểm xác nhận cộng 10 phút theo \texttt{BR-RES-03}.\newline
+    \textbf{7.} Hệ thống hiển thị mã lượt đặt, thông tin xe và Hub nhận xe, thời điểm hết hạn, thời gian còn lại và hướng dẫn nhận xe.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Thay đổi xe trước khi xác nhận.} \textit{Rẽ từ bước 1.} Sinh viên quay lại thông tin Hub để chọn xe khác; use case kết thúc mà không tạo lượt đặt.\newline
+    \textbf{AF-02 -- Sinh viên đã có lượt đặt hiệu lực.} \textit{Tại bước 3.} Hệ thống từ chối yêu cầu, hiển thị lượt đặt hiện có và cho phép Sinh viên quay về quản lý lượt đặt đó.\newline
+    \textbf{AF-03 -- Xe không còn đủ điều kiện.} \textit{Tại bước 4.} Hệ thống từ chối yêu cầu, nêu điều kiện không còn được đáp ứng và cung cấp hành động mở \texttt{UC-HUB-03} để xem Hub thay thế.\newline
+    \textbf{AF-04 -- Yêu cầu cạnh tranh được xác nhận trước.} \textit{Tại bước 4 hoặc 5.} Nếu xe vừa được giữ bởi yêu cầu khác, hệ thống không tạo lượt đặt thứ hai, trả kết quả từ chối nhất quán và cung cấp hành động chọn xe khác.\newline
+    \textbf{AF-05 -- Lượt đặt hết hạn trước khi nhận xe.} Sau khi luồng chính hoàn tất, nếu Sinh viên chưa nhận xe khi hết 10 phút, \texttt{NIFR-RES-01} chuyển lượt đặt sang \texttt{Expired}, giải phóng xe khi đủ điều kiện và thông báo kết quả cho Sinh viên.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Dữ liệu kiểm tra chưa sẵn sàng.} \textit{Tại bước 3 hoặc 4.} Nếu hệ thống không thể xác định chắc chắn trạng thái Sinh viên, lượt đặt hoặc xe, yêu cầu bị từ chối an toàn và Sinh viên được hướng dẫn thử lại.\newline
+    \textbf{EF-02 -- Không thể hoàn tất thay đổi nhất quán.} \textit{Tại bước 5.} Hệ thống hoàn tác toàn bộ thay đổi của yêu cầu, không để lại lượt đặt \texttt{Confirmed} hoặc xe \texttt{Reserved} đơn lẻ, sau đó thông báo lỗi và cho phép thử lại.\newline
+    \textbf{EF-03 -- Không tải được kết quả xác nhận.} \textit{Tại bước 7.} Hệ thống kiểm tra lại kết quả theo mã yêu cầu; nếu lượt đặt đã được tạo, hệ thống hiển thị lại thay vì gửi một yêu cầu đặt mới.\\\hline
+  Related Requirements & \texttt{FR-RES-01}; \texttt{NIFR-RES-01}; \texttt{NFR-PERF-01}, \texttt{NFR-CON-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-RES-01}--\texttt{BR-RES-04}.\\\hline
+  Dependencies & Xe thường được chọn từ \texttt{UC-HUB-02}; có thể chuyển sang \texttt{UC-HUB-03} khi xe không còn phù hợp. Lượt đặt \texttt{Confirmed} là đầu vào của \texttt{UC-TRIP-01}; việc hết hạn do \texttt{NIFR-RES-01} xử lý.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-RES-02 -- Hủy lượt đặt phương tiện}
+
+\UseCaseDiagram{uc-res-02.pdf}{UC-RES-02}{Hủy lượt đặt phương tiện}{fig:uc-res-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-RES-02 -- Hủy lượt đặt phương tiện}\label{tab:spec-UC-RES-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-RES-02\\\hline
+  Use Case Name & Hủy lượt đặt phương tiện\\\hline
+  Owning Subsystem & SUB-RES\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} Không có.\\\hline
+  Description / Goal & Cho phép Sinh viên hủy lượt đặt phương tiện của chính mình khi lượt đặt còn \texttt{Pending} hoặc \texttt{Confirmed}, đồng thời giải phóng xe một cách nhất quán để xe có thể tiếp tục phục vụ nếu không có ràng buộc khác.\\\hline
+  Trigger & Sinh viên mở lượt đặt đang có hiệu lực và chọn hủy lượt đặt.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên đã được hệ thống nhận diện.\newline
+    \textbf{2.} Mã lượt đặt tồn tại và hệ thống có thể xác định chủ sở hữu cùng trạng thái hiện tại của lượt đặt.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Lượt đặt chuyển sang \texttt{Cancelled}; xe được chuyển về \texttt{Available} nếu vẫn đủ điều kiện phục vụ và không bị ràng buộc bởi sự cố hoặc quy trình khác.\newline
+    \textbf{Thất bại:} Trạng thái lượt đặt và xe trước yêu cầu được bảo toàn; Sinh viên nhận được trạng thái hiện tại hoặc lý do không thể hủy.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên mở chi tiết lượt đặt đang có hiệu lực.\newline
+    \textbf{2.} Hệ thống hiển thị xe, Hub nhận xe, trạng thái và thời điểm hết hạn của lượt đặt.\newline
+    \textbf{3.} Sinh viên chọn hủy và xác nhận quyết định.\newline
+    \textbf{4.} Hệ thống xác minh lượt đặt thuộc Sinh viên và đang ở trạng thái \texttt{Pending} hoặc \texttt{Confirmed}.\newline
+    \textbf{5.} Trong cùng một thao tác nhất quán, hệ thống chuyển lượt đặt sang \texttt{Cancelled} và gỡ quan hệ giữ xe của lượt đặt.\newline
+    \textbf{6.} Hệ thống đánh giá trạng thái hiện tại của xe; nếu xe không có sự cố hoặc ràng buộc khác, hệ thống chuyển xe từ \texttt{Reserved} về \texttt{Available}.\newline
+    \textbf{7.} Hệ thống hiển thị xác nhận hủy thành công và trạng thái cuối của lượt đặt.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Sinh viên không xác nhận hủy.} \textit{Rẽ từ bước 3.} Sinh viên đóng hộp xác nhận; use case kết thúc và không thay đổi dữ liệu.\newline
+    \textbf{AF-02 -- Lượt đặt đã hết hạn hoặc đã được hủy.} \textit{Tại bước 4.} Hệ thống không thực hiện hủy lần nữa, hiển thị trạng thái \texttt{Expired} hoặc \texttt{Cancelled} hiện tại và làm mới thông tin trên màn hình.\newline
+    \textbf{AF-03 -- Lượt đặt đã được dùng để nhận xe.} \textit{Tại bước 4.} Nếu lượt đặt đã \texttt{Fulfilled}, hệ thống từ chối hủy và hướng Sinh viên đến thông tin chuyến đi tương ứng.\newline
+    \textbf{AF-04 -- Xe không thể trở lại phục vụ.} \textit{Tại bước 6.} Hệ thống vẫn hoàn tất việc hủy lượt đặt nhưng giữ xe ở trạng thái hiện tại, chẳng hạn \texttt{OutOfService}, và không hiển thị xe là khả dụng.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Lượt đặt không tồn tại hoặc không thuộc Sinh viên.} \textit{Tại bước 4.} Hệ thống từ chối yêu cầu, không tiết lộ thông tin của người khác và không thay đổi dữ liệu.\newline
+    \textbf{EF-02 -- Không thể hoàn tất cập nhật nhất quán.} \textit{Tại bước 5 hoặc 6.} Hệ thống hoàn tác thay đổi của yêu cầu để tránh trạng thái lượt đặt và xe mâu thuẫn, sau đó thông báo lỗi và cho phép thử lại.\newline
+    \textbf{EF-03 -- Không tải được kết quả sau khi gửi yêu cầu.} \textit{Tại bước 7.} Hệ thống đọc lại trạng thái theo mã lượt đặt và hiển thị kết quả thực tế, không lặp lại thao tác hủy nếu lượt đặt đã \texttt{Cancelled}.\\\hline
+  Related Requirements & \texttt{FR-RES-02}; \texttt{NFR-SEC-01}, \texttt{NFR-CON-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-RES-01}, \texttt{BR-RES-02}, \texttt{BR-RES-03}.\\\hline
+  Dependencies & Lượt đặt được tạo bởi \texttt{UC-RES-01}; trạng thái có thể đồng thời thay đổi bởi \texttt{NIFR-RES-01}. Lượt đặt đã \texttt{Fulfilled} thuộc luồng của \texttt{UC-TRIP-01} và không còn được hủy.\\\hline
+\end{longtable}
+\normalsize
+\clearpage
+
+\clearpage

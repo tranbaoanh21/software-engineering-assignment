@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Sinh viên\n(ACT-STU)" as Student
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Hủy lượt đặt\nphương tiện\n(UC-RES-02)" as UC_Cancel
+  usecase "Xác minh quyền sở hữu\nvà trạng thái lượt đặt" as UC_Validate
+  usecase "Chuyển lượt đặt sang\nCancelled" as UC_Update
+  usecase "Giải phóng phương tiện\ntheo trạng thái hiện tại" as UC_Release
+}
+
+Student -down-> UC_Cancel
+
+UC_Cancel ..> UC_Validate : <<include>>
+UC_Cancel ..> UC_Update : <<include>>
+UC_Cancel ..> UC_Release : <<include>>
+
+@enduml

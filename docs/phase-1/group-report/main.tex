@@ -5,6 +5,9 @@
 \input{../../../assets/latex-template/hcmut-report.sty}
 \input{cover-page}
 
+% Nguồn hình dùng chung giữa group report và bảy individual report.
+\newcommand{\PhaseOneDiagramPath}{../diagrams/plantuml/output}
+
 % Báo cáo tham khảo dùng họ VnTeX/Computer Modern. Template chung đã cấu hình
 % Latin Modern để giữ đúng tinh thần đó và vẫn hỗ trợ Unicode tiếng Việt.
 
@@ -22,43 +25,13 @@
 \fancyfoot[L]{\scriptsize\ttfamily Bài tập lớn công nghệ phần mềm\\Niên khoá \AcademicYear}
 \fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
 
-\newcommand{\Placeholder}[1]{\textit{\color{gray!70!black}[#1]}}
-\newcommand{\OwnerNote}[1]{%
-  \par\vspace{-0.25em}
-  \noindent\hfill{\small\itshape\color{gray!70!black}Phụ trách: #1}\par
-  \vspace{0.35em}
-}
-\newcommand{\DiagramPlaceholder}[2]{%
+\newcommand{\UseCaseDiagram}[4]{%
   \par\medskip
   \noindent\begin{minipage}{\textwidth}
     \centering
-    \fbox{%
-      \begin{minipage}[c][70mm][c]{0.88\textwidth}
-        \centering
-        \Placeholder{CHÈN DIAGRAM TẠI ĐÂY}\\[2mm]
-        \small #1
-      \end{minipage}%
-    }
-    \captionof{figure}{#1}
-    \label{#2}
-  \end{minipage}
-  \par\medskip
-}
-
-\newcommand{\UseCaseDiagramPlaceholder}[3]{%
-  \par\medskip
-  \noindent\begin{minipage}{\textwidth}
-    \centering
-    \fbox{%
-      \begin{minipage}[c][88mm][c]{0.9\textwidth}
-        \centering
-        \Placeholder{CHÈN SƠ ĐỒ USE CASE CHI TIẾT TẠI ĐÂY}\\[3mm]
-        \small #1\\[2mm]
-        \footnotesize Actor, use case, quan hệ include/extend và system boundary phải khớp với phần đặc tả bên dưới.
-      \end{minipage}%
-    }
-    \captionof{figure}{Sơ đồ Use Case #1 -- #2}
-    \label{#3}
+    \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseOneDiagramPath/#1}
+    \captionof{figure}{Sơ đồ Use Case #2 -- #3}
+    \label{#4}
   \end{minipage}
   \par\medskip
 }
@@ -114,13 +87,13 @@
   \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
   \textbf{MSSV} & \centering\arraybackslash\textbf{Vai trò / Nhiệm vụ}\\
   \hline
-  1 & Nguyễn Quốc Trung & 2413707 & Bối cảnh, stakeholder; SUB-HUB -- 3 use case\\\hline
-  2 & Phan Võ Bảo Trâm & 2413576 & Mục tiêu, phạm vi, boundary; SUB-RES -- 2 use case\\\hline
-  3 & Lê Nguyễn Tường Vi & 2413937 & Tổng hợp FR/BR; SUB-TRIP -- 2 use case\\\hline
-  4 & Nguyễn Ngọc Hân & 2410951 & Use-case model chung; SUB-PARK -- 3 use case\\\hline
-  5 & Trần Thị Hương Giang & 2410845 & Tổng hợp NFR; SUB-CHG -- 3 use case\\\hline
-  6 & Nguyễn Thị Minh Anh & 2410126 & Tổng hợp NIFR; SUB-OPS -- 3 use case\\\hline
-  7 & Trần Nhật Bảo Anh & 2410155 & Quy ước, tích hợp báo cáo; SUB-SIM -- 2 use case\\\hline
+  1 & Nguyễn Quốc Trung & 2413707 & Toàn bộ Phần II; SUB-HUB -- 3 use case\\\hline
+  2 & Phan Võ Bảo Trâm & 2413576 & SUB-RES -- 2 use case\\\hline
+  3 & Lê Nguyễn Tường Vi & 2413937 & Mô hình use case toàn hệ thống; SUB-TRIP -- 2 use case\\\hline
+  4 & Nguyễn Ngọc Hân & 2410951 & SUB-PARK -- 3 use case\\\hline
+  5 & Trần Thị Hương Giang & 2410845 & SUB-CHG -- 3 use case\\\hline
+  6 & Nguyễn Thị Minh Anh & 2410126 & SUB-OPS -- 3 use case\\\hline
+  7 & Trần Nhật Bảo Anh & 2410155 & Toàn bộ Phần I; SUB-SIM -- 2 use case; tích hợp báo cáo\\\hline
 \end{tabularx}
 \end{center}
 \normalsize

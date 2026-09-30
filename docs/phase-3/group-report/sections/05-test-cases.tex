@@ -1,0 +1,33 @@
+\section{Test Cases (Bonus)}
+
+Test case là phần bonus của Submission 3. Nếu thực hiện, nhóm ưu tiên các business rule, nhánh lỗi và NFR có rủi ro cao thay vì chỉ kiểm thử happy path.
+
+\subsection{Test strategy và phạm vi}
+
+Phân biệt unit test cho domain rule, integration test cho repository/external adapter, API test cho use-case flow và system test cho demonstration. Ghi rõ dữ liệu test, môi trường, oracle và tiêu chí pass/fail.
+
+\subsection{Mẫu test case}
+
+\begin{longtable}{|L{25mm}|L{108mm}|}
+  \caption{Mẫu đặc tả test case}\\
+  \hline
+  \rowcolor{gray!15}\textbf{Trường} & \textbf{Nội dung cần điền}\\\hline
+  Test Case ID & \texttt{TC-[SUB]-[SỐ]}\\\hline
+  Traceability & UC/FR/BR/NFR và method liên quan\\\hline
+  Mục tiêu & Hành vi hoặc rủi ro cần kiểm chứng\\\hline
+  Precondition & Trạng thái dữ liệu và môi trường ban đầu\\\hline
+  Test data & Input, mock/stub và dữ liệu IoT giả lập\\\hline
+  Steps & Các bước thực hiện có thể lặp lại\\\hline
+  Expected result & Kết quả định lượng hoặc trạng thái mong đợi\\\hline
+  Actual result & Kết quả khi chạy, evidence và thời điểm chạy\\\hline
+\end{longtable}
+
+\subsection{Tổ chức test theo use case}
+
+Test nghiệp vụ được đặt trong phần UC tương ứng của Class Diagram và Method Descriptions. Phần này chỉ giữ chiến lược dùng chung, kiểm thử NFR và bảng tổng hợp kết quả. Cách tổ chức đó giúp mỗi test truy ngược được đến UC, FR/BR, method và dữ liệu đầu vào mà không tạo một danh sách test tách rời thiết kế.
+
+Bao phủ tối thiểu: concurrent reservation không double-booking; reservation hết hạn; trả xe không hợp lệ; check-in và check-out bãi đỗ theo cảm biến; ưu tiên sạc; xử lý sự cố và điều phối; cô lập simulation; fallback khi dữ liệu IoT hoặc bản đồ không khả dụng.
+
+\subsection{Kiểm thử NFR và bằng chứng}
+
+Ghi công cụ, phiên bản, cấu hình, số lần chạy, sample size và kết quả đo cho performance, reliability, security, consistency, usability, auditability và maintainability nếu nhóm tuyên bố đã kiểm chứng.

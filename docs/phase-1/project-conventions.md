@@ -50,6 +50,7 @@ Stakeholder là bên sử dụng, quản lý, chịu ảnh hưởng hoặc quan 
 | `ACT-OPR` | Nhân viên vận hành | Người giám sát Hub, xử lý sự cố, điều phối tài nguyên và chạy mô phỏng. |
 | `ACT-MNT` | Nhân viên kỹ thuật | Người tiếp nhận công việc kỹ thuật và xác nhận kết quả khắc phục sự cố. |
 | `ACT-DAT` | Nguồn dữ liệu trạng thái | Hệ thống bên ngoài cung cấp dữ liệu cảm biến hoặc dữ liệu giả lập. |
+| `ACT-MAP` | Dịch vụ bản đồ và định vị | Hệ thống bên ngoài chuẩn hóa vị trí, xác định khoảng cách và vùng Hub lân cận. |
 
 Quy tắc sử dụng actor:
 
@@ -64,8 +65,11 @@ Quy tắc sử dụng actor:
 | Mã | Tên | Vai trò |
 |---|---|---|
 | `EXT-STATE` | IoT & State Data Gateway | Cung cấp trạng thái xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. |
+| `EXT-MAP` | Map & Geolocation Service | Chuẩn hóa địa chỉ hoặc tọa độ, tính khoảng cách và xác định Hub trong vùng tìm kiếm. |
 
 `EXT-STATE` là cổng giao tiếp trừu tượng giữa SEMH và lớp thiết bị/dữ liệu bên ngoài. Dữ liệu có thể đến từ cảm biến thật hoặc nguồn mô phỏng. Không tách từng cảm biến, khóa xe hay cổng sạc thành actor khi đề tài chưa yêu cầu tích hợp phần cứng cụ thể.
+
+`EXT-MAP` chỉ cung cấp năng lực bản đồ và định vị cho các luồng tra cứu. SEMH vẫn chịu trách nhiệm áp dụng tiêu chí nghiệp vụ, đánh giá khả năng phục vụ và xếp hạng Hub; không giao quyết định nghiệp vụ cho dịch vụ bản đồ.
 
 ## 4. Thuật ngữ nghiệp vụ chính
 

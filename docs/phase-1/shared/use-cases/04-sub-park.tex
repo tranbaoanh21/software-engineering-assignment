@@ -1,0 +1,167 @@
+\subsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+SUB-PARK quản lý việc giữ trước và sử dụng \texttt{ParkingSpace} cho phương tiện điện cá nhân. Phân hệ bảo đảm một chỗ đỗ không được xác nhận cho nhiều lượt cùng lúc, quản lý \texttt{ParkingReservation} qua các trạng thái \texttt{Confirmed}, \texttt{CheckedIn} và \texttt{Completed}, đồng thời dùng trạng thái cảm biến từ \texttt{EXT-STATE} để xác nhận phương tiện đến hoặc rời chỗ. SUB-PARK không quản lý việc trả xe dùng chung của SUB-TRIP.
+
+\subsubsection{UC-PARK-01 -- Đặt chỗ đỗ cho xe cá nhân}
+
+\UseCaseDiagram{uc-park-01.pdf}{UC-PARK-01}{Đặt chỗ đỗ cho xe cá nhân}{fig:uc-park-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-PARK-01 -- Đặt chỗ đỗ cho xe cá nhân}\label{tab:spec-UC-PARK-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-PARK-01\\\hline
+  Use Case Name & Đặt chỗ đỗ cho xe cá nhân\\\hline
+  Owning Subsystem & SUB-PARK\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp.\\\hline
+  Description / Goal & Cho phép Sinh viên giữ trước một chỗ đỗ \texttt{Available} tại Hub đích trong tối đa 20 phút và nhận xác nhận đủ rõ để thực hiện check-in.\\\hline
+  Trigger & Sinh viên chọn một Mobility Hub và gửi yêu cầu đặt chỗ cho phương tiện cá nhân.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên đã được nhận diện và đã chọn phương tiện cá nhân cần đỗ.\newline
+    \textbf{2.} Hub đích tồn tại, đang phục vụ và có danh mục chỗ đỗ hợp lệ.\newline
+    \textbf{3.} Hệ thống có trạng thái chỗ đỗ đủ tin cậy để kiểm tra tại thời điểm xác nhận.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Một \texttt{ParkingReservation} \texttt{Confirmed} được tạo cho đúng Sinh viên, phương tiện và chỗ đỗ; chỗ chuyển sang \texttt{Reserved} với thời điểm hết hạn không quá 20 phút.\newline
+    \textbf{Thất bại:} Không có lượt đặt chỗ mới và không có chỗ đỗ nào bị giữ bởi yêu cầu thất bại.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên chọn Hub đích và chức năng đặt chỗ đỗ.\newline
+    \textbf{2.} Hệ thống hiển thị số chỗ đỗ có thể đặt cùng điều kiện và thời hạn giữ chỗ.\newline
+    \textbf{3.} Sinh viên chọn phương tiện cá nhân và xác nhận yêu cầu.\newline
+    \textbf{4.} Hệ thống chọn một \texttt{ParkingSpace} \texttt{Available} phù hợp.\newline
+    \textbf{5.} Trong cùng một thao tác nhất quán, hệ thống kiểm tra chỗ chưa có lượt đặt hiệu lực, tạo \texttt{ParkingReservation} và chuyển chỗ sang \texttt{Reserved} theo \texttt{BR-PARK-01}.\newline
+    \textbf{6.} Hệ thống chuyển lượt đặt sang \texttt{Confirmed} và thiết lập thời điểm hết hạn không quá 20 phút theo \texttt{BR-PARK-02}.\newline
+    \textbf{7.} Hệ thống hiển thị mã lượt đặt, Hub, vị trí chỗ đỗ, thời điểm hết hạn và hướng dẫn check-in.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Không còn chỗ đáp ứng.} \textit{Tại bước 4.} Hệ thống trả kết quả không thể đặt, giữ nguyên dữ liệu và cung cấp hành động mở \texttt{UC-HUB-03}.\newline
+    \textbf{AF-02 -- Yêu cầu khác giữ chỗ trước.} \textit{Tại bước 5.} Hệ thống chọn lại một chỗ \texttt{Available} khác trong cùng Hub; nếu không còn chỗ, chuyển sang AF-01.\newline
+    \textbf{AF-03 -- Sinh viên đổi Hub hoặc phương tiện.} \textit{Rẽ từ bước 3.} Hệ thống quay lại lựa chọn tương ứng; chưa có chỗ nào bị giữ.\newline
+    \textbf{AF-04 -- Lượt đặt hết hạn trước check-in.} Sau khi luồng chính kết thúc, \texttt{NIFR-PARK-01} chuyển lượt đặt sang \texttt{Expired} và chỗ về \texttt{Available} nếu Sinh viên chưa check-in đúng hạn.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Trạng thái chỗ đỗ chưa đủ tin cậy.} \textit{Tại bước 4.} Hệ thống từ chối giữ chỗ an toàn, thông báo dữ liệu chưa sẵn sàng và cho phép thử lại.\newline
+    \textbf{EF-02 -- Không thể hoàn tất thay đổi nhất quán.} \textit{Tại bước 5 hoặc 6.} Hệ thống hoàn tác yêu cầu để không tồn tại lượt đặt \texttt{Confirmed} và chỗ \texttt{Available}, hoặc lượt đặt thất bại nhưng chỗ vẫn \texttt{Reserved}.\newline
+    \textbf{EF-03 -- Không tải được kết quả xác nhận.} \textit{Tại bước 7.} Hệ thống đọc lại kết quả theo mã yêu cầu và hiển thị lượt đặt đã tạo, không gửi yêu cầu đặt trùng.\\\hline
+  Related Requirements & \texttt{FR-PARK-01}; \texttt{NIFR-PARK-01}; \texttt{NFR-CON-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-PARK-01}, \texttt{BR-PARK-02}.\\\hline
+  Dependencies & Hub thường được chọn từ \texttt{UC-HUB-02}; có thể mở \texttt{UC-HUB-03} khi không còn chỗ. Lượt đặt được sử dụng bởi \texttt{UC-PARK-02} và có thể hết hạn qua \texttt{NIFR-PARK-01}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-PARK-02 -- Check-in phương tiện cá nhân}
+
+\UseCaseDiagram{uc-park-02.pdf}{UC-PARK-02}{Check-in phương tiện cá nhân}{fig:uc-park-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-PARK-02 -- Check-in phương tiện cá nhân}\label{tab:spec-UC-PARK-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-PARK-02\\\hline
+  Use Case Name & Check-in phương tiện cá nhân\\\hline
+  Owning Subsystem & SUB-PARK\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Xác nhận phương tiện cá nhân đã đến đúng chỗ đỗ của lượt đặt còn hiệu lực, sau đó chuyển lượt đặt sang \texttt{CheckedIn} và chỗ đỗ sang \texttt{Occupied}.\\\hline
+  Trigger & Sinh viên đến Hub, đưa phương tiện vào chỗ đã giữ và yêu cầu check-in.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên có một \texttt{ParkingReservation} \texttt{Confirmed} chưa hết hạn.\newline
+    \textbf{2.} Lượt đặt thuộc đúng Sinh viên, phương tiện, Hub và chỗ đỗ.\newline
+    \textbf{3.} Chỗ đỗ đang \texttt{Reserved} bởi chính lượt đặt này.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{ParkingReservation} chuyển sang \texttt{CheckedIn}; \texttt{ParkingSpace} chuyển sang \texttt{Occupied} và thời điểm check-in được ghi nhận.\newline
+    \textbf{Thất bại:} Lượt đặt và chỗ đỗ giữ nguyên trạng thái hợp lệ trước yêu cầu; hệ thống không ghi nhận phương tiện đã vào chỗ khi chưa được xác nhận.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên mở lượt đặt chỗ và chọn check-in.\newline
+    \textbf{2.} Hệ thống xác minh lượt đặt \texttt{Confirmed}, chưa hết hạn và thuộc Sinh viên.\newline
+    \textbf{3.} Hệ thống hiển thị Hub và chỗ đỗ đã được phân bổ.\newline
+    \textbf{4.} Sinh viên đưa đúng phương tiện vào chỗ đỗ và xác nhận đã hoàn tất.\newline
+    \textbf{5.} Hệ thống nhận từ \texttt{ACT-DAT} tín hiệu phương tiện hiện diện tại đúng chỗ.\newline
+    \textbf{6.} Trong cùng một thao tác nhất quán, hệ thống chuyển lượt đặt sang \texttt{CheckedIn}, chỗ đỗ sang \texttt{Occupied} và ghi thời điểm check-in.\newline
+    \textbf{7.} Hệ thống hiển thị xác nhận phương tiện đã được ghi nhận tại Hub.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Cảm biến cập nhật chậm.} \textit{Tại bước 5.} Hệ thống giữ yêu cầu trong thời gian chờ có giới hạn, hiển thị trạng thái đang xác minh và tiếp tục khi nhận được tín hiệu hợp lệ.\newline
+    \textbf{AF-02 -- Lượt đặt vừa hết hạn.} \textit{Tại bước 2.} Hệ thống hiển thị \texttt{Expired}, không check-in theo lượt cũ và hướng Sinh viên tra cứu khả năng đỗ hiện tại.\newline
+    \textbf{AF-03 -- Sinh viên chưa hoàn tất đưa xe vào chỗ.} \textit{Rẽ từ bước 4.} Use case dừng, lượt đặt vẫn \texttt{Confirmed} nếu chưa hết hạn.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Phương tiện ở sai chỗ hoặc không được phát hiện.} \textit{Tại bước 5.} Hệ thống không cập nhật trạng thái, chỉ rõ chỗ được phân bổ và yêu cầu Sinh viên kiểm tra lại.\newline
+    \textbf{EF-02 -- Chỗ đỗ báo lỗi.} \textit{Tại bước 5.} Hệ thống không đánh dấu \texttt{Occupied}, thông báo không thể check-in và chuyển thông tin sự cố cho SUB-OPS.\newline
+    \textbf{EF-03 -- Cập nhật trạng thái thất bại.} \textit{Tại bước 6.} Hệ thống hoàn tác để lượt đặt và chỗ đỗ không ở hai trạng thái mâu thuẫn, sau đó cho phép thử lại.\\\hline
+  Related Requirements & \texttt{FR-PARK-02}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-PARK-01}, \texttt{BR-PARK-02}.\\\hline
+  Dependencies & Sử dụng lượt đặt từ \texttt{UC-PARK-01} và trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT}; tạo trạng thái đầu vào cho \texttt{UC-PARK-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\clearpage
+\subsubsection{UC-PARK-03 -- Check-out phương tiện cá nhân}
+
+\UseCaseDiagram{uc-park-03.pdf}{UC-PARK-03}{Check-out phương tiện cá nhân}{fig:uc-park-03}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{42mm}|L{102mm}|}
+  \caption{Đặc tả Use Case UC-PARK-03 -- Check-out phương tiện cá nhân}\label{tab:spec-UC-PARK-03}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Use Case ID & UC-PARK-03\\\hline
+  Use Case Name & Check-out phương tiện cá nhân\\\hline
+  Owning Subsystem & SUB-PARK\\\hline
+  Actors & \textbf{Primary:} \texttt{ACT-STU}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Xác nhận phương tiện cá nhân đã rời đúng chỗ đang sử dụng, hoàn tất \texttt{ParkingReservation} và giải phóng chỗ để có thể phục vụ lượt tiếp theo.\\\hline
+  Trigger & Sinh viên lấy phương tiện khỏi chỗ đỗ và yêu cầu check-out.\\\hline
+  Preconditions &
+    \textbf{1.} Sinh viên có một \texttt{ParkingReservation} \texttt{CheckedIn}.\newline
+    \textbf{2.} Chỗ đỗ tương ứng đang \texttt{Occupied} bởi phương tiện của lượt đặt.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{ParkingReservation} chuyển sang \texttt{Completed}; chỗ đỗ chuyển sang \texttt{Available} nếu không có sự cố và thời điểm check-out được ghi nhận.\newline
+    \textbf{Thất bại:} Lượt đặt vẫn \texttt{CheckedIn}, chỗ đỗ chưa được giải phóng và hệ thống nêu hành động tiếp theo.\\\hline
+  Main Flow &
+    \textbf{1.} Sinh viên mở lượt đỗ đang sử dụng và chọn check-out.\newline
+    \textbf{2.} Hệ thống xác minh lượt đặt thuộc Sinh viên và đang \texttt{CheckedIn}.\newline
+    \textbf{3.} Hệ thống hiển thị chỗ đỗ cần rời và yêu cầu Sinh viên lấy phương tiện ra khỏi chỗ.\newline
+    \textbf{4.} Sinh viên đưa phương tiện ra và xác nhận thao tác.\newline
+    \textbf{5.} Hệ thống nhận từ \texttt{ACT-DAT} tín hiệu phương tiện không còn hiện diện tại chỗ.\newline
+    \textbf{6.} Hệ thống chuyển lượt đặt sang \texttt{Completed}, ghi thời điểm check-out và chuyển chỗ sang \texttt{Available} nếu chỗ không có sự cố.\newline
+    \textbf{7.} Hệ thống hiển thị xác nhận check-out và kết thúc lượt sử dụng chỗ đỗ.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Cảm biến cập nhật chậm.} \textit{Tại bước 5.} Hệ thống hiển thị đang xác minh trong thời gian giới hạn và chưa giải phóng chỗ cho đến khi nhận tín hiệu hợp lệ.\newline
+    \textbf{AF-02 -- Chỗ đỗ phát sinh sự cố sau khi xe rời.} \textit{Tại bước 6.} Hệ thống hoàn tất lượt đặt nhưng chuyển chỗ sang \texttt{OutOfService} thay vì \texttt{Available}.\newline
+    \textbf{AF-03 -- Sinh viên dừng thao tác.} \textit{Rẽ từ bước 4.} Use case kết thúc, lượt đặt vẫn \texttt{CheckedIn} và chỗ vẫn \texttt{Occupied}.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Phương tiện vẫn được phát hiện tại chỗ.} \textit{Tại bước 5.} Hệ thống từ chối check-out, không giải phóng chỗ và yêu cầu Sinh viên kiểm tra lại.\newline
+    \textbf{EF-02 -- Không nhận được dữ liệu trạng thái.} \textit{Tại bước 5.} Hệ thống giữ trạng thái hiện tại, cảnh báo chưa thể xác nhận và cho phép thử lại.\newline
+    \textbf{EF-03 -- Cập nhật trạng thái thất bại.} \textit{Tại bước 6.} Hệ thống hoàn tác để lượt đặt và chỗ đỗ nhất quán, ghi nhận lỗi và không cấp chỗ cho lượt mới.\\\hline
+  Related Requirements & \texttt{FR-PARK-03}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
+  Related Business Rules & \texttt{BR-PARK-01}.\\\hline
+  Dependencies & Tiếp nối \texttt{UC-PARK-02}; sử dụng trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT}. Chỗ lỗi được chuyển cho SUB-OPS theo dõi.\\\hline
+\end{longtable}
+\normalsize
+\clearpage
+
+\clearpage

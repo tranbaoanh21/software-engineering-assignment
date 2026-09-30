@@ -1,0 +1,190 @@
+\documentclass[10pt,a4paper]{article}
+
+% Đường dẫn từ thư mục meeting-03 đến assets/ của repository.
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+
+\begin{document}
+
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section{THÔNG TIN BUỔI HỌP}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabularx}{\textwidth}{|>{\bfseries}L{45mm}|Y|}
+    \hline
+    Lần họp & Buổi 03 -- Phase 1\\
+    \hline
+    Ngày họp & 20/09/2026\\
+    \hline
+    Thời gian bắt đầu & 21:30\\
+    \hline
+    Hình thức & Họp trực tuyến\\
+    \hline
+    Chủ đề & Làm rõ khó khăn trong quá trình thực hiện và thống nhất hướng hoàn thiện Submission 1\\
+    \hline
+    Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\
+    \hline
+    Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{THÀNH PHẦN NHÓM}
+
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+
+\noindent Buổi họp có sự tham gia của đầy đủ bảy thành viên trong nhóm.
+
+\section{MỤC TIÊU BUỔI HỌP}
+
+Buổi họp được tổ chức sau khi các thành viên đã hoàn thành bản nháp phần việc cá nhân. Mục tiêu chính là để từng người nêu những điểm còn vướng, xác định nguyên nhân và thống nhất cách sửa trước khi nhóm trưởng tích hợp nội dung vào báo cáo chung. Nhóm cũng rà lại tiến độ, cách bàn giao tài liệu và các lỗi có khả năng xuất hiện khi ghép bảy phần thành một báo cáo thống nhất.
+
+\section{TÌNH HÌNH THỰC HIỆN TRƯỚC BUỔI HỌP}
+
+Tính đến ngày 20/09/2026, phần lớn nội dung nền của Submission 1 đã được hình thành. Phần tổng quan dự án và hệ thống yêu cầu đã có bản tương đối hoàn chỉnh; các thành viên phụ trách phân hệ đã xác định actor, phạm vi use case và xây dựng luồng sự kiện ban đầu. Tuy nhiên, mức độ chi tiết giữa các phần chưa đồng đều. Một số sơ đồ còn nhiều đường giao nhau, một số đặc tả chưa phân biệt rõ luồng thay thế với luồng ngoại lệ, và cách dùng thuật ngữ giữa requirement với use case vẫn còn chỗ lệch nhau.
+
+Nhóm thống nhất rằng buổi họp này không thay đổi phạm vi bảy phân hệ và 18 use case đã chốt ở buổi 02. Công việc cần làm là sửa nội dung hiện có cho rõ ràng, kiểm chứng được và liên kết được với các phần còn lại của báo cáo.
+
+\section{KHÓ KHĂN ĐƯỢC CÁC THÀNH VIÊN NÊU RA}
+
+\begingroup
+\small
+\renewcommand{\arraystretch}{1.12}
+\begin{longtable}{|L{38mm}|L{34mm}|L{70mm}|}
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Thành viên} &
+  \centering\arraybackslash\textbf{Phạm vi} &
+  \centering\arraybackslash\textbf{Khó khăn chính}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Thành viên} &
+  \centering\arraybackslash\textbf{Phạm vi} &
+  \centering\arraybackslash\textbf{Khó khăn chính}\\
+  \hline
+  \endhead
+  Nguyễn Quốc Trung & Phần II; SUB-HUB &
+  Phân biệt yêu cầu chức năng do người dùng kích hoạt với chức năng tự động; tránh lặp nội dung giữa BR, FR và NIFR; diễn đạt NFR sao cho có thể kiểm tra. Ở SUB-HUB, dữ liệu gần thời gian thực và trường hợp dữ liệu IoT bị trễ cần được mô tả nhất quán.\\
+  \hline
+  Phan Võ Bảo Trâm & SUB-RES &
+  Xác định ranh giới giữa tạo lượt đặt, hủy lượt đặt và cơ chế tự động hết hạn; phân biệt luồng thay thế vẫn đạt mục tiêu với ngoại lệ khiến use case không hoàn tất.\\
+  \hline
+  Lê Nguyễn Tường Vi & Mô hình toàn hệ thống; SUB-TRIP &
+  Chọn mức độ chi tiết phù hợp cho sơ đồ use case toàn hệ thống, tránh đưa toàn bộ use case con vào một hình; xác định actor ngoài hệ thống và mối liên hệ giữa nhận xe, bắt đầu chuyến đi, trả xe và kết thúc chuyến đi.\\
+  \hline
+  Nguyễn Ngọc Hân & SUB-PARK &
+  Làm rõ đối tượng là phương tiện cá nhân, trạng thái của chỗ đỗ và vai trò của cảm biến trong các luồng đặt chỗ, check-in và check-out.\\
+  \hline
+  Trần Thị Hương Giang & SUB-CHG &
+  Mô tả hàng đợi sạc, phiên sạc và quy tắc ưu tiên mà không trộn trách nhiệm của người vận hành với xử lý tự động; xác định các trường hợp dừng sạc, lỗi thiết bị và điều chỉnh lịch sạc.\\
+  \hline
+  Nguyễn Thị Minh Anh & SUB-OPS &
+  Giữ đúng ranh giới giữa giám sát vận hành với các phân hệ HUB, PARK và CHG; tránh mô tả lại chức năng của phân hệ khác trong use case cảnh báo, điều phối và xử lý sự cố.\\
+  \hline
+  Trần Nhật Bảo Anh & Phần I; SUB-SIM; tích hợp báo cáo &
+  Bảo đảm system boundary, bản đồ phân hệ và thuật ngữ ở Phần I đủ làm nền cho Phần II, III; kiểm soát mã tham chiếu, định dạng LaTeX, vị trí hình và sự thống nhất giữa group work với individual work.\\
+  \hline
+\end{longtable}
+\endgroup
+
+\section{NỘI DUNG THẢO LUẬN VÀ HƯỚNG XỬ LÝ}
+
+\subsection{Thống nhất cách viết requirement}
+
+Mỗi business rule chỉ nêu một quy tắc nghiệp vụ bắt buộc. Functional requirement mô tả khả năng hệ thống phải cung cấp để thực hiện nghiệp vụ; NIFR dành cho xử lý được kích hoạt bởi thời gian, telemetry hoặc sự kiện hệ thống mà không cần người dùng thao tác trực tiếp. NFR phải có tiêu chí đo hoặc cách kiểm tra, tránh các từ chung chung như ``nhanh'', ``an toàn'' hoặc ``dễ sử dụng'' nếu không có ngưỡng đánh giá.
+
+Nhóm giữ nguyên mã đã thống nhất. Khi sửa nội dung, thành viên không tự đổi mã FR, BR hoặc UC vì việc đổi mã sẽ ảnh hưởng đến các phần đã tham chiếu. Nếu phát hiện một yêu cầu thật sự cần tách hoặc gộp, thành viên ghi chú và gửi nhóm trưởng xử lý tập trung.
+
+\subsection{Thống nhất cấu trúc use-case specification}
+
+Mỗi use case phải có mục tiêu rõ ràng, actor chính, trigger, tiền điều kiện, hậu điều kiện, luồng chính, luồng thay thế, luồng ngoại lệ và các mã FR/BR liên quan. Luồng chính chỉ mô tả một đường thành công điển hình. Luồng thay thế vẫn đạt mục tiêu use case theo một cách khác; luồng ngoại lệ mô tả trường hợp mục tiêu không đạt hoặc hệ thống phải dừng, khôi phục hay thông báo lỗi.
+
+Các bước trong luồng được viết theo thứ tự tương tác giữa actor và hệ thống. Nhóm hạn chế đưa chi tiết giao diện, API, database hoặc thuật toán vào đặc tả nếu chi tiết đó chưa cần thiết để hiểu hành vi nghiệp vụ.
+
+\subsection{Thống nhất cách vẽ sơ đồ}
+
+Sơ đồ use case toàn hệ thống chỉ thể hiện bảy nhóm chức năng tương ứng với bảy phân hệ và các actor chính để người đọc nhìn được bức tranh tổng quát. Mỗi use case trong 18 use case có một sơ đồ chi tiết riêng để thể hiện actor, quan hệ include/extend và hệ thống ngoài liên quan. Không tạo thêm bảy sơ đồ trung gian cho từng phân hệ vì sẽ lặp thông tin mà không làm rõ thêm nội dung.
+
+Tất cả sơ đồ dùng cùng phong cách PlantUML: nền trắng, viền đen, font dễ đọc và bố cục ngang khi phù hợp. Tên actor và mã use case phải khớp với Actor Catalog và danh mục use case. Quan hệ include/extend chỉ sử dụng khi đúng ý nghĩa UML, không dùng để thay cho thứ tự các bước trong luồng.
+
+\subsection{Dữ liệu IoT và hệ thống ngoài}
+
+Nguồn dữ liệu IoT được xem là tác nhân bên ngoài cung cấp telemetry và sự kiện trạng thái cho hệ thống. Trong đặc tả, thành viên cần phân biệt dữ liệu mới nhất, dữ liệu đồng bộ gần nhất và trường hợp không có dữ liệu hợp lệ. Nếu sử dụng dữ liệu cũ, giao diện phải thể hiện thời điểm cập nhật để người dùng không hiểu nhầm đó là trạng thái thời gian thực.
+
+Dịch vụ bản đồ và định vị cũng là hệ thống ngoài. Phân hệ HUB sử dụng dịch vụ này để chuẩn hóa vị trí, tính khoảng cách và tìm HUB lân cận; không mô tả dịch vụ bản đồ như một chức năng nội bộ của SEMH.
+
+\subsection{Cách bàn giao và tích hợp tài liệu}
+
+Thành viên chỉ cần gửi nội dung đã rà soát ở định dạng tài liệu hoặc văn bản có cấu trúc rõ. Nhóm trưởng chịu trách nhiệm đưa nội dung vào LaTeX, đồng bộ hình thức và biên dịch PDF. Trước khi tích hợp, từng thành viên phải tự kiểm tra tên actor, mã FR/BR/UC, trạng thái và thuật ngữ theo tài liệu quy ước chung.
+
+Sau khi có bản PDF tổng hợp, mỗi người đọc lại chính phần của mình trong báo cáo nhóm thay vì chỉ kiểm tra file cá nhân. Những thay đổi sau vòng rà soát phải được cập nhật đồng thời vào nguồn nội dung dùng chung để tránh hai bản báo cáo khác nhau.
+
+\section{KẾT QUẢ THỐNG NHẤT}
+
+Sau khi thảo luận, nhóm thống nhất các điểm sau:
+
+\begin{enumerate}
+  \item Giữ nguyên bảy phân hệ, 18 use case và phạm vi phân công đã chốt trong buổi 02.
+  \item Không bổ sung tính năng mới trong giai đoạn hoàn thiện nếu tính năng đó chưa có nguồn gốc từ mục tiêu, stakeholder hoặc yêu cầu đã xác định.
+  \item Mỗi thành viên hoàn thiện toàn bộ use case thuộc phân hệ được giao, không chỉ sửa một use case đại diện.
+  \item Sử dụng cùng một bộ thuật ngữ, actor, trạng thái và quy tắc đặt mã trong tất cả requirement, sơ đồ và đặc tả.
+  \item Nhóm trưởng thực hiện vòng kiểm tra chéo giữa Phần I, II và III; các thành viên chịu trách nhiệm xác nhận nội dung chuyên môn của phần mình.
+  \item Ưu tiên hoàn thiện nội dung trước, sau đó mới điều chỉnh kích thước hình, ngắt trang và các chi tiết trình bày của bản PDF.
+\end{enumerate}
+
+\section{CÔNG VIỆC SAU BUỔI HỌP}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{\textwidth}{|C{21mm}|Y|L{42mm}|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{Mốc} &
+    \centering\arraybackslash\textbf{Kết quả cần hoàn thành} &
+    \centering\arraybackslash\textbf{Người chịu trách nhiệm}\\
+    \hline
+    21/09 & Sửa nội dung theo các vấn đề đã thống nhất; kiểm tra mã và thuật ngữ. & Từng thành viên\\
+    \hline
+    22/09 & Gửi gói nội dung hoàn chỉnh của từng phân hệ và các phần lớn được giao. & Từng thành viên\\
+    \hline
+    23/09 & Tích hợp nội dung vào group report; chuẩn hóa sơ đồ và định dạng LaTeX. & Trần Nhật Bảo Anh\\
+    \hline
+    24/09 & Gửi bản PDF tổng hợp để các thành viên đọc lại phần của mình. & Trần Nhật Bảo Anh và toàn nhóm\\
+    \hline
+    25/09 & Chốt group report, bảy individual report và biên bản họp. & Trần Nhật Bảo Anh\\
+    \hline
+    27/09 & Nộp bài đúng vai trò trên LMS. & Nhóm trưởng và từng thành viên\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{RỦI RO CÒN LẠI}
+
+\begin{itemize}
+  \item \textbf{Sửa cục bộ làm lệch phần khác:} mọi thay đổi về mã, actor hoặc trạng thái phải được rà lại ở requirement, sơ đồ và use-case specification liên quan.
+  \item \textbf{Sơ đồ đúng nội dung nhưng khó đọc:} cần kiểm tra bản render thực tế, không chỉ kiểm tra mã PlantUML.
+  \item \textbf{Báo cáo cá nhân và báo cáo nhóm không đồng bộ:} hai loại báo cáo phải dùng chung nội dung đã duyệt; không chỉnh riêng từng bản sau khi đã chốt.
+  \item \textbf{Thành viên không nắm phần đã nộp:} mỗi người phải đọc lại và có khả năng giải thích actor, quy tắc nghiệp vụ, luồng chính và các trường hợp rẽ nhánh thuộc phạm vi của mình.
+  \item \textbf{Trễ tiến độ do sửa hình thức quá sớm:} ưu tiên xử lý lỗi nội dung và tính nhất quán trước khi tinh chỉnh trình bày.
+\end{itemize}
+
+\section{KẾT LUẬN BUỔI HỌP}
+
+Buổi họp đã giúp nhóm xác định rõ các khó khăn đang ảnh hưởng đến chất lượng Submission 1 và thống nhất cách xử lý cho từng nhóm vấn đề. Phạm vi bài không thay đổi; trọng tâm của giai đoạn tiếp theo là hoàn thiện đủ 18 use case, liên kết đúng với requirement, làm rõ vai trò của các hệ thống ngoài và đồng bộ nội dung giữa báo cáo nhóm với báo cáo cá nhân. Các thành viên tiếp tục sửa phần việc ngay sau buổi họp và gửi bản hoàn chỉnh theo các mốc đã thống nhất.
+
+\end{document}

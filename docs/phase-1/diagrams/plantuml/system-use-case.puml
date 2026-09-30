@@ -29,15 +29,16 @@ skinparam package {
 ' ACTOR
 ' =========================================================
 
-actor "Sinh viên" as Student
-actor "Nhân viên vận hành" as Operator
-actor "Nhân viên kỹ thuật" as Technician
+actor "Sinh viên\n(ACT-STU)" as Student
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+actor "Nhân viên kỹ thuật\n(ACT-MNT)" as Technician
 
 ' =========================================================
 ' HỆ THỐNG BÊN NGOÀI
 ' =========================================================
 
 rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
+rectangle "<<External System>>\nMap & Geolocation Service\n(EXT-MAP / ACT-MAP)" as MapSource
 
 ' =========================================================
 ' SMART E-MOBILITY HUB SYSTEM
@@ -93,6 +94,9 @@ Technician --> UC_Operation
 ' =========================================================
 
 UC_Hub --> StateSource : "Trạng thái Hub"
+UC_Hub --> MapSource : "Vị trí và khoảng cách"
+UC_Trip --> StateSource : "Trạng thái bàn giao\nvà trả xe"
+UC_Parking --> StateSource : "Trạng thái\nchỗ đỗ"
 UC_Charging --> StateSource : "Trạng thái sạc"
 UC_Operation --> StateSource : "Sự kiện vận hành"
 

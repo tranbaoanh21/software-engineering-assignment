@@ -1,0 +1,15 @@
+\section{Kiến trúc tổng thể và các quyết định dùng chung}
+
+Phần này chỉ giữ artefact có phạm vi toàn hệ thống. Class diagram và method đặc thù đã được đặt trong UC tương ứng; ở đây trình bày dependency và môi trường chạy chung để tránh lặp lại trong 18 use case.
+
+\subsection{Deployment View}
+Trình bày cấu hình local/Docker dùng để chấm, phương án production nếu đã triển khai và đường đi của luồng IoT/map/database.
+
+\subsection{Development/Implementation View}
+Trình bày module/package thật trong mã nguồn, dependency direction, external adapter và cross-cutting concerns.
+
+\subsection{Class Diagram và Method Descriptions}
+Trình bày class/package overview toàn hệ thống và quan hệ giữa bảy phân hệ. Class, thuộc tính, method chi tiết phải khớp implementation và được dẫn chiếu về UC sở hữu; không chèn lại toàn bộ class diagram của từng phân hệ trong phần này.
+
+\subsection{Test Cases và kết quả}
+Nếu nộp phần bonus, ghi expected/actual result, môi trường, thời điểm, công cụ và evidence. Phân biệt test đã chạy với test mới chỉ được thiết kế.

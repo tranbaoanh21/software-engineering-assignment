@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 13
+skinparam linetype ortho
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Điều phối phương tiện\ngiữa các Hub\n(UC-OPS-03)" as UC_Redistribute
+  usecase "Xác định Hub nguồn,\nHub đích và phương tiện" as UC_Select
+  usecase "Kiểm tra tính khả thi\ncủa phương án" as UC_Validate
+  usecase "Lập và phê duyệt\nRedistributionPlan" as UC_Approve
+  usecase "Theo dõi và ghi nhận\nkết quả điều chuyển" as UC_Track
+  usecase "Khởi tạo từ\nkhuyến nghị mô phỏng" as UC_FromRecommendation
+}
+
+Operator -down-> UC_Redistribute
+UC_Redistribute ..> UC_Select : <<include>>
+UC_Redistribute ..> UC_Validate : <<include>>
+UC_Redistribute ..> UC_Approve : <<include>>
+UC_Redistribute ..> UC_Track : <<include>>
+UC_FromRecommendation ..> UC_Redistribute : <<extend>>\n[Có Recommendation]
+@enduml

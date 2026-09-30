@@ -1,0 +1,76 @@
+% Thiết lập dùng chung cho bảy báo cáo cá nhân Submission 1.
+% Mỗi main.tex phải định nghĩa IndividualName, IndividualId và IndividualAssignment.
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+
+\renewcommand{\ReportType}{BÁO CÁO CÁ NHÂN}
+\renewcommand{\ReportTitle}{BÀI TẬP LỚN CÔNG NGHỆ PHẦN MỀM}
+\renewcommand{\ReportSubjectLabel}{ĐỀ TÀI:}
+\renewcommand{\ProjectTitle}{SMART E-MOBILITY HUB}
+\renewcommand{\ProjectSubtitle}{Submission 1 -- Individual Work\\[3mm]\textbf{Sinh viên:} \IndividualName\\\textbf{MSSV:} \IndividualId}
+\renewcommand{\CourseCode}{CO3001}
+\renewcommand{\LecturerName}{Cô Trần Thị Ngọc Trâm}
+\renewcommand{\ClassCode}{L02}
+\renewcommand{\GroupName}{K24 Warriors}
+\renewcommand{\Semester}{Học kỳ 261}
+\renewcommand{\AcademicYear}{2026 -- 2027}
+\renewcommand{\PlaceAndDate}{TP. Hồ Chí Minh, tháng 09/2026}
+\renewcommand{\FooterTitle}{Báo cáo cá nhân -- Submission 1}
+
+\renewcommand{\CoverReportTypeStyle}{\Large\normalfont}
+\renewcommand{\CoverReportTitleStyle}{\large\bfseries}
+\renewcommand{\CoverSubjectLabelStyle}{\normalsize\bfseries}
+\renewcommand{\CoverProjectTitleStyle}{\large\bfseries}
+\renewcommand{\CoverProjectSubtitleStyle}{\normalsize\normalfont}
+
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \footnotesize\ttfamily Trường Đại Học Bách Khoa - ĐHQG TP.HCM\\[-1pt]
+      \footnotesize\ttfamily Khoa Khoa học và kỹ thuật máy tính
+    \end{tabular}
+  \end{tabular}%
+}
+
+\newcommand{\PhaseOneDiagramPath}{../../diagrams/plantuml/output}
+
+\newcommand{\UseCaseDiagram}[4]{%
+  \par\medskip
+  \noindent\begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseOneDiagramPath/#1}
+    \captionof{figure}{Sơ đồ Use Case #2 -- #3}
+    \label{#4}
+  \end{minipage}
+  \par\medskip
+}
+
+\setcounter{tocdepth}{3}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\listfigurename}{Danh sách hình}
+\renewcommand{\listtablename}{Danh sách bảng}
+
+\newcommand{\MakeIndividualFrontMatter}{%
+  \pagenumbering{gobble}
+  \MakeHCMUTCover
+
+  \section*{Thông tin báo cáo cá nhân}
+  \begin{table}[htbp]
+    \centering
+    \begin{tabularx}{0.94\textwidth}{|>{\bfseries}L{43mm}|Y|}
+      \hline
+      Họ và tên & \IndividualName\\\hline
+      Mã số sinh viên & \IndividualId\\\hline
+      Nội dung phụ trách & \IndividualAssignment\\\hline
+    \end{tabularx}
+  \end{table}
+
+  \clearpage
+  \tableofcontents
+  \clearpage
+  \listoffigures
+  \clearpage
+  \listoftables
+  \clearpage
+}
