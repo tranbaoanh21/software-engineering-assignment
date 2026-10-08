@@ -1,0 +1,13 @@
+\section{Thiết kế giao diện và hành vi theo phân hệ}
+
+UI Mockup trong các phân hệ do cả nhóm cùng thực hiện trên Figma. Ghi chú phụ trách tại từng phân hệ áp dụng cho sequence, activity, state chart nếu có và phần giải thích tương ứng; không chia riêng trách nhiệm thiết kế UI theo phân hệ.
+
+Trừ ba UC tra cứu công khai của SUB-HUB, các luồng yêu cầu phiên hợp lệ. Sequence và activity cần thể hiện kiểm tra quyền, nhánh hết phiên hoặc thiếu quyền theo \texttt{FR-GEN-03}. Không lặp luồng đăng nhập ở từng UC hoặc tự gửi lại yêu cầu thay đổi dữ liệu sau đăng nhập lại.
+
+\input{sections/use-cases/01-sub-hub}
+\input{sections/use-cases/02-sub-res}
+\input{sections/use-cases/03-sub-trip}
+\input{sections/use-cases/04-sub-park}
+\input{sections/use-cases/05-sub-chg}
+\input{sections/use-cases/06-sub-ops}
+\input{sections/use-cases/07-sub-sim}

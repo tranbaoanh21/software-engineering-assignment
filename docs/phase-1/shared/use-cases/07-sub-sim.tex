@@ -27,7 +27,7 @@ SUB-SIM cho phép Nhân viên vận hành thiết lập giả định, chạy \t
   Description / Goal & Cho phép Nhân viên vận hành tạo \texttt{SimulationScenario}, chọn trạng thái cơ sở và chạy mô phỏng trên snapshot cô lập để quan sát tác động mà không thay đổi dữ liệu vận hành thật.\\\hline
   Trigger & Nhân viên vận hành chọn tạo kịch bản mới hoặc chạy một kịch bản nháp.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền chạy mô phỏng.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền chạy mô phỏng trong phạm vi được cấp.\newline
     \textbf{2.} Hệ thống có trạng thái mạng lưới hợp lệ để tạo snapshot và các tham số nằm trong miền cho phép.\\\hline
   Postconditions &
     \textbf{Thành công:} \texttt{SimulationScenario}, snapshot đầu vào, \texttt{SimulationRun} \texttt{Completed} cùng kết quả được lưu; dữ liệu vận hành thật không thay đổi.\newline
@@ -49,9 +49,10 @@ SUB-SIM cho phép Nhân viên vận hành thiết lập giả định, chạy \t
   Exception Flows &
     \textbf{EF-01 -- Tham số không hợp lệ.} \textit{Tại bước 4.} Hệ thống chỉ rõ giá trị sai hoặc mâu thuẫn, không tạo lần chạy và cho phép sửa.\newline
     \textbf{EF-02 -- Không thể tạo snapshot.} \textit{Tại bước 6.} Hệ thống không bắt đầu mô phỏng, thông báo phạm vi dữ liệu thiếu và bảo toàn dữ liệu thật.\newline
-    \textbf{EF-03 -- Tiến trình mô phỏng lỗi.} \textit{Tại bước 7 hoặc 8.} Hệ thống chuyển \texttt{SimulationRun} sang \texttt{Failed}, lưu nguyên nhân và không tạo khuyến nghị từ kết quả chưa hoàn tất.\\\hline
-  Related Requirements & \texttt{FR-SIM-01}; \texttt{NFR-SEC-01}.\\\hline
-  Related Business Rules & \texttt{BR-SIM-01}.\\\hline
+    \textbf{EF-03 -- Tiến trình mô phỏng lỗi.} \textit{Tại bước 7 hoặc 8.} Hệ thống chuyển \texttt{SimulationRun} sang \texttt{Failed}, lưu nguyên nhân và không tạo khuyến nghị từ kết quả chưa hoàn tất.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-SIM-01}; \texttt{NFR-SEC-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-SIM-01}.\KeepUseCaseRow
   Dependencies & Dùng snapshot từ trạng thái mạng lưới đã được SEMH chấp nhận. Kết quả \texttt{Completed} là đầu vào cho \texttt{NIFR-SIM-01} và \texttt{UC-SIM-02}.\\\hline
 \end{longtable}
 \normalsize
@@ -82,14 +83,14 @@ SUB-SIM cho phép Nhân viên vận hành thiết lập giả định, chạy \t
   Description / Goal & Cho phép Nhân viên vận hành xem chỉ số của lần chạy đã hoàn tất, so sánh với trạng thái cơ sở và đánh giá \texttt{Recommendation} trước khi quyết định có khởi tạo hành động nghiệp vụ hay không.\\\hline
   Trigger & Nhân viên vận hành mở kết quả của một \texttt{SimulationRun} \texttt{Completed}.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền xem kết quả mô phỏng.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền xem kết quả mô phỏng được chọn.\newline
     \textbf{2.} Lần chạy được chọn ở trạng thái \texttt{Completed}, có snapshot cơ sở và kết quả để đối chiếu.\\\hline
   Postconditions &
     \textbf{Thành công:} Actor xem được chỉ số, chênh lệch và, nếu có khuyến nghị, cơ sở cùng tác động dự kiến của từng khuyến nghị; không dữ liệu vận hành nào tự động thay đổi.\newline
     \textbf{Thất bại:} Không hiển thị khuyến nghị không có đủ cơ sở; trạng thái thật và kết quả đã lưu được bảo toàn.\\\hline
   Main Flow &
     \textbf{1.} Nhân viên vận hành chọn một lần chạy \texttt{Completed}.\newline
-    \textbf{2.} Hệ thống truy xuất kịch bản, tham số, snapshot cơ sở và bộ kết quả của lần chạy.\newline
+    \textbf{2.} Hệ thống kiểm tra quyền với lần chạy rồi truy xuất kịch bản, tham số, snapshot cơ sở và bộ kết quả.\newline
     \textbf{3.} Hệ thống kiểm tra tính đầy đủ và liên kết của dữ liệu phân tích.\newline
     \textbf{4.} Hệ thống hiển thị các chỉ số theo Hub và theo thời gian, đồng thời so sánh với giá trị cơ sở.\newline
     \textbf{5.} Hệ thống truy xuất các \texttt{Recommendation} do \texttt{NIFR-SIM-01} tạo cho lần chạy.\newline
@@ -104,9 +105,10 @@ SUB-SIM cho phép Nhân viên vận hành thiết lập giả định, chạy \t
   Exception Flows &
     \textbf{EF-01 -- Lần chạy chưa hoàn tất.} \textit{Tại bước 1.} Hệ thống không cho phép phân tích kết quả chưa hoàn chỉnh và hiển thị trạng thái \texttt{Running} hoặc \texttt{Failed}.\newline
     \textbf{EF-02 -- Dữ liệu kết quả thiếu hoặc sai liên kết.} \textit{Tại bước 3.} Hệ thống dừng phân tích, không tạo thêm khuyến nghị và ghi nhận lỗi dữ liệu.\newline
-    \textbf{EF-03 -- Không thể mở quy trình áp dụng.} \textit{Tại AF-03.} Hệ thống giữ nguyên khuyến nghị và dữ liệu thật, thông báo lỗi; không tạo kế hoạch nửa chừng.\\\hline
-  Related Requirements & \texttt{FR-SIM-02}; \texttt{NIFR-SIM-01}; \texttt{NFR-SEC-01}.\\\hline
-  Related Business Rules & \texttt{BR-SIM-01}.\\\hline
+    \textbf{EF-03 -- Không thể mở quy trình áp dụng.} \textit{Tại AF-03.} Hệ thống giữ nguyên khuyến nghị và dữ liệu thật, thông báo lỗi; không tạo kế hoạch nửa chừng.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-SIM-02}; \texttt{NIFR-SIM-01}; \texttt{NFR-SEC-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-SIM-01}.\KeepUseCaseRow
   Dependencies & Phân tích kết quả từ \texttt{UC-SIM-01}; khuyến nghị do \texttt{NIFR-SIM-01} tạo. Việc áp dụng khuyến nghị điều chuyển phải đi qua \texttt{UC-OPS-03}.\\\hline
 \end{longtable}
 \normalsize

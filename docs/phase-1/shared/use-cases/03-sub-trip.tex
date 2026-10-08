@@ -27,7 +27,7 @@ SUB-TRIP quản lý quá trình sử dụng xe dùng chung từ lúc Sinh viên 
   Description / Goal & Cho phép Sinh viên nhận đúng xe của một \texttt{VehicleReservation} \texttt{Confirmed} còn hiệu lực, hoàn tất bàn giao và bắt đầu một \texttt{Trip} mà không tạo lượt cấp phát mới.\\\hline
   Trigger & Sinh viên có mặt tại Hub, chọn nhận xe và cung cấp định danh của phương tiện đã đặt.\\\hline
   Preconditions &
-    \textbf{1.} Sinh viên đã được nhận diện và có một lượt đặt \texttt{Confirmed} chưa hết hạn.\newline
+    \textbf{1.} Sinh viên đã đăng nhập với phiên hợp lệ và có một lượt đặt \texttt{Confirmed} chưa hết hạn.\newline
     \textbf{2.} Lượt đặt thuộc đúng Sinh viên, đúng xe và đúng Hub nhận xe.\newline
     \textbf{3.} Chưa có \texttt{Trip} \texttt{InProgress} được tạo từ lượt đặt này.\\\hline
   Postconditions &
@@ -50,9 +50,10 @@ SUB-TRIP quản lý quá trình sử dụng xe dùng chung từ lúc Sinh viên 
   Exception Flows &
     \textbf{EF-01 -- Không nhận được xác nhận bàn giao.} \textit{Tại bước 5.} Hệ thống không suy đoán rằng xe đã được nhận, giữ lượt đặt ở trạng thái hiện tại và hướng dẫn thử lại hoặc liên hệ vận hành.\newline
     \textbf{EF-02 -- Cập nhật trạng thái không hoàn tất.} \textit{Tại bước 6.} Hệ thống hoàn tác thay đổi để không tồn tại \texttt{Trip} \texttt{InProgress} nếu lượt đặt chưa \texttt{Fulfilled} hoặc xe chưa \texttt{InUse}.\newline
-    \textbf{EF-03 -- Mất phản hồi sau khi gửi yêu cầu.} \textit{Tại bước 8.} Hệ thống đọc lại theo mã lượt đặt; nếu chuyến đi đã được tạo, hệ thống hiển thị chuyến đi đó thay vì tạo bản ghi thứ hai.\\\hline
-  Related Requirements & \texttt{FR-TRIP-01}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-TRIP-01}, \texttt{BR-RES-03}.\\\hline
+    \textbf{EF-03 -- Mất phản hồi sau khi gửi yêu cầu.} \textit{Tại bước 8.} Hệ thống đọc lại theo mã lượt đặt; nếu chuyến đi đã được tạo, hệ thống hiển thị chuyến đi đó thay vì tạo bản ghi thứ hai.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-TRIP-01}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-TRIP-01}, \texttt{BR-RES-03}.\KeepUseCaseRow
   Dependencies & Nhận \texttt{VehicleReservation} từ \texttt{UC-RES-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}; chuyến đi được hoàn tất bởi \texttt{UC-TRIP-02}.\\\hline
 \end{longtable}
 \normalsize
@@ -83,7 +84,7 @@ SUB-TRIP quản lý quá trình sử dụng xe dùng chung từ lúc Sinh viên 
   Description / Goal & Cho phép Sinh viên trả xe dùng chung tại một Mobility Hub hợp lệ, xác nhận việc khóa hoặc bàn giao an toàn, hoàn tất chuyến đi và nhận bản tóm tắt sử dụng.\\\hline
   Trigger & Sinh viên đưa xe đến Hub và gửi yêu cầu kết thúc chuyến đi.\\\hline
   Preconditions &
-    \textbf{1.} Sinh viên có một \texttt{Trip} \texttt{InProgress} gắn với xe đang trả.\newline
+    \textbf{1.} Sinh viên đã đăng nhập với phiên hợp lệ và có một \texttt{Trip} \texttt{InProgress} của mình gắn với xe đang trả.\newline
     \textbf{2.} Xe đang ở trạng thái \texttt{InUse}.\newline
     \textbf{3.} Hệ thống có thể xác định Hub và nhận trạng thái trả xe.\\\hline
   Postconditions &
@@ -105,9 +106,10 @@ SUB-TRIP quản lý quá trình sử dụng xe dùng chung từ lúc Sinh viên 
   Exception Flows &
     \textbf{EF-01 -- Hub không hợp lệ hoặc không thể tiếp nhận.} \textit{Tại bước 3.} Hệ thống không kết thúc chuyến đi, giải thích nguyên nhân và yêu cầu Sinh viên chọn Hub hợp lệ khác.\newline
     \textbf{EF-02 -- Không xác nhận được việc trả xe an toàn.} \textit{Tại bước 5.} Hệ thống giữ chuyến đi \texttt{InProgress}, không chuyển xe sang \texttt{Available} và hướng dẫn kiểm tra lại khóa hoặc vị trí xe.\newline
-    \textbf{EF-03 -- Không thể hoàn tất cập nhật nhất quán.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi để trạng thái \texttt{Trip} và xe không mâu thuẫn, ghi nhận lỗi và cho phép thử lại.\\\hline
-  Related Requirements & \texttt{FR-TRIP-02}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-TRIP-02}, \texttt{BR-RES-04}, \texttt{BR-OPS-02}.\\\hline
+    \textbf{EF-03 -- Không thể hoàn tất cập nhật nhất quán.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi để trạng thái \texttt{Trip} và xe không mâu thuẫn, ghi nhận lỗi và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-TRIP-02}; \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-TRIP-02}, \texttt{BR-RES-04}, \texttt{BR-OPS-02}.\KeepUseCaseRow
   Dependencies & Hoàn tất chuyến đi được tạo bởi \texttt{UC-TRIP-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}. Xe cần sạc được chuyển tiếp tới nghiệp vụ SUB-CHG, còn xe lỗi được theo dõi bởi SUB-OPS.\\\hline
 \end{longtable}
 \normalsize

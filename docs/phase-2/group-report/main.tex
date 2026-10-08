@@ -1,9 +1,9 @@
 \documentclass[12pt,a4paper]{article}
 
-% Báo cáo Phase 2 là tài liệu độc lập, dùng chung visual template với Phase 1.
 \newcommand{\HCMUTAssetPath}{../../../assets}
 \input{../../../assets/latex-template/hcmut-report.sty}
 \input{cover-page}
+\usepackage{float}
 \setlength{\emergencystretch}{3em}
 
 \fancyhead[L]{%
@@ -19,15 +19,13 @@
 \fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
 
 \setcounter{secnumdepth}{4}
-\setcounter{tocdepth}{4}
+\setcounter{tocdepth}{3}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh sách hình}
-\renewcommand{\listtablename}{Danh sách bảng}
 \makeatletter
 \renewcommand*\l@section[2]{%
   \ifnum\c@tocdepth>\z@
-    \addpenalty{\@secpenalty}%
-    \addvspace{0.3em \@plus\p@}%
+    \addpenalty{\@secpenalty}\addvspace{0.45em \@plus\p@}%
     \setlength\@tempdima{2.1em}%
     \begingroup
       \parindent\z@ \rightskip\@pnumwidth \parfillskip-\@pnumwidth
@@ -40,36 +38,42 @@
 \renewcommand*\l@subsubsection{\@dottedtocline{3}{4.1em}{3.2em}}
 \renewcommand*\l@paragraph{\@dottedtocline{4}{7.3em}{4.0em}}
 \renewcommand\paragraph{%
-  \@startsection{paragraph}{4}{\z@}{1.0ex \@plus 0.4ex \@minus 0.2ex}{0.35ex \@plus 0.1ex}{\normalfont\normalsize\bfseries}}
+  \@startsection{paragraph}{4}{\z@}{1.6ex \@plus 0.4ex \@minus 0.2ex}{0.6ex \@plus 0.1ex}{\normalfont\normalsize\bfseries}}
 \newcommand{\ReferenceTableOfContents}{%
   \begingroup
-    \setstretch{1.0}\fontsize{9pt}{10.7pt}\selectfont
-    \section*{\normalfont\Large Mục lục}\vspace{-0.45em}\@starttoc{toc}%
+    \setlength{\parskip}{0pt}%
+    \setstretch{1.0}\fontsize{9.5pt}{11.2pt}\selectfont
+    \section*{\normalfont\Large Mục lục}\vspace{-0.3em}\@starttoc{toc}%
   \endgroup
 }
 \makeatother
 
-\newcommand{\ArtifactSection}[4]{%
-  \subsubsection{#4}
-  \begin{sloppypar}\noindent\textbf{Mã artefact:} \texttt{#2}. #3\end{sloppypar}
+% Nội dung trong ngoặc vuông là vị trí thay bằng bài làm của nhóm.
+\newcommand{\PlaceholderText}[1]{%
+  \begin{sloppypar}\noindent{\color{black!65}\itshape [#1]}\end{sloppypar}
 }
 
-\newcommand{\BehaviorUseCase}[6]{%
-  \subsubsection{#1 -- #2}
-  \noindent\textbf{Baseline Phase 1:} \texttt{#1}. \textbf{Màn hình liên quan:} #3.\par
-  \noindent\textbf{Truy vết yêu cầu:} #4.\par
-  \noindent\textbf{State chart liên quan:}\par
-  \noindent #5. State chart được đặt một lần ở phần mô hình trạng thái; tại đây chỉ dẫn chiếu để tránh lặp hình.\par
-  \paragraph{Thiết kế giao diện}
-  \begin{sloppypar}Trình bày các màn hình #3 thuộc bộ mockup #6, bao gồm trạng thái mặc định, loading, empty, validation, stale-data và lỗi có liên quan đến \texttt{#1}.\end{sloppypar}
-  \paragraph{Biểu đồ tuần tự}
-  Sơ đồ \texttt{SEQ-#1} giữ nguyên actor, trigger, main flow, alternative flow, exception flow và các external system đã khóa ở Phase 1.
-  \paragraph{Biểu đồ hoạt động}
-  Sơ đồ \texttt{ACT-#1} có start/end, action, decision/merge, guard và swimlane khi cần phân biệt trách nhiệm.
-  \paragraph{Biểu đồ trạng thái liên quan}
-  \begin{sloppypar}Dẫn chiếu các state chart #5 và giải thích transition do \texttt{#1} kích hoạt; không sao chép lại cùng một state chart.\end{sloppypar}
-  \paragraph{Giải thích thiết kế}
-  Nêu phạm vi luồng được mô hình hóa, các quyết định quan trọng, \texttt{BR-*}/\texttt{FR-*} chi phối và cách UI, sequence, activity và state chart khớp nhau. Không chép lại nguyên Use Case Specification.
+% Ghi chú phân công, không đưa tên thành viên vào mục lục.
+\newcommand{\AssignmentNote}[2]{%
+  \par\begingroup\small\color{black!65}
+  \noindent\textit{Phụ trách: #1. #2}\par
+  \endgroup\smallskip
+}
+
+% Khi có PDF hình tại đường dẫn này, hình được đưa vào báo cáo tự động.
+% Có thể gọi nhiều lần để trình bày thêm màn hình hoặc sơ đồ của cùng một UC.
+\newcommand{\InsertArtifact}[5][0.68\textheight]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#2}{%
+      \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}%
+    }{%
+      \begin{minipage}{0.94\linewidth}
+        \centering\small\color{black!65}\itshape [#5]
+      \end{minipage}%
+    }
+    \caption{#3}\label{#4}
+  \end{figure}
 }
 
 \begin{document}
@@ -79,32 +83,33 @@
 \section*{Danh sách thành viên}
 \small
 \begin{center}
-\begin{tabularx}{0.94\textwidth}{|C{10mm}|L{45mm}|C{27mm}|Y|}
+\begin{tabularx}{0.96\textwidth}{|C{9mm}|L{44mm}|C{24mm}|Y|}
   \hline
   \rowcolor{gray!15}
   \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
-  \textbf{MSSV} & \centering\arraybackslash\textbf{Vai trò / Nhiệm vụ Phase 2}\\
+  \textbf{MSSV} & \centering\arraybackslash\textbf{Nhiệm vụ Submission 2}\\
   \hline
-  1 & Nguyễn Quốc Trung & 2413707 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-HUB\\\hline
-  2 & Phan Võ Bảo Trâm & 2413576 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-RES\\\hline
-  3 & Lê Nguyễn Tường Vi & 2413937 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-TRIP\\\hline
-  4 & Nguyễn Ngọc Hân & 2410951 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-PARK\\\hline
-  5 & Trần Thị Hương Giang & 2410845 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-CHG\\\hline
-  6 & Nguyễn Thị Minh Anh & 2410126 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-OPS\\\hline
-  7 & Trần Nhật Bảo Anh & 2410155 & UI group work; sequence, activity và dẫn chiếu state chart cho SUB-SIM; tích hợp báo cáo\\\hline
+  1 & Nguyễn Quốc Trung & 2413707 & UI Mockup cùng cả nhóm; sequence và activity của SUB-HUB\\\hline
+  2 & Phan Võ Bảo Trâm & 2413576 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-RES\\\hline
+  3 & Lê Nguyễn Tường Vi & 2413937 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-TRIP (gồm SharedVehicle)\\\hline
+  4 & Nguyễn Ngọc Hân & 2410951 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-PARK\\\hline
+  5 & Trần Thị Hương Giang & 2410845 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-CHG\\\hline
+  6 & Nguyễn Thị Minh Anh & 2410126 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-OPS\\\hline
+  7 & Trần Nhật Bảo Anh & 2410155 & UI Mockup cùng cả nhóm; sequence, activity và state chart của SUB-SIM; tổng hợp báo cáo\\\hline
 \end{tabularx}
 \end{center}
 \normalsize
 
-Mỗi thành viên chịu trách nhiệm toàn bộ các use case thuộc phân hệ được giao. Phần UI Design là group work; từng thành viên cung cấp màn hình và trạng thái UI của phân hệ mình để nhóm trưởng hợp nhất kiến trúc thông tin, screen flow và quy tắc giao diện dùng chung.
+UI Mockup toàn hệ thống, gồm giao diện dùng chung ở Phần I và giao diện của 18 use case ở Phần II, do cả bảy thành viên cùng thực hiện trên Figma. Nhóm cùng đề xuất mẫu, chọn một bộ giao diện và chỉnh sửa trên file chung để thống nhất bố cục, thành phần và luồng điều hướng của website. Từ phần thiết kế hành vi theo phân hệ, mỗi người phụ trách sequence, activity, state chart nếu có và phần giải thích tương ứng của phân hệ đã được giao; UI trong từng phân hệ vẫn là phần làm chung. State chart SharedVehicle thuộc SUB-TRIP, do Tường Vi thực hiện. Bảo Anh tổng hợp và kiểm soát nội dung báo cáo.
 
 \clearpage\ReferenceTableOfContents
-\clearpage\listoffigures
-\clearpage\listoftables
+\clearpage
+\begingroup
+  \setstretch{1.0}\small
+  \listoffigures
+\endgroup
 
-\clearpage\input{sections/01-phase-2-baseline}
-\clearpage\input{sections/02-ui-design}
-\clearpage\input{sections/03-behavioral-diagrams}
-\clearpage\input{sections/04-state-charts}
+\clearpage\input{sections/01-ui-design}
+\clearpage\input{sections/02-use-case-design}
 
 \end{document}

@@ -193,6 +193,12 @@ Tùy phạm vi của từng phân hệ, dữ liệu này có thể bao gồm v�
 
 Giảng viên cung cấp nguồn [Connected Vehicles Dataset](https://iotdataset.com/topic/connected-vehicles) để nhóm tham khảo dữ liệu mẫu. Việc xây dựng luồng xử lý IoT theo thời gian thực không phải yêu cầu cốt lõi, nhưng nếu thực hiện được, nhóm sẽ được cộng **0,25 điểm** vào tổng điểm bài tập lớn. [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-get-started-with-azure-stream-analytics-to-process-data-from-iot-devices) là một giải pháp có thể tham khảo để mô phỏng và xử lý dòng dữ liệu cảm biến, đặc biệt hữu ích cho chức năng What-if Simulation.
 
+### Xác thực và phân quyền dùng chung
+
+Nhóm thống nhất bổ sung một mục nhỏ trong Phần II của Submission 1, không tạo thêm phân hệ, actor hoặc use case nghiệp vụ. `FR-GEN-01`--`FR-GEN-03` mô tả đăng nhập, đăng xuất và kiểm tra quyền; `BR-GEN-01`--`BR-GEN-03` quy định quyền được cấu hình trước, giới hạn theo vai trò và đối tượng, cùng hiệu lực phiên. Tài khoản demo được cấp sẵn; đăng ký, khôi phục mật khẩu, OTP và SSO thật nằm ngoài phạm vi.
+
+Ba use case tra cứu của SUB-HUB cho phép xem thông tin công khai; 15 use case còn lại yêu cầu phiên hợp lệ và quyền với dữ liệu đang thao tác. Sinh viên không được truy cập lượt đặt, chuyến đi hoặc yêu cầu sạc của người khác; nhân viên làm việc trong phạm vi được cấp. Khung Submission 2 có vị trí mockup đăng nhập dùng chung, còn các diagram nghiệp vụ cần thể hiện kiểm tra quyền và nhánh từ chối phù hợp.
+
 ## 7. Các yêu cầu phi chức năng
 
 Trong Submission #1, nhóm phải xác định các yêu cầu phi chức năng chung cho toàn hệ thống. Phần này cần xem xét:

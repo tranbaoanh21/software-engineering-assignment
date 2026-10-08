@@ -1,0 +1,63 @@
+\section{Thiết kế giao diện tổng thể}
+
+\AssignmentNote{Cả bảy thành viên}{Cùng chọn mẫu và thiết kế UI Mockup website trên Figma, gồm giao diện dùng chung tại phần này và giao diện của toàn bộ 18 use case ở Phần II; thống nhất thành phần, mô tả giao diện và luồng điều hướng.}
+
+\subsection{Đăng nhập và kiểm soát truy cập}
+
+\InsertArtifact{../mockups/ui-login.pdf}
+  {Giao diện đăng nhập và phản hồi truy cập}
+  {fig:p2-ui-login}
+  {Chèn mockup đăng nhập với tài khoản được cấp sẵn, thông báo sai thông tin, phiên hết hạn, truy cập bị từ chối và vị trí đăng xuất trên giao diện.}
+\PlaceholderText{Mô tả việc nhập tài khoản và mật khẩu, vào giao diện theo quyền đã cấu hình, đăng xuất và đăng nhập lại. Không có thao tác tự chọn vai trò, đăng ký, quên mật khẩu hoặc OTP. Tra cứu Hub công khai vẫn sử dụng được khi chưa đăng nhập.}
+\PlaceholderText{Thể hiện cách từ chối thao tác ngoài quyền mà không lộ dữ liệu riêng; sau đăng nhập lại, người dùng xem trạng thái hiện tại và xác nhận lại, không tự gửi lại yêu cầu đặt, trả xe hoặc điều phối trước đó. Đối chiếu FR-GEN-01--FR-GEN-03 và BR-GEN-01--BR-GEN-03 của Submission 1.}
+
+\clearpage
+\subsection{Bố cục và điều hướng theo vai trò}
+
+\subsubsection{Giao diện dành cho Sinh viên}
+\InsertArtifact{../mockups/ui-student-overview.pdf}
+  {Bố cục giao diện dành cho Sinh viên}
+  {fig:p2-ui-student}
+  {Chèn mockup bố cục chính của Sinh viên: tra cứu Hub, lượt đặt xe, chuyến đi, chỗ đỗ và nhu cầu sạc.}
+\PlaceholderText{Mô tả các khu vực trên giao diện, cách mở từng chức năng và cách Sinh viên nhận biết lượt đặt hoặc chuyến đi đang có hiệu lực.}
+
+\subsubsection{Giao diện dành cho Nhân viên vận hành}
+\InsertArtifact{../mockups/ui-operator-overview.pdf}
+  {Bố cục giao diện dành cho Nhân viên vận hành}
+  {fig:p2-ui-operator}
+  {Chèn mockup bố cục chính của Nhân viên vận hành: giám sát mạng lưới, lịch sạc, sự cố, điều phối và mô phỏng.}
+\PlaceholderText{Mô tả khu vực tổng quan, danh sách cảnh báo và cách chuyển đến các tác vụ vận hành.}
+
+\subsubsection{Giao diện dành cho Nhân viên kỹ thuật}
+\InsertArtifact{../mockups/ui-maintenance-overview.pdf}
+  {Bố cục giao diện dành cho Nhân viên kỹ thuật}
+  {fig:p2-ui-maintenance}
+  {Chèn mockup giao diện công việc kỹ thuật: sự cố được giao, chi tiết tài nguyên và cập nhật kết quả khắc phục.}
+\PlaceholderText{Mô tả cách Nhân viên kỹ thuật mở công việc được giao, cập nhật tiến độ và ghi kết quả kiểm tra tài nguyên.}
+
+\clearpage
+\subsection{Thành phần và trạng thái giao diện dùng chung}
+
+\subsubsection{Màu sắc, kiểu chữ và bố cục}
+\PlaceholderText{Điền bộ màu, kiểu chữ, khoảng cách và bố cục dùng chung; giải thích cách hiển thị trạng thái tài nguyên bằng nhãn chữ hoặc biểu tượng bên cạnh màu sắc.}
+
+\subsubsection{Thành phần tương tác}
+\InsertArtifact{../mockups/ui-common-components.pdf}
+  {Các thành phần giao diện dùng chung}
+  {fig:p2-ui-components}
+  {Chèn mẫu thanh điều hướng, nút, ô nhập liệu, bộ lọc, thẻ Hub hoặc tài nguyên, hộp xác nhận và thông báo kết quả.}
+\PlaceholderText{Mô tả cách dùng các thành phần, trạng thái được phép thao tác và thông tin cần có trước khi người dùng xác nhận.}
+
+\subsubsection{Phản hồi và trạng thái dữ liệu}
+\InsertArtifact{../mockups/ui-common-states.pdf}
+  {Các trạng thái phản hồi trên giao diện}
+  {fig:p2-ui-states}
+  {Chèn các trạng thái đang tải, không có kết quả, lỗi nhập liệu, lỗi hệ thống, thành công, từ chối thao tác và dữ liệu có thể đã cũ.}
+\PlaceholderText{Điền cách hiển thị thời điểm cập nhật, giữ lại dữ liệu đã nhập, hướng dẫn thử lại và phân biệt tài nguyên không khả dụng với dữ liệu chưa xác định được.}
+
+\subsection{Luồng điều hướng tổng quát}
+\InsertArtifact{../mockups/ui-navigation.pdf}
+  {Luồng điều hướng tổng quát của Smart E-Mobility Hub}
+  {fig:p2-ui-navigation}
+  {Chèn sơ đồ chuyển màn hình theo ba vai trò; thể hiện tra cứu công khai, điểm đăng nhập, màn hình chi tiết, đăng xuất và các liên kết giữa phân hệ.}
+\PlaceholderText{Giải thích các luồng điều hướng chính của Sinh viên, Nhân viên vận hành và Nhân viên kỹ thuật; mô tả cách quay lại và chuyển sang tác vụ liên quan.}

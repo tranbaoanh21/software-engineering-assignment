@@ -1,0 +1,65 @@
+\subsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+\AssignmentNote{Bảo Trâm}{Sequence, activity và phần giải thích của UC-RES-01--UC-RES-02; state chart VehicleReservation.}
+
+\subsubsection{UC-RES-01 -- Đặt phương tiện dùng chung}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-res-01.pdf}
+  {UI Mockup -- UC-RES-01}
+  {fig:p2-ui-uc-res-01}
+  {Chèn mockup: Chọn xe, xem điều kiện đặt, xác nhận; mã lượt đặt, Hub nhận xe và thời hạn; thông báo xe không còn khả dụng hoặc đã có lượt đặt hiệu lực.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-res-01.pdf}
+  {Biểu đồ tuần tự -- UC-RES-01}
+  {fig:p2-seq-uc-res-01}
+  {Chèn sequence diagram: Kiểm tra chủ thể, lượt đặt hiệu lực và điều kiện xe; xác nhận lượt đặt cùng việc giữ xe một cách nhất quán; nhánh xung đột tài nguyên và phản hồi xác nhận bị mất.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-res-01.pdf}
+  {Biểu đồ hoạt động -- UC-RES-01}
+  {fig:p2-act-uc-res-01}
+  {Chèn activity diagram: Chọn xe, kiểm tra điều kiện và xác nhận đặt; các quyết định từ chối, chọn lại xe hoặc Hub và hiển thị kết quả cuối.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-RES-02 -- Hủy lượt đặt phương tiện}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-res-02.pdf}
+  {UI Mockup -- UC-RES-02}
+  {fig:p2-ui-uc-res-02}
+  {Chèn mockup: Chi tiết lượt đặt, hộp xác nhận hủy và kết quả; hiển thị lượt đặt đã hết hạn, đã hủy hoặc đã được dùng để nhận xe.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-res-02.pdf}
+  {Biểu đồ tuần tự -- UC-RES-02}
+  {fig:p2-seq-uc-res-02}
+  {Chèn sequence diagram: Xác minh chủ sở hữu và trạng thái lượt đặt, cập nhật hủy và gỡ quan hệ giữ xe; đánh giá điều kiện xe trước khi đưa trở lại phục vụ; nhánh cập nhật thất bại.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-res-02.pdf}
+  {Biểu đồ hoạt động -- UC-RES-02}
+  {fig:p2-act-uc-res-02}
+  {Chèn activity diagram: Xem lượt đặt, xác nhận hoặc bỏ thao tác hủy, kiểm tra khả năng hủy và giải phóng xe; thể hiện trường hợp xe vẫn cần giữ ngoài phục vụ.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- VehicleReservation (Bonus)}
+
+\InsertArtifact{../diagrams/state/vehicle-reservation.pdf}
+  {Biểu đồ trạng thái của VehicleReservation}
+  {fig:p2-state-vehicle-reservation}
+  {Chèn state-chart diagram: Các trạng thái Pending, Confirmed, Fulfilled, Cancelled, Expired và Rejected; xác nhận, nhận xe, hủy và hết hạn theo điều kiện tương ứng.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

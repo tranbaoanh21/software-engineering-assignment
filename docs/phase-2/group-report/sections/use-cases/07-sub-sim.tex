@@ -1,0 +1,65 @@
+\subsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+\AssignmentNote{Bảo Anh}{Sequence, activity và phần giải thích của UC-SIM-01--UC-SIM-02; state chart SimulationRun.}
+
+\subsubsection{UC-SIM-01 -- Chạy kịch bản What-if Simulation}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-sim-01.pdf}
+  {UI Mockup -- UC-SIM-01}
+  {fig:p2-ui-uc-sim-01}
+  {Chèn mockup: Cấu hình tên, mục tiêu, tham số, phạm vi Hub và trạng thái cơ sở; lưu nháp, xác nhận chạy, tiến độ, kết quả hoàn tất hoặc lỗi tham số.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-sim-01.pdf}
+  {Biểu đồ tuần tự -- UC-SIM-01}
+  {fig:p2-seq-uc-sim-01}
+  {Chèn sequence diagram: Kiểm tra tham số, lưu kịch bản, tạo snapshot cô lập và SimulationRun, thực thi rồi lưu kết quả; nhánh lưu nháp chưa tạo lần chạy, lỗi snapshot và Failed.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-sim-01.pdf}
+  {Biểu đồ hoạt động -- UC-SIM-01}
+  {fig:p2-act-uc-sim-01}
+  {Chèn activity diagram: Tạo hoặc dùng lại kịch bản, nhập và kiểm tra tham số, lưu nháp hoặc chạy, theo dõi đến Completed hoặc Failed; rời màn hình không dừng lần chạy.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-SIM-02 -- Phân tích kết quả và khuyến nghị điều phối}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-sim-02.pdf}
+  {UI Mockup -- UC-SIM-02}
+  {fig:p2-ui-uc-sim-02}
+  {Chèn mockup: Chọn lần chạy hoàn tất, xem chỉ số và so sánh với trạng thái cơ sở, lọc kết quả và xem chi tiết khuyến nghị; trường hợp không phát sinh khuyến nghị.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-sim-02.pdf}
+  {Biểu đồ tuần tự -- UC-SIM-02}
+  {fig:p2-seq-uc-sim-02}
+  {Chèn sequence diagram: Kiểm tra lần chạy Completed và dữ liệu phân tích, truy xuất kết quả cùng khuyến nghị, trả phần so sánh; nhánh kết quả thiếu và mở quy trình điều phối khi actor chủ động chọn.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-sim-02.pdf}
+  {Biểu đồ hoạt động -- UC-SIM-02}
+  {fig:p2-act-uc-sim-02}
+  {Chèn activity diagram: Chọn kết quả, kiểm tra dữ liệu, xem so sánh và đánh giá khuyến nghị; nhánh không có khuyến nghị hoặc mở UC-OPS-03 để xem lại và phê duyệt.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- SimulationRun (Bonus)}
+
+\InsertArtifact{../diagrams/state/simulation-run.pdf}
+  {Biểu đồ trạng thái của SimulationRun}
+  {fig:p2-state-simulation-run}
+  {Chèn state-chart diagram: Vòng đời lần chạy theo các trạng thái và sự kiện đã xác định ở Submission 1; phân biệt kịch bản lưu nháp chưa tạo lần chạy với lần chạy đang thực thi hoặc đã kết thúc.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

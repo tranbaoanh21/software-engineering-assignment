@@ -2,6 +2,8 @@
 
 SUB-HUB cung cấp khả năng xác định Hub phù hợp, xem trạng thái tài nguyên tại một Hub và nhận danh sách Hub thay thế khi lựa chọn ban đầu không đáp ứng nhu cầu. Phân hệ sử dụng dữ liệu vị trí từ \texttt{EXT-MAP} và trạng thái tài nguyên đã được SEMH chấp nhận từ \texttt{EXT-STATE}; quyết định Hub có khả năng phục vụ vẫn do các business rule của SEMH xác định. SUB-HUB chỉ cung cấp thông tin và kết quả tra cứu, không tạo lượt đặt phương tiện, chỗ đỗ hoặc lịch sạc.
 
+Ba use case dưới đây cho phép xem thông tin Hub và tài nguyên công khai mà không cần đăng nhập. Actor Sinh viên thể hiện vai trò có nhu cầu tra cứu, không mặc định là tài khoản đã xác thực; kết quả không chứa danh tính hoặc dữ liệu lượt đặt của người khác. Khi chuyển sang đặt hoặc sử dụng tài nguyên, hệ thống kiểm tra phiên và quyền theo \texttt{FR-GEN-03}.
+
 \subsubsection{UC-HUB-01 -- Tra cứu Hub phù hợp}
 
 \UseCaseDiagram{uc-hub-01.pdf}{UC-HUB-01}{Tra cứu Hub phù hợp}{fig:uc-hub-01}

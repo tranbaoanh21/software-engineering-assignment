@@ -3,11 +3,42 @@
 
 \subsection{Quy ước đặc tả yêu cầu}
 
-Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể quan sát hoặc kiểm tra. Yêu cầu chức năng dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, quy tắc nghiệp vụ dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu phi chức năng dùng \texttt{NFR-[NHÓM]-[SỐ]}.
+Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể quan sát hoặc kiểm tra. Yêu cầu chức năng dùng mã \texttt{FR-[PHÂN HỆ]-[SỐ]}, quy tắc nghiệp vụ dùng \texttt{BR-[PHÂN HỆ]-[SỐ]}, chức năng tự động dùng \texttt{NIFR-[PHÂN HỆ]-[SỐ]} và yêu cầu phi chức năng dùng \texttt{NFR-[NHÓM]-[SỐ]}. Mã \texttt{GEN} dành cho chức năng và quy tắc dùng chung, không phải mã của một phân hệ bổ sung.
 
 Nội dung phải dùng đúng actor, thuật ngữ và trạng thái đã thống nhất ở Phần I, đặc biệt là các bảng thuật ngữ nghiệp vụ, trạng thái tài nguyên và trạng thái quy trình dùng chung. Các ngưỡng thời gian, dung lượng và mức pin trong business rule là quyết định nghiệp vụ của nhóm cho phạm vi bài tập; chúng không hàm ý một thiết bị hay công nghệ triển khai cụ thể.
 
 Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}); \texttt{ACT-MAP} là vai trò của \textit{Map \& Geolocation Service} (\texttt{EXT-MAP}). Hệ thống chỉ tiếp nhận dữ liệu trạng thái hoặc kết quả địa lý từ các hệ thống ngoài; cách cảm biến, khóa xe, cổng sạc hoặc nền tảng bản đồ hoạt động nằm ngoài system boundary.
+
+\subsection{Xác thực và phân quyền dùng chung}
+\label{sec:common-access}
+
+Xác thực xác định người đang thao tác; phân quyền xác định chức năng và dữ liệu người đó được phép truy cập. Phần này áp dụng xuyên suốt bảy phân hệ, không bổ sung actor hoặc use case nghiệp vụ mới. Ba use case của SUB-HUB cho phép xem thông tin công khai mà không cần đăng nhập; các thao tác còn lại cần phiên đăng nhập hợp lệ.
+
+\noindent\textbf{FR-GEN-01 -- Đăng nhập.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép người dùng đăng nhập bằng tài khoản được cấp sẵn. Khi thông tin hợp lệ, hệ thống thiết lập phiên gắn với danh tính và quyền đã cấu hình; khi không hợp lệ, không tạo phiên và thông báo lỗi chung, không xác nhận tài khoản có tồn tại hay không.
+
+\medskip
+\noindent\textbf{FR-GEN-02 -- Đăng xuất.}\par
+\nopagebreak[4]
+Hệ thống phải cho phép người dùng kết thúc phiên hiện tại. Phiên đã đăng xuất không được tiếp tục truy cập chức năng được bảo vệ; đăng xuất không tự hủy lượt đặt, chuyến đi hoặc phiên sạc đang có hiệu lực.
+
+\medskip
+\noindent\textbf{FR-GEN-03 -- Kiểm tra quyền truy cập.}\par
+\nopagebreak[4]
+Trước mỗi yêu cầu được bảo vệ, hệ thống phải kiểm tra phiên, vai trò và quyền đối với đối tượng được yêu cầu. Yêu cầu không được phép phải bị từ chối trước khi đọc dữ liệu riêng hoặc ghi thay đổi, kể cả khi gửi trực tiếp mà không qua giao diện.
+
+\medskip
+\noindent\textbf{Quy tắc áp dụng:}
+\begin{itemize}
+  \item \textbf{BR-GEN-01 -- Quyền được cấu hình trước:} danh tính và vai trò lấy từ tài khoản đã xác thực, không lấy từ lựa chọn vai trò hoặc mã người dùng do phía người dùng tự gửi.
+  \item \textbf{BR-GEN-02 -- Giới hạn theo vai trò và đối tượng:} Sinh viên chỉ đặt, nhận, trả xe và quản lý chỗ đỗ, yêu cầu sạc thuộc quyền của mình. Nhân viên vận hành được quản lý sạc, sự cố, điều phối và mô phỏng trong phạm vi được cấp. Nhân viên kỹ thuật chỉ tiếp nhận, cập nhật và xác nhận kết quả công việc kỹ thuật được giao trong UC-OPS-02; không được phê duyệt điều phối hoặc chạy mô phỏng. Quyền không được cấp bị từ chối mặc định.
+  \item \textbf{BR-GEN-03 -- Hiệu lực phiên:} phiên không còn hiệu lực sau đăng xuất hoặc 30 phút không có yêu cầu được bảo vệ hợp lệ của người dùng. Bản tin IoT và tiến trình tự động không kéo dài phiên; hết phiên không làm dừng chuyến đi, sạc hoặc mô phỏng đang chạy.
+\end{itemize}
+
+Khi chưa xác thực hoặc phiên hết hạn, hệ thống yêu cầu đăng nhập lại. Khi đã xác thực nhưng thiếu quyền, hệ thống thông báo từ chối truy cập, không làm lộ dữ liệu của người khác và không thay đổi trạng thái nghiệp vụ. Đăng nhập lại không tự gửi lại yêu cầu thay đổi dữ liệu trước đó; người dùng phải xem trạng thái hiện tại và xác nhận lại.
+
+\textit{Nguồn gốc: \texttt{SCP-IN-09}, \texttt{ASM-GEN-03}. Các FR dùng chung tuân theo \texttt{BR-GEN-01}--\texttt{BR-GEN-03} và được kiểm chứng cùng \texttt{NFR-SEC-01}.}
 
 \subsection{Business Rules}
 
@@ -354,9 +385,9 @@ Với tập dữ liệu demo tối thiểu 20 Hub và 500 phương tiện, trong
 \medskip
 \noindent\textbf{NFR-SEC-01 -- Kiểm soát truy cập theo vai trò.}\par
 \nopagebreak[4]
-Các chức năng xử lý sự cố, điều chỉnh lịch sạc, điều chuyển và chạy mô phỏng chỉ được thực hiện bởi actor có vai trò phù hợp. Yêu cầu bị từ chối không được làm thay đổi trạng thái nghiệp vụ hoặc làm lộ dữ liệu không thuộc phạm vi của actor.
+Mọi yêu cầu được bảo vệ phải được kiểm tra tại hệ thống theo \texttt{FR-GEN-03}, không chỉ bằng cách ẩn chức năng trên giao diện. Actor đúng vai trò nhưng không có quyền với đối tượng cũng phải bị từ chối. Không yêu cầu bị từ chối nào được làm thay đổi trạng thái nghiệp vụ hoặc làm lộ dữ liệu ngoài phạm vi của actor.
 
-\textit{Cách kiểm tra:} thực hiện ma trận kiểm thử actor--chức năng với \texttt{ACT-STU}, \texttt{ACT-OPR} và \texttt{ACT-MNT}; đối chiếu kết quả cho phép, từ chối và trạng thái sau mỗi lần thử.
+\textit{Cách kiểm tra:} kiểm thử ba vai trò với phiên hợp lệ, không có phiên, phiên đã đăng xuất và phiên hết hạn sau 30 phút không hoạt động. Dùng hai tài khoản Sinh viên để thử truy cập lượt đặt, chuyến đi và yêu cầu sạc của nhau; thử gửi trực tiếp yêu cầu điều phối bằng tài khoản Sinh viên hoặc Nhân viên kỹ thuật. Tất cả trường hợp không được cấp quyền phải bị từ chối, không lộ nội dung và không đổi dữ liệu. Đăng nhập sai phải không tạo phiên và không tiết lộ sự tồn tại của tài khoản.
 
 \medskip
 \noindent\textbf{NFR-CON-01 -- Nhất quán khi cấp phát tài nguyên.}\par

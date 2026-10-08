@@ -1,0 +1,118 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceBoxBackgroundColor white
+skinparam SequenceBoxBorderColor black
+skinparam SequenceActivationBackgroundColor white
+skinparam SequenceActivationBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderColor black
+skinparam ActivityDiamondBackgroundColor white
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBarColor black
+skinparam state {
+ BackgroundColor white
+ BorderColor black
+ FontColor black
+}
+
+skinparam BoundaryBackgroundColor white
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor white
+skinparam ControlBorderColor black
+skinparam DatabaseBackgroundColor white
+skinparam DatabaseBorderColor black
+
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+hide footbox
+autonumber
+actor "Khách hàng" as C
+control "Dịch vụ\nđơn hàng" as O
+database "Kho hàng" as S
+participant "Cổng\nthanh toán" as P
+participant "Bộ xử lý\ngiao hàng" as D
+C -> O : placeOrder(cart, info)
+activate O
+O -> O : Kiểm tra dữ liệu
+break Dữ liệu không hợp lệ
+  O --> C : Từ chối, nêu trường cần sửa
+end
+opt Có mã giảm giá
+  O -> O : Kiểm tra mã, tính lại tổng tiền
+end
+critical
+  O -> S : reserveItems(cart)
+  activate S
+  S --> O : Đã giữ hoặc hết hàng
+  deactivate S
+end
+break Không giữ được hàng
+  O --> C : Từ chối vì hết hàng
+end
+create participant "Phiên\nthanh toán" as T
+O -> T : <<create>> (orderId, amount)
+O --> C : orderId, hướng dẫn thanh toán
+deactivate O
+newpage Thanh toán đơn hàng
+loop Tối đa 3 lần và chưa thanh toán
+  C -> O : pay(orderId)
+  activate O
+  O -> T : authorizePayment()
+  activate T
+  T -> P : authorize(amount)
+  activate P
+  P --> T : Kết quả thanh toán
+  deactivate P
+  T --> O : paymentStatus
+  deactivate T
+  alt Thành công
+    O -> O : Ghi nhận paid = true
+    O --> C : Thanh toán thành công
+  else Thất bại
+    O --> C : Thông báo, cho phép thử lại
+  end
+  deactivate O
+end
+newpage Kết thúc thanh toán và xử lý đơn
+C -> O : finishCheckout(orderId)
+activate O
+O -> T : <<destroy>>
+destroy T
+alt Đã thanh toán
+  ref over O, S
+    Chốt đơn hàng và tồn kho
+  end ref
+  par
+    O ->> D : dispatch(orderId)
+    activate D
+  else
+    O --> C : Mã đơn và xác nhận thành công
+  end
+else Chưa thanh toán sau các lần thử
+  O -> S : releaseReservation(orderId)
+  S --> O : Đã giải phóng hàng
+  O --> C : Đơn không thành công
+end
+deactivate O
+... Tác vụ giao hàng tiếp tục ở nền ...
+opt Tác vụ giao hàng đã được gửi
+  D ->> O : deliveryAccepted(orderId)
+  activate O
+  O -> O : Cập nhật đã tiếp nhận giao hàng
+  deactivate O
+  deactivate D
+end
+@enduml

@@ -1,0 +1,86 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceBoxBackgroundColor white
+skinparam SequenceBoxBorderColor black
+skinparam SequenceActivationBackgroundColor white
+skinparam SequenceActivationBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderColor black
+skinparam ActivityDiamondBackgroundColor white
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBarColor black
+skinparam state {
+ BackgroundColor white
+ BorderColor black
+ FontColor black
+}
+
+skinparam BoundaryBackgroundColor white
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor white
+skinparam ControlBorderColor black
+skinparam DatabaseBackgroundColor white
+skinparam DatabaseBorderColor black
+
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+|Người đăng ký|
+start
+:Nhập thông tin\nvà chọn khóa học;
+|Hệ thống|
+:Hồ sơ đăng ký; <<object>>
+:Kiểm tra dữ liệu;
+while (Dữ liệu cần sửa?) is ([có])
+  :Nêu trường chưa hợp lệ;
+  |Người đăng ký|
+  if (Tiếp tục đăng ký?) then ([có])
+    :Sửa thông tin;
+    |Hệ thống|
+    :Kiểm tra lại;
+  else ([không])
+    end
+  endif
+endwhile ([không])
+|Hệ thống|
+if (Kênh liên hệ đã chọn?) then ([email])
+  :Lưu địa chỉ email;
+else ([SMS])
+  :Lưu số điện thoại;
+endif
+fork
+  :Kiểm tra điều kiện\nđầu vào của khóa học;
+fork again
+  :Kiểm tra\nsố chỗ còn lại;
+end fork
+if (Đủ điều kiện\nvà còn chỗ?) then ([có])
+  :Giữ chỗ,\ntạo đăng ký Pending;
+  :Đăng ký [Pending]; <<object>>
+  :Gửi yêu cầu\nthu học phí; <<sendSignal>>
+  :Nhận kết quả\nthanh toán; <<acceptEvent>>
+  if (Thanh toán thành công?) then ([có])
+    :Xác nhận đăng ký,\ngửi thông báo cho học viên;
+    :Đến ngày khai giảng; <<timeEvent>>
+    :Mở quyền truy cập\nkhóa học;
+    stop
+  else ([không])
+    :Hủy đăng ký,\ngiải phóng chỗ;
+    stop
+  endif
+else ([không])
+  :Từ chối và\nthông báo lý do;
+  stop
+endif
+@enduml

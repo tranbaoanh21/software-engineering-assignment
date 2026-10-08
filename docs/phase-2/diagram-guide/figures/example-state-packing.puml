@@ -1,0 +1,60 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceBoxBackgroundColor white
+skinparam SequenceBoxBorderColor black
+skinparam SequenceActivationBackgroundColor white
+skinparam SequenceActivationBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderColor black
+skinparam ActivityDiamondBackgroundColor white
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBarColor black
+skinparam state {
+ BackgroundColor white
+ BorderColor black
+ FontColor black
+}
+
+skinparam BoundaryBackgroundColor white
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor white
+skinparam ControlBorderColor black
+skinparam DatabaseBackgroundColor white
+skinparam DatabaseBorderColor black
+
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+!pragma layout smetana
+hide empty description
+left to right direction
+state "Đóng gói" as Packing {
+  state "Bọc sản phẩm" as Wrap
+  state "Bọc xong" as Wrapped
+  [*] --> Wrap
+  Wrap --> Wrapped : wrappingDone
+  Wrapped --> [*]
+  --
+  state "Chuẩn bị nhãn" as Label
+  state "Nhãn sẵn sàng" as LabelReady
+  [*] --> Label
+  Label --> LabelReady : labelPrepared
+  LabelReady --> [*]
+}
+state "Hoàn tất đóng gói" as Packed
+[*] --> Packing
+Packing --> Packed : / xác nhận đủ hai phần
+Packed --> [*]
+@enduml

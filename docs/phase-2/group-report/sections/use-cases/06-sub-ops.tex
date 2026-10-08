@@ -1,0 +1,101 @@
+\subsection{SUB-OPS -- Giám sát và điều phối vận hành}
+
+\AssignmentNote{Minh Anh}{Sequence, activity và phần giải thích của UC-OPS-01--UC-OPS-03; state chart Incident và RedistributionPlan.}
+
+\subsubsection{UC-OPS-01 -- Giám sát mạng lưới Mobility Hub}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-ops-01.pdf}
+  {UI Mockup -- UC-OPS-01}
+  {fig:p2-ui-uc-ops-01}
+  {Chèn mockup: Tổng quan mạng lưới, tài nguyên, cảnh báo và sự cố; bộ lọc, thời điểm cập nhật, dữ liệu thiếu; cách mở chi tiết và tác vụ xử lý.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-ops-01.pdf}
+  {Biểu đồ tuần tự -- UC-OPS-01}
+  {fig:p2-seq-uc-ops-01}
+  {Chèn sequence diagram: Xác minh phạm vi giám sát, tổng hợp trạng thái đã chấp nhận, lấy sự cố và cảnh báo rồi trả kết quả; nhánh thiếu một phần dữ liệu hoặc mất nguồn trạng thái.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-ops-01.pdf}
+  {Biểu đồ hoạt động -- UC-OPS-01}
+  {fig:p2-act-uc-ops-01}
+  {Chèn activity diagram: Mở giám sát, kiểm tra quyền, xem tổng quan và lọc hoặc mở chi tiết; nhánh chuyển sang xử lý sự cố hoặc lập kế hoạch điều phối.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-OPS-02 -- Xử lý sự cố vận hành}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành; Nhân viên kỹ thuật.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-ops-02.pdf}
+  {UI Mockup -- UC-OPS-02}
+  {fig:p2-ui-uc-ops-02}
+  {Chèn mockup: Danh sách và chi tiết sự cố, ghi nhận mới, tiếp nhận và giao xử lý; màn hình cập nhật kết quả kỹ thuật và xác nhận đóng sự cố.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-ops-02.pdf}
+  {Biểu đồ tuần tự -- UC-OPS-02}
+  {fig:p2-seq-uc-ops-02}
+  {Chèn sequence diagram: Tra cứu hoặc ghi nhận sự cố, chống trùng, tiếp nhận, phân công, cập nhật kết quả kỹ thuật và đóng; chỉ khôi phục tài nguyên khi kết quả kiểm tra đạt điều kiện.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-ops-02.pdf}
+  {Biểu đồ hoạt động -- UC-OPS-02}
+  {fig:p2-act-uc-ops-02}
+  {Chèn activity diagram: Thể hiện các trách nhiệm vận hành, kỹ thuật và hệ thống từ ghi nhận đến đóng sự cố; nhánh khắc phục chưa đạt, đổi người xử lý hoặc lỗi cập nhật.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-OPS-03 -- Điều phối phương tiện giữa các Hub}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-ops-03.pdf}
+  {UI Mockup -- UC-OPS-03}
+  {fig:p2-ui-uc-ops-03}
+  {Chèn mockup: Chọn Hub nguồn, Hub đích, xe và thời gian, xem tác động dự kiến, lưu nháp hoặc phê duyệt; cập nhật tiến độ và hủy kế hoạch.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-ops-03.pdf}
+  {Biểu đồ tuần tự -- UC-OPS-03}
+  {fig:p2-seq-uc-ops-03}
+  {Chèn sequence diagram: Kiểm tra phương án, tạo nháp, kiểm tra lại khi phê duyệt và lưu tiến độ; nhánh xe hoặc Hub không còn phù hợp, khởi tạo từ khuyến nghị và cập nhật thất bại.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-ops-03.pdf}
+  {Biểu đồ hoạt động -- UC-OPS-03}
+  {fig:p2-act-uc-ops-03}
+  {Chèn activity diagram: Lập, xem lại, phê duyệt và theo dõi kế hoạch; tách quyết định trên hệ thống với việc di chuyển vật lý và xác nhận kết quả ngoài thực tế.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- Incident (Bonus)}
+
+\InsertArtifact{../diagrams/state/incident.pdf}
+  {Biểu đồ trạng thái của Incident}
+  {fig:p2-state-incident}
+  {Chèn state-chart diagram: Các trạng thái Open, Acknowledged, InProgress, Resolved và Closed; điều kiện tiếp nhận, giao xử lý, xác nhận khắc phục và đóng sự cố.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage
+
+\subsubsection{Biểu đồ trạng thái -- RedistributionPlan (Bonus)}
+
+\InsertArtifact{../diagrams/state/redistribution-plan.pdf}
+  {Biểu đồ trạng thái của RedistributionPlan}
+  {fig:p2-state-redistribution-plan}
+  {Chèn state-chart diagram: Các trạng thái Draft, Recommended, Approved, InProgress, Completed và Cancelled; phân biệt đề xuất, phê duyệt và xác nhận di chuyển thực tế.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

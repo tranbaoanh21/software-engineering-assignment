@@ -1,0 +1,111 @@
+\subsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+
+\AssignmentNote{Hương Giang}{Sequence, activity và phần giải thích của UC-CHG-01--UC-CHG-03; state chart ChargingRequest, ChargingSession và ChargingPoint.}
+
+\subsubsection{UC-CHG-01 -- Đăng ký nhu cầu sạc}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên; Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-chg-01.pdf}
+  {UI Mockup -- UC-CHG-01}
+  {fig:p2-ui-uc-chg-01}
+  {Chèn mockup: Biểu mẫu yêu cầu sạc, phương tiện và Hub, mức pin và nhu cầu sử dụng; xác nhận yêu cầu, thời gian dự kiến hoặc trạng thái chờ.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-chg-01.pdf}
+  {Biểu đồ tuần tự -- UC-CHG-01}
+  {fig:p2-seq-uc-chg-01}
+  {Chèn sequence diagram: Kiểm tra quyền, phương tiện và dữ liệu liên quan, tạo yêu cầu sạc và xếp lịch theo ưu tiên; nhánh chưa có cổng phù hợp hoặc dữ liệu chưa đủ tin cậy.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-chg-01.pdf}
+  {Biểu đồ hoạt động -- UC-CHG-01}
+  {fig:p2-act-uc-chg-01}
+  {Chèn activity diagram: Nhập yêu cầu, kiểm tra điều kiện, ghi nhận và xem khả năng phân bổ lịch; phân biệt yêu cầu được ghi nhận với phiên sạc đã bắt đầu.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-CHG-02 -- Theo dõi lịch và phiên sạc}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên; Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-chg-02.pdf}
+  {UI Mockup -- UC-CHG-02}
+  {fig:p2-ui-uc-chg-02}
+  {Chèn mockup: Lịch sạc, trạng thái yêu cầu, tiến độ và thông tin phiên sạc; phạm vi của Sinh viên và góc nhìn vận hành; dữ liệu cũ, phiên gián đoạn hoặc gặp lỗi.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-chg-02.pdf}
+  {Biểu đồ tuần tự -- UC-CHG-02}
+  {fig:p2-seq-uc-chg-02}
+  {Chèn sequence diagram: Kiểm tra quyền xem, truy xuất lịch và phiên sạc, tổng hợp trạng thái đã chấp nhận từ EXT-STATE; nhánh dữ liệu thiếu, gián đoạn hoặc không có quyền.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-chg-02.pdf}
+  {Biểu đồ hoạt động -- UC-CHG-02}
+  {fig:p2-act-uc-chg-02}
+  {Chèn activity diagram: Mở lịch hoặc phiên sạc, xác định phạm vi được xem, tải và hiển thị trạng thái; các nhánh xem lại, làm mới hoặc xử lý thông tin chưa sẵn sàng.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-CHG-03 -- Điều chỉnh lịch sạc ưu tiên}
+
+\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-chg-03.pdf}
+  {UI Mockup -- UC-CHG-03}
+  {fig:p2-ui-uc-chg-03}
+  {Chèn mockup: Hàng đợi sạc, thứ tự ưu tiên, cổng phân bổ, biểu mẫu điều chỉnh và lý do; xác nhận lịch mới hoặc thông báo xung đột.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-chg-03.pdf}
+  {Biểu đồ tuần tự -- UC-CHG-03}
+  {fig:p2-seq-uc-chg-03}
+  {Chèn sequence diagram: Xác minh quyền, lấy các yêu cầu chưa bắt đầu, kiểm tra ưu tiên và cổng hợp lệ, tính rồi lưu lịch mới; nhánh yêu cầu đã bắt đầu, cổng lỗi hoặc lưu thất bại.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-chg-03.pdf}
+  {Biểu đồ hoạt động -- UC-CHG-03}
+  {fig:p2-act-uc-chg-03}
+  {Chèn activity diagram: Chọn yêu cầu cần điều chỉnh, thay ưu tiên hoặc cổng, kiểm tra và xác nhận; giữ các phiên đang Charging ngoài phạm vi chỉnh lịch.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- ChargingRequest (Bonus)}
+
+\InsertArtifact{../diagrams/state/charging-request.pdf}
+  {Biểu đồ trạng thái của ChargingRequest}
+  {fig:p2-state-charging-request}
+  {Chèn state-chart diagram: Các trạng thái Pending, Scheduled, Charging, Completed, Cancelled và Rejected; điều kiện xếp lịch, bắt đầu, kết thúc và hủy yêu cầu.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage
+
+\subsubsection{Biểu đồ trạng thái -- ChargingSession (Bonus)}
+
+\InsertArtifact{../diagrams/state/charging-session.pdf}
+  {Biểu đồ trạng thái của ChargingSession}
+  {fig:p2-state-charging-session}
+  {Chèn state-chart diagram: Các trạng thái Ready, Charging, Paused, Completed, Interrupted và Failed; sự kiện bắt đầu, tạm dừng, tiếp tục, hoàn tất và lỗi.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage
+
+\subsubsection{Biểu đồ trạng thái -- ChargingPoint (Bonus)}
+
+\InsertArtifact{../diagrams/state/charging-point.pdf}
+  {Biểu đồ trạng thái của ChargingPoint}
+  {fig:p2-state-charging-point}
+  {Chèn state-chart diagram: Vòng đời cổng sạc với các trạng thái Available, Reserved, Charging và OutOfService; phân biệt lỗi cổng với việc phiên sạc hoàn tất.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

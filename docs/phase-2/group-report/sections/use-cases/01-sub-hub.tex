@@ -1,0 +1,82 @@
+\subsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
+
+\AssignmentNote{Quốc Trung}{Sequence, activity của ba UC và phần giải thích; không có state chart riêng.}
+
+\subsubsection{UC-HUB-01 -- Tra cứu Hub phù hợp}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-hub-01.pdf}
+  {UI Mockup -- UC-HUB-01}
+  {fig:p2-ui-uc-hub-01}
+  {Chèn mockup: Tra cứu theo vị trí hiện tại hoặc vị trí nhập; bộ lọc nhu cầu; kết quả bản đồ hoặc danh sách; kết quả rỗng và thời điểm cập nhật.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-hub-01.pdf}
+  {Biểu đồ tuần tự -- UC-HUB-01}
+  {fig:p2-seq-uc-hub-01}
+  {Chèn sequence diagram: Yêu cầu tra cứu, chuẩn hóa vị trí qua EXT-MAP, lấy trạng thái đã được hệ thống chấp nhận, lọc và xếp hạng Hub; nhánh lỗi vị trí, lỗi tải và dùng dữ liệu gần nhất.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-hub-01.pdf}
+  {Biểu đồ hoạt động -- UC-HUB-01}
+  {fig:p2-act-uc-hub-01}
+  {Chèn activity diagram: Lựa chọn vị trí và nhu cầu, kiểm tra dữ liệu, lọc kết quả, hiển thị hoặc yêu cầu sửa tiêu chí; thể hiện các điểm quay lại khi nhập vị trí hoặc thử lại.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-HUB-02 -- Xem trạng thái tài nguyên tại Hub}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-hub-02.pdf}
+  {UI Mockup -- UC-HUB-02}
+  {fig:p2-ui-uc-hub-02}
+  {Chèn mockup: Thông tin Hub, xe và mức pin, chỗ đỗ, cổng sạc; thời điểm cập nhật; dữ liệu thiếu hoặc đã cũ; các hành động nghiệp vụ tiếp theo.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-hub-02.pdf}
+  {Biểu đồ tuần tự -- UC-HUB-02}
+  {fig:p2-seq-uc-hub-02}
+  {Chèn sequence diagram: Chọn Hub, kiểm tra danh mục, lấy và tổng hợp trạng thái tài nguyên; nhánh Hub không tồn tại, dữ liệu thiếu hoặc mất nguồn trạng thái.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-hub-02.pdf}
+  {Biểu đồ hoạt động -- UC-HUB-02}
+  {fig:p2-act-uc-hub-02}
+  {Chèn activity diagram: Chọn Hub, đánh giá dữ liệu và hiển thị tài nguyên; phân biệt Hub không đáp ứng nhu cầu với việc không tải được thông tin.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-HUB-03 -- Xem Hub thay thế}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-hub-03.pdf}
+  {UI Mockup -- UC-HUB-03}
+  {fig:p2-ui-uc-hub-03}
+  {Chèn mockup: Thông báo lựa chọn ban đầu không đáp ứng nhu cầu, danh sách Hub thay thế kèm lý do và khoảng cách; chọn Hub khác hoặc điều chỉnh tiêu chí.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-hub-03.pdf}
+  {Biểu đồ tuần tự -- UC-HUB-03}
+  {fig:p2-seq-uc-hub-03}
+  {Chèn sequence diagram: Nhận nhu cầu chưa được đáp ứng, xác định vùng lân cận qua EXT-MAP, đánh giá trạng thái và trả danh sách Hub thay thế; nhánh không tìm được lựa chọn hoặc dữ liệu chưa sẵn sàng.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-hub-03.pdf}
+  {Biểu đồ hoạt động -- UC-HUB-03}
+  {fig:p2-act-uc-hub-03}
+  {Chèn activity diagram: Xác định nhu cầu, tìm và đánh giá Hub thay thế, trình bày kết quả; nhánh điều chỉnh vùng hoặc tiêu chí và nhánh xem chi tiết Hub được chọn.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage

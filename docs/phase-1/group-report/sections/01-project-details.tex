@@ -210,6 +210,7 @@ Mức độ đạt mục tiêu trong Phase 1 được đánh giá bằng khả n
   \item \textbf{SCP-IN-06:} Giám sát mạng lưới, cảnh báo nguy cơ quá tải, quản lý sự cố và kế hoạch điều chuyển phương tiện.
   \item \textbf{SCP-IN-07:} Cấu hình, chạy và phân tích kịch bản What-if; cung cấp kết quả và khuyến nghị điều phối.
   \item \textbf{SCP-IN-08:} Tiếp nhận dữ liệu trạng thái từ nguồn IoT hoặc nguồn dữ liệu giả lập và phản ánh thay đổi vào mô hình phần mềm.
+  \item \textbf{SCP-IN-09:} Xác thực tài khoản được cấp sẵn, đăng xuất và kiểm soát quyền thao tác theo vai trò cùng phạm vi dữ liệu.
 \end{itemize}
 
 \subsubsection*{Ngoài phạm vi}
@@ -222,6 +223,7 @@ Mức độ đạt mục tiêu trong Phase 1 được đánh giá bằng khả n
   \item \textbf{SCP-OUT-05:} Thanh toán, định giá chuyến đi và tích hợp thực tế với hệ thống Metro, ngân hàng, SSO hoặc hệ thống quản lý sinh viên.
   \item \textbf{SCP-OUT-06:} Xây dựng mô hình AI dự báo phức tạp; chức năng mô phỏng có thể dựa trên quy tắc và dữ liệu giả lập phù hợp với phạm vi môn học.
   \item \textbf{SCP-OUT-07:} Triển khai vận hành thật trên toàn Khu đô thị ĐHQG-HCM hoặc cam kết các tiêu chuẩn vận hành của một hệ thống thương mại.
+  \item \textbf{SCP-OUT-08:} Đăng ký tài khoản, khôi phục mật khẩu, xác thực OTP và giao diện quản trị tài khoản; tài khoản demo cùng quyền truy cập được cấu hình trước.
 \end{itemize}
 
 \subsubsection*{Phạm vi phân tích và phạm vi MVP}
@@ -300,8 +302,8 @@ Hệ thống nhận được dữ liệu gần hiện tại về phương tiện
 Mỗi Mobility Hub, phương tiện, chỗ đỗ và cổng sạc có một mã không trùng trong phạm vi mạng lưới. Giả định này là cơ sở để đặt chỗ, cập nhật trạng thái và truy vết sự cố đúng đối tượng.
 
 \medskip
-\noindent\textbf{ASM-GEN-03 -- Người dùng đã được nhận diện theo vai trò.}
-Trong các use case nghiệp vụ, hệ thống biết người đang thao tác là Sinh viên, Nhân viên vận hành hoặc Nhân viên kỹ thuật. Cơ chế đăng nhập và tích hợp danh tính cụ thể chưa thuộc phạm vi phân tích hiện tại.
+\noindent\textbf{ASM-GEN-03 -- Tài khoản và vai trò được cấp sẵn.}
+Tài khoản demo được cấu hình trước với vai trò Sinh viên, Nhân viên vận hành hoặc Nhân viên kỹ thuật và phạm vi dữ liệu tương ứng. Hệ thống xác thực tài khoản trước các thao tác được bảo vệ; người dùng không tự chọn hoặc thay đổi vai trò. Tích hợp SSO thực tế nằm ngoài phạm vi dự án.
 
 \medskip
 \noindent\textbf{ASM-GEN-04 -- Mốc thời gian có thể so sánh nhất quán.}

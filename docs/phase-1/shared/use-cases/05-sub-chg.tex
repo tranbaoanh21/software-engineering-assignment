@@ -27,7 +27,7 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
   Description / Goal & Cho phép actor hợp lệ tạo \texttt{ChargingRequest} cho một phương tiện, nhận trạng thái tiếp nhận cùng mức ưu tiên và thời gian sạc dự kiến khi hệ thống có đủ dữ liệu lập lịch.\\\hline
   Trigger & Sinh viên đăng ký sạc cho xe cá nhân hoặc Nhân viên vận hành tạo nhu cầu sạc cho phương tiện thuộc mạng lưới.\\\hline
   Preconditions &
-    \textbf{1.} Actor đã được nhận diện và có quyền tạo yêu cầu cho phương tiện đã chọn.\newline
+    \textbf{1.} Actor đã đăng nhập với phiên hợp lệ và có quyền tạo yêu cầu cho phương tiện đã chọn.\newline
     \textbf{2.} Phương tiện và Hub sạc tồn tại trong SEMH.\newline
     \textbf{3.} Hệ thống có dữ liệu cần thiết để xác định yêu cầu hợp lệ hoặc có thể chỉ rõ dữ liệu còn thiếu.\\\hline
   Postconditions &
@@ -35,7 +35,7 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
     \textbf{Thất bại:} Không có yêu cầu sạc mới và không có cổng sạc nào bị giữ bởi yêu cầu thất bại.\\\hline
   Main Flow &
     \textbf{1.} Actor chọn phương tiện, Hub và chức năng đăng ký nhu cầu sạc.\newline
-    \textbf{2.} Hệ thống hiển thị trạng thái phương tiện, mức pin gần nhất, các thông tin yêu cầu và điều kiện sạc.\newline
+    \textbf{2.} Hệ thống kiểm tra phiên và quyền với phương tiện trước khi hiển thị trạng thái, mức pin gần nhất và điều kiện sạc.\newline
     \textbf{3.} Actor cung cấp thời hạn mong muốn hoặc kế hoạch sử dụng gần nhất, rồi xác nhận yêu cầu.\newline
     \textbf{4.} Hệ thống xác minh quyền của actor, phương tiện và tính đầy đủ của dữ liệu.\newline
     \textbf{5.} Hệ thống lấy mức pin và trạng thái hợp lệ gần nhất từ dữ liệu đã nhận qua \texttt{ACT-DAT}.\newline
@@ -48,11 +48,12 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
     \textbf{AF-03 -- Actor sửa thông tin trước xác nhận.} \textit{Rẽ từ bước 3.} Hệ thống cập nhật dữ liệu dự kiến và tính lại thông tin hiển thị; chưa tạo yêu cầu.\newline
     \textbf{AF-04 -- Dữ liệu mức pin đã cũ nhưng còn hợp lệ.} \textit{Tại bước 5.} Hệ thống hiển thị thời điểm cập nhật, tiếp nhận yêu cầu ở \texttt{Pending} và chưa cam kết lịch chính xác.\\\hline
   Exception Flows &
-    \textbf{EF-01 -- Actor không có quyền với phương tiện.} \textit{Tại bước 4.} Hệ thống từ chối yêu cầu, không tiết lộ dữ liệu ngoài phạm vi và không thay đổi lịch sạc.\newline
+    \textbf{EF-01 -- Actor không có quyền với phương tiện.} \textit{Tại bước 2 hoặc 4.} Hệ thống từ chối yêu cầu, không tiết lộ dữ liệu ngoài phạm vi và không thay đổi lịch sạc.\newline
     \textbf{EF-02 -- Phương tiện hoặc dữ liệu bắt buộc không hợp lệ.} \textit{Tại bước 4 hoặc 5.} Hệ thống chỉ rõ nội dung cần sửa và không tạo yêu cầu.\newline
-    \textbf{EF-03 -- Không thể lưu yêu cầu.} \textit{Tại bước 7.} Hệ thống hoàn tác mọi phân bổ tạm thời, thông báo lỗi và cho phép gửi lại mà không tạo bản ghi trùng.\\\hline
-  Related Requirements & \texttt{FR-CHG-01}; \texttt{NIFR-CHG-01}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\\\hline
+    \textbf{EF-03 -- Không thể lưu yêu cầu.} \textit{Tại bước 7.} Hệ thống hoàn tác mọi phân bổ tạm thời, thông báo lỗi và cho phép gửi lại mà không tạo bản ghi trùng.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-CHG-01}; \texttt{NIFR-CHG-01}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\KeepUseCaseRow
   Dependencies & Sử dụng trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT}; lịch có thể được tính lại bởi \texttt{NIFR-CHG-01}. Yêu cầu được theo dõi trong \texttt{UC-CHG-02} và có thể được điều chỉnh qua \texttt{UC-CHG-03}.\\\hline
 \end{longtable}
 \normalsize
@@ -83,7 +84,7 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
   Description / Goal & Cung cấp cho Sinh viên trạng thái yêu cầu của mình và cho Nhân viên vận hành góc nhìn các yêu cầu, cổng cùng phiên sạc thuộc phạm vi quản lý, bao gồm tiến độ và thời gian hoàn tất dự kiến khi có dữ liệu.\\\hline
   Trigger & Actor mở danh sách hoặc chi tiết lịch và phiên sạc.\\\hline
   Preconditions &
-    \textbf{1.} Actor đã được nhận diện.\newline
+    \textbf{1.} Actor đã đăng nhập với phiên hợp lệ.\newline
     \textbf{2.} Actor chỉ được truy cập yêu cầu của mình hoặc phạm vi vận hành được cấp quyền.\\\hline
   Postconditions &
     \textbf{Thành công:} Trạng thái \texttt{ChargingRequest}, \texttt{ChargingSession}, cổng sạc, mức pin và thời gian dự kiến khi tính được được hiển thị cùng thời điểm cập nhật; không có lịch nào bị thay đổi.\newline
@@ -104,9 +105,10 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
   Exception Flows &
     \textbf{EF-01 -- Actor không có quyền xem mục được chọn.} \textit{Tại bước 2 hoặc 3.} Hệ thống từ chối truy cập, không tiết lộ nội dung và ghi nhận kết quả.\newline
     \textbf{EF-02 -- Không có dữ liệu trạng thái hợp lệ.} \textit{Tại bước 4.} Hệ thống vẫn hiển thị thông tin yêu cầu nhưng đánh dấu tiến độ và dự báo chưa sẵn sàng.\newline
-    \textbf{EF-03 -- Không thể tải dữ liệu theo dõi.} \textit{Tại bước 3.} Hệ thống giữ bộ lọc hiện tại, thông báo lỗi và cho phép thử lại.\\\hline
-  Related Requirements & \texttt{FR-CHG-02}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}.\\\hline
-  Related Business Rules & \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\\\hline
+    \textbf{EF-03 -- Không thể tải dữ liệu theo dõi.} \textit{Tại bước 3.} Hệ thống giữ bộ lọc hiện tại, thông báo lỗi và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-CHG-02}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\KeepUseCaseRow
   Dependencies & Theo dõi yêu cầu từ \texttt{UC-CHG-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}. Nhân viên vận hành có thể mở \texttt{UC-CHG-03} từ một lịch chưa bắt đầu.\\\hline
 \end{longtable}
 \normalsize
@@ -138,7 +140,7 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
   Description / Goal & Cho phép Nhân viên vận hành thay đổi thứ tự hoặc phân bổ cổng của các yêu cầu chưa bắt đầu, trong khi vẫn tuân thủ quy tắc ưu tiên, không gián đoạn phiên đang sạc và ghi nhận đầy đủ lý do điều chỉnh.\\\hline
   Trigger & Nhân viên vận hành chọn một lịch sạc và yêu cầu điều chỉnh.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền điều chỉnh lịch.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền điều chỉnh lịch trong phạm vi được cấp.\newline
     \textbf{2.} Các yêu cầu được chọn đang \texttt{Pending} hoặc \texttt{Scheduled}, chưa có phiên \texttt{Charging}.\newline
     \textbf{3.} Hệ thống có trạng thái cổng sạc và lịch hiện tại đủ để kiểm tra xung đột.\\\hline
   Postconditions &
@@ -161,9 +163,10 @@ SUB-CHG tiếp nhận \texttt{ChargingRequest} của Sinh viên và Nhân viên 
   Exception Flows &
     \textbf{EF-01 -- Vi phạm quy tắc ưu tiên hoặc xung đột cổng.} \textit{Tại bước 5.} Hệ thống từ chối phương án, chỉ rõ yêu cầu hoặc cổng xung đột và cho phép chỉnh sửa.\newline
     \textbf{EF-02 -- Cổng được chọn vừa gặp sự cố.} \textit{Tại bước 5 hoặc 6.} Hệ thống loại cổng, giữ lịch cũ và cung cấp các cổng hợp lệ còn lại nếu có.\newline
-    \textbf{EF-03 -- Không thể lưu toàn bộ lịch mới.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi, bảo toàn lịch trước đó và thông báo thử lại.\\\hline
-  Related Requirements & \texttt{FR-CHG-03}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\\\hline
+    \textbf{EF-03 -- Không thể lưu toàn bộ lịch mới.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi, bảo toàn lịch trước đó và thông báo thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-CHG-03}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-CHG-01}, \texttt{BR-CHG-02}.\KeepUseCaseRow
   Dependencies & Điều chỉnh các yêu cầu tạo từ \texttt{UC-CHG-01} và quan sát qua \texttt{UC-CHG-02}. Sự cố cổng được xử lý tự động bởi \texttt{NIFR-CHG-02} và theo dõi trong SUB-OPS.\\\hline
 \end{longtable}
 \normalsize

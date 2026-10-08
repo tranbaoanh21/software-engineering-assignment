@@ -1,0 +1,78 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceBoxBackgroundColor white
+skinparam SequenceBoxBorderColor black
+skinparam SequenceActivationBackgroundColor white
+skinparam SequenceActivationBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderColor black
+skinparam ActivityDiamondBackgroundColor white
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBarColor black
+skinparam state {
+ BackgroundColor white
+ BorderColor black
+ FontColor black
+}
+
+skinparam BoundaryBackgroundColor white
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor white
+skinparam ControlBorderColor black
+skinparam DatabaseBackgroundColor white
+skinparam DatabaseBorderColor black
+
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+!pragma layout smetana
+hide empty description
+top to bottom direction
+skinparam linetype polyline
+state "Mới tạo" as New
+state valid <<choice>>
+state "Bị từ chối" as Rejected
+state "Đang sản xuất" as Processing {
+  state "Chuẩn bị" as Prep
+  state "Gia công" as Work
+  state "Kiểm tra\nchất lượng" as QC
+  state "Đóng gói" as Packing
+  Packing : do / bọc sản phẩm và chuẩn bị nhãn
+  [*] --> Prep
+  Prep -down-> Work : materialsReady
+  Work -down-> QC : / bàn giao sản phẩm
+  QC -down-> Packing : qualityPassed
+  QC --> Work : qualityFailed\n/ tạo lần gia công lại
+  Packing --> [*]
+}
+state "Tạm dừng" as Paused
+state "Hoàn tất" as Completed
+state "Đã hủy" as Cancelled
+[*] --> New
+New --> valid : submit / kiểm tra hồ sơ
+valid --> Rejected : [hồ sơ không hợp lệ]
+valid --> Processing : [hồ sơ hợp lệ]
+Processing -left-> Paused : pauseRequested\n/ lưu checkpoint
+Paused -right-> Processing[H*] : resume [điều kiện an toàn]\n/ khôi phục checkpoint
+Paused --> Cancelled : after (30 phút)\n/ hủy theo quy định
+Processing --> Cancelled : cancel [được phép]\n/ dừng và thu hồi tài nguyên
+Processing --> Completed : / lưu kết quả cuối
+state endRejected <<end>>
+state endCancelled <<end>>
+state endCompleted <<end>>
+Rejected --> endRejected
+Cancelled --> endCancelled
+Completed --> endCompleted
+@enduml

@@ -1,0 +1,61 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 14
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBorderColor black
+skinparam ActorBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceBoxBackgroundColor white
+skinparam SequenceBoxBorderColor black
+skinparam SequenceActivationBackgroundColor white
+skinparam SequenceActivationBorderColor black
+skinparam ActivityBackgroundColor white
+skinparam ActivityBorderColor black
+skinparam ActivityDiamondBackgroundColor white
+skinparam ActivityDiamondBorderColor black
+skinparam ActivityBarColor black
+skinparam state {
+ BackgroundColor white
+ BorderColor black
+ FontColor black
+}
+
+skinparam BoundaryBackgroundColor white
+skinparam BoundaryBorderColor black
+skinparam ControlBackgroundColor white
+skinparam ControlBorderColor black
+skinparam DatabaseBackgroundColor white
+skinparam DatabaseBorderColor black
+
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+!pragma layout smetana
+hide empty description
+top to bottom direction
+state "Gia công" as Work {
+  state "Cắt tạo hình" as Cut
+  state "Đánh bóng" as Polish
+  [*] --> Cut
+  Cut : entry / ghi thời điểm đoạn cắt
+  Cut : do / điều khiển máy cắt
+  Cut : exit / lưu vị trí và tiến độ
+  Cut : progressReceived / cập nhật phần trăm
+  Cut --> Cut : recalibrate\n/ đặt lại thông số đoạn cắt
+  Cut -down-> Polish : cuttingDone
+  Polish --> [*] : polishingDone
+}
+state "Thay dụng cụ" as ToolChange
+state "Kiểm tra chất lượng" as QC
+[*] --> Work
+Work -right-> ToolChange : toolWorn\n/ ghi checkpoint
+ToolChange --> Work[H] : toolReady [đã kiểm tra]\n/ khôi phục checkpoint
+Work --> QC : / bàn giao sản phẩm
+@enduml

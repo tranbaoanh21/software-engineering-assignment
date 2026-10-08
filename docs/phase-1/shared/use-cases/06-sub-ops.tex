@@ -27,7 +27,7 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Description / Goal & Cho phép Nhân viên vận hành quan sát trạng thái tổng hợp của các Hub, tài nguyên, sự cố và cảnh báo mất cân bằng để xác định nơi cần can thiệp.\\\hline
   Trigger & Nhân viên vận hành mở màn hình giám sát mạng lưới hoặc chọn một cảnh báo được hệ thống thông báo.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền giám sát.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền giám sát phạm vi Hub được cấp.\newline
     \textbf{2.} Hệ thống đã có danh mục Hub và dữ liệu trạng thái gần nhất được chấp nhận.\\\hline
   Postconditions &
     \textbf{Thành công:} Trạng thái tổng hợp, thời điểm cập nhật, sự cố đang mở và cảnh báo mất cân bằng được hiển thị; việc xem không làm thay đổi dữ liệu vận hành.\newline
@@ -47,9 +47,10 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Exception Flows &
     \textbf{EF-01 -- Không có quyền giám sát.} \textit{Tại bước 2.} Hệ thống từ chối truy cập, không tiết lộ dữ liệu ngoài phạm vi và ghi nhận kết quả.\newline
     \textbf{EF-02 -- Không thể tổng hợp một phần dữ liệu.} \textit{Tại bước 3 hoặc 4.} Hệ thống hiển thị phần còn hợp lệ, đánh dấu phần thiếu và không suy diễn trạng thái thay thế.\newline
-    \textbf{EF-03 -- Mất nguồn trạng thái.} \textit{Tại bước 3.} Hệ thống không ghi đè dữ liệu hợp lệ cuối, cảnh báo gián đoạn và cho phép thử lại.\\\hline
-  Related Requirements & \texttt{FR-OPS-01}; \texttt{NIFR-HUB-01}, \texttt{NIFR-OPS-01}, \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}.\\\hline
-  Related Business Rules & \texttt{BR-OPS-01}, \texttt{BR-OPS-02}.\\\hline
+    \textbf{EF-03 -- Mất nguồn trạng thái.} \textit{Tại bước 3.} Hệ thống không ghi đè dữ liệu hợp lệ cuối, cảnh báo gián đoạn và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-OPS-01}; \texttt{NIFR-HUB-01}, \texttt{NIFR-OPS-01}, \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-OPS-01}, \texttt{BR-OPS-02}.\KeepUseCaseRow
   Dependencies & Sử dụng trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT} và dữ liệu do các phân hệ HUB, PARK, CHG, TRIP tạo. Có thể chuyển sang \texttt{UC-OPS-02} hoặc \texttt{UC-OPS-03}.\\\hline
 \end{longtable}
 \normalsize
@@ -80,7 +81,7 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Description / Goal & Quản lý một \texttt{Incident} từ khi được phát hiện hoặc ghi nhận, qua tiếp nhận và giao xử lý, đến khi kết quả kỹ thuật được xác nhận và tài nguyên có trạng thái phục vụ phù hợp.\\\hline
   Trigger & Nhân viên vận hành chọn một sự cố \texttt{Open} hoặc ghi nhận sự cố mới từ thông tin vận hành.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền quản lý sự cố.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền quản lý sự cố; Nhân viên kỹ thuật tham gia bằng phiên riêng, chỉ cập nhật công việc được giao.\newline
     \textbf{2.} Tài nguyên bị ảnh hưởng tồn tại hoặc thông tin báo cáo đủ để xác định phạm vi sự cố.\\\hline
   Postconditions &
     \textbf{Thành công:} \texttt{Incident} có trạng thái và lịch sử xử lý nhất quán; tài nguyên chỉ trở lại phục vụ sau khi \texttt{ACT-MNT} xác nhận kết quả đạt yêu cầu.\newline
@@ -102,9 +103,10 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Exception Flows &
     \textbf{EF-01 -- Tài nguyên không tồn tại hoặc không khớp.} \textit{Tại bước 2.} Hệ thống không cho phép tiếp tục, giữ sự cố \texttt{Open} và yêu cầu xác minh thông tin.\newline
     \textbf{EF-02 -- Actor không có quyền cập nhật.} \textit{Tại bất kỳ bước ghi nào.} Hệ thống từ chối thao tác, bảo toàn trạng thái và ghi nhận kết quả truy cập.\newline
-    \textbf{EF-03 -- Lỗi khi cập nhật nhiều đối tượng.} \textit{Tại bước 7 hoặc 8.} Hệ thống hoàn tác thay đổi, giữ tài nguyên \texttt{OutOfService} và thông báo thử lại.\\\hline
-  Related Requirements & \texttt{FR-OPS-02}; \texttt{NIFR-CHG-02}, \texttt{NIFR-OPS-01}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-OPS-02}.\\\hline
+    \textbf{EF-03 -- Lỗi khi cập nhật nhiều đối tượng.} \textit{Tại bước 7 hoặc 8.} Hệ thống hoàn tác thay đổi, giữ tài nguyên \texttt{OutOfService} và thông báo thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-OPS-02}; \texttt{NIFR-CHG-02}, \texttt{NIFR-OPS-01}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-OPS-02}.\KeepUseCaseRow
   Dependencies & Có thể được mở từ \texttt{UC-OPS-01}; nhận sự kiện lỗi từ \texttt{EXT-STATE}/\texttt{ACT-DAT}. Hoạt động sửa chữa vật lý nằm ngoài system boundary.\\\hline
 \end{longtable}
 \normalsize
@@ -135,7 +137,7 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Description / Goal & Cho phép Nhân viên vận hành lập, phê duyệt và theo dõi \texttt{RedistributionPlan} nhằm chuyển phương tiện từ Hub dư thừa sang Hub thiếu, mà không coi việc phê duyệt trong phần mềm là việc di chuyển vật lý đã hoàn tất.\\\hline
   Trigger & Nhân viên vận hành chọn lập kế hoạch từ cảnh báo mất cân bằng, từ khuyến nghị mô phỏng hoặc chủ động tạo kế hoạch.\\\hline
   Preconditions &
-    \textbf{1.} Nhân viên vận hành đã được nhận diện và có quyền lập, phê duyệt kế hoạch.\newline
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền lập, phê duyệt kế hoạch trong phạm vi được cấp.\newline
     \textbf{2.} Các Hub nguồn, Hub đích và phương tiện dự kiến tồn tại; hệ thống có trạng thái gần nhất để kiểm tra phương án.\\\hline
   Postconditions &
     \textbf{Thành công:} \texttt{RedistributionPlan} có đầy đủ Hub nguồn, Hub đích, danh sách xe, thời gian dự kiến và trạng thái; lịch sử phê duyệt, tiến độ được ghi nhận.\newline
@@ -157,9 +159,10 @@ SUB-OPS cung cấp góc nhìn tổng hợp về mạng lưới Mobility Hub, qu�
   Exception Flows &
     \textbf{EF-01 -- Phương án không còn khả thi.} \textit{Tại bước 4 hoặc 7.} Xe đã bị đặt, bị lỗi hoặc Hub đích không còn chỗ; hệ thống không phê duyệt và yêu cầu chọn lại.\newline
     \textbf{EF-02 -- Actor không có quyền phê duyệt.} \textit{Tại bước 6.} Hệ thống giữ kế hoạch \texttt{Draft}, từ chối thay đổi và ghi nhận kết quả.\newline
-    \textbf{EF-03 -- Cập nhật tiến độ thất bại.} \textit{Tại bước 8.} Hệ thống giữ trạng thái kế hoạch trước đó, không tự thay đổi trạng thái xe và cho phép thử lại.\\\hline
-  Related Requirements & \texttt{FR-OPS-03}; \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\\\hline
-  Related Business Rules & \texttt{BR-OPS-01}.\\\hline
+    \textbf{EF-03 -- Cập nhật tiến độ thất bại.} \textit{Tại bước 8.} Hệ thống giữ trạng thái kế hoạch trước đó, không tự thay đổi trạng thái xe và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} \textit{Trước mỗi yêu cầu được bảo vệ.} Từ chối truy cập theo \texttt{FR-GEN-03}; yêu cầu đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Related Requirements & \texttt{FR-GEN-03}; \texttt{FR-OPS-03}; \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}.\KeepUseCaseRow
+  Related Business Rules & \texttt{BR-GEN-02}; \texttt{BR-OPS-01}.\KeepUseCaseRow
   Dependencies & Dùng cảnh báo từ \texttt{UC-OPS-01}; có thể nhận \texttt{Recommendation} từ \texttt{UC-SIM-02}. Việc vận chuyển xe vật lý nằm ngoài system boundary.\\\hline
 \end{longtable}
 \normalsize

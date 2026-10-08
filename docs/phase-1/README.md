@@ -2,6 +2,8 @@
 
 Phase 1 tập trung vào việc hiểu đúng bài toán và xác định hệ thống phải làm gì. Đây là nền cho UI, các behavioral diagram, class diagram, kiến trúc và MVP ở những phase sau. Nếu requirement chưa rõ hoặc các thành viên hiểu nghiệp vụ khác nhau, toàn bộ tài liệu phía sau sẽ không thể thống nhất.
 
+Xác thực và phân quyền được trình bày thành một mục dùng chung trong Phần II, với mã `FR-GEN-01`--`FR-GEN-03` và `BR-GEN-01`--`BR-GEN-03`. Không thêm phân hệ, actor hay UC nghiệp vụ: giữ nguyên bảy phân hệ và 18 UC. Tài khoản demo được cấp sẵn; SUB-HUB cho phép tra cứu công khai, các UC còn lại yêu cầu phiên hợp lệ và quyền theo vai trò, chủ sở hữu hoặc phạm vi công việc. Không triển khai đăng ký, OTP, khôi phục mật khẩu hay SSO thật.
+
 - Deadline trên LMS: **27/09/2026**
 - Review dự kiến trên lớp: **Tuần 7**
 - Đề bài gốc: [`../../BTL_SoftwareEngineering_HK261_v1.pdf`](../../BTL_SoftwareEngineering_HK261_v1.pdf)

@@ -1,0 +1,101 @@
+\subsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+\AssignmentNote{Ngọc Hân}{Sequence, activity và phần giải thích của UC-PARK-01--UC-PARK-03; state chart ParkingReservation và ParkingSpace.}
+
+\subsubsection{UC-PARK-01 -- Đặt chỗ đỗ cho xe cá nhân}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-park-01.pdf}
+  {UI Mockup -- UC-PARK-01}
+  {fig:p2-ui-uc-park-01}
+  {Chèn mockup: Chọn Hub và phương tiện cá nhân, xem chỗ có thể đặt, xác nhận; mã lượt đặt, vị trí và thời hạn; tình huống hết chỗ hoặc chỗ vừa được giữ.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-park-01.pdf}
+  {Biểu đồ tuần tự -- UC-PARK-01}
+  {fig:p2-seq-uc-park-01}
+  {Chèn sequence diagram: Chọn chỗ phù hợp, kiểm tra lại tính khả dụng và xác nhận lượt đặt cùng trạng thái giữ chỗ; nhánh cạnh tranh cùng chỗ và lỗi xác nhận.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-park-01.pdf}
+  {Biểu đồ hoạt động -- UC-PARK-01}
+  {fig:p2-act-uc-park-01}
+  {Chèn activity diagram: Chọn Hub, phương tiện và chỗ đỗ, kiểm tra điều kiện rồi giữ chỗ; nhánh chọn chỗ khác hoặc Hub thay thế khi không thể đặt.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-PARK-02 -- Check-in phương tiện cá nhân}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-park-02.pdf}
+  {UI Mockup -- UC-PARK-02}
+  {fig:p2-ui-uc-park-02}
+  {Chèn mockup: Thông tin lượt đặt, hướng dẫn đến đúng chỗ, trạng thái check-in và xác nhận vào chỗ; cảnh báo lượt đặt hết hạn hoặc chưa nhận được xác nhận.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-park-02.pdf}
+  {Biểu đồ tuần tự -- UC-PARK-02}
+  {fig:p2-seq-uc-park-02}
+  {Chèn sequence diagram: Xác minh lượt đặt, phương tiện và vị trí, nhận xác nhận hiện diện từ EXT-STATE, cập nhật lượt đặt sang CheckedIn và chỗ sang Occupied; nhánh xác nhận thiếu hoặc không khớp.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-park-02.pdf}
+  {Biểu đồ hoạt động -- UC-PARK-02}
+  {fig:p2-act-uc-park-02}
+  {Chèn activity diagram: Đưa phương tiện vào chỗ, kiểm tra lượt đặt và xác nhận hiện diện, hoàn tất check-in; các nhánh từ chối hoặc thử lại theo đặc tả.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-PARK-03 -- Check-out phương tiện cá nhân}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-park-03.pdf}
+  {UI Mockup -- UC-PARK-03}
+  {fig:p2-ui-uc-park-03}
+  {Chèn mockup: Thông tin lượt đỗ đang sử dụng, yêu cầu check-out, xác nhận hoàn tất và thời gian đỗ; trạng thái chưa xác nhận phương tiện rời chỗ.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-park-03.pdf}
+  {Biểu đồ tuần tự -- UC-PARK-03}
+  {fig:p2-seq-uc-park-03}
+  {Chèn sequence diagram: Xác minh lượt đỗ, nhận xác nhận rời chỗ từ EXT-STATE và cập nhật lượt đặt cùng chỗ đỗ nhất quán; nhánh chưa thể giải phóng hoặc cập nhật lỗi.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-park-03.pdf}
+  {Biểu đồ hoạt động -- UC-PARK-03}
+  {fig:p2-act-uc-park-03}
+  {Chèn activity diagram: Yêu cầu check-out, kiểm tra trạng thái và xác nhận rời chỗ, hoàn tất lượt đỗ; thể hiện điều kiện chỗ có thể trở lại phục vụ.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- ParkingReservation (Bonus)}
+
+\InsertArtifact{../diagrams/state/parking-reservation.pdf}
+  {Biểu đồ trạng thái của ParkingReservation}
+  {fig:p2-state-parking-reservation}
+  {Chèn state-chart diagram: Các trạng thái Pending, Confirmed, CheckedIn, Completed, Cancelled, Expired và Rejected; các sự kiện đặt, vào chỗ, rời chỗ và hết hạn.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage
+
+\subsubsection{Biểu đồ trạng thái -- ParkingSpace (Bonus)}
+
+\InsertArtifact{../diagrams/state/parking-space.pdf}
+  {Biểu đồ trạng thái của ParkingSpace}
+  {fig:p2-state-parking-space}
+  {Chèn state-chart diagram: Vòng đời chỗ đỗ với các trạng thái Available, Reserved, Occupied và OutOfService; điều kiện giữ chỗ, check-in, check-out và giải phóng.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

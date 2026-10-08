@@ -1,0 +1,76 @@
+\subsection{SUB-TRIP -- Quản lý chuyến đi}
+
+\AssignmentNote{Tường Vi}{Sequence, activity và phần giải thích của UC-TRIP-01--UC-TRIP-02; state chart Trip và SharedVehicle.}
+
+\subsubsection{UC-TRIP-01 -- Nhận phương tiện đã đặt}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-trip-01.pdf}
+  {UI Mockup -- UC-TRIP-01}
+  {fig:p2-ui-uc-trip-01}
+  {Chèn mockup: Thông tin xe đã đặt, quét hoặc nhập mã xe, xác nhận nhận xe; chuyến đi đang hoạt động; cảnh báo sai xe, hết hạn hoặc chưa xác nhận được bàn giao.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-trip-01.pdf}
+  {Biểu đồ tuần tự -- UC-TRIP-01}
+  {fig:p2-seq-uc-trip-01}
+  {Chèn sequence diagram: Xác minh lượt đặt và đúng phương tiện, nhận xác nhận bàn giao từ EXT-STATE, cập nhật lượt đặt và xe rồi tạo chuyến đi nhất quán; nhánh lỗi bàn giao hoặc cập nhật.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-trip-01.pdf}
+  {Biểu đồ hoạt động -- UC-TRIP-01}
+  {fig:p2-act-uc-trip-01}
+  {Chèn activity diagram: Xác định xe, kiểm tra lượt đặt, chờ xác nhận bàn giao và bắt đầu chuyến đi; phân biệt trách nhiệm Sinh viên, hệ thống và nguồn trạng thái.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{UC-TRIP-02 -- Trả phương tiện và kết thúc chuyến đi}
+
+\noindent\textbf{Tác nhân thực hiện:} Sinh viên.
+
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\InsertArtifact{../mockups/uc-trip-02.pdf}
+  {UI Mockup -- UC-TRIP-02}
+  {fig:p2-ui-uc-trip-02}
+  {Chèn mockup: Hướng dẫn trả xe tại Hub, trạng thái xác nhận trả an toàn và bản tóm tắt chuyến đi; thông báo Hub không tiếp nhận hoặc việc trả chưa được xác nhận.}
+\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\InsertArtifact{../diagrams/sequence/uc-trip-02.pdf}
+  {Biểu đồ tuần tự -- UC-TRIP-02}
+  {fig:p2-seq-uc-trip-02}
+  {Chèn sequence diagram: Xác minh chuyến đi và Hub, nhận trạng thái trả an toàn từ EXT-STATE, hoàn tất chuyến đi và xác định trạng thái tiếp theo của xe; nhánh chưa trả an toàn hoặc cập nhật lỗi.}
+\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
+
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\InsertArtifact{../diagrams/activity/uc-trip-02.pdf}
+  {Biểu đồ hoạt động -- UC-TRIP-02}
+  {fig:p2-act-uc-trip-02}
+  {Chèn activity diagram: Kiểm tra Hub, thực hiện trả xe, xác nhận an toàn và hoàn tất; rẽ nhánh xe đủ điều kiện phục vụ, cần sạc hoặc cần kiểm tra kỹ thuật.}
+\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- Trip (Bonus)}
+
+\InsertArtifact{../diagrams/state/trip.pdf}
+  {Biểu đồ trạng thái của Trip}
+  {fig:p2-state-trip}
+  {Chèn state-chart diagram: Các trạng thái InProgress, Completed và Interrupted; điều kiện bắt đầu, trả an toàn và chuyến đi bị gián đoạn.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- SharedVehicle (Bonus)}
+
+Vòng đời phương tiện dùng chung được trình bày tại SUB-TRIP, bao quát các chuyển trạng thái khi đặt, nhận và trả xe, sạc hoặc xử lý sự cố trong SUB-RES, SUB-TRIP, SUB-CHG và SUB-OPS.
+
+\InsertArtifact{../diagrams/state/shared-vehicle.pdf}
+  {Biểu đồ trạng thái của SharedVehicle}
+  {fig:p2-state-shared-vehicle}
+  {Chèn state-chart diagram: Vòng đời xe với các trạng thái Available, Reserved, InUse, Charging và OutOfService; các sự kiện đặt, nhận, trả, sạc và sự cố.}
+\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
+
+\clearpage

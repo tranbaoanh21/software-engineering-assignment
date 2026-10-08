@@ -3,6 +3,8 @@
 
 Phần này gồm một sơ đồ use case toàn hệ thống và 18 bộ sơ đồ chi tiết -- đặc tả tương ứng với 18 use case trong danh mục. Mỗi phân hệ được mở đầu bằng phạm vi, actor và dependency chung; sau đó từng use case được trình bày bằng sơ đồ chi tiết và Use Case Specification.
 
+Đăng nhập, đăng xuất và kiểm tra quyền là chức năng hỗ trợ dùng chung theo \texttt{FR-GEN-01}--\texttt{FR-GEN-03}, không thuộc danh mục 18 use case nghiệp vụ. Ba use case của SUB-HUB cho phép tra cứu thông tin công khai; các use case còn lại yêu cầu phiên hợp lệ và quyền với đối tượng đang thao tác. Đăng nhập là điều kiện truy cập, không phải một bước \texttt{include} lặp lại trong mọi sơ đồ. Nguồn dữ liệu \texttt{ACT-DAT} và dịch vụ \texttt{ACT-MAP} không sử dụng phiên đăng nhập của actor con người.
+
 \subsection{Mô hình use case toàn hệ thống}
 
 \subsubsection{Actor Catalog}

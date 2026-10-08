@@ -29,6 +29,8 @@ Không dùng lẫn các tên `trạm`, `bãi`, `điểm` để thay cho `Mobilit
 
 Một use case chỉ có một phân hệ sở hữu chính. Nếu use case cần dữ liệu hoặc kết quả từ phân hệ khác, ghi phần phụ thuộc thay vì tạo bản sao use case.
 
+Xác thực và phân quyền là chức năng dùng chung, không tạo thêm `SUB` hoặc actor. `GEN` trong `FR-GEN-xx` và `BR-GEN-xx` viết tắt của General, dùng cho yêu cầu và quy tắc xuyên phân hệ. Giữ nguyên danh mục 18 use case nghiệp vụ.
+
 ## 3. Stakeholder, actor và hệ thống bên ngoài
 
 ### 3.1. Stakeholder
@@ -169,6 +171,8 @@ FR-RES-01: Hệ thống phải cho phép Sinh viên đặt một phương tiện
 
 Không ghi giao diện, framework, API, database hoặc tên class vào FR nghiệp vụ.
 
+Yêu cầu dùng chung có mã `FR-GEN-01` (đăng nhập), `FR-GEN-02` (đăng xuất), `FR-GEN-03` (kiểm tra quyền truy cập). Đây là yêu cầu chức năng, không phải phân hệ mới và không tạo mã UC riêng cho từng thao tác này.
+
 ### 6.4. Non-interactive functional requirement - bonus
 
 Định dạng: `NIFR-[PHÂN HỆ]-[SỐ]`.
@@ -190,6 +194,8 @@ tại cùng một thời điểm.
 ```
 
 BR phải là quy tắc, điều kiện, giới hạn hoặc bất biến nghiệp vụ. Không viết lại hành động của FR dưới một mã BR khác.
+
+Quy tắc truy cập dùng chung: `BR-GEN-01` (quyền được cấu hình trước), `BR-GEN-02` (giới hạn theo vai trò và đối tượng), `BR-GEN-03` (hiệu lực phiên). Tài khoản demo được cấp sẵn; ba UC của SUB-HUB cho phép tra cứu công khai, các UC nghiệp vụ còn lại yêu cầu phiên hợp lệ. Sinh viên chỉ thao tác trên dữ liệu thuộc quyền của mình; nhân viên làm trong phạm vi được cấp. Phiên hết hiệu lực sau đăng xuất hoặc 30 phút không có yêu cầu được bảo vệ hợp lệ; không tự hủy nghiệp vụ đang chạy. Không lấy vai trò hay chủ sở hữu từ thông tin phía người dùng tự khai báo.
 
 ### 6.6. Use case
 

@@ -1,0 +1,11 @@
+% Giữ các hàng cuối bảng đặc tả hai cột đi cùng nhau.
+% Đường kẻ có đúng chiều rộng bảng L{42mm}, L{102mm} và căn giữa trang.
+\newcommand{\KeepUseCaseRow}{%
+  \\*\noalign{%
+    \nobreak
+    \hbox to\linewidth{\hfil
+      \vrule height\arrayrulewidth width\dimexpr144mm+4\tabcolsep+3\arrayrulewidth\relax
+      \hfil}%
+    \nobreak
+  }%
+}
