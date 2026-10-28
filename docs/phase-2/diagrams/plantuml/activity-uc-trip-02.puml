@@ -1,0 +1,115 @@
+@startuml
+title UC-TRIP-02 - Trả phương tiện và kết thúc chuyến đi\nActivity Diagram
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam monochrome true
+skinparam ArrowColor black
+skinparam activityBackgroundColor white
+skinparam activityDiamondBackgroundColor white
+skinparam noteBackgroundColor white
+
+|Sinh viên (ACT-STU)|
+start
+:Bước 1: Yêu cầu trả xe tại Hub;
+|Hệ thống SEMH|
+:Kiểm tra phiên, vai trò và\nquyền đối tượng (FR-GEN-03);
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :EF-04: Từ chối truy cập;\nyêu cầu đăng nhập nếu hết phiên;
+  stop
+endif
+:Bước 2: Kiểm tra Trip, xe;
+if (Đúng chủ Trip và xe;\nTrip.InProgress, xe InUse?) then (Có)
+else (Không)
+  :Từ chối yêu cầu; hiển thị trạng thái;
+  stop
+endif
+:Bước 3: Kiểm tra Hub tiếp nhận;
+if (Hub hợp lệ, tiếp nhận được?) then (Có)
+else (Không)
+  :EF-01: Báo lý do; chọn Hub khác;\ngiữ Trip.InProgress;
+  stop
+endif
+:Hướng dẫn trả / khóa xe;
+|Sinh viên (ACT-STU)|
+if (Tiếp tục trả xe?) then (Có)
+  :Bước 4: Trả / khóa / gắn xe;
+  :Gửi xác nhận trả xe;
+else (Không)
+  |Hệ thống SEMH|
+  :AF-03: Hủy thao tác trả;\ngiữ Trip.InProgress, không cập nhật;
+  stop
+endif
+|Hệ thống SEMH|
+:Kiểm tra lại phiên, vai trò, quyền;
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :EF-04: Từ chối truy cập / đăng nhập lại;\nkhông tự gửi lại yêu cầu;
+  stop
+endif
+:Bước 5: Chờ xác nhận trả an toàn;
+|IoT & State Data Gateway (EXT-STATE / ACT-DAT)|
+:Trả vị trí, khóa / bàn giao, pin, tình trạng\nhoặc báo chưa xác nhận;
+|Hệ thống SEMH|
+if (Xác nhận đúng Hub, trả an toàn?) then (Có)
+else (Không / timeout)
+  :EF-02: Giữ Trip.InProgress;\nkhông chuyển xe sang Available;\nhướng dẫn kiểm tra khóa / vị trí;
+  stop
+endif
+:Xác nhận trả an toàn\n(safeReturnConfirmed);
+:Bước 6: Chuẩn bị dữ liệu cuối chuyến;
+:Bước 7: Chọn trạng thái xe;
+if (Xe lỗi / đến hạn kiểm tra?) then (Có)
+  :AF-02: Xác định trạng thái xe OutOfService;
+else (Không)
+  if (Pin dưới 30%?) then (Có)
+    :AF-01: Xác định trạng thái xe theo SUB-CHG;\nkhông cấp phát lại xe;
+    note right
+      Pin thấp không đồng nghĩa xe đang sạc.
+      Trạng thái chờ sạc chưa được đặc tả.
+      Chuyển xử lý qua SUB-CHG sau khi lưu thành công.
+    end note
+  else (Không)
+    :Xác định trạng thái xe Available\nnếu đủ điều kiện phục vụ;
+  endif
+endif
+partition "Bước 7 (tiếp): Lưu kết quả đồng bộ" {
+  :Khóa dữ liệu Trip, xe, Hub;\nkiểm tra lại chủ Trip, xe, trạng thái,\nHub và xác nhận trả an toàn;
+  if (Điều kiện vẫn hợp lệ?) then (Có)
+    :Xét lại pin, tình trạng;\nđiều chỉnh trạng thái xe nếu cần;
+    :Trip -> Completed; lưu thông tin cuối chuyến;
+    :Cập nhật xe, Hub;\nghi lịch sử thay đổi (NFR-AUD-01);
+    note right
+      Lưu toàn bộ thay đổi cùng nhau.
+      Nếu lỗi: hoàn tác thay đổi của yêu cầu.
+    end note
+    if (Lưu toàn bộ thành công?) then (Có)
+    else (Không)
+      :EF-03: Hoàn tác thay đổi và ghi lỗi;
+      :Báo chưa hoàn tất; xem lại / thử lại;
+      stop
+    endif
+  else (Không)
+    :EF-03: Hoàn tác thay đổi của yêu cầu; ghi lỗi;\ngiữ thay đổi hợp lệ từ xử lý khác;
+    :Báo chưa hoàn tất;\nxem lại / thử lại;
+    note right
+      Giữ trạng thái OutOfService do xử lý khác cập nhật.
+    end note
+    stop
+  endif
+}
+if (Xe cần sạc / kiểm tra kỹ thuật?) then (Có)
+  :Chuyển SUB-CHG / SUB-OPS sau khi lưu thành công;\nkhông cấp phát lại xe;
+endif
+:Bước 8: Báo hoàn tất; hiển thị tóm tắt;
+note right
+  Lưu Hub đích, giờ kết thúc, thời lượng, pin, tình trạng.
+  Tóm tắt: mã Trip, Hub đi / đến, giờ và pin đầu / cuối, thời lượng.
+  Trip.Completed không đồng nghĩa SharedVehicle.Available.
+end note
+|Sinh viên (ACT-STU)|
+:Xem kết quả Trip;
+stop
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+!include sim-style.puml
+!pragma layout smetana
+top to bottom direction
+hide empty description
+title VehicleReservation - Vòng đời lượt đặt phương tiện
+skinparam nodesep 55
+skinparam ranksep 60
+
+state Pending
+state Confirmed
+state Fulfilled
+state Cancelled
+state Expired
+state Rejected
+
+[*] --> Pending
+Pending : do / kiểm tra điều kiện đặt xe
+Pending --> Confirmed : reservationConfirmed\n[đủ điều kiện; lưu thành công]
+Pending --> Rejected : reservationRejected\n[vi phạm quy tắc đặt]
+Pending --> Cancelled : cancelReservation\n[đúng chủ; còn Pending]
+
+Confirmed : entry / expiresAt = confirmedAt + 10 phút
+Confirmed : entry / giữ xe ở trạng thái Reserved
+Confirmed --> Fulfilled : handoverConfirmed\n[đúng chủ, xe, Hub; còn hạn; lưu thành công]
+Confirmed --> Cancelled : cancelReservation\n[đúng chủ; còn Confirmed]
+Confirmed --> Expired : at(expiresAt)\n[còn Confirmed; chưa nhận xe]
+Fulfilled : entry / xe InUse; tạo Trip.InProgress
+Rejected : entry / lưu lý do; không giữ xe
+Cancelled : entry / gỡ ràng buộc giữ xe
+Expired : entry / gỡ ràng buộc giữ xe
+
+note left of Pending
+  Kiểm tra phiên và quyền trước khi xử lý.
+  Mỗi Sinh viên và mỗi xe có tối đa
+  một lượt đặt Pending hoặc Confirmed.
+  Chỉ xác nhận xe Available, pin >= 30%.
+end note
+
+note right of Confirmed
+  Xác nhận, hủy, hết hạn và nhận xe
+  phải kiểm tra lại trạng thái hiện tại
+  trong cùng thay đổi nhất quán.
+  Chỉ một chuyển trạng thái cạnh tranh
+  được chấp nhận; không thực hiện lần hai.
+end note
+
+note bottom of Cancelled
+  Cancelled hoặc Expired không đồng nghĩa xe Available.
+  Chỉ đưa xe trở lại phục vụ nếu không có sự cố,
+  phiên sử dụng hoặc ràng buộc khác đang có hiệu lực.
+end note
+
+legend bottom
+  Nguồn: UC-RES-01/02; UC-TRIP-01; NIFR-RES-01; BR-RES-01..04.
+  Lỗi kỹ thuật: hoàn tác thay đổi chưa commit; không tự chuyển sang Rejected.
+  Mất phản hồi: đọc lại theo mã yêu cầu / lượt đặt; không tạo hoặc hủy trùng.
+  Fulfilled, Cancelled, Expired, Rejected là trạng thái kết thúc của lượt đặt.
+  Không mở lại lượt đặt đã kết thúc; đặt lại tạo VehicleReservation mới.
+  Kết thúc vòng đời không xóa bản ghi hoặc Audit Log.
+endlegend
+@enduml

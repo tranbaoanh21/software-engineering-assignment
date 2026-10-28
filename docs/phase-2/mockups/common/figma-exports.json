@@ -1,0 +1,126 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "figmaAccess": "Existing common exports retained; student overview re-exported after AppHeader synchronization on 2026-10-24.",
+  "reportSection": "III / Thiết kế giao diện dùng chung",
+  "assets": [
+    {
+      "file": "ui-login.png",
+      "nodeId": "18:2",
+      "format": "png"
+    },
+    {
+      "file": "ui-login-error.png",
+      "nodeId": "18:54",
+      "format": "png"
+    },
+    {
+      "file": "ui-login-expired.png",
+      "nodeId": "18:115",
+      "format": "png"
+    },
+    {
+      "file": "ui-login-denied.png",
+      "nodeId": "18:176",
+      "format": "png"
+    },
+    {
+      "file": "ui-login-missing.png",
+      "nodeId": "196:2686",
+      "format": "png"
+    },
+    {
+      "file": "ui-login-loading.png",
+      "nodeId": "196:2805",
+      "format": "png"
+    },
+    {
+      "file": "ui-student-overview.png",
+      "nodeId": "19:2",
+      "format": "png",
+      "updatedOn": "2026-10-24",
+      "contentNodeId": "438:399",
+      "note": "Editable Ocean Mobility overview; shared six-item student AppHeader and prototype navigation synchronized."
+    },
+    {
+      "file": "ui-operator-overview.png",
+      "nodeId": "34:326",
+      "format": "png"
+    },
+    {
+      "file": "ui-maintenance-overview.png",
+      "nodeId": "21:2",
+      "format": "png"
+    },
+    {
+      "file": "ui-header.png",
+      "nodeId": "21:3",
+      "format": "png"
+    },
+    {
+      "file": "ui-inputs.png",
+      "nodeId": "105:180",
+      "format": "png"
+    },
+    {
+      "file": "ui-filters.png",
+      "nodeId": "105:161",
+      "format": "png"
+    },
+    {
+      "file": "ui-confirmation.png",
+      "nodeId": "22:265",
+      "format": "png"
+    },
+    {
+      "file": "ui-state-loading.png",
+      "nodeId": "22:6",
+      "format": "png"
+    },
+    {
+      "file": "ui-state-empty-errors.png",
+      "nodeId": "22:40",
+      "format": "png"
+    },
+    {
+      "file": "ui-state-feedback.png",
+      "nodeId": "22:116",
+      "format": "png"
+    },
+    {
+      "file": "ui-state-freshness.png",
+      "nodeId": "22:205",
+      "format": "png"
+    },
+    {
+      "file": "ui-state-battery-time.png",
+      "nodeId": "22:234",
+      "format": "png"
+    },
+    {
+      "file": "ui-navigation.png",
+      "nodeId": "22:309",
+      "format": "png",
+      "updatedOn": "2026-10-23",
+      "note": "Refreshed read-only export matching the supplied navigation overview, without the long introductory annotation."
+    }
+  ],
+  "leftBlank": [],
+  "excluded": [
+    {
+      "nodeId": "20:2",
+      "reason": "Bản tổng quan chính còn placeholder; dùng bản có nội dung 34:326"
+    },
+    {
+      "nodeId": "121:390",
+      "reason": "Frame luyện tập, không đưa vào báo cáo"
+    },
+    {
+      "nodeId": "14:156",
+      "reason": "Bảng mẫu header cũ; dùng header thực tế trên màn hình kỹ thuật 21:3"
+    }
+  ],
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

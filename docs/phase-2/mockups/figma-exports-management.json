@@ -1,0 +1,40 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "purpose": "Admin and Operator resource management design extension",
+  "reportScreens": [
+    {
+      "uc": "UC-GEN-01",
+      "nodeId": "474:2088",
+      "file": "uc-gen-01.png"
+    },
+    {
+      "uc": "UC-GEN-02",
+      "nodeId": "474:2089",
+      "file": "uc-gen-02.png"
+    },
+    {
+      "uc": "UC-GEN-03",
+      "nodeId": "474:2090",
+      "file": "uc-gen-03.png"
+    },
+    {
+      "uc": "UC-OPS-04",
+      "nodeId": "474:2085",
+      "file": "uc-ops-04.png"
+    },
+    {
+      "uc": "UC-OPS-05",
+      "nodeId": "474:2086",
+      "file": "uc-ops-05.png"
+    }
+  ],
+  "adminPage": "474:2087",
+  "operatorPage": "1:150",
+  "notes": [
+    "Native editable layers and existing Ocean Mobility instances/tokens; no flattened UI imported.",
+    "One representative screen per new UC exported to report; detailed confirmation/outcome states remain in Figma.",
+    "Figma interactions illustrate outcomes with fixed data, not a running backend or physical IoT control.",
+    "18 existing UC diagrams and AF/EF retained; automatic charging algorithm unchanged."
+  ]
+}

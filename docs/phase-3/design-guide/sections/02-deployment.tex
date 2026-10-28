@@ -1,0 +1,78 @@
+\chapter{Deployment View}
+\subsection{Lý thuyết từ đầu}
+Deployment View mô tả \textbf{cấu hình thực thi}: phần mềm nào chạy trong môi trường nào, trên tài nguyên nào và các nơi đó kết nối ra sao. Người đọc phải phân biệt được trình duyệt của người dùng, backend, nơi lưu dữ liệu và hệ thống ngoài.
+
+Nó không phải sơ đồ thứ tự xử lý một use case. Trục trên--dưới của hình không biểu diễn thời gian; đường HTTP không cho biết phải kiểm tra quyền trước hay sau. Thứ tự đó thuộc sequence/activity.
+
+\subsection{Node và device}
+\glyph{\draw (0,0) rectangle (4.6,1.7);
+  \draw (0,1.7)--(0.35,2.05)--(4.95,2.05)--(4.6,1.7);
+  \draw (4.95,2.05)--(4.95,0.35)--(4.6,0);
+  \node[align=center] at (2.3,0.85) {\guillemotleft device\guillemotright\\Máy chủ ứng dụng};}
+  {Hộp có chiều sâu là cách biểu diễn node}
+Node là một tài nguyên tính toán của mô hình triển khai. \code{\guillemotleft device\guillemotright} thường dùng cho thiết bị có năng lực xử lý, như máy người dùng hoặc máy chủ. Với máy ảo cần ghi rõ đó là tài nguyên ảo, không gọi mọi hình hộp là phần cứng vật lý.
+
+Nếu nói về một instance cụ thể có thể dùng dạng \code{app01:ApplicationServer}; nếu đang thiết kế một loại node thì chỉ cần tên loại. Tên node cần thể hiện nó là nơi chạy, không phải tên chức năng như ``Đặt xe''.
+
+\subsection{Execution environment}
+\glyph{\node[draw,minimum width=104mm,minimum height=35mm] (host) at (0,0) {};
+  \node at (0,1.15) {\guillemotleft device\guillemotright\ Máy chủ};
+  \node[draw,align=center,minimum width=74mm,minimum height=16mm] at (0,-0.25)
+    {\guillemotleft executionEnvironment\guillemotright\\API runtime};}
+  {Môi trường thực thi có thể nằm trong một node khác}
+Execution environment là môi trường phần mềm cung cấp khả năng chạy artifact: JVM, một runtime ứng dụng hoặc môi trường container được mô hình hóa phù hợp. Nó không phải một thuật ngữ khác của class.
+
+Container có thể được biểu diễn như một môi trường thực thi có chú thích rõ. Container image là artifact được tạo trước khi chạy; container đang chạy là một thể hiện runtime. Không ghi cùng một ô vừa là image vừa là process mà không giải thích.
+
+\subsection{Artifact và quan hệ triển khai}
+\glyph{\draw (0,0)--(4.6,0)--(4.6,1.3)--(4.25,1.65)--(0,1.65)--cycle;
+  \draw (4.25,1.65)--(4.25,1.3)--(4.6,1.3);
+  \node[align=center] at (2.2,0.8) {\guillemotleft artifact\guillemotright\\registration-api.jar};}
+  {Artifact là sản phẩm phần mềm cụ thể}
+Artifact có thể là executable, thư viện, gói web hoặc tập lệnh cấu hình. Component ``Đăng ký'' là trách nhiệm logic; file \code{registration-api.jar} là một sản phẩm có thể chứa nhiều component.
+
+Có hai cách thường dùng: đặt artifact bên trong node đích hoặc vẽ dependency nét đứt có nhãn \code{\guillemotleft deploy\guillemotright} từ artifact đến deployment target. Phải thống nhất cách đọc trong chú giải.
+
+\glyph{\node[box] (a) at (0,0) {\guillemotleft artifact\guillemotright\\api.jar};
+  \node[box] (b) at (8,0) {API runtime};
+  \draw[dashed,->] (a.east)--(b.west) node[midway,above] {\guillemotleft deploy\guillemotright};}
+  {Artifact được triển khai tới môi trường đích}
+
+\point{Manifestation}
+Artifact có thể hiện thực một component logic. Quan hệ \code{\guillemotleft manifest\guillemotright} nối artifact tới phần tử mà nó biểu hiện. Nó khác deploy: một bên nói ``sản phẩm này hiện thực phần nào'', bên kia nói ``sản phẩm này được đặt ở đâu''.
+
+\subsection{Communication path và protocol}
+\glyph{\node[box] (a) at (0,0) {Trình duyệt};
+  \node[box] (b) at (8,0) {Web/API host};
+  \draw (a.east)--(b.west) node[midway,above] {HTTPS / TCP 443};}
+  {Đường nối liền giữa các node biểu diễn đường giao tiếp}
+Communication path thường là đường liền. Ghi protocol và port khi chúng giúp tái tạo cấu hình. Nếu thêm đầu mũi tên để chỉ bên khởi tạo kết nối thì phải nói rõ; HTTP response vẫn có thể đi ngược lại trên cùng kết nối.
+
+Port TCP như 443 khác UML port hình ô vuông ở biên component. Một bên là địa chỉ truyền thông của runtime; bên kia là điểm tương tác logic của component.
+
+\subsection{System boundary và hệ thống ngoài}
+Vẽ rõ phần nào nhóm triển khai và phần nào sử dụng từ ngoài. Dịch vụ bản đồ không biến thành class nội bộ chỉ vì backend gọi nó. Database nội bộ cũng không trở thành actor nghiệp vụ chỉ vì nằm trên một máy khác.
+
+Boundary triển khai và trust boundary không nhất thiết trùng nhau. Kết nối từ trình duyệt tới API cần xác thực và kiểm tra quyền; database thường không mở trực tiếp cho trình duyệt. Một đường nối trên sơ đồ không phải là quyết định cho phép truy cập vô điều kiện.
+
+\subsection{Local, Docker và production}
+\begin{center}\begin{tabularx}{\linewidth}{|L{29mm}|Y|}\hline
+\textbf{Môi trường} & \textbf{Thông tin cần làm rõ}\\\hline
+Local & Chạy chương trình nào, trên máy nào, cổng nào và dữ liệu được khởi tạo ở đâu.\\\hline
+Docker & Container, image, network, volume, cấu hình và cách kiểm tra dịch vụ đã sẵn sàng.\\\hline
+Production & Điểm vào HTTPS, nơi giữ secret, dữ liệu bền vững, backup, log và hành vi khi dịch vụ lỗi.\\\hline
+\end{tabularx}\end{center}
+Docker không đồng nghĩa cloud, và thêm logo cloud không làm bản thiết kế trở thành production. Chỉ mô tả nhà cung cấp hoặc dịch vụ cụ thể là phần nhóm sẽ dùng khi đã có quyết định tương ứng.
+
+Các container trong cùng một máy không tự tạo ra khả năng chịu lỗi nếu máy đó sập. Chạy nhiều replica cũng không tự giải quyết cạnh tranh đặt tài nguyên nếu kiểm tra được giữ trong bộ nhớ riêng của từng replica.
+
+\subsection{Cách tự dựng một Deployment View}
+\begin{enumerate}
+  \item Xác định người sử dụng và hệ thống ngoài cần kết nối.
+  \item Liệt kê artifact cần chạy: web bundle, API, worker nếu thực sự có, cấu hình dữ liệu.
+  \item Đặt từng artifact vào runtime và host phù hợp.
+  \item Nối các nơi có giao tiếp thật; ghi protocol, port và boundary cần bảo vệ.
+  \item Mô tả cách khởi động, cấu hình, dữ liệu và kiểm tra sẵn sàng.
+  \item Thử các tình huống mất mạng, lỗi nguồn ngoài và khởi động lại; giải thích hệ thống giữ gì và mất gì.
+\end{enumerate}
+Không cần liệt kê mọi chi tiết phần cứng chưa quyết định. Mức chi tiết đúng là mức giúp người khác hiểu và tái tạo cách chạy, không phải mức có nhiều biểu tượng nhất.

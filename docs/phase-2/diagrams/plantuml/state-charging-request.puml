@@ -1,0 +1,89 @@
+@startuml state_SUB-CHG_UC01-03
+title Biểu đồ trạng thái của ChargingRequest
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam ArrowFontSize 11
+skinparam state {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor black
+}
+hide empty description
+
+state Pending
+state Scheduled
+state Charging
+state Completed
+state Cancelled
+state Rejected
+
+state "Xác định kết quả lập lịch" as ScheduleDecision <<choice>>
+
+[*] --> ScheduleDecision : createChargingRequest\n[dữ liệu và quyền hợp lệ]\n(UC-CHG-01: bước 4-7)
+
+ScheduleDecision --> Pending : [chưa có cổng và khung giờ phù hợp\nhoặc dữ liệu pin đã cũ nhưng còn hợp lệ]\n(UC-CHG-01: AF-01, AF-04)
+ScheduleDecision --> Scheduled : [dữ liệu đủ tin cậy; có cổng và khung giờ phù hợp]\n(UC-CHG-01: bước 7)
+
+Pending --> Scheduled : allocateChargingPoint (tự động)\n[lần tính lịch tiếp theo tìm được cổng]\n(UC-CHG-01: AF-01)
+
+Pending --> Pending : adjustChargingSchedule\n[chỉ đổi thứ tự ưu tiên; phương án hợp lệ theo\nBR-CHG-01, BR-CHG-02; lưu thành công;\nvẫn chưa được phân bổ]\n(UC-CHG-03: AF-01)
+
+Scheduled --> Scheduled : <U+00A0>\n<U+00A0>\n<U+00A0>\n<U+00A0>\nadjustChargingSchedule\n[đổi thứ tự hoặc cổng; cổng không OutOfService;\nphương án hợp lệ theo BR-CHG-01, BR-CHG-02;\nlưu thành công; vẫn có phân bổ phù hợp]\n(UC-CHG-03: bước 4-7, AF-02)
+
+Scheduled --> Charging : startCharging\n[phiên sạc bắt đầu]
+
+Charging --> Completed : chargingCompleted
+
+Pending --> Cancelled : cancelChargingRequest\n[yêu cầu chưa có phiên Charging]
+Scheduled --> Cancelled : cancelChargingRequest\n[yêu cầu chưa có phiên Charging]
+
+Completed --> [*]
+Cancelled --> [*]
+Rejected --> [*]
+
+note left of Cancelled
+  Hủy yêu cầu đã tồn tại (Pending, Scheduled sang
+  Cancelled) được vẽ theo yêu cầu mục 5.4; sự kiện này
+  chưa có luồng riêng trong UC-CHG-01 đến 03.
+  Rejected: điều kiện chuyển vào chưa được xác định
+  nên chưa vẽ mũi tên.
+  Hủy bản nháp (UC-CHG-01 AF-03) và hủy điều chỉnh
+  (UC-CHG-03 AF-04) không phải chuyển trạng thái;
+  tạo thất bại thì không có yêu cầu mới.
+end note
+
+note as NoteUC01
+  UC-CHG-01:
+  - Ưu tiên cao (BR-CHG-01) nếu pin dưới 20%
+    hoặc có kế hoạch sử dụng trong 60 phút.
+  - Tạo thất bại (EF-02, EF-03): không có
+    ChargingRequest mới, không giữ cổng nào.
+end note
+
+note as NoteUC03
+  UC-CHG-03:
+  - Chỉ áp dụng cho Pending hoặc Scheduled.
+  - Sự cố cổng được NIFR-CHG-02 xử lý tự động;
+    chuyển trạng thái yêu cầu do sự cố này chưa
+    được xác định nên chưa vẽ.
+  - Thất bại (EF-01, EF-02, EF-03): giữ nguyên lịch cũ.
+  - Tính lại lịch của các yêu cầu chưa bắt đầu
+    nhưng không thay đổi phiên đang Charging.
+end note
+
+note right of Charging
+  UC-CHG-02 chỉ theo dõi, không trực tiếp đổi
+  trạng thái yêu cầu.
+  - Paused và Interrupted là trạng thái của
+    ChargingSession, không phải của ChargingRequest
+    (AF-03).
+  - Thời gian dự kiến được cập nhật nếu đủ dữ liệu.
+  - UC-CHG-03 không được điều chỉnh yêu cầu này.
+end note
+@enduml

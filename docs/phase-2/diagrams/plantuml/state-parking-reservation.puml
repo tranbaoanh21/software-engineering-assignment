@@ -1,0 +1,60 @@
+@startuml
+!pragma layout smetana
+title Biểu đồ trạng thái ParkingReservation
+
+top to bottom direction
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor white
+hide empty description
+
+' Chỉ bảy trạng thái chuẩn trong Phase 1
+state Pending
+state Confirmed
+state CheckedIn
+state Completed
+state Cancelled
+state Expired
+state Rejected
+
+' UC-PARK-01: Tạo Confirmed trực tiếp
+[*] --> Confirmed : / tạo lượt đặt Confirmed;\nParkingSpace -> Reserved
+
+note right of Confirmed
+  UC-PARK-01 chỉ tạo lượt đặt khi quyền hợp lệ,
+  chỗ Available và giao dịch giữ chỗ thành công.
+end note
+
+note right of Pending
+  Pending và Rejected có trong danh mục trạng thái.
+  UC-PARK-01 tạo Confirmed khi giữ chỗ thành công;
+  baseline chưa quy định quy trình duyệt thủ công.
+end note
+
+' UC-PARK-02: Check-in
+Confirmed --> CheckedIn : checkInPrivateVehicle()\n[còn hạn, đúng Sinh viên/xe/Hub/chỗ, cảm biến hợp lệ]\n/ ParkingSpace: Reserved -> Occupied; ghi checkInAt
+
+' NIFR-PARK-01: Hết hạn tự động
+Confirmed --> Expired : at(expiresAt)\n[vẫn Confirmed, chưa CheckedIn; kiểm tra nguyên tử]\n/ hủy giữ chỗ; chỉ mở lại khi an toàn (BR-PARK-02)
+
+note left of Expired
+  Không ghi đè OutOfService hoặc check-in vừa hoàn tất.
+  Chỉ giải phóng thành Available khi chỗ trống,
+  dữ liệu tin cậy và không có ràng buộc khác.
+  Thiếu dữ liệu: chờ xác minh; chưa cấp phát lại.
+  Cấp phát còn cần chỗ và Hub ServiceStatus.Active.
+end note
+
+' Hủy lượt đặt trước check-in
+Confirmed --> Cancelled : cancelParkingReservation()\n[đúng chủ, còn hạn, chưa CheckedIn]\n/ hủy giữ chỗ nguyên tử; giải phóng khi an toàn
+
+' UC-PARK-03: Check-out
+CheckedIn --> Completed : checkOutPrivateVehicle()\n[cảm biến xác nhận xe đã rời đúng chỗ]\n/ ghi checkOutAt; ParkingSpace -> Available hoặc OutOfService
+
+' Các trạng thái kết thúc
+Completed --> [*]
+Cancelled --> [*]
+Expired --> [*]
+Rejected --> [*]
+
+@enduml

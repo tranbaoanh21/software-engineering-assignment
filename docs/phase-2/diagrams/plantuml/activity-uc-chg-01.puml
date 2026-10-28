@@ -1,0 +1,133 @@
+@startuml
+title UC-CHG-01 - Biểu đồ hoạt động Đăng ký nhu cầu sạc
+
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Phối màu đơn sắc đen trắng
+skinparam activityBorderColor #000000
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityDiamondBorderColor #000000
+skinparam activityDiamondBackgroundColor #FFFFFF
+skinparam swimlaneBorderColor #000000
+skinparam swimlaneTitleFontStyle bold
+
+|#FFFFFF|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+|#FFFFFF|Giao diện sạc\n(ChargingUI)|
+|#FFFFFF|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+start
+:Chọn phương tiện, Hub và mở màn hình đăng ký sạc;
+
+|Giao diện sạc\n(ChargingUI)|
+:Gửi yêu cầu khởi tạo đăng ký (vehicleId, hubId);
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Kiểm tra phiên đăng nhập và quyền truy cập (FR-GEN-03);
+
+if (Phiên hết hạn hoặc actor thiếu quyền?) then (Có - EF-01, EF-04)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo từ chối truy cập / Yêu cầu đăng nhập lại;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+else (Hợp lệ)
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Truy vấn thông tin phương tiện và Hub từ SEMHDataStore;
+  if (Phương tiện hoặc Hub không tồn tại?) then (Có - EF-02)
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị thông báo phương tiện/Hub không tồn tại;
+    |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+    stop
+  else (Hợp lệ)
+    |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+    if (Kết nối StateDataGateway thành công?) then (Bình thường)
+      :Lấy mức pin và trạng thái xe gần nhất từ Gateway;
+    else (Gián đoạn [NFR-REL-01])
+      :Lấy trạng thái hợp lệ gần nhất (nếu có) từ SEMHDataStore\nvà đánh dấu cảnh báo dữ liệu cũ (staleWarning);
+    endif
+  endif
+endif
+
+|Giao diện sạc\n(ChargingUI)|
+:Hiển thị form đăng ký sạc kèm trạng thái hiện tại;
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+:Nhập thời hạn mong muốn hoặc kế hoạch sử dụng tiếp theo;
+
+while (Người dùng muốn chỉnh sửa thông tin? [AF-03]) is (Có)
+  :Cập nhật lại thời hạn hoặc thời điểm sử dụng;
+  |Giao diện sạc\n(ChargingUI)|
+  :Tính toán lại và hiển thị bản xem trước dự kiến (Draft Preview);
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+endwhile (Xác nhận)
+
+:Bấm xác nhận đăng ký sạc;
+
+|Giao diện sạc\n(ChargingUI)|
+:Tạo hoặc tái sử dụng mã clientRequestId và gửi yêu cầu đăng ký sạc;
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Tái xác thực quyền và phiên tại thời điểm xác nhận (FR-GEN-03);
+if (Phiên hết hạn hoặc quyền không hợp lệ?) then (Có - EF-01, EF-04)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo lỗi phiên / Từ chối thao tác;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+else (Hợp lệ)
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Đọc lại trạng thái pin và phương tiện mới nhất từ kho dữ liệu;
+:Kiểm tra tính toàn vẹn dữ liệu yêu cầu (validateChargingRequest);
+
+if (Sai định danh, phương tiện, thời hạn\nhoặc pin đã đạt mục tiêu?) then (Có - EF-02)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo lỗi dữ liệu không hợp lệ;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+else (Hợp lệ)
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Xác định mức ưu tiên ban đầu theo BR-CHG-01;
+if (Pin < 20% HOẶC cần dùng trong 60 phút? [AF-02]) then (Đúng)
+  :Gán mức ưu tiên cao (High Priority);
+else (Sai)
+  :Gán mức ưu tiên thông thường (Normal Priority);
+endif
+
+:Đánh giá khả năng phân bổ lịch sạc dự kiến;
+if (Pin cũ hoặc thiếu dữ liệu ước tính\nhay hạn mức công suất Hub? [AF-04]) then (Đúng)
+  :Chuẩn bị ChargingRequest ở trạng thái Pending\nkèm cảnh báo dữ liệu cũ (chưa cam kết lịch cố định);
+else (Dữ liệu đủ tin cậy)
+  :Ước tính thời lượng theo BR-CHG-03;\nTìm cổng tương thích, Active, không lỗi;\nChọn khoảng sớm nhất, không trùng cổng,\nđủ công suất Hub và kịp hạn (BR-CHG-04);
+  if (Có phân bổ đáp ứng?) then (Có)
+    :Chuẩn bị ChargingRequest ở trạng thái Scheduled\nvà phương án phân bổ khung giờ cổng sạc;
+  else (Chưa đáp ứng [AF-01])
+    :Chuẩn bị ChargingRequest ở trạng thái Pending\n(đưa vào hàng đợi chờ đợt tính lịch tiếp theo);
+  endif
+endif
+
+:Thực hiện lưu nguyên tử yêu cầu và lịch sạc\n(saveChargingRequestAndSlotAtomically);
+
+if (Giao dịch lưu thất bại?) then (Có - EF-03)
+  :Rollback transaction (hoàn tác phân bổ tạm thời);
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo lỗi lưu trữ\nGiữ nguyên form và clientRequestId\nđể người dùng thử lại;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+else (Thành công)
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Ghi nhận ChargingRequest thành công (Pending hoặc Scheduled)\n<b>[LƯU Ý: ChargingSession CHƯA bắt đầu]</b>;
+endif
+
+|Giao diện sạc\n(ChargingUI)|
+:Hiển thị mã yêu cầu, trạng thái, mức ưu tiên,\nlịch dự kiến (nếu có), thời điểm cập nhật và cảnh báo;
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+:Nhận kết quả tiếp nhận nhu cầu sạc;
+stop
+@enduml

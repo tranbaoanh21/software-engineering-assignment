@@ -1,0 +1,142 @@
+@startuml
+title UC-TRIP-02 - Trả phương tiện và kết thúc chuyến đi
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam monochrome true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 240
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor black
+  LifeLineBorderColor black
+  GroupBackgroundColor white
+  GroupBodyBackgroundColor white
+  GroupBorderColor black
+  DividerBackgroundColor white
+  DividerBorderColor black
+  BoxBackgroundColor white
+  BoxBorderColor black
+}
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "Sinh viên\n(ACT-STU)" as Student
+box "Smart E-Mobility Hub (SEMH)" #White
+boundary TripUI
+control TripService
+control AccessService
+database SEMHDataStore
+end box
+participant "IoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateDataGateway <<External System>>
+
+== Bước 1: Yêu cầu trả xe ==
+Student -> TripUI : openReturn()
+TripUI -> TripService : prepareReturn()
+TripService -> AccessService : authorize()
+AccessService --> TripService : accessResult
+break Phiên / quyền không hợp lệ - EF-04
+  TripService --> TripUI : accessDenied()
+  TripUI --> Student : Đăng nhập lại / từ chối truy cập
+end
+note over TripService, SEMHDataStore
+  FR-GEN-03: Kiểm tra phiên, vai trò và quyền đối tượng.
+  Không tự gửi lại yêu cầu sau đăng nhập.
+end note
+
+== Bước 2: Kiểm tra Trip ==
+TripService -> SEMHDataStore : getReturnContext()
+SEMHDataStore --> TripService : trip, vehicle, hub
+TripService -> TripService : validateActiveTrip()
+break Trip không InProgress / xe không InUse / sai chủ hoặc xe
+  TripService --> TripUI : returnRejected()
+  TripUI --> Student : Hiển thị trạng thái; không cập nhật
+end
+== Bước 3: Kiểm tra Hub ==
+TripService -> TripService : validateReceivingHub()
+break Hub không hợp lệ / không nhận xe - EF-01
+  TripService --> TripUI : hubCannotReceive()
+  TripUI --> Student : Báo lý do; chọn Hub khác
+end
+== Bước 4: Trả xe ==
+TripService --> TripUI : returnInstructions()
+TripUI --> Student : Hướng dẫn trả / khóa / gắn xe
+break Hủy trước khi trả - AF-03
+  Student -> TripUI : cancelReturn()
+  TripUI --> Student : Giữ Trip.InProgress; không cập nhật
+end
+Student -> Student : Trả / khóa xe
+Student -> TripUI : confirmReturn()
+TripUI -> TripService : confirmReturn()
+ref over TripService, AccessService
+  Kiểm tra quyền như bước 1; thất bại: EF-04
+end ref
+== Bước 5: Xác nhận trả an toàn ==
+TripService -> StateDataGateway : awaitSafeReturnConfirmation()
+StateDataGateway --> TripService : returnEvidence / timeout
+TripService -> TripService : validateReturnEvidence()
+break Chưa xác nhận vị trí / an toàn - EF-02
+  TripService --> TripUI : safeReturnNotConfirmed()
+  TripUI --> Student : Giữ Trip.InProgress; kiểm tra khóa / vị trí
+end
+TripService -> TripService : safeReturnConfirmed()
+
+== Bước 6: Dữ liệu cuối chuyến ==
+TripService -> TripService : buildEndSnapshot()
+note right of TripService
+  Hub đích, giờ kết thúc, thời lượng, pin, tình trạng.
+  Lưu cùng Trip và xe ở bước 7.
+end note
+
+== Bước 7: Hoàn tất chuyến đi ==
+alt Xe lỗi / đến hạn kiểm tra - AF-02
+  TripService -> TripService : determineNextVehicleState(OutOfService)
+else Xe không lỗi, pin < 30% - AF-01
+  ref over TripService, SEMHDataStore
+    Xử lý sạc qua SUB-CHG sau khi lưu thành công.
+    Không cấp phát lại xe.
+  end ref
+  note over TripService, SEMHDataStore
+    Pin thấp không đồng nghĩa xe đang sạc.
+    Trạng thái chờ sạc chưa được đặc tả.
+  end note
+else Xe đủ pin, đủ điều kiện phục vụ
+  TripService -> TripService : determineNextVehicleState(Available)
+end
+
+critical Kiểm tra lại và cập nhật đồng bộ
+  TripService -> SEMHDataStore : completeTripAtomically()
+  note right of SEMHDataStore
+    Kiểm tra lại chủ Trip, xe, Hub và xác nhận trả an toàn.
+    Trip phải InProgress; xe phải InUse.
+    Chọn trạng thái xe theo pin và tình trạng mới nhất.
+    Trip -> Completed; lưu thông tin cuối chuyến; cập nhật xe, Hub.
+    Ghi lịch sử thay đổi (NFR-AUD-01).
+    Lưu toàn bộ; nếu lỗi thì hoàn tác.
+    Trạng thái đã thay đổi: EF-03; giữ OutOfService.
+  end note
+  SEMHDataStore --> TripService : returnResult
+end
+break Cập nhật thất bại - EF-03
+  TripService --> TripUI : returnNotCompleted()
+  TripUI --> Student : Chưa hoàn tất; xem lại / thử lại
+  note over TripService, SEMHDataStore
+    Hoàn tác thay đổi của yêu cầu; ghi lỗi.
+    Giữ thay đổi hợp lệ từ xử lý khác.
+    Chỉ báo hoàn tất khi đã lưu thành công.
+  end note
+end
+opt Cần sạc / kiểm tra kỹ thuật
+  ref over TripService, SEMHDataStore
+    Chuyển SUB-CHG / SUB-OPS sau khi lưu thành công; không cấp phát lại xe.
+  end ref
+end
+== Bước 8: Kết quả chuyến đi ==
+TripService --> TripUI : tripCompleted()
+TripUI --> Student : Báo hoàn tất; tóm tắt chuyến đi
+note over Student, TripUI
+  Mã Trip, Hub đi / đến, giờ và pin đầu / cuối, thời lượng.
+  Trip.Completed không đồng nghĩa SharedVehicle.Available.
+end note
+@enduml

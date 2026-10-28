@@ -1,0 +1,37 @@
+@startuml
+!include guide-style.puml
+top to bottom direction
+class Student {
+  - studentId: UUID
+  - active: Boolean
+  - version: Integer
+  + isActive(): Boolean
+}
+class Course {
+  - courseId: UUID
+  - capacity: Integer
+  - enrolledCount: Integer
+  - version: Integer
+  + hasSeat(): Boolean
+  + occupySeat(): Void
+}
+class Registration {
+  - registrationId: UUID
+  - requestId: UUID
+  - status: RegistrationStatus
+  - confirmedAt: DateTime [0..1]
+  + confirm(at: DateTime): Void
+}
+class CourseSession {
+  - sessionId: UUID
+  - startsAt: DateTime
+}
+enum RegistrationStatus {
+  Pending
+  Confirmed
+}
+Student "1" -- "0..*" Registration : đăng ký
+Course "1" -- "0..*" Registration : tiếp nhận
+Course "1" *-- "0..*" CourseSession : sở hữu
+Registration ..> RegistrationStatus
+@enduml

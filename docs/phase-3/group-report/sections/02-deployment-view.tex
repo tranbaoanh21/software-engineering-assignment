@@ -1,38 +1,33 @@
 \section{Deployment View}
 
-Deployment view mô tả các node chạy hệ thống, artefact được triển khai trên từng node và kết nối giữa chúng. Nhóm cần trình bày riêng cấu hình local/Docker dùng để chấm bài và phương án production nếu hai môi trường khác nhau.
+\subsection{Mô hình triển khai}
+\ToFill{môi trường mục tiêu, giả định về thiết bị, mạng và nơi thực thi các thành phần}
+\DesignFigure{../architecture/deployment-view.pdf}{Deployment View của Smart E-Mobility Hub}{fig:p3-deployment}
+% Node/device, execution environment, artifact và communication path.
+% Source IoT/map ở ngoài boundary. Không mặc định mỗi phân hệ là một server.
 
-\subsection{Mục tiêu và giả định triển khai}
-
-Nêu số lượng người dùng dự kiến, điều kiện mạng, phạm vi dữ liệu IoT giả lập, cách quản lý cấu hình và các giả định liên quan đến dịch vụ bản đồ hoặc nền tảng cloud.
-
-\subsection{Node catalog}
-
-\begin{longtable}{|L{25mm}|L{32mm}|L{43mm}|L{35mm}|}
-  \caption{Danh mục deployment node}\\
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Node ID} & \textbf{Node} & \textbf{Artefact/Service chạy trên node} & \textbf{Cấu hình và trách nhiệm}\\\hline
-  \endfirsthead
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Node ID} & \textbf{Node} & \textbf{Artefact/Service chạy trên node} & \textbf{Cấu hình và trách nhiệm}\\\hline
-  \endhead
-  \texttt{NODE-*} & Tên node & \texttt{ART-*} hoặc service & Runtime, port, storage, scaling và health check\\\hline
+\subsection{Node, môi trường thực thi và artifact}
+\begin{longtable}{|L{30mm}|L{35mm}|L{40mm}|L{32mm}|}
+\caption{Thành phần triển khai}\\\hline
+\textbf{Node / môi trường} & \textbf{Artifact triển khai} & \textbf{Trách nhiệm} & \textbf{Cấu hình chính}\\\hline
+\endfirsthead
+\hline\textbf{Node / môi trường} & \textbf{Artifact triển khai} & \textbf{Trách nhiệm} & \textbf{Cấu hình chính}\\\hline\endhead
+\ToFill{tên node/runtime} & \ToFill{gói chạy} & \ToFill{trách nhiệm} & \ToFill{runtime, lưu trữ}\\\hline
 \end{longtable}
 
-\subsection{Deployment diagram}
+\subsection{Kết nối, bảo mật và xử lý gián đoạn}
+\begin{longtable}{|L{30mm}|L{31mm}|L{27mm}|L{49mm}|}
+\caption{Kết nối giữa các thành phần triển khai}\\\hline
+\textbf{Nguồn} & \textbf{Đích} & \textbf{Protocol / port} & \textbf{Kiểm soát truy cập và lỗi}\\\hline
+\endfirsthead
+\hline\textbf{Nguồn} & \textbf{Đích} & \textbf{Protocol / port} & \textbf{Kiểm soát truy cập và lỗi}\\\hline\endhead
+\ToFill{thành phần gọi} & \ToFill{thành phần nhận} & \ToFill{giao thức} & \ToFill{TLS, timeout, retry và hành vi khi mất kết nối}\\\hline
+\end{longtable}
+Browser truy cập chức năng qua ứng dụng; nơi lưu dữ liệu không là điểm truy cập trực tiếp của UI. Nguồn IoT/map nằm ngoài ranh giới SEMH; adapter kiểm tra dữ liệu trước khi đưa vào nghiệp vụ. Cấu hình bí mật tách khỏi dữ liệu hiển thị và mã đưa ra client.
 
-\ArtifactBrief{DEPLOYMENT DIAGRAM}{DEP-SEMH-01}{Thể hiện client, frontend, backend, database, IoT data source/gateway, map service và hạ tầng mô phỏng; ghi protocol và hướng kết nối.}{Deployment view của Smart E-Mobility Hub}
+Các kết nối ngoài có timeout và cơ chế khôi phục được xác định theo loại lời gọi. Query có thể đọc lại phù hợp; command không được lặp mù khi chưa biết kết quả. Mất kết nối không làm dữ liệu hợp lệ cuối bị ghi đè. Phương án runtime, TLS, secret và lưu bền vững cụ thể được điền cùng cấu hình triển khai đã chọn.
 
-\subsection{Local/Docker deployment}
-
-Mô tả container/service, port, volume, biến môi trường, thứ tự khởi động, seed data, health check và lệnh chạy. Đây là cấu hình tối thiểu phải tái tạo được trên máy chấm bài.
-
-\subsection{Production deployment và vận hành}
-
-Nếu nhóm triển khai server hoặc luồng IoT real-time để lấy điểm cộng, trình bày điểm khác so với local: ingress/TLS, secret, logging, monitoring, backup, recovery và giới hạn tài nguyên. Không mô tả dịch vụ cloud chưa thực sự dùng như một phần đã hoàn thành.
-
-\subsection{Bảo mật và failure handling}
-
-Ghi trust boundary, quyền truy cập database, mã hóa đường truyền, retry/timeout với external system, xử lý dữ liệu IoT đến trễ hoặc trùng, và hành vi khi map/IoT service mất kết nối.
+\subsection{Cấu hình chạy và tái tạo môi trường}
+\ToFill{phụ thuộc, cấu hình, dữ liệu ban đầu và các bước khởi động trên môi trường đã chọn}
+% Local hoặc Docker đều được phép. Không bắt buộc dùng cả hai.
+% Nếu có server/real-time IoT, bổ sung khác biệt thực tế; không mặc định phải dùng Azure.

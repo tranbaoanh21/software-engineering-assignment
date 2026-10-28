@@ -1,0 +1,106 @@
+\documentclass[10pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{2em}
+
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section{THÔNG TIN BUỔI HỌP}
+\begin{center}
+\begin{tabularx}{\textwidth}{|>{\bfseries}L{43mm}|Y|}
+  \hline
+  Lần họp & Buổi 03 -- Phase 2\\\hline
+  Ngày họp & 24/10/2026\\\hline
+  Thời gian bắt đầu & 20:30\\\hline
+  Nhóm / Lớp & K24 Warriors / L02\\\hline
+  Chủ đề & Rà soát, thống nhất và chốt bộ tài liệu Submission 2\\\hline
+  Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\\hline
+  Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\\hline
+\end{tabularx}
+\end{center}
+
+\section{THÀNH PHẦN NHÓM}
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+
+\section{MỤC TIÊU BUỔI HỌP}
+Buổi họp tập trung rà soát lần cuối và chốt bộ tài liệu Phase 2 sau khi các thành viên bàn giao nội dung. Nhóm đối chiếu báo cáo tích hợp với yêu cầu, đặc tả use case, giao diện Figma và các biểu đồ; thống nhất phiên bản báo cáo nhóm, bảy báo cáo cá nhân và tài liệu bàn giao trước khi nộp Submission 2.
+
+\section{NỘI DUNG THẢO LUẬN}
+
+\subsection{Chốt phạm vi và cấu trúc báo cáo tích hợp}
+Nhóm thống nhất sử dụng báo cáo Phase 2 kế thừa nội dung phân tích của Phase 1, bổ sung giao diện và biểu đồ hành vi ngay trong từng use case để người đọc đối chiếu theo cùng một luồng nghiệp vụ. Nội dung chung được trình bày một lần, tránh ghép nguyên bảy bài cá nhân thành các phần rời rạc.
+
+Danh mục hiện tại gồm 23 use case: 18 use case ban đầu, ba use case quản trị dùng chung và hai use case quản lý tài nguyên của Nhân viên vận hành. Giữ bảy phân hệ nghiệp vụ, không tạo thêm phân hệ riêng cho phần quản trị dùng chung; các mã use case ban đầu không thay đổi.
+
+\subsection{Hoàn thiện giao diện và prototype trên Figma}
+Nhóm chốt giao diện website theo phong cách Ocean Mobility, sử dụng chung logo, màu sắc, kiểu chữ và component. UI là sản phẩm cả nhóm cùng thực hiện; thành viên phụ trách phân hệ đối chiếu các thao tác trên màn hình với đặc tả tương ứng.
+
+Navbar Sinh viên sau đăng nhập được thống nhất theo thứ tự: Khám phá Hub, Hoạt động của tôi, Lượt đặt xe, Chuyến đi, Chỗ đỗ của tôi và Sạc của tôi. Các màn hình giữ nguyên danh sách và thứ tự, chỉ thay mục đang chọn; các liên kết prototype được nối về đúng màn hình. Mục Lượt đặt xe phục vụ xem lượt đặt, không tự tạo yêu cầu mới.
+
+Tra cứu Hub vẫn hỗ trợ người chưa đăng nhập. Ba mockup SUB-HUB trong báo cáo dùng phiên bản Sinh viên đã đăng nhập để thể hiện điều hướng nhất quán; phiên bản công khai vẫn được giữ trên Figma. Báo cáo chỉ đưa ảnh đại diện cần thiết, không lặp lại toàn bộ trạng thái tải, lỗi và hộp thoại của cùng một màn hình.
+
+\subsection{Rà soát các biểu đồ và thuật ngữ dùng chung}
+Nhóm đối chiếu use-case diagram, đặc tả, activity, sequence và state chart ở các phân hệ HUB, RES, TRIP, PARK, CHG, OPS và SIM. Nội dung cần nhất quán về actor, điều kiện thực hiện, thao tác ghi dữ liệu và kết quả cuối; không xem việc sơ đồ render được là đủ để xác nhận đúng nghiệp vụ.
+
+Các biểu đồ dùng thống nhất tên thành phần theo quy chuẩn nhóm. \texttt{StateDataGateway} là nguồn trạng thái bên ngoài, có thể nhận dữ liệu thực hoặc giả lập; \texttt{SEMHDataStore} là kho dữ liệu nội bộ. Các tiến trình đồng bộ, hết hạn và tính toán tự động thuộc trách nhiệm của hệ thống, không được vẽ thành actor bên ngoài.
+
+Mỗi sequence và activity được giữ thành một hình hoàn chỉnh trên trang dọc; không chia nhỏ chỉ để vừa trang. State chart biểu diễn vòng đời đối tượng, không ép mỗi use case phải có một biểu đồ trạng thái riêng. Nguồn sơ đồ được giữ cùng bản xuất để thuận tiện chỉnh sửa ở giai đoạn tiếp theo.
+
+\subsection{Thống nhất quyền và các điều kiện an toàn}
+Nhóm phân biệt bốn vai trò: Sinh viên sử dụng dịch vụ; Nhân viên vận hành giám sát, quản lý tài nguyên và điều phối; Nhân viên kỹ thuật thực hiện công việc được giao; Quản trị viên quản lý tài khoản, vai trò, phạm vi truy cập và danh mục ban đầu. Quyền quản trị không đồng nghĩa được bỏ qua các điều kiện an toàn khi sử dụng tài nguyên.
+
+Các điểm liên phân hệ cần giữ khi triển khai gồm: hết hạn đặt chỗ không tự đưa chỗ đang lỗi về Available; lịch sạc phụ thuộc khả năng phục vụ và giới hạn công suất; kết quả mô phỏng không thay đổi mạng lưới thực. Phê duyệt một kế hoạch điều chuyển khác với việc xe đã được vận chuyển và xác nhận tại Hub đích.
+
+\subsection{Chốt bộ PDF và cách bàn giao}
+Nhóm thống nhất lấy nội dung báo cáo nhóm làm nguồn đồng bộ cho báo cáo cá nhân. Phần việc của từng thành viên được trình bày đầy đủ trong bài cá nhân; nội dung chung của GEN được đưa vào báo cáo Bảo Anh và ghi rõ là nội dung chung. Không tự chỉnh một bản cá nhân theo hướng khác với bản nhóm đã chốt.
+
+Các ảnh UI sau chỉnh sửa được xuất lại từ Figma và cập nhật vào các báo cáo liên quan. Trước khi bàn giao, kiểm tra mục lục, danh sách hình và bảng, số trang, ảnh thiếu hoặc cắt chữ, mã lớp L02, tên nhóm K24 Warriors và thông tin thành viên. File PDF là bản đọc, còn nguồn LaTeX, sơ đồ và Figma được giữ để tiếp tục sử dụng ở Phase 3.
+
+\clearpage
+\section{KẾT QUẢ THỐNG NHẤT}
+\begin{enumerate}
+  \item Chốt bộ tài liệu Phase 2 gồm báo cáo nhóm tích hợp, bảy báo cáo cá nhân, giao diện và prototype trên Figma, các nguồn sơ đồ cùng biên bản họp.
+  \item Giữ danh mục 23 use case, bảy phân hệ nghiệp vụ và phạm vi quyền của bốn vai trò theo nội dung đã thống nhất.
+  \item Dùng một bộ thành phần giao diện chung; đồng bộ navbar Sinh viên và giữ riêng trải nghiệm tra cứu công khai.
+  \item Báo cáo cá nhân sử dụng đúng nội dung tương ứng trong báo cáo nhóm; UI vẫn được ghi nhận là phần làm chung.
+  \item Không bổ sung chức năng ngoài phạm vi trong lượt chốt này. Nếu cần sửa, sửa tại nguồn chung rồi cập nhật các tài liệu bị ảnh hưởng.
+\end{enumerate}
+
+\section{TRÁCH NHIỆM BÀN GIAO}
+\begin{center}
+\begin{tabularx}{\textwidth}{|L{40mm}|Y|}
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Thành viên} & \textbf{Phạm vi kiểm tra và xác nhận bản bàn giao}\\\hline
+  Nguyễn Quốc Trung & Phần II -- Yêu cầu hệ thống; nội dung và biểu đồ SUB-HUB.\\\hline
+  Phan Võ Bảo Trâm & Nội dung và biểu đồ SUB-RES.\\\hline
+  Lê Nguyễn Tường Vi & Mô hình use case toàn hệ thống; SUB-TRIP và vòng đời SharedVehicle.\\\hline
+  Nguyễn Ngọc Hân & Nội dung và biểu đồ SUB-PARK.\\\hline
+  Trần Thị Hương Giang & Nội dung và biểu đồ SUB-CHG.\\\hline
+  Nguyễn Thị Minh Anh & Nội dung và biểu đồ SUB-OPS, gồm quản lý và trạng thái phục vụ tài nguyên.\\\hline
+  Trần Nhật Bảo Anh & Phần I, SUB-SIM, nội dung chung GEN; tổng hợp và kiểm tra bộ hồ sơ.\\\hline
+\end{tabularx}
+\end{center}
+
+Mỗi thành viên kiểm tra đúng bản PDF cá nhân và phần tương ứng trong báo cáo nhóm trước khi nộp Submission 2. Nhóm trưởng tập hợp các bản đã xác nhận, giữ nguồn chỉnh sửa và liên kết Figma; không dùng lại ảnh hoặc PDF cũ sau khi đã có bản cập nhật.
+
+\section{LƯU Ý VÀ HƯỚNG TIẾP THEO}
+Các rủi ro cần tránh khi bàn giao là gửi nhầm phiên bản, thay component chung làm lệch các màn hình, hoặc chỉ sửa một bản cá nhân mà chưa đồng bộ báo cáo nhóm. Mọi thay đổi sau khi chốt phải ghi rõ phần bị ảnh hưởng và xuất lại các bản liên quan.
+
+Phase 2 chốt tài liệu phân tích và thiết kế hành vi, không đồng nghĩa đã hiện thực hoặc kiểm thử hệ thống. Prototype Figma và dữ liệu hiển thị là minh họa, không phải kết nối IoT đang chạy. Thiết kế kiến trúc, lớp và các chi tiết triển khai tiếp tục được làm rõ ở giai đoạn sau trên cùng thuật ngữ và luồng nghiệp vụ.
+
+\section{KẾT LUẬN BUỔI HỌP}
+Nhóm thống nhất chốt hoàn chỉnh bộ tài liệu Phase 2 để bàn giao Submission 2. Các thành viên chịu trách nhiệm xác nhận phần việc của mình; nhóm trưởng tổng hợp và quản lý phiên bản cuối. Nội dung đã chốt là cơ sở để nhóm tiếp tục Phase 3.
+
+\end{document}

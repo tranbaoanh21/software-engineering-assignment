@@ -1,0 +1,41 @@
+@startuml
+!pragma layout smetana
+title Biểu đồ trạng thái ChargingPoint
+skinparam monochrome true
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 110
+skinparam ranksep 110
+hide empty description
+state Available
+state Reserved
+state Charging
+state OutOfService
+[*] --> Available
+Available -right-> Reserved : allocateChargingPoint\n[không xung đột]
+Reserved -down-> Charging : chargingStarted\n[xác nhận hợp lệ]
+Reserved -left-> Available : releaseAllocation
+Charging -left-> Available : pointReleased
+Available --> OutOfService : pointFaultConfirmed
+Reserved --> OutOfService : pointFaultConfirmed
+Charging -down-> OutOfService : pointFaultConfirmed
+OutOfService -left-> Available : maintenanceConfirmed
+note top of Available
+  Khởi tạo khi xác minh cổng trống.
+  Mọi chuyển về Available phải xác nhận cổng trống,
+  an toàn và không còn phân bổ ràng buộc.
+  pointReleased: phiên đã dừng và cổng đã giải phóng.
+  maintenanceConfirmed: ACT-MNT xác nhận sửa đạt yêu cầu.
+end note
+note bottom of OutOfService
+  BR-CHG-02, NIFR-CHG-02, BR-OPS-02, UC-OPS-02.
+  ServiceStatus độc lập với trạng thái vật lý.
+  Available chỉ được cấp phát khi cổng và Hub đều Active.
+  Bật phục vụ không ghi đè OutOfService.
+  UC-CHG-03 không tự ngắt phiên đang sạc.
+  Sự cố: ghi nhận lỗi, đánh dấu phiên bị ảnh hưởng,
+  tính lại phân bổ chưa bắt đầu và cảnh báo.
+end note
+@enduml

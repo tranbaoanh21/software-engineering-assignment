@@ -1,0 +1,88 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+hide footbox
+autonumber
+title UC-OPS-04 - Thêm và cập nhật thông tin tài nguyên
+actor "Nhân viên vận hành\n(ACT-OPR)" as Actor
+boundary OperationsUI as UI
+control OperationsService as Service
+control AccessService as Access
+database SEMHDataStore as DB
+Actor -> UI : openManagement()
+UI -> Service : getManagedResources(session, scope)
+activate Service
+Service -> Access : verifyAccess(session, permission, scope)
+Access --> Service : accessResult, currentScope
+break Phiên hoặc quyền không hợp lệ - EF-03
+  Service --> UI : accessDenied
+  UI --> Actor : Từ chối truy cập
+end
+Service -> DB : loadCurrentData(scope)
+DB --> Service : records, version, currentConstraints
+Service --> UI : managementData
+UI --> Actor : Hiển thị dữ liệu và thao tác được phép
+Actor -> UI : selectActionAndEdit(input, reason)
+break Actor chọn hủy trước xác nhận - AF-04
+  Actor -> UI : cancelEditing()
+  UI --> Actor : Giữ dữ liệu đã lưu
+end
+Actor -> UI : confirmChange()
+UI -> Service : submitChange(session, input, reason, version, requestId)
+Service -> Access : verifyAccess(session, permission, target)
+Access --> Service : accessResult, currentScope
+break Phiên hoặc quyền bị thu hồi - EF-03
+  Service --> UI : accessDenied
+  UI --> Actor : Không thực hiện thay đổi
+end
+Service -> DB : loadCurrentData(target)
+DB --> Service : currentRecord, version, constraints
+Service -> Service : validateResourceMetadataChange(input, currentData)
+note right of Service
+  Đúng Hub\n  mã duy nhất\n  chỉ sửa trường cho phép\n  kiểm tra ràng buộc nếu đổi thông số
+end note
+alt Điều kiện nghiệp vụ không đạt
+  Service --> UI : rejectedOrCancelled(reason)
+  UI --> Actor : Không đổi dữ liệu; cho sửa hoặc kết thúc
+else Dữ liệu đủ điều kiện và actor xác nhận
+  Service -> DB : commitResourceMetadataAndAudit(input, version, requestId)
+  activate DB
+  note right of DB
+    Kiểm tra lại điều kiện và phiên bản;
+    lưu thay đổi + audit nguyên tử.
+    Không lưu một phần; requestId chống lặp.
+  end note
+  DB --> Service : committed / conflict / storageFailure
+  deactivate DB
+  alt Commit thành công
+    Service --> UI : resourceSaved; bản ghi mới Draft
+    UI --> Actor : Hiển thị trạng thái đã lưu
+  else Phiên bản hoặc điều kiện vừa thay đổi
+    Service --> UI : conflict(currentVersion)
+    UI --> Actor : Tải lại và xác nhận lại; không ghi đè
+  else Lỗi lưu - EF-01
+    Service --> UI : saveFailed
+    UI --> Actor : Giữ trạng thái trước; có thể thử lại
+  end
+end
+opt Mất phản hồi; chưa rõ kết quả - EF-02
+  UI -> Service : getChangeResult(session, requestId)
+  Service -> Access : verifyAccess(session, permission, target)
+  Access --> Service : accessResult
+  break Không còn quyền
+    Service --> UI : accessDenied
+  end
+  Service -> DB : findResultByRequestId(requestId)
+  DB --> Service : committedResult / notCommitted
+  Service --> UI : knownResultOrSafeRetry
+end
+note over Service, DB
+  Không thay đổi telemetry\n  bản ghi sửa giữ nguyên các trạng thái.
+end note
+deactivate Service
+@enduml

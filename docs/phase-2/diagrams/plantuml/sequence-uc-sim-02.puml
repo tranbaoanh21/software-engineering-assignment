@@ -1,0 +1,106 @@
+@startuml
+!include sim-style.puml
+hide footbox
+autonumber
+title UC-SIM-02 - Phân tích kết quả và khuyến nghị điều phối
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as OPR
+boundary SimulationUI as UI
+control SimulationService as SIM
+control AccessService as ACCESS
+database SEMHDataStore as DB
+control OperationsService as OPS
+
+OPR -> UI : openSimulationResults(runId)
+UI -> SIM : getAnalysis(session, runId)
+SIM -> ACCESS : verifyAccess(session, runId)
+ACCESS --> SIM : accessResult, scope
+break Phiên hoặc quyền không hợp lệ - EF-04
+  SIM --> UI : accessDenied
+  UI --> OPR : Từ chối; đăng nhập lại nếu hết phiên
+end
+SIM -> DB : getRunContext(runId, scope)
+DB --> SIM : runContext
+break Lần chạy không phải Completed - EF-01
+  SIM --> UI : analysisUnavailable(runStatus)
+  UI --> OPR : Hiển thị trạng thái; không phân tích
+end
+SIM -> SIM : validateResults()
+break Kết quả thiếu hoặc sai liên kết - EF-02
+  SIM -> DB : recordAnalysisDataError(runId)
+  SIM --> UI : invalidAnalysisData
+  UI --> OPR : Không đưa ra khuyến nghị thiếu cơ sở
+end
+== UC-SIM-02 - So sánh chỉ số và khuyến nghị ==
+SIM -> SIM : compareMetrics(snapshot, results)
+SIM -> DB : getRecommendations(runId)
+DB --> SIM : analysisReady, recommendations
+SIM --> UI : analysisView
+UI --> OPR : Hiển thị chỉ số theo Hub và thời gian
+alt Phân tích đã xong và danh sách rỗng - AF-01
+  UI --> OPR : Không có điều kiện đủ để đề xuất khuyến nghị
+else Có khuyến nghị hợp lệ
+  UI --> OPR : Hiển thị đề xuất và cơ sở
+else NIFR-SIM-01 chưa xử lý xong
+  UI --> OPR : Kết quả đã có; khuyến nghị đang được xử lý
+end
+note over SIM, DB
+  Khuyến nghị do NIFR-SIM-01 tạo.
+  Chỉ kết luận danh sách rỗng khi phân tích đã xong.
+  analysisReady không phải trạng thái run.
+end note
+
+== UC-SIM-02 - Đánh giá và mở quy trình điều phối ==
+
+loop Người dùng tiếp tục xem kết quả
+  OPR -> UI : inspectAnalysis(action, selection)
+  UI -> SIM : inspectAnalysis(session, selection)
+  ref over SIM, ACCESS
+    Kiểm tra truy cập và phạm vi - EF-04
+    Từ chối thì dừng yêu cầu
+  end ref
+  alt Lọc theo Hub hoặc chỉ số - AF-02
+    SIM -> DB : getAnalysisData(runId, scope)
+    DB --> SIM : analysisData
+    SIM -> SIM : filterAnalysis(analysisData, filters)
+    SIM --> UI : filteredMetrics, filteredRecommendations
+  else Chọn một khuyến nghị - Luồng chính bước 7
+    SIM -> DB : getRecommendation(recId, scope)
+    DB --> SIM : recommendation, evidence, expectedImpact
+    SIM --> UI : recommendationDetails
+  else Xem lại giả định - AF-04
+    SIM -> DB : getScenarioContext(runId, scope)
+    DB --> SIM : parameters, snapshotMetadata
+    SIM --> UI : scenarioContext
+  end
+  UI --> OPR : Cập nhật phân tích; khuyến nghị không tự áp dụng
+end
+
+== UC-SIM-02 - Bàn giao đề xuất điều chuyển ==
+opt Chủ động mở quy trình điều chuyển - AF-03
+  OPR -> UI : openRedistribution(recId)
+  UI -> SIM : prepareRedistribution(session, recId)
+  ref over SIM, ACCESS : Kiểm tra phiên và quyền - EF-04
+  SIM -> DB : getRecommendation(recId, scope)
+  DB --> SIM : redistributionProposal
+  SIM -> OPS : prepareRedistribution(session, proposal)
+  ref over ACCESS, OPS : Kiểm tra quyền điều phối - EF-04
+  alt Mở quy trình thành công
+    OPS --> SIM : prefilledInput
+    SIM --> UI : openUCOPS03(prefilledInput)
+    UI --> OPR : Mở UC-OPS-03 với đề xuất điền trước
+    ref over OPR, OPS
+      UC-OPS-03 - Điều phối phương tiện
+      Kiểm tra trạng thái thật; lập và phê duyệt
+    end ref
+  else Không thể mở quy trình - EF-03
+    OPS --> SIM : preparationFailed
+    SIM --> UI : cannotOpenOperationalProcess
+    UI --> OPR : Không tạo kế hoạch nửa chừng
+  end
+end
+note over SIM, OPS
+  Bàn giao không phê duyệt hoặc chuyển xe.
+  Không tạo kế hoạch trong SUB-SIM.
+end note
+@enduml

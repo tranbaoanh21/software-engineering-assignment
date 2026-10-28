@@ -1,0 +1,205 @@
+\clearpage
+\subsection{GEN -- Quản trị dùng chung}
+\subsubsection{UC-GEN-01 -- Quản lý tài khoản}
+
+\ManagementFigure[0.65\textheight]{../diagrams/use-case/uc-gen-01.pdf}
+  {Sơ đồ Use Case UC-GEN-01 -- Quản lý tài khoản}
+  {fig:p2-uc-uc-gen-01}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-GEN-01 -- Quản lý tài khoản}\label{tab:spec-UC-GEN-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-ADM}.\\\hline
+  Description / Goal & Cấp, cập nhật hoặc khóa/mở tài khoản mà không thay đổi chủ sở hữu và lịch sử nghiệp vụ.\\\hline
+  Trigger & Quản trị viên mở danh sách tài khoản hoặc chọn một tài khoản để quản lý.\\\hline
+  Preconditions & \textbf{1.} Actor có phiên hợp lệ và quyền quản trị tài khoản.\newline
+\textbf{2.} Đã có tài khoản Quản trị viên khởi tạo ban đầu; hệ thống có thể đọc danh sách tài khoản và quyền hiện hành.\\\hline
+  Postconditions & \textbf{Thành công:} Thông tin hoặc trạng thái Account được cập nhật và có lịch sử quản trị; khóa tài khoản thu hồi quyền sử dụng các phiên hiện có, mở lại không phục hồi phiên cũ.\newline
+  \textbf{Không thành công:} Không lưu thay đổi một phần; giữ dữ liệu hợp lệ và hiển thị nguyên nhân hoặc kết quả tra cứu lại.\\\hline
+  Main Flow & \textbf{1.} Quản trị viên mở danh sách tài khoản; hệ thống kiểm tra quyền và tải dữ liệu.\newline
+\textbf{2.} Actor chọn cấp tài khoản mới, cập nhật thông tin hoặc khóa/mở một tài khoản.\newline
+\textbf{3.} Hệ thống hiển thị biểu mẫu và trạng thái hiện tại; vai trò không được thay đổi qua biểu mẫu cập nhật thông tin.\newline
+\textbf{4.} Actor nhập thông tin hoặc chọn trạng thái đích, cung cấp lý do và xem lại trước khi xác nhận.\newline
+\textbf{5.} Hệ thống kiểm tra định danh duy nhất, tài khoản đích và điều kiện bảo toàn Quản trị viên hoạt động cuối cùng.\newline
+\textbf{6.} Actor xác nhận; hệ thống kiểm tra lại phiên, quyền và phiên bản tài khoản.\newline
+\textbf{7.} Hệ thống lưu thay đổi và audit cùng một giao dịch. Khi khóa, mọi yêu cầu được bảo vệ tiếp theo từ phiên cũ phải bị từ chối.\newline
+\textbf{8.} Hệ thống hiển thị kết quả; lượt đặt, chuyến đi, phiên sạc và lịch sử vẫn giữ nguyên.\\\hline
+  Alternative Flows & \textbf{AF-01 -- Cấp tài khoản mới.} Tại bước 2: tạo \texttt{Account.Active} với định danh duy nhất; quyền nghiệp vụ được cấp qua \texttt{UC-\texttt{GEN}-02}, không tự có quyền Operator.\newline
+\textbf{AF-02 -- Trùng định danh hoặc thiếu thông tin.} Tại bước 5: không lưu; chỉ rõ trường cần sửa và quay lại bước 4.\newline
+\textbf{AF-03 -- Khóa Quản trị viên hoạt động cuối cùng.} Tại bước 5 hoặc 7: từ chối thay đổi, giữ tài khoản và quyền hiện tại.\newline
+\textbf{AF-04 -- Hủy hoặc dữ liệu đã thay đổi.} Trước khi lưu: hủy không thay đổi dữ liệu; nếu phiên bản đã đổi, tải lại và yêu cầu xác nhận mới.\\\hline
+  Exception Flows & \textbf{EF-01 -- Không tải hoặc lưu được tài khoản.} Không lưu một phần; thông báo lỗi và giữ trạng thái đã lưu hợp lệ.\newline
+\textbf{EF-02 -- Mất phản hồi sau xác nhận.} Đọc lại theo mã yêu cầu trước khi gửi lại; không tạo tài khoản hoặc audit trùng.\newline
+  \textbf{EF-03 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\\\hline
+  Liên quan & \texttt{FR-\texttt{GEN}-04}, \texttt{FR-\texttt{GEN}-05}, \texttt{FR-\texttt{GEN}-06}; \texttt{FR-GEN-03}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-\texttt{GEN}-01}, \texttt{BR-\texttt{GEN}-02}, \texttt{BR-\texttt{GEN}-04}.\\\hline
+  Dependencies & \texttt{UC-\texttt{GEN}-02} quản lý quyền độc lập; \texttt{FR-\texttt{GEN}-03} kiểm tra hiệu lực tài khoản ở từng yêu cầu.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\ManagementFigure[0.68\textheight]{../mockups/uc-gen-01.png}
+  {Tài khoản và trạng thái truy cập -- UC-GEN-01}
+  {fig:p2-ui-uc-gen-01}
+\end{minipage}\par
+
+\clearpage
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\ManagementFigure{../diagrams/sequence/uc-gen-01.pdf}
+  {Biểu đồ tuần tự -- UC-GEN-01}
+  {fig:p2-seq-uc-gen-01}
+
+\clearpage
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\ManagementFigure{../diagrams/activity/uc-gen-01.pdf}
+  {Biểu đồ hoạt động -- UC-GEN-01}
+  {fig:p2-act-uc-gen-01}
+
+\clearpage
+\subsubsection{UC-GEN-02 -- Quản lý vai trò và phạm vi truy cập}
+
+\ManagementFigure[0.65\textheight]{../diagrams/use-case/uc-gen-02.pdf}
+  {Sơ đồ Use Case UC-GEN-02 -- Quản lý vai trò và phạm vi truy cập}
+  {fig:p2-uc-uc-gen-02}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-GEN-02 -- Quản lý vai trò và phạm vi truy cập}\label{tab:spec-UC-GEN-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-ADM}.\\\hline
+  Description / Goal & Cấp hoặc thu hồi vai trò và phạm vi Hub của tài khoản, không mặc nhiên cho Admin quyền vận hành.\\\hline
+  Trigger & Quản trị viên chọn chức năng phân quyền cho một tài khoản.\\\hline
+  Preconditions & \textbf{1.} Actor có phiên hợp lệ và quyền quản trị phân quyền.\newline
+\textbf{2.} Tài khoản đích và các Hub nằm trong danh mục; bảng quyền của bốn vai trò đã được xác định.\\\hline
+  Postconditions & \textbf{Thành công:} Phân quyền hiện hành và audit được lưu nhất quán; yêu cầu được bảo vệ tiếp theo áp dụng quyền mới, không chấp nhận quyền cũ đã thu hồi.\newline
+  \textbf{Không thành công:} Không lưu thay đổi một phần; giữ dữ liệu hợp lệ và hiển thị nguyên nhân hoặc kết quả tra cứu lại.\\\hline
+  Main Flow & \textbf{1.} Actor mở phân quyền, hệ thống kiểm tra quyền quản trị.\newline
+\textbf{2.} Hệ thống tải tài khoản, vai trò, phạm vi Hub và phiên bản phân quyền hiện tại.\newline
+\textbf{3.} Actor chọn vai trò và phạm vi hoặc thu hồi quyền; nhập lý do.\newline
+\textbf{4.} Hệ thống hiển thị phần thay đổi, các quyền sẽ có và các quyền sẽ mất.\newline
+\textbf{5.} Actor xác nhận; hệ thống xác minh lại phiên, tài khoản đích, vai trò và phạm vi hợp lệ.\newline
+\textbf{6.} Hệ thống kiểm tra bảo toàn Quản trị viên hoạt động cuối cùng và phiên bản dữ liệu trong giao dịch lưu.\newline
+\textbf{7.} Hệ thống lưu quyền mới cùng audit; \texttt{AccessService} phải dùng quyền hiện hành ở yêu cầu tiếp theo.\newline
+\textbf{8.} Hệ thống hiển thị kết quả; thay đổi quyền không tự hủy hoặc phê duyệt quy trình đang có.\\\hline
+  Alternative Flows & \textbf{AF-01 -- Thu hồi toàn bộ quyền nghiệp vụ.} Tại bước 3: tài khoản không còn truy cập các chức năng được bảo vệ ngoài quyền còn được cấp rõ ràng; dữ liệu nghiệp vụ không bị xóa.\newline
+\textbf{AF-02 -- Vai trò hoặc phạm vi không hợp lệ.} Tại bước 5: từ chối, giữ quyền cũ và yêu cầu sửa.\newline
+\textbf{AF-03 -- Thu hồi quyền Admin cuối cùng.} Tại bước 6: từ chối thay đổi để tránh mất khả năng quản trị.\newline
+\textbf{AF-04 -- Hủy hoặc thay đổi đồng thời.} Hủy trước lưu không có tác động; nếu phiên bản quyền thay đổi, tải lại và yêu cầu actor xác nhận lại.\\\hline
+  Exception Flows & \textbf{EF-01 -- Lỗi lưu phân quyền.} Hoàn tác quyền và audit của giao dịch; không công bố quyền mới chưa lưu thành công.\newline
+\textbf{EF-02 -- Không xác định được kết quả.} Tải quyền hiện hành theo mã yêu cầu trước khi gửi lại; không áp dụng thay đổi hai lần.\newline
+  \textbf{EF-03 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\\\hline
+  Liên quan & \texttt{FR-\texttt{GEN}-07}; \texttt{FR-GEN-03}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-\texttt{GEN}-01}, \texttt{BR-\texttt{GEN}-02}, \texttt{BR-\texttt{GEN}-04}.\\\hline
+  Dependencies & Tài khoản tạo qua \texttt{UC-\texttt{GEN}-01}; \texttt{FR-\texttt{GEN}-03} kiểm tra quyền hiện hành, không dùng đặc quyền Admin để bỏ qua các vai trò nghiệp vụ.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\ManagementFigure[0.68\textheight]{../mockups/uc-gen-02.png}
+  {Vai trò và phạm vi Hub -- UC-GEN-02}
+  {fig:p2-ui-uc-gen-02}
+\end{minipage}\par
+
+\clearpage
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\ManagementFigure{../diagrams/sequence/uc-gen-02.pdf}
+  {Biểu đồ tuần tự -- UC-GEN-02}
+  {fig:p2-seq-uc-gen-02}
+
+\clearpage
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\ManagementFigure{../diagrams/activity/uc-gen-02.pdf}
+  {Biểu đồ hoạt động -- UC-GEN-02}
+  {fig:p2-act-uc-gen-02}
+
+\clearpage
+\subsubsection{UC-GEN-03 -- Thiết lập danh mục tài nguyên ban đầu}
+
+\ManagementFigure[0.65\textheight]{../diagrams/use-case/uc-gen-03.pdf}
+  {Sơ đồ Use Case UC-GEN-03 -- Thiết lập danh mục tài nguyên ban đầu}
+  {fig:p2-uc-uc-gen-03}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-GEN-03 -- Thiết lập danh mục tài nguyên ban đầu}\label{tab:spec-UC-GEN-03}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-ADM}.\\\hline
+  Description / Goal & Khai báo Hub và tài nguyên ban đầu với định danh thống nhất, chưa cho phép cấp phát trước khi Operator kích hoạt hợp lệ.\\\hline
+  Trigger & Quản trị viên mở danh mục ban đầu và yêu cầu khai báo Hub hoặc tài nguyên.\\\hline
+  Preconditions & \textbf{1.} Actor có phiên hợp lệ và quyền thiết lập danh mục.\newline
+\textbf{2.} Khi khai báo xe, chỗ đỗ hoặc cổng sạc, Hub tham chiếu đã tồn tại.\\\hline
+  Postconditions & \textbf{Thành công:} Bản ghi danh mục được lưu với \texttt{ServiceStatus.Draft} cùng audit; không tự tạo trạng thái \texttt{Available}, telemetry hay lượt cấp phát.\newline
+  \textbf{Không thành công:} Không lưu thay đổi một phần; giữ dữ liệu hợp lệ và hiển thị nguyên nhân hoặc kết quả tra cứu lại.\\\hline
+  Main Flow & \textbf{1.} Actor mở danh mục ban đầu; hệ thống kiểm tra quyền.\newline
+\textbf{2.} Hệ thống hiển thị các Hub, loại tài nguyên, định danh và trạng thái phục vụ đã khai báo.\newline
+\textbf{3.} Actor chọn khai báo Hub hoặc tài nguyên thuộc Hub; nhập định danh, tên và thông số theo loại.\newline
+\textbf{4.} Hệ thống kiểm tra định danh duy nhất, cấu trúc thông tin và Hub tham chiếu.\newline
+\textbf{5.} Hệ thống hiển thị bản xem lại, nêu rõ bản ghi được tạo ở \texttt{ServiceStatus.Draft}.\newline
+\textbf{6.} Actor nhập lý do và xác nhận; hệ thống kiểm tra lại quyền và xung đột định danh.\newline
+\textbf{7.} Hệ thống tạo bản ghi \texttt{Draft} và audit trong một giao dịch; không ghi đè trạng thái IoT hoặc bản ghi đang vận hành.\newline
+\textbf{8.} Hệ thống hiển thị bản ghi; Operator xem và kích hoạt qua \texttt{UC-OPS-05} khi đủ điều kiện.\\\hline
+  Alternative Flows & \textbf{AF-01 -- Khai báo Hub.} Tại bước 3: nhập vị trí và sức chứa; không yêu cầu Hub cha.\newline
+\textbf{AF-02 -- Khai báo thiết bị thuộc Hub.} Tại bước 3: chọn Hub hợp lệ; ghi thông số loại xe, chỗ đỗ hoặc cổng sạc, không nhập telemetry như dữ liệu đo thực tế.\newline
+\textbf{AF-03 -- Trùng mã hoặc dữ liệu không hợp lệ.} Tại bước 4 hoặc 6: không tạo mới, chỉ rõ lỗi và cho sửa.\newline
+\textbf{AF-04 -- Hủy hoặc chọn bản ghi đã vận hành.} Hủy trước lưu không đổi dữ liệu; bản ghi đang vận hành chỉ được xem, không sửa qua luồng thiết lập ban đầu.\\\hline
+  Exception Flows & \textbf{EF-01 -- Không tải hoặc lưu được danh mục.} Không tạo bản ghi một phần; thông báo lỗi và cho phép thử lại.\newline
+\textbf{EF-02 -- Mất phản hồi sau lưu.} Đọc lại theo mã yêu cầu hoặc định danh trước khi tạo lại để tránh trùng.\newline
+  \textbf{EF-03 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\\\hline
+  Liên quan & \texttt{FR-\texttt{GEN}-08}; \texttt{FR-GEN-03}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-\texttt{GEN}-02}, \texttt{BR-\texttt{GEN}-04}, \texttt{BR-OPS-03}.\\\hline
+  Dependencies & \texttt{UC-OPS-04} quản lý thông tin tại Hub được giao; \texttt{UC-OPS-05} kích hoạt phục vụ. \texttt{ACT-DAT} cung cấp trạng thái thực tế qua luồng đồng bộ hiện có.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\ManagementFigure[0.68\textheight]{../mockups/uc-gen-03.png}
+  {Danh mục tài nguyên ban đầu -- UC-GEN-03}
+  {fig:p2-ui-uc-gen-03}
+\end{minipage}\par
+
+\clearpage
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\ManagementFigure{../diagrams/sequence/uc-gen-03.pdf}
+  {Biểu đồ tuần tự -- UC-GEN-03}
+  {fig:p2-seq-uc-gen-03}
+
+\clearpage
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\ManagementFigure{../diagrams/activity/uc-gen-03.pdf}
+  {Biểu đồ hoạt động -- UC-GEN-03}
+  {fig:p2-act-uc-gen-03}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- Account}
+\ManagementFigure{../diagrams/state/account.pdf}
+  {Biểu đồ trạng thái truy cập của Account}
+  {fig:p2-state-account}
+\clearpage

@@ -1,37 +1,42 @@
-\section{Baseline và quy ước thiết kế Submission 3}
+\section{Cơ sở và quyết định kiến trúc}
 
-Submission 3 chuyển các requirement, use case, giao diện và behavioral diagram đã khóa ở hai submission trước thành thiết kế có thể hiện thực. Mọi component, class và method phải có lý do tồn tại từ trách nhiệm nghiệp vụ hoặc yêu cầu chất lượng; không thêm feature mới trực tiếp trong tài liệu thiết kế.
+\subsection{Phạm vi thiết kế}
+Thiết kế tiếp nối baseline Submission 2 gồm \textbf{23 use case, bảy phân hệ và GEN là chức năng dùng chung}. Bốn vai trò người dùng là Sinh viên (\texttt{ACT-STU}), Nhân viên vận hành (\texttt{ACT-OPR}), Nhân viên kỹ thuật (\texttt{ACT-MNT}) và Quản trị viên (\texttt{ACT-ADM}). Tra cứu Hub công khai không yêu cầu đăng nhập; thao tác được bảo vệ phải kiểm tra phiên, quyền và phạm vi đối tượng.
 
-\subsection{Nguồn đầu vào bắt buộc}
+\texttt{StateDataGateway} (\texttt{ACT-DAT}/\texttt{EXT-STATE}) và \texttt{MapService} (\texttt{ACT-MAP}/\texttt{EXT-MAP}) là nguồn ngoài. \texttt{SEMHDataStore} là trách nhiệm lưu/truy xuất nội bộ, không chỉ phục vụ mô phỏng. Dữ liệu IoT giả lập vẫn cần các lớp tiếp nhận và quản lý.
 
-\begin{longtable}{|L{35mm}|L{50mm}|L{48mm}|}
-  \caption{Nguồn truy vết cho Submission 3}\\
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Nguồn} & \textbf{Thông tin sử dụng} & \textbf{Artefact thiết kế chịu ảnh hưởng}\\\hline
-  \endfirsthead
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Nguồn} & \textbf{Thông tin sử dụng} & \textbf{Artefact thiết kế chịu ảnh hưởng}\\\hline
-  \endhead
-  Submission 1 & Actor, FR, BR, NIFR, NFR, use-case flow và trạng thái & Component, class, method, interface và constraint\\\hline
-  Submission 2 & Screen ID, sequence, activity và state chart & Boundary class, application service, domain behavior và event flow\\\hline
-  Quyết định công nghệ & Stack, cách deploy, data store và tích hợp external system & Deployment view và implementation view\\\hline
+Tên đối tượng, trạng thái và thành phần giữ theo quy chuẩn Submission 2. Nếu phân rã một lifeline thành nhiều lớp cụ thể, thiết kế phải nêu rõ trách nhiệm thay thế; không mặc định một service tương ứng một máy chủ.
+
+\subsection{Các yêu cầu chi phối kiến trúc}
+% Chỉ chọn các yêu cầu thật sự ảnh hưởng phương án, không chép lại toàn bộ Phần II.
+\begin{longtable}{|L{28mm}|L{49mm}|L{62mm}|}
+\caption{Yêu cầu chi phối kiến trúc}\\\hline
+\textbf{Mã yêu cầu} & \textbf{Vấn đề cần bảo đảm} & \textbf{Ảnh hưởng tới thiết kế}\\\hline
+\endfirsthead
+\hline\textbf{Mã yêu cầu} & \textbf{Vấn đề cần bảo đảm} & \textbf{Ảnh hưởng tới thiết kế}\\\hline\endhead
+\texttt{NFR-PERF-01} & Demo ít nhất 20 Hub, 500 xe; 50 người dùng ảo; p95 tra cứu $\leq 2$ giây, đặt xe $\leq 3$ giây; lỗi hệ thống $<1\%$. & Tách truy vấn và cấp phát; đo riêng hai tác vụ trên cùng môi trường.\\\hline
+\texttt{NFR-SEC-01}, \texttt{FR-GEN-03} & Bốn vai trò, quyền hiện hành và phạm vi đối tượng; phiên hết hạn sau 30 phút không hoạt động. & Kiểm tra truy cập ở hệ thống; quyền bị thu hồi có hiệu lực ở yêu cầu được bảo vệ tiếp theo.\\\hline
+\texttt{NFR-CON-01} & 50 yêu cầu cùng đặt một xe/chỗ chỉ có một xác nhận; cạnh tranh với ngừng phục vụ phải nhất quán. & Bảo vệ điều kiện cấp phát và cập nhật liên quan trong cùng ranh giới cạnh tranh.\\\hline
+\texttt{NFR-REL-01} & Giữ trạng thái hợp lệ cuối khi nguồn lỗi; đồng bộ lại trong 60 giây sau khôi phục. & Kiểm tra bản tin, thứ tự dữ liệu và timestamp; tách thiếu dữ liệu khỏi hết tài nguyên.\\\hline
+\texttt{NFR-AUD-01} & Truy vết các thay đổi quan trọng, gồm quản trị và phục vụ tài nguyên. & Audit ghi nguồn, đối tượng, hành động, trước/sau và kết quả; thống nhất với thay đổi đã lưu.\\\hline
+\texttt{NFR-MNT-01} & Tách business rule khỏi UI; statement coverage ít nhất 80\% cho logic cốt lõi MVP. & Ranh giới module rõ; nghiệp vụ kiểm thử được, adapter che chi tiết nguồn ngoài/lưu trữ.\\\hline
+\texttt{BR-SIM-01} & Mô phỏng không tự thay đổi dữ liệu vận hành. & Cố định đầu vào lần chạy, tính trên vùng riêng; khuyến nghị đi qua quy trình OPS khi áp dụng.\\\hline
+\texttt{NIFR-CHG-01}, \texttt{BR-CHG-01--04} & Lập lịch sạc theo ưu tiên, thời lượng, tương thích và công suất đã đặc tả. & Tách phần tính lịch và ghi phân bổ; giữ phiên đang sạc, xử lý cạnh tranh khi cập nhật lịch.\\\hline
 \end{longtable}
 
-\subsection{Architectural drivers}
+\subsection{Phương án và quyết định công nghệ}
+\begin{longtable}{|L{32mm}|L{45mm}|L{62mm}|}
+\caption{Quyết định kiến trúc và công nghệ}\\\hline
+\textbf{Hạng mục} & \textbf{Phương án lựa chọn} & \textbf{Lý do và giới hạn}\\\hline
+\endfirsthead
+\hline\textbf{Hạng mục} & \textbf{Phương án lựa chọn} & \textbf{Lý do và giới hạn}\\\hline\endhead
+Tổ chức logic & Module nghiệp vụ; tách nhận yêu cầu, điều phối, miền và tích hợp. & Quy tắc phụ thuộc dùng chung ở Phần III; cách đóng gói/chạy được xác định trong Deployment View.\\\hline
+Frontend website & \ToFill{công nghệ} & \ToFill{lý do}\\\hline
+Backend & \ToFill{công nghệ} & \ToFill{lý do}\\\hline
+Lưu trữ dữ liệu & \ToFill{công nghệ} & \ToFill{cạnh tranh, transaction và lưu bền vững}\\\hline
+IoT giả lập và bản đồ & \ToFill{nguồn dữ liệu, công cụ} & \ToFill{hình thức tích hợp và giới hạn}\\\hline
+Môi trường triển khai & \ToFill{local/Docker/server thực dùng} & \ToFill{cấu hình mục tiêu}\\\hline
+\end{longtable}
 
-Chọn các requirement tác động mạnh đến kiến trúc, chẳng hạn tính nhất quán khi đặt tài nguyên, độ trễ tra cứu Hub, khả năng nhận dữ liệu IoT giả lập, audit log, phục hồi lỗi và cô lập môi trường mô phỏng. Với mỗi driver cần ghi mã nguồn, quyết định thiết kế, trade-off và cách kiểm chứng.
-
-\subsection{Quy ước mã artefact}
-
-\begin{itemize}
-  \item Deployment node: \texttt{NODE-*}; deployable artifact: \texttt{ART-*}.
-  \item Component/module: \texttt{CMP-*}; interface: \texttt{IF-*}.
-  \item Class diagram: \texttt{CD-SUB-*}; class và method giữ tên nhất quán trong code.
-  \item Test case bonus: \texttt{TC-[SUB]-[SỐ]} và truy vết về \texttt{UC-*}/\texttt{FR-*}/\texttt{NFR-*}.
-\end{itemize}
-
-\subsection{Tiêu chí hoàn tất}
-
-Thiết kế hoàn tất khi các view không mâu thuẫn nhau, mỗi class có trách nhiệm rõ, toàn bộ method trong class diagram được mô tả, external system có adapter/interface tương ứng và nhóm có thể chỉ ra đường truy vết từ requirement đến module, class và method.
+\subsection{Thuật ngữ và quy ước dùng chung}
+\input{sections/common/01-terminology}

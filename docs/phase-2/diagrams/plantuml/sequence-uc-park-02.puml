@@ -1,0 +1,279 @@
+@startuml
+title UC-PARK-02 - Check-in phương tiện cá nhân
+
+skinparam shadowing false
+skinparam sequence {
+    ActivationBackgroundColor #E3EEFF
+    ActivationBorderColor #5378A8
+    LifeLineBorderColor #888888
+}
+
+hide footbox
+
+actor "Sinh viên (ACT-STU)" as STU
+boundary "ParkingUI" as UI
+control "ParkingService" as PS
+control "AccessService" as ACC
+database "SEMHDataStore" as DB
+participant "StateDataGateway\n(EXT-STATE / ACT-DAT)" as DAT
+control "OperationsService" as OPS
+
+== 1. Mở lượt đặt và kiểm tra hiệu lực ==
+
+STU -> UI: openParkingReservation(reservationId)
+activate UI
+
+UI -> PS: getParkingReservationForCheckIn(sessionId, reservationId)
+activate PS
+
+PS -> ACC: checkAccess(sessionId, studentId, reservationId)
+activate ACC
+ACC --> PS: accessResult
+deactivate ACC
+
+alt EF-04: Phiên hoặc quyền không hợp lệ
+
+    PS -> PS: prepareAccessDeniedResult()
+
+else Quyền truy cập hợp lệ
+
+    PS -> DB: getParkingReservationDetails(reservationId)
+    activate DB
+    DB --> PS: reservation:ParkingReservation, space:ParkingSpace
+    deactivate DB
+
+    
+alt AF-02: Lượt đặt đã Expired hoặc quá hạn
+
+    PS -> PS: prepareExpiredReservationResult()
+
+else Lượt đặt Confirmed còn hạn và chỗ Reserved hợp lệ
+
+    note right of PS
+        Kiểm tra:
+        - ParkingReservation Confirmed
+        - Chưa đến expiresAt
+        - Thuộc đúng Sinh viên
+        - Đúng PrivateVehicle và MobilityHub
+        - ParkingSpace Reserved bởi lượt đặt
+    end note
+
+    PS -> PS: prepareParkingCheckInDetails()
+
+else Các điều kiện check-in khác không hợp lệ
+
+    note right of PS
+        Ví dụ:
+        - ParkingReservation Pending
+        - CheckedIn, Completed, Cancelled
+          hoặc Rejected
+        - ParkingSpace không còn Reserved
+        - Thông tin xe hoặc chỗ không khớp
+
+        Không cập nhật trạng thái check-in.
+    end note
+
+    PS -> PS: prepareInvalidReservationResult()
+
+end
+
+end
+
+PS --> UI: reservationDetailsResult
+deactivate PS
+
+alt EF-04: Truy cập không hợp lệ
+
+    UI --> STU: displayAccessError()
+
+else AF-02: Lượt đặt đã hết hạn
+
+    UI --> STU: displayExpiredReservationNotice()
+else Lượt đặt hoặc chỗ đỗ không hợp lệ
+
+    UI --> STU: displayInvalidReservationNotice()
+
+else Lượt đặt còn hiệu lực
+
+    UI --> STU: displayAssignedParkingSpace(reservation)
+
+end
+
+deactivate UI
+
+== 2. Đưa phương tiện vào chỗ và xác nhận ==
+
+opt Lượt đặt Confirmed hợp lệ và Sinh viên tiếp tục
+
+    alt AF-03: Sinh viên chưa hoàn tất đưa xe vào chỗ
+
+        note over STU, UI
+            Sinh viên chưa xác nhận hoàn tất.
+            ParkingReservation vẫn Confirmed
+            nếu chưa hết hạn.
+            ParkingSpace vẫn Reserved.
+        end note
+
+    else Sinh viên đã đưa xe vào chỗ được phân bổ
+
+        STU -> UI: confirmVehicleParked(reservationId)
+        activate UI
+
+        UI -> PS: checkInPrivateVehicle(sessionId, reservationId)
+        activate PS
+
+        PS -> ACC: checkAccess(sessionId, studentId, reservationId)
+        activate ACC
+        ACC --> PS: accessResult
+        deactivate ACC
+
+        alt EF-04: Phiên hoặc quyền không hợp lệ
+
+            PS -> PS: prepareAccessDeniedResult()
+
+        else Quyền truy cập hợp lệ
+
+            == 3. Xác minh lại lượt đặt và chỗ đỗ ==
+
+            PS -> DB: validateParkingReservationForCheckIn(reservationId)
+            activate DB
+            DB --> PS: reservationValidationResult
+            deactivate DB
+
+            alt AF-02: Lượt đặt vừa hết hạn
+
+                PS -> PS: prepareExpiredReservationResult()
+
+            else Lượt đặt và chỗ đỗ còn hợp lệ
+
+                == 4. Xác nhận hiện diện từ cảm biến ==
+
+                PS -> DAT: getParkingSpacePresence(spaceId)
+                activate DAT
+                DAT --> PS: presenceResult
+                deactivate DAT
+
+                opt AF-01: Cảm biến cập nhật chậm
+
+                    PS --> UI: verificationPending
+                    UI --> STU: displayVerificationPending()
+
+                    loop Chờ tín hiệu trong thời gian giới hạn
+                        PS -> DAT: getParkingSpacePresence(spaceId)
+                        activate DAT
+                        DAT --> PS: updatedPresenceResult
+                        deactivate DAT
+                    end
+
+                end
+
+                alt EF-02: Chỗ đỗ báo lỗi
+
+                    PS -> OPS: reportParkingSpaceFault(spaceId)
+                    activate OPS
+                    OPS --> PS: incidentReceived
+                    deactivate OPS
+
+                    PS -> PS: prepareParkingSpaceFaultResult()
+
+                else EF-01: Sai chỗ hoặc không phát hiện xe
+
+                    PS -> PS: preparePresenceMismatchResult()
+
+                else Xác nhận hiện diện hợp lệ
+
+                    == 5. Cập nhật trạng thái nhất quán ==
+
+                    PS -> DB: checkInParkingReservationAtomically(reservationId, spaceId)
+                    activate DB
+
+                    note right of DB
+                        BR-PARK-01, BR-PARK-02:
+                        - Kiểm tra lại lượt đặt hợp lệ
+                        - ParkingReservation:
+                          Confirmed -> CheckedIn
+                        - ParkingSpace:
+                          Reserved -> Occupied
+                        - Ghi nhận checkInAt
+
+                        Nếu lỗi transaction:
+                        rollback toàn bộ thay đổi.
+                    end note
+
+                    DB --> PS: checkInUpdateResult
+                    deactivate DB
+
+                    
+alt AF-02: Lượt đặt hết hạn trước cập nhật
+
+    note right of PS
+        Không chuyển ParkingReservation
+        sang CheckedIn hoặc ParkingSpace
+        sang Occupied.
+
+        Theo NIFR-PARK-01 (xử lý độc lập):
+        ParkingReservation: Confirmed -> Expired
+                    Chỉ Reserved -> Available khi an toàn (BR-PARK-02).
+                    Giữ OutOfService nếu lỗi; thiếu dữ liệu thì chưa mở chỗ.
+    end note
+
+    PS -> PS: prepareExpiredReservationResult()
+
+else EF-03: Cập nhật trạng thái thất bại
+
+    note right of PS
+        Rollback transaction check-in.
+        Nếu lượt đặt còn hiệu lực:
+        ParkingReservation vẫn Confirmed.
+        ParkingSpace vẫn Reserved.
+    end note
+
+    PS -> PS: prepareTransactionErrorResult()
+
+else Check-in thành công
+
+    PS -> PS: prepareCheckInConfirmationResult()
+
+end
+
+                end
+            end
+        end
+
+        == 6. Trả kết quả và hiển thị xác nhận ==
+
+        PS --> UI: checkInResult
+        deactivate PS
+
+        alt Check-in thành công
+
+            UI --> STU: displayCheckInConfirmation(reservation)
+
+        else AF-02: Lượt đặt đã hết hạn
+
+            UI --> STU: displayExpiredReservationNotice()
+
+        else EF-01: Không xác nhận đúng vị trí
+
+            UI --> STU: displayAssignedSpaceAndRetry()
+
+        else EF-02: Chỗ đỗ báo lỗi
+
+            UI --> STU: displayParkingSpaceFault()
+
+        else EF-03: Cập nhật thất bại
+
+            UI --> STU: displaySystemErrorAndRetry()
+
+        else EF-04: Truy cập không hợp lệ
+
+            UI --> STU: displayAccessError()
+
+        end
+
+        deactivate UI
+
+    end
+end
+
+@enduml

@@ -1,0 +1,44 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-PARK",
+  "assets": [
+    {
+      "file": "uc-park-01.png",
+      "nodeId": "462:795",
+      "screen": "07.1 Đặt chỗ đỗ xe cá nhân",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-park-02.png",
+      "nodeId": "19:209",
+      "screen": "07 Chỗ đỗ của tôi",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-park-03.png",
+      "nodeId": "462:808",
+      "screen": "07.3 Check-out phương tiện cá nhân",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    }
+  ],
+  "figmaChanges": [
+    "Completed the existing parking screen with a confirmed reservation and check-in instructions; the previous placeholder content remains hidden for recovery.",
+    "Added booking and check-out screens using the existing student AppHeader, Input, Button, Stat, StatusChip and DataFreshness components.",
+    "Reused Ocean Mobility tokens and Be Vietnam Pro text styles. The new content is native editable Figma layers, not a flattened screen image."
+  ],
+  "scope": "UI only. Sequence, activity and state diagram placeholders remain unchanged for later teammate submissions.",
+  "modelingNotes": [
+    "Reservation validity is at most 20 minutes from confirmation; the booking preview does not claim to hold a space before a successful request.",
+    "Check-in requires a valid reservation and confirmation of vehicle presence at the assigned space.",
+    "Check-out requires confirmation that the vehicle has left. A faulted space is not automatically made available.",
+    "Displayed countdowns and sensor states are illustrative static mockup data; no IoT flow, timer or business-state mutation is implemented.",
+    "The report contains one representative UI per UC, with no added activity/sequence explanatory text."
+  ],
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

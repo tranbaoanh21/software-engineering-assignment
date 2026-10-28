@@ -1,0 +1,43 @@
+@startuml
+!pragma layout smetana
+title Biểu đồ trạng thái ChargingSession
+skinparam monochrome true
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 80
+skinparam ranksep 90
+hide empty description
+state Ready
+state Charging
+state Paused
+state Completed
+state Interrupted
+state Failed
+[*] --> Ready : / ghi nhận phiên sẵn sàng\ncho yêu cầu đã có phân bổ hợp lệ
+Ready -down-> Charging : chargingStarted\n[xác nhận bắt đầu sạc hợp lệ]\n/ ghi startedAt
+Charging -down-> Completed : chargingCompleted\n[xác nhận hoàn tất hợp lệ]\n/ ghi endedAt, kết quả phiên
+Charging -right-> Paused : chargingPaused\n[trạng thái tạm dừng được xác nhận]\n/ ghi nguyên nhân, thời điểm
+Paused -left-> Charging : chargingResumed\n[xác nhận sạc tiếp, cổng an toàn]
+Charging -left-> Interrupted : chargingInterrupted\n[xác nhận phiên bị gián đoạn]\n/ ghi nguyên nhân; cảnh báo
+Paused --> Interrupted : chargingInterrupted\n[xác nhận gián đoạn]
+Ready --> Failed : chargingStartFailed\n[xác nhận không thể khởi động]\n/ ghi lỗi
+Charging --> Failed : chargingFailed\n[xác nhận phiên thất bại]\n/ ghi lỗi và cảnh báo
+Completed --> [*]
+Failed --> [*]
+note right of Ready
+  Đăng ký nhu cầu chỉ tạo ChargingRequest,
+  không tự tạo phiên đang Charging.
+  Bắt đầu phải giữ BR-CHG-02
+  và điều kiện ServiceStatus.
+end note
+note bottom of Interrupted
+  UC-CHG-02 chỉ đọc trạng thái đã xác nhận.
+  Dữ liệu cũ hoặc mất kết nối UI
+  không tự đổi trạng thái phiên.
+  NIFR-CHG-02 đánh dấu phiên bị ảnh hưởng khi cổng lỗi.
+  Baseline chưa quy định phục hồi phiên Interrupted;
+  không tự chuyển lại Charging.
+end note
+@enduml

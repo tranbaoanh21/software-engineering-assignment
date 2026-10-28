@@ -1,0 +1,145 @@
+\chapter{Áp dụng cho SEMH và tự luyện}
+\subsection{Đầu vào hiện hành của nhóm}
+Baseline hiện tại là báo cáo Phase 2 tích hợp: \textbf{23 UC, bảy phân hệ và bốn vai trò người dùng}. GEN có ba UC quản trị dùng chung; SUB-OPS có thêm UC-OPS-04/05. Không quay về phạm vi 18 UC cũ hoặc bỏ Admin khi sang thiết kế.
+
+Trong tài liệu này, những class/method mới ở phần gợi ý là \textbf{ứng viên thiết kế}, không phải quyết định công nghệ hoặc giao diện đã được nhóm khóa. Tên đối tượng và trạng thái có sẵn phải giữ theo quy chuẩn Phase 2. Các quyết định mới cần thống nhất trước khi điền vào báo cáo chính.
+
+\subsection{Nhìn hệ thống bằng hai view kiến trúc}
+\point{Deployment View}
+Xác định nơi chạy website, backend, nơi lưu dữ liệu, nguồn trạng thái giả lập/thực và dịch vụ bản đồ. Worker mô phỏng có thể ở cùng backend hoặc là tiến trình riêng tùy phương án; cần nói rõ, không tự suy ra một server cho mỗi phân hệ.
+
+\point{Development/Implementation View}
+Giữ các ranh giới HUB, RES, TRIP, PARK, CHG, OPS, SIM cùng chức năng dùng chung GEN. Một phương án học dễ theo là backend chia module, dùng interface ở các ranh giới dữ liệu/nguồn ngoài. Đây là phương án để cân nhắc, không phải stack đã chọn.
+
+\point{Điều cần thống nhất trước khi bảy người cùng thiết kế}
+Kiểu ID, kiểu thời gian, đơn vị pin/công suất, kết quả lỗi, nguồn danh tính, store contract và cách mở transaction. Cùng tên Service trong sequence không bắt buộc phải thành một ứng dụng deploy riêng.
+
+\subsection{Gợi ý trách nhiệm theo phân hệ}
+\begin{longtable}{|L{20mm}|L{121mm}|}\hline
+\textbf{Phạm vi} & \textbf{Đối tượng và vấn đề cần thiết kế}\\\hline
+\endfirsthead
+\hline
+\textbf{Phạm vi} & \textbf{Đối tượng và vấn đề cần thiết kế}\\\hline
+\endhead
+GEN & Account, AccessAssignment, AccessService; quản trị tài khoản và phạm vi; không để Admin mặc nhiên có quyền vận hành.\\\hline
+HUB & MobilityHub và dữ liệu tài nguyên; truy vấn theo vị trí, thời điểm cập nhật, fallback và đánh dấu chưa xác định. Không giữ tài nguyên chỉ vì xem thông tin.\\\hline
+RES & VehicleReservation; một lượt đặt hiệu lực trên mỗi sinh viên và mỗi xe; xác nhận, hủy, hết hạn và xử lý gửi lặp trong kiểm tra cạnh tranh.\\\hline
+TRIP & Trip, SharedVehicle; bàn giao vật lý, trả xe, chốt số liệu; kết thúc Trip không tự bảo đảm SharedVehicle.Available.\\\hline
+PARK & ParkingReservation, ParkingSpace, PrivateVehicle; giữ chỗ, check-in/out, hết hạn và trạng thái lỗi có thể tới cùng lúc.\\\hline
+CHG & ChargingRequest, ChargingSession, ChargingPoint; ưu tiên, thời lượng, tương thích cổng và tổng công suất; xem lịch khác điều chỉnh lịch.\\\hline
+OPS & Incident, RedistributionPlan, ServiceStatus; quyền kỹ thuật/vận hành, đóng sự cố, điều chuyển và bật/tắt tài nguyên có ràng buộc.\\\hline
+SIM & SimulationScenario, SimulationRun, Recommendation; đóng băng đầu vào lần chạy, snapshot, tiến độ, kết quả và khuyến nghị không ghi vào mạng vận hành.\\\hline
+\end{longtable}
+
+Một class dùng chung như SharedVehicle phải có định nghĩa chuẩn. RES dùng nó không có nghĩa tạo thêm một class SharedVehicle khác với bộ trạng thái riêng. Cũng không dùng composition Hub--SharedVehicle chỉ vì xe hiện đang được gán vào Hub; xe còn có thể được điều chuyển.
+
+\subsection{Lifeline của Phase 2 chuyển sang thiết kế như thế nào?}
+\begin{center}\begin{tabularx}{\linewidth}{|L{37mm}|Y|}\hline
+\textbf{Tên hiện có} & \textbf{Ý nghĩa khi sang Phase 3}\\\hline
+ReservationUI, HubUI & Boundary phía giao diện; có thể là trang/component web. Không phải bắt buộc tạo entity lưu trong database.\\\hline
+ReservationService & Trách nhiệm application cho nghiệp vụ đặt/hủy; tách thêm class chỉ khi có lý do.\\\hline
+SEMHDataStore & Trừu tượng lưu trữ nội bộ trong mô hình trước; nay cần chốt interface, ownership dữ liệu và cách hiện thực. Không có nghĩa chỉ là dữ liệu giả.\\\hline
+StateDataGateway & Tên chuẩn của nguồn trạng thái ngoài, tương ứng ACT-DAT/EXT-STATE. Phía nội bộ có thể cần adapter nhận, kiểm tra và ánh xạ sự kiện.\\\hline
+MapService & Nguồn bản đồ/định vị ngoài theo ACT-MAP/EXT-MAP. Không đổi thành một database nội bộ chỉ để dễ vẽ.\\\hline
+\end{tabularx}\end{center}
+
+Nếu tách một lifeline trừu tượng thành nhiều lớp cụ thể, cần ghi cách ánh xạ và kiểm tra lại các thông điệp liên quan. Không đổi tên ở class diagram mà để sequence và mô tả method trỏ tới thành phần đã không còn ý nghĩa.
+
+\subsection{Ví dụ suy nghĩ thiết kế cho UC-RES-01}
+Một ứng viên application method là \code{reserveVehicle(context, vehicleId, key)} của ReservationService. Context đến từ danh tính/phiên đã xác thực; không lấy studentId tùy ý do UI gửi rồi coi là người đang đăng nhập.
+
+Các điều kiện cần được bảo vệ cùng một quyết định cấp phát gồm: sinh viên không có lượt Pending/Confirmed khác, xe không bị giữ, mức pin đạt ngưỡng, Hub và xe đều được phục vụ, không có lỗi hoặc ràng buộc khác ngăn đặt. Chỉ kiểm tra VehicleStatus.Available là chưa đủ theo baseline.
+
+Khi xác nhận thành công, VehicleReservation.Confirmed và việc giữ SharedVehicle phải nhất quán. Trường hợp hai request cạnh tranh không được cả hai cùng xác nhận. Request gửi lặp sau mất phản hồi cần tra kết quả theo key, không tự tạo lần giữ thứ hai.
+
+Hết hạn là trách nhiệm nền NIFR-RES-01, không phải actor ``Timer'' bên ngoài. Method xử lý phải kiểm tra lượt vẫn Confirmed và chưa được nhận. Việc trả xe về Available còn phụ thuộc điều kiện phục vụ; không gán Available một cách vô điều kiện.
+
+\subsection{IoT giả lập vẫn cần được thiết kế đầy đủ}
+Luồng cần nhìn được là: \textbf{nguồn ngoài} gửi sự kiện, \textbf{adapter/ingestion nội bộ} kiểm tra và chuyển đổi, \textbf{store} giữ trạng thái đã chấp nhận, \textbf{service/UI} sử dụng dữ liệu có nguồn và thời điểm rõ ràng.
+
+\glyph{\node[smallbox] (e) at (-4.8,0) {Nguồn ngoài\\ACT-DAT};
+  \node[smallbox] (a) at (-1.6,0) {Adapter\\kiểm tra};
+  \node[smallbox] (s) at (1.6,0) {Trạng thái\\đã chấp nhận};
+  \node[smallbox] (u) at (4.8,0) {Service\\và UI};
+  \draw[->] (e)--(a);\draw[->] (a)--(s);\draw[->] (s)--(u);}
+  {Nguồn dữ liệu ngoài khác với nơi lưu dữ liệu của hệ thống}
+
+Sự kiện nên xác định được tài nguyên, loại trạng thái, đơn vị, thời gian và key/version phù hợp với phương án. Cần xử lý sự kiện trùng, tới muộn, thiếu trường và mất kết nối. Hiển thị dữ liệu cũ có cảnh báo không có nghĩa dùng nó để cấp phát một tài nguyên mà chưa kiểm tra lại.
+
+Theo hướng dẫn của cô, Azure Stream Analytics là công cụ tham khảo cho luồng real-time; không phải mọi nhóm bắt buộc thêm Azure IoT Hub, broker và nhiều dịch vụ cloud. Dữ liệu giả lập vẫn là actor/nguồn ngoài; bên trong SEMH vẫn cần lớp nhận và quản lý nó. Thêm component chỉ khi nhóm có trách nhiệm thật cần hiện thực.
+
+\subsection{Thiết kế phân hệ mô phỏng (SUB-SIM)}
+\point{Kịch bản khác lần chạy}
+SimulationScenario giữ cấu hình dùng để thử nghiệm. SimulationRun là một lần thực thi với đầu vào, trạng thái và kết quả cụ thể. Chạy lại cùng kịch bản có thể tạo run mới để giữ lịch sử; không ghi đè kết quả cũ chỉ vì tên scenario không đổi.
+
+\point{Tham số cần có kiểu, đơn vị và phạm vi}
+Ví dụ tăng nhu cầu 30\% cần biết tăng so với cơ sở nào, trong khoảng thời gian nào và tại các Hub nào. ``Thời gian mô phỏng 60 phút'' khác số giây chương trình mất để tính. Random seed có thể hỗ trợ tái lập nếu mô hình dùng ngẫu nhiên; đây là lựa chọn kỹ thuật cần thống nhất, không phải tính năng đã được thêm vào baseline.
+
+\point{Snapshot và dữ liệu làm việc}
+Snapshot là dữ liệu cơ sở có mốc/phiên bản. Run dùng bản sao làm việc để tính trạng thái giả định. Trong lúc mạng thực thay đổi, không tự làm snapshot trôi theo mà không có định nghĩa, vì kết quả sẽ khó đối chiếu.
+
+\glyph{\node[smallbox] (live) at (-3.8,1) {Trạng thái\\vận hành};
+  \node[smallbox] (snap) at (0,1) {Snapshot\\cơ sở};
+  \node[smallbox] (work) at (3.8,1) {Bản sao\\làm việc};
+  \node[smallbox] (result) at (3.8,-1) {Kết quả\\mô phỏng};
+  \draw[->] (live)--(snap);\draw[->] (snap)--(work);\draw[->] (work)--(result);
+  \node[align=center] at (-2,-1) {Không có đường ghi tự động\\từ mô phỏng về mạng thực};}
+  {Tính kết quả ở vùng riêng không đồng nghĩa điều khiển thiết bị thật}
+
+\point{Các trách nhiệm method có thể cần}
+Tạo/cập nhật scenario, kiểm tra cấu hình, bắt đầu run, lấy tiến độ, đọc kết quả và phân tích khuyến nghị. Có thể phân công cho SimulationService và các đối tượng/engine hỗ trợ; không cần biến mỗi trách nhiệm thành một server.
+
+Application method bắt đầu run phải chỉ rõ khi nào ghi Running, lúc nào xác nhận Completed/Failed, dữ liệu nào được lưu khi lỗi và cách đọc lại sau khi UI đóng. Giữ đúng bốn trạng thái Draft, Running, Completed, Failed hiện có; không tự thêm Cancelled vì một khung cũ có chữ ``hủy''.
+
+\point{Khuyến nghị không phải lệnh đã được áp dụng}
+Không có khuyến nghị có thể là kết quả hợp lệ. Phân tích chưa hoàn thành lại là tình huống khác. Chọn khuyến nghị để lập RedistributionPlan phải đi qua quyền và quy trình của OPS; không tạo method trong engine để tự thay Hub quản lý của xe thật.
+
+\point{Test nên ưu tiên}
+Sai đơn vị/phạm vi tham số; khôi phục tiến độ khi mở lại UI; kết quả rỗng hợp lệ; trạng thái Failed; cùng đầu vào/seed khi cần tái lập; và cách ly kho vận hành. Với test isolation, dùng fixture được kiểm soát hoặc theo dõi nguồn thao tác ghi. Không khẳng định toàn mạng không đổi trong khi người dùng thực vẫn đang hoạt động.
+
+\subsection{Cách chia việc mà không nhân bản thiết kế}
+Các thành viên tiếp tục phụ trách phân hệ đang làm. Kiến trúc tổng thể và hợp đồng dùng chung cần được thống nhất cùng nhau trước. Người phụ trách class chuẩn giữ trách nhiệm thay đổi định nghĩa; thành viên khác dẫn chiếu thay vì chép thành phiên bản mới.
+
+Class diagram có thể tách theo phân hệ để dễ đọc, nhưng các quan hệ liên phân hệ phải ăn khớp. Method description đặt tại owner của method; từng UC ghi rõ nó dùng method nào. Với GEN và hai UC-OPS bổ sung, phải có người tiếp tục trách nhiệm khi phân công Phase 3.
+
+\subsection{Bài tập tự luyện và gợi ý đáp án}
+\point{Bài 1: phân biệt view}
+``SimulationService chạy trên Node A'' và ``SimulationService phụ thuộc SnapshotStore'' thuộc cùng một view không?
+\textit{Gợi ý:} Câu đầu nói nơi thực thi; câu sau nói ranh giới/phụ thuộc mã nguồn. Nếu SnapshotStore có runtime riêng, mô tả thêm artifact/node tương ứng ở Deployment View, không đồng nhất class với server.
+
+\point{Bài 2: đọc multiplicity}
+SharedVehicle liên hệ 0..* VehicleReservation trong lịch sử. Làm sao giữ quy tắc tối đa một lượt Pending/Confirmed?
+\textit{Gợi ý:} Giữ multiplicity lịch sử, thêm invariant theo trạng thái và cơ chế cạnh tranh tại nơi ghi. Không đổi 0..* thành 0..1 trên toàn lịch sử.
+
+\point{Bài 3: chọn quan hệ}
+ReservationService nhận MapResult làm tham số trong một thao tác nhưng không giữ nó. Có cần composition không?
+\textit{Gợi ý:} Không có bằng chứng về sở hữu vòng đời. Dependency có thể đủ; nếu giữ tham chiếu cấu trúc lâu dài thì xem xét association.
+
+\point{Bài 4: phát hiện sai chiều mũi tên}
+Một hình vẽ EnrollmentStore với tam giác rỗng trỏ vào SqlEnrollmentStore. Đúng chưa?
+\textit{Gợi ý:} Với realization, tam giác rỗng phải ở đầu interface EnrollmentStore; đường nối nét đứt xuất phát từ implementation.
+
+\point{Bài 5: method có hợp đồng chưa đủ}
+``completeTrip(id): Void -- đổi trạng thái thành Completed''. Còn thiếu gì?
+\textit{Gợi ý:} Quyền và owner, trạng thái hiện tại, bằng chứng trả tại Hub hợp lệ/khóa an toàn, thời gian và số liệu chốt, tác động xe, transaction, lỗi/mất phản hồi và thử lại. Không mặc định xe trở thành Available.
+
+\point{Bài 6: transaction và thế giới ngoài}
+API đã gửi lệnh mở khóa nhưng không nhận được phản hồi. Có thể chỉ rollback database rồi coi xe chắc chắn còn khóa không?
+\textit{Gợi ý:} Không. Cần đọc lại hoặc hòa giải trạng thái; cơ chế thiết bị ngoài không rollback tự động cùng SQL.
+
+\point{Bài 7: kiểm chứng phần bonus}
+Đã viết 20 test case trên giấy thì có được ghi 20/20 Pass không?
+\textit{Gợi ý:} Chưa. Phải chạy, giữ dữ liệu/môi trường và evidence. Thiết kế test và thực thi test là hai bước khác nhau.
+
+\point{Bài 8: độ chính xác của tên gọi}
+Nhóm không dùng database thật mà lưu dữ liệu trong bộ nhớ. Có cần xóa SEMHDataStore khỏi thiết kế không?
+\textit{Gợi ý:} Không, nếu nó vẫn là trách nhiệm lưu/truy vấn nội bộ. Nhưng phải nêu mất dữ liệu khi restart, cơ chế cạnh tranh và giới hạn so với NFR đã cam kết; không tự tuyên bố đạt lưu audit 90 ngày.
+
+\subsection{Tài liệu đối chiếu}
+\begin{enumerate}
+  \item \textbf{Đề bài CO3001}: \code{BTL\_SoftwareEngineering\_HK261\_v1.pdf}, mục Project Submission Detail, Submission \#3; phân biệt nội dung bắt buộc và test case bonus.
+  \item \textbf{OMG UML 2.5.1}: \href{https://www.omg.org/spec/UML/2.5.1}{trang đặc tả chính thức}; đối chiếu phần Properties/Associations, Classes, Components và Deployments. Chú ý ngữ nghĩa composition, dependency và realization.
+  \item \textbf{PlantUML}: \href{https://plantuml.com/class-diagram}{Class diagram}, \href{https://plantuml.com/deployment-diagram}{Deployment diagram}, \href{https://plantuml.com/component-diagram}{Component diagram}; tài liệu cú pháp công cụ, không thay thế định nghĩa ngữ nghĩa UML.
+  \item \textbf{Microsoft Architecture guidance}: \href{https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures}{Common web application architectures}; đối chiếu layers, monolith và chiều phụ thuộc. Tài liệu dùng .NET để minh họa, không bắt nhóm chọn .NET hoặc Azure.
+  \item \textbf{Baseline nhóm}: báo cáo Phase 2 tích hợp và tệp quy chuẩn thuật ngữ Phase 2; giữ tên actor, đối tượng và trạng thái đã chốt. Đường dẫn nguồn nằm trong README của tài liệu.
+\end{enumerate}

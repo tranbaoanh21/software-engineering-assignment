@@ -1,0 +1,81 @@
+\subsubsection{Đối tượng nghiệp vụ}
+Các tên sau giữ nguyên từ Submission 2; GEN là chức năng dùng chung, không phải phân hệ thứ tám. Tên lớp/kiểu dùng \texttt{PascalCase}; tên thuộc tính, phương thức và sự kiện dùng \texttt{lowerCamelCase}. Actor, UC và nội dung giải thích viết tiếng Việt.
+
+\begin{longtable}{|L{53mm}|L{86mm}|}
+\caption{Đối tượng nghiệp vụ dùng chung}\\\hline
+\textbf{Tên chuẩn} & \textbf{Ý nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Tên chuẩn} & \textbf{Ý nghĩa}\\\hline\endhead
+\texttt{Account} & Tài khoản người dùng; trạng thái truy cập độc lập với dữ liệu nghiệp vụ.\\\hline
+\texttt{AccessAssignment} & Vai trò và phạm vi truy cập được cấp cho tài khoản.\\\hline
+\texttt{MobilityHub} & Mobility Hub; viết gọn Hub trong nội dung tiếng Việt.\\\hline
+\texttt{Vehicle} & Khái niệm phương tiện chung.\\\hline
+\texttt{SharedVehicle} & Phương tiện dùng chung; dùng tập VehicleStatus.\\\hline
+\texttt{PrivateVehicle} & Phương tiện cá nhân.\\\hline
+\texttt{VehicleReservation} & Lượt đặt phương tiện; không đổi tên thành Booking.\\\hline
+\texttt{ParkingReservation} & Lượt đặt chỗ đỗ, tách khỏi tài nguyên ParkingSpace.\\\hline
+\texttt{ParkingSpace} & Chỗ đỗ cho phương tiện cá nhân.\\\hline
+\texttt{Trip} & Chuyến đi và số liệu nhận/trả phương tiện.\\\hline
+\texttt{ChargingRequest} & Nhu cầu/yêu cầu sạc.\\\hline
+\texttt{ChargingSession} & Phiên sạc thực hiện nhu cầu, có vòng đời riêng.\\\hline
+\texttt{ChargingPoint} & Cổng sạc; không dùng Charger thay cho tên chuẩn.\\\hline
+\texttt{Incident} & Sự cố và quá trình xử lý.\\\hline
+\texttt{RedistributionPlan} & Kế hoạch điều chuyển phương tiện giữa Hub.\\\hline
+\texttt{SimulationScenario} & Cấu hình kịch bản mô phỏng.\\\hline
+\texttt{SimulationRun} & Một lần thực thi kịch bản, có đầu vào và kết quả cụ thể.\\\hline
+\texttt{Recommendation} & Khuyến nghị gắn với lần chạy mô phỏng.\\\hline
+\end{longtable}
+
+\subsubsection{Thành phần và ranh giới hệ thống}
+\begin{longtable}{|L{24mm}|L{43mm}|L{72mm}|}
+\caption{Tên thành phần kế thừa từ behavioral design}\\\hline
+\textbf{Phạm vi} & \textbf{Giao diện} & \textbf{Xử lý nghiệp vụ}\\\hline
+\endfirsthead
+\hline\textbf{Phạm vi} & \textbf{Giao diện} & \textbf{Xử lý nghiệp vụ}\\\hline\endhead
+GEN & \texttt{AdministrationUI} & \texttt{AdministrationService}; xác thực và kiểm tra truy cập qua \texttt{AccessService}.\\\hline
+SUB-HUB & \texttt{HubUI} & \texttt{HubService}\\\hline
+SUB-RES & \texttt{ReservationUI} & \texttt{ReservationService}\\\hline
+SUB-TRIP & \texttt{TripUI} & \texttt{TripService}\\\hline
+SUB-PARK & \texttt{ParkingUI} & \texttt{ParkingService}\\\hline
+SUB-CHG & \texttt{ChargingUI} & \texttt{ChargingService}\\\hline
+SUB-OPS & \texttt{OperationsUI} & \texttt{OperationsService}\\\hline
+SUB-SIM & \texttt{SimulationUI} & \texttt{SimulationService}\\\hline
+\end{longtable}
+
+\texttt{SEMHDataStore} là trách nhiệm lưu/truy xuất nội bộ. Nếu tách thành các store/repository cụ thể, mỗi hợp đồng phải ghi rõ phần dữ liệu và bảo đảm transaction mà nó cung cấp. Tên một service không quyết định số process, container hoặc máy chủ.
+
+\texttt{StateDataGateway} là cùng nguồn \texttt{ACT-DAT}/\texttt{EXT-STATE}; \texttt{MapService} là cùng nguồn \texttt{ACT-MAP}/\texttt{EXT-MAP}. Adapter nội bộ tiếp nhận hai nguồn này là thành phần của SEMH, không phải actor mới. Scheduler, timer và worker cũng là thành phần nội bộ.
+
+\subsubsection{Trạng thái dùng chung}
+Giữ nguyên tên và chữ hoa/thường. Mỗi giá trị đi kèm đúng đối tượng; kết quả API, lỗi kỹ thuật và chất lượng dữ liệu không thay thế các trạng thái nghiệp vụ.
+\begin{longtable}{|L{55mm}|L{84mm}|}
+\caption{Tập trạng thái kế thừa từ Submission 2}\\\hline
+\textbf{Kiểu} & \textbf{Giá trị}\\\hline
+\endfirsthead
+\hline\textbf{Kiểu} & \textbf{Giá trị}\\\hline\endhead
+\texttt{AccountStatus} & \texttt{Active} $|$ \texttt{Locked}\\\hline
+\texttt{ServiceStatus} & \texttt{Draft} $|$ \texttt{Active} $|$ \texttt{Inactive}\\\hline
+\texttt{VehicleStatus} & \texttt{Available} $|$ \texttt{Reserved} $|$ \texttt{InUse} $|$ \texttt{Charging} $|$ \texttt{OutOfService}\\\hline
+\texttt{ParkingSpaceStatus} & \texttt{Available} $|$ \texttt{Reserved} $|$ \texttt{Occupied} $|$ \texttt{OutOfService}\\\hline
+\texttt{ChargingPointStatus} & \texttt{Available} $|$ \texttt{Reserved} $|$ \texttt{Charging} $|$ \texttt{OutOfService}\\\hline
+\texttt{HubStatus} & \texttt{Normal} $|$ \texttt{NearCapacity} $|$ \texttt{Full} $|$ \texttt{OutOfService}\\\hline
+\texttt{VehicleReservationStatus} & \texttt{Pending} $|$ \texttt{Confirmed} $|$ \texttt{Fulfilled} $|$ \texttt{Cancelled} $|$ \texttt{Expired} $|$ \texttt{Rejected}\\\hline
+\texttt{ParkingReservationStatus} & \texttt{Pending} $|$ \texttt{Confirmed} $|$ \texttt{CheckedIn} $|$ \texttt{Completed} $|$ \texttt{Cancelled} $|$ \texttt{Expired} $|$ \texttt{Rejected}\\\hline
+\texttt{TripStatus} & \texttt{InProgress} $|$ \texttt{Completed} $|$ \texttt{Interrupted}\\\hline
+\texttt{ChargingRequestStatus} & \texttt{Pending} $|$ \texttt{Scheduled} $|$ \texttt{Charging} $|$ \texttt{Completed} $|$ \texttt{Cancelled} $|$ \texttt{Rejected}\\\hline
+\texttt{ChargingSessionStatus} & \texttt{Ready} $|$ \texttt{Charging} $|$ \texttt{Paused} $|$ \texttt{Completed} $|$ \texttt{Interrupted} $|$ \texttt{Failed}\\\hline
+\texttt{IncidentStatus} & \texttt{Open} $|$ \texttt{Acknowledged} $|$ \texttt{InProgress} $|$ \texttt{Resolved} $|$ \texttt{Closed}\\\hline
+\texttt{RedistributionPlanStatus} & \texttt{Draft} $|$ \texttt{Recommended} $|$ \texttt{Approved} $|$ \texttt{InProgress} $|$ \texttt{Completed} $|$ \texttt{Cancelled}\\\hline
+\texttt{SimulationRunStatus} & \texttt{Draft} $|$ \texttt{Running} $|$ \texttt{Completed} $|$ \texttt{Failed}\\\hline
+\end{longtable}
+
+\texttt{ServiceStatus} mô tả việc cho phép phục vụ, gắn với Hub và tài nguyên. Cấp phát cần Hub và tài nguyên đều \texttt{Active}, đồng thời đáp ứng trạng thái vận hành/quy tắc riêng. Dữ liệu IoT không tự mở lại \texttt{Inactive}. \texttt{AccountStatus.Active} không tự cấp quyền; \texttt{Trip.Completed} không tự làm xe \texttt{Available}.
+
+\subsubsection{Cách ghi class, operation và quan hệ}
+Tên class là danh từ hoặc vai trò rõ nghĩa; tên operation là động từ và mục tiêu. Cùng một hành vi giữ cùng tên giữa class diagram, sequence và method description. Instance ghi dạng \texttt{reservation:VehicleReservation}; operation ghi dạng \texttt{+ cancel(...): ResultType}.
+
+Các nhãn \texttt{entity}, \texttt{applicationService}, \texttt{repository}, \texttt{adapter}, \texttt{DTO} được dùng như quy ước vai trò trong thiết kế; không tự suy ra chúng là các kiểu phần tử UML chuẩn riêng. Interface dùng ký hiệu interface; enum dùng enumeration.
+
+Association có multiplicity ở hai đầu. Hình thoi đặc chỉ dùng khi có ngữ nghĩa sở hữu vòng đời; Hub quản lý xe có thể điều chuyển không đủ để chọn composition. Vai trò Admin/Operator được biểu diễn qua phân quyền, không mặc nhiên bằng kế thừa lớp. Phụ thuộc dùng nét đứt đầu mở, realization dùng nét đứt tam giác rỗng hướng về interface.
+
+Sơ đồ dùng cùng phong cách nền trắng, viền/nét đen, không bóng đổ; nhãn không che đường nối. Giữ source chỉnh sửa được và PDF vector; sơ đồ tổng thể và sơ đồ chi tiết phải dùng cùng định nghĩa lớp.

@@ -1,101 +1,248 @@
+% Bản tích hợp Submission 2; nội dung phân tích kế thừa từ Submission 1.
 \subsection{SUB-OPS -- Giám sát và điều phối vận hành}
 
-\AssignmentNote{Minh Anh}{Sequence, activity và phần giải thích của UC-OPS-01--UC-OPS-03; state chart Incident và RedistributionPlan.}
+
+\newcommand{\OPSDiagramFigure}[3]{%
+  \begingroup
+  \setlength{\intextsep}{0pt}
+  \InsertArtifact[0.90\textheight]{#1}{#2}{#3}{}
+  \endgroup
+}
 
 \subsubsection{UC-OPS-01 -- Giám sát mạng lưới Mobility Hub}
 
-\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+\UseCaseDiagram{uc-ops-01.pdf}{UC-OPS-01}{Giám sát mạng lưới Mobility Hub}{fig:uc-ops-01}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-OPS-01 -- Giám sát mạng lưới Mobility Hub}\label{tab:spec-UC-OPS-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Giám sát Hub, tài nguyên, sự cố và cảnh báo mất cân bằng để xác định nơi cần can thiệp.\\\hline
+  Trigger & Nhân viên vận hành mở màn hình giám sát mạng lưới hoặc chọn một cảnh báo được hệ thống thông báo.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền giám sát phạm vi Hub được cấp.\newline
+    \textbf{2.} Hệ thống đã có danh mục Hub và dữ liệu trạng thái gần nhất được chấp nhận.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Trạng thái tổng hợp, thời điểm cập nhật, sự cố đang mở và cảnh báo mất cân bằng được hiển thị; việc xem không làm thay đổi dữ liệu vận hành.\newline
+    \textbf{Thất bại:} Không có trạng thái nghiệp vụ nào bị thay đổi; actor được thông báo phạm vi dữ liệu chưa thể tải.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành mở màn hình giám sát mạng lưới.\newline
+    \textbf{2.} Hệ thống xác minh quyền và phạm vi Hub actor được xem.\newline
+    \textbf{3.} Hệ thống tổng hợp trạng thái Hub, xe khả dụng, mức sử dụng chỗ đỗ, cổng sạc và thời điểm cập nhật.\newline
+    \textbf{4.} Hệ thống truy xuất các \texttt{Incident} đang mở và cảnh báo đã tạo bởi \texttt{NIFR-OPS-01}, \texttt{NIFR-OPS-02}.\newline
+    \textbf{5.} Hệ thống hiển thị toàn cảnh mạng lưới, đánh dấu Hub thiếu xe, gần đầy hoặc có tài nguyên \texttt{OutOfService}; Nhân viên có thể kết thúc sau khi xem tổng quan hoặc thực hiện một luồng thay thế.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Lọc và sắp xếp.} \textit{Rẽ từ bước 5.} Actor lọc theo Hub, loại tài nguyên, trạng thái hoặc mức độ cảnh báo; hệ thống cập nhật góc nhìn và quay lại bước 5.\newline
+    \textbf{AF-02 -- Dữ liệu có thể đã cũ.} \textit{Tại bước 3.} Hệ thống giữ trạng thái hợp lệ gần nhất, hiển thị thời điểm đồng bộ và cảnh báo dữ liệu có thể đã cũ.\newline
+    \textbf{AF-03 -- Xem chi tiết một mục.} \textit{Rẽ từ bước 5.} Nhân viên chọn một Hub, cảnh báo hoặc sự cố; hệ thống hiển thị chi tiết, nguồn dữ liệu, thời điểm cập nhật và các tác vụ nghiệp vụ phù hợp.\newline
+    \textbf{AF-04 -- Mở quy trình xử lý.} \textit{Rẽ từ AF-03.} Actor mở \texttt{UC-OPS-02} cho sự cố hoặc \texttt{UC-OPS-03} cho cảnh báo mất cân bằng.\newline
+    \textbf{AF-05 -- Làm mới dữ liệu.} \textit{Rẽ từ bước 5.} Actor yêu cầu làm mới; hệ thống thực hiện lại bước 3--5 bằng trạng thái mới nhất đã chấp nhận.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Không có quyền giám sát.} \textit{Tại bước 2.} Hệ thống từ chối truy cập, không tiết lộ dữ liệu ngoài phạm vi và ghi nhận kết quả.\newline
+    \textbf{EF-02 -- Không thể tổng hợp một phần dữ liệu.} \textit{Tại bước 3 hoặc 4.} Hệ thống hiển thị phần còn hợp lệ, đánh dấu phần thiếu và không suy diễn trạng thái thay thế.\newline
+    \textbf{EF-03 -- Mất nguồn trạng thái.} \textit{Tại bước 3.} Hệ thống không ghi đè dữ liệu hợp lệ cuối, cảnh báo gián đoạn và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-OPS-01}; \texttt{NIFR-HUB-01}, \texttt{NIFR-OPS-01}, \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}; \texttt{BR-GEN-02}; \texttt{BR-OPS-01}, \texttt{BR-OPS-02}.\KeepUseCaseRow
+  Dependencies & Sử dụng trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT} và dữ liệu do các phân hệ HUB, PARK, CHG, TRIP tạo. Có thể chuyển sang \texttt{UC-OPS-02} hoặc \texttt{UC-OPS-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-ops-01.pdf}
-  {UI Mockup -- UC-OPS-01}
+\InsertArtifact{../mockups/uc-ops-01.png}
+  {Tổng quan mạng lưới Mobility Hub và cảnh báo vận hành -- UC-OPS-01}
   {fig:p2-ui-uc-ops-01}
-  {Chèn mockup: Tổng quan mạng lưới, tài nguyên, cảnh báo và sự cố; bộ lọc, thời điểm cập nhật, dữ liệu thiếu; cách mở chi tiết và tác vụ xử lý.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-ops-01.pdf}
+\OPSDiagramFigure{../diagrams/sequence/uc-ops-01.jpg}
   {Biểu đồ tuần tự -- UC-OPS-01}
   {fig:p2-seq-uc-ops-01}
-  {Chèn sequence diagram: Xác minh phạm vi giám sát, tổng hợp trạng thái đã chấp nhận, lấy sự cố và cảnh báo rồi trả kết quả; nhánh thiếu một phần dữ liệu hoặc mất nguồn trạng thái.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-ops-01.pdf}
+\OPSDiagramFigure{../diagrams/activity/uc-ops-01.png}
   {Biểu đồ hoạt động -- UC-OPS-01}
   {fig:p2-act-uc-ops-01}
-  {Chèn activity diagram: Mở giám sát, kiểm tra quyền, xem tổng quan và lọc hoặc mở chi tiết; nhánh chuyển sang xử lý sự cố hoặc lập kế hoạch điều phối.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
+
 \subsubsection{UC-OPS-02 -- Xử lý sự cố vận hành}
 
-\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành; Nhân viên kỹ thuật.
+\UseCaseDiagram{uc-ops-02.pdf}{UC-OPS-02}{Xử lý sự cố vận hành}{fig:uc-ops-02}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-OPS-02 -- Xử lý sự cố vận hành}\label{tab:spec-UC-OPS-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} \texttt{ACT-MNT}, \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Quản lý \texttt{Incident} từ tiếp nhận, giao xử lý đến xác nhận kỹ thuật và hoàn tất, bảo đảm tài nguyên ở trạng thái an toàn.\\\hline
+  Trigger & Nhân viên vận hành chọn một sự cố \texttt{Open} hoặc ghi nhận sự cố mới từ thông tin vận hành.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền quản lý sự cố; Nhân viên kỹ thuật tham gia bằng phiên riêng, chỉ cập nhật công việc được giao.\newline
+    \textbf{2.} Tài nguyên bị ảnh hưởng tồn tại hoặc thông tin báo cáo đủ để xác định phạm vi sự cố.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{Incident} có trạng thái và lịch sử xử lý nhất quán; tài nguyên chỉ trở lại phục vụ sau khi \texttt{ACT-MNT} xác nhận kết quả đạt yêu cầu.\newline
+    \textbf{Thất bại:} Sự cố và tài nguyên giữ trạng thái an toàn trước đó; không tài nguyên lỗi nào bị đưa trở lại phục vụ.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành mở một sự cố \texttt{Open}.\newline
+    \textbf{2.} Hệ thống hiển thị nguồn phát hiện, tài nguyên, thời điểm, trạng thái gần nhất và kiểm tra sự cố trùng đang mở.\newline
+    \textbf{3.} Nhân viên xác nhận tiếp nhận, phân loại mức độ và bổ sung mô tả; sự cố chuyển sang \texttt{Acknowledged}.\newline
+    \textbf{4.} Nhân viên giao xử lý cho Nhân viên kỹ thuật; hệ thống ghi người nhận và hạn dự kiến.\newline
+    \textbf{5.} Nhân viên kỹ thuật tiếp nhận công việc, cập nhật sự cố sang \texttt{InProgress} và thực hiện khắc phục ngoài hệ thống.\newline
+    \textbf{6.} Nhân viên kỹ thuật ghi nhận nguyên nhân, hành động, kết quả kiểm tra và xác nhận tài nguyên có đạt điều kiện phục vụ hay không.\newline
+    \textbf{7.} Hệ thống kiểm tra kết quả; nếu đạt yêu cầu, chuyển sự cố sang \texttt{Resolved} và cập nhật tài nguyên về trạng thái phục vụ hợp lệ.\newline
+    \textbf{8.} Nhân viên vận hành xem kết quả, xác nhận hoàn tất; hệ thống chuyển sự cố sang \texttt{Closed} và lưu toàn bộ lịch sử.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Ghi nhận sự cố thủ công.} \textit{Thay cho bước 1.} Actor chọn tài nguyên, nhập mô tả; hệ thống tạo \texttt{Incident} \texttt{Open}, đưa tài nguyên ra khỏi phục vụ và tiếp tục bước 2.\newline
+    \textbf{AF-02 -- Sự cố trùng.} \textit{Tại bước 2.} Hệ thống liên kết thông tin mới vào sự cố đang mở, không tạo bản ghi trùng, rồi tiếp tục bước 3.\newline
+    \textbf{AF-03 -- Chưa khắc phục đạt yêu cầu.} \textit{Tại bước 6 hoặc 7.} Sự cố giữ \texttt{InProgress}, tài nguyên giữ \texttt{OutOfService}; actor bổ sung phương án và quay lại bước 5.\newline
+    \textbf{AF-04 -- Cần đổi người xử lý.} \textit{Rẽ từ bước 4 hoặc 5.} Nhân viên vận hành giao lại, nêu lý do; hệ thống ghi lịch sử và thông báo người nhận mới.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Tài nguyên không tồn tại hoặc không khớp.} \textit{Tại bước 2.} Hệ thống không cho phép tiếp tục, giữ sự cố \texttt{Open} và yêu cầu xác minh thông tin.\newline
+    \textbf{EF-02 -- Actor không có quyền cập nhật.} \textit{Tại bất kỳ bước ghi nào.} Hệ thống từ chối thao tác, bảo toàn trạng thái và ghi nhận kết quả truy cập.\newline
+    \textbf{EF-03 -- Lỗi khi cập nhật nhiều đối tượng.} \textit{Tại bước 7 hoặc 8.} Hệ thống hoàn tác thay đổi, giữ tài nguyên \texttt{OutOfService} và thông báo thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-OPS-02}; \texttt{NIFR-CHG-02}, \texttt{NIFR-OPS-01}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-GEN-02}; \texttt{BR-OPS-02}.\KeepUseCaseRow
+  Dependencies & Có thể được mở từ \texttt{UC-OPS-01}; nhận sự kiện lỗi từ \texttt{EXT-STATE}/\texttt{ACT-DAT}. Hoạt động sửa chữa vật lý nằm ngoài system boundary.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-ops-02.pdf}
-  {UI Mockup -- UC-OPS-02}
+\InsertArtifact{../mockups/uc-ops-02.png}
+  {Chi tiết sự cố dành cho Nhân viên vận hành -- UC-OPS-02}
   {fig:p2-ui-uc-ops-02}
-  {Chèn mockup: Danh sách và chi tiết sự cố, ghi nhận mới, tiếp nhận và giao xử lý; màn hình cập nhật kết quả kỹ thuật và xác nhận đóng sự cố.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-ops-02.pdf}
+\OPSDiagramFigure{../diagrams/sequence/uc-ops-02.png}
   {Biểu đồ tuần tự -- UC-OPS-02}
   {fig:p2-seq-uc-ops-02}
-  {Chèn sequence diagram: Tra cứu hoặc ghi nhận sự cố, chống trùng, tiếp nhận, phân công, cập nhật kết quả kỹ thuật và đóng; chỉ khôi phục tài nguyên khi kết quả kiểm tra đạt điều kiện.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-ops-02.pdf}
+\OPSDiagramFigure{../diagrams/activity/uc-ops-02.png}
   {Biểu đồ hoạt động -- UC-OPS-02}
   {fig:p2-act-uc-ops-02}
-  {Chèn activity diagram: Thể hiện các trách nhiệm vận hành, kỹ thuật và hệ thống từ ghi nhận đến đóng sự cố; nhánh khắc phục chưa đạt, đổi người xử lý hoặc lỗi cập nhật.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
+
 \subsubsection{UC-OPS-03 -- Điều phối phương tiện giữa các Hub}
 
-\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+\UseCaseDiagram{uc-ops-03.pdf}{UC-OPS-03}{Điều phối phương tiện giữa các Hub}{fig:uc-ops-03}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-OPS-03 -- Điều phối phương tiện giữa các Hub}\label{tab:spec-UC-OPS-03}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp.\\\hline
+  Description / Goal & Lập, phê duyệt và theo dõi \texttt{RedistributionPlan}; phê duyệt không đồng nghĩa xe đã được di chuyển.\\\hline
+  Trigger & Nhân viên vận hành chọn lập kế hoạch từ cảnh báo mất cân bằng, từ khuyến nghị mô phỏng hoặc chủ động tạo kế hoạch.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền lập, phê duyệt kế hoạch trong phạm vi được cấp.\newline
+    \textbf{2.} Các Hub nguồn, Hub đích và phương tiện dự kiến tồn tại; hệ thống có trạng thái gần nhất để kiểm tra phương án.\\\hline
+  Postconditions &
+    \textbf{Thành công:} \texttt{RedistributionPlan} có đầy đủ Hub nguồn, Hub đích, danh sách xe, thời gian dự kiến và trạng thái; lịch sử phê duyệt, tiến độ được ghi nhận.\newline
+    \textbf{Thất bại:} Không tạo hoặc phê duyệt kế hoạch không hợp lệ; trạng thái xe và Hub không bị thay đổi.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành khởi tạo kế hoạch điều chuyển.\newline
+    \textbf{2.} Hệ thống hiển thị cảnh báo, mức sử dụng Hub, xe \texttt{Available} và các khuyến nghị liên quan nếu có.\newline
+    \textbf{3.} Nhân viên chọn Hub nguồn, Hub đích, danh sách phương tiện và thời gian dự kiến.\newline
+    \textbf{4.} Hệ thống kiểm tra xe thuộc Hub nguồn, đang khả dụng, không bị giữ bởi nghiệp vụ khác; Hub đích có khả năng tiếp nhận.\newline
+    \textbf{5.} Hệ thống hiển thị tác động dự kiến và tạo kế hoạch \texttt{Draft}.\newline
+    \textbf{6.} Nhân viên xem lại, nhập ghi chú và phê duyệt.\newline
+    \textbf{7.} Hệ thống kiểm tra lại tính khả thi, chuyển kế hoạch sang \texttt{Approved} và ghi người, thời điểm phê duyệt.\newline
+    \textbf{8.} Khi việc di chuyển được thực hiện ngoài hệ thống, Nhân viên cập nhật tiến độ \texttt{InProgress} và kết quả \texttt{Completed}; hệ thống lưu lịch sử và đối chiếu trạng thái Hub.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Khởi tạo từ khuyến nghị mô phỏng.} \textit{Tại bước 2.} Hệ thống điền trước Hub nguồn, Hub đích, số xe đề xuất và liên kết \texttt{Recommendation}; actor vẫn phải xem lại và phê duyệt.\newline
+    \textbf{AF-02 -- Lưu nháp chưa phê duyệt.} \textit{Rẽ từ bước 5.} Actor lưu \texttt{Draft} và kết thúc; không có lệnh điều chuyển có hiệu lực.\newline
+    \textbf{AF-03 -- Điều chỉnh phương án.} \textit{Tại bước 4 hoặc 6.} Actor thay xe, Hub hoặc thời gian; hệ thống quay lại bước 4.\newline
+    \textbf{AF-04 -- Hủy kế hoạch.} \textit{Trước khi hoàn tất.} Actor nêu lý do; hệ thống chuyển kế hoạch sang \texttt{Cancelled} và không suy diễn việc xe đã di chuyển.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Phương án không còn khả thi.} \textit{Tại bước 4 hoặc 7.} Xe đã bị đặt, bị lỗi hoặc Hub đích không còn chỗ; hệ thống không phê duyệt và yêu cầu chọn lại.\newline
+    \textbf{EF-02 -- Actor không có quyền phê duyệt.} \textit{Tại bước 6.} Hệ thống giữ kế hoạch \texttt{Draft}, từ chối thay đổi và ghi nhận kết quả.\newline
+    \textbf{EF-03 -- Cập nhật tiến độ thất bại.} \textit{Tại bước 8.} Hệ thống giữ trạng thái kế hoạch trước đó, không tự thay đổi trạng thái xe và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-OPS-03}; \texttt{NIFR-OPS-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-GEN-02}; \texttt{BR-OPS-01}.\KeepUseCaseRow
+  Dependencies & Dùng cảnh báo từ \texttt{UC-OPS-01}; có thể nhận \texttt{Recommendation} từ \texttt{UC-SIM-02}. Việc vận chuyển xe vật lý nằm ngoài system boundary.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-ops-03.pdf}
-  {UI Mockup -- UC-OPS-03}
+\InsertArtifact{../mockups/uc-ops-03.png}
+  {Lập và xem chi tiết kế hoạch điều chuyển phương tiện -- UC-OPS-03}
   {fig:p2-ui-uc-ops-03}
-  {Chèn mockup: Chọn Hub nguồn, Hub đích, xe và thời gian, xem tác động dự kiến, lưu nháp hoặc phê duyệt; cập nhật tiến độ và hủy kế hoạch.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-ops-03.pdf}
+\OPSDiagramFigure{../diagrams/sequence/uc-ops-03.png}
   {Biểu đồ tuần tự -- UC-OPS-03}
   {fig:p2-seq-uc-ops-03}
-  {Chèn sequence diagram: Kiểm tra phương án, tạo nháp, kiểm tra lại khi phê duyệt và lưu tiến độ; nhánh xe hoặc Hub không còn phù hợp, khởi tạo từ khuyến nghị và cập nhật thất bại.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-ops-03.pdf}
+\OPSDiagramFigure{../diagrams/activity/uc-ops-03.png}
   {Biểu đồ hoạt động -- UC-OPS-03}
   {fig:p2-act-uc-ops-03}
-  {Chèn activity diagram: Lập, xem lại, phê duyệt và theo dõi kế hoạch; tách quyết định trên hệ thống với việc di chuyển vật lý và xác nhận kết quả ngoài thực tế.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
-\subsubsection{Biểu đồ trạng thái -- Incident (Bonus)}
 
-\InsertArtifact{../diagrams/state/incident.pdf}
+\input{sections/use-cases/06-sub-ops-resource-management}
+
+\subsubsection{Biểu đồ trạng thái -- Incident}
+
+\OPSDiagramFigure{../diagrams/state/incident.png}
   {Biểu đồ trạng thái của Incident}
   {fig:p2-state-incident}
-  {Chèn state-chart diagram: Các trạng thái Open, Acknowledged, InProgress, Resolved và Closed; điều kiện tiếp nhận, giao xử lý, xác nhận khắc phục và đóng sự cố.}
-\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
 
 \clearpage
 
-\subsubsection{Biểu đồ trạng thái -- RedistributionPlan (Bonus)}
+\subsubsection{Biểu đồ trạng thái -- RedistributionPlan}
 
-\InsertArtifact{../diagrams/state/redistribution-plan.pdf}
+\OPSDiagramFigure{../diagrams/state/redistribution-plan.pdf}
   {Biểu đồ trạng thái của RedistributionPlan}
   {fig:p2-state-redistribution-plan}
-  {Chèn state-chart diagram: Các trạng thái Draft, Recommended, Approved, InProgress, Completed và Cancelled; phân biệt đề xuất, phê duyệt và xác nhận di chuyển thực tế.}
-\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
 
 \clearpage

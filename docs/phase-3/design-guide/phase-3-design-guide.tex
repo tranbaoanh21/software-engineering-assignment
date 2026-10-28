@@ -1,0 +1,84 @@
+\documentclass[12pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../assets}
+\input{../../../assets/latex-template/hcmut-report.sty}
+\usepackage{float}
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,shapes.geometric,positioning,calc}
+\setlength{\emergencystretch}{3em}
+\setlength{\LTpre}{0.5em}
+\setlength{\LTpost}{0.5em}
+\renewcommand{\ReportType}{TÀI LIỆU HỌC}
+\renewcommand{\ReportTitle}{THIẾT KẾ PHẦN MỀM}
+\renewcommand{\ReportSubjectLabel}{}
+\renewcommand{\ProjectTitle}{KIẾN THỨC NỀN PHASE 3}
+\renewcommand{\ProjectSubtitle}{KIẾN TRÚC, UML VÀ THIẾT KẾ PHƯƠNG THỨC}
+\renewcommand{\CoverReportTypeStyle}{\Large\bfseries}
+\renewcommand{\CoverReportTitleStyle}{\Large\bfseries}
+\renewcommand{\CoverProjectTitleStyle}{\Large\bfseries}
+\renewcommand{\CoverProjectSubtitleStyle}{\normalsize\bfseries}
+\renewcommand{\LecturerName}{Cô Trần Thị Ngọc Trâm}
+\renewcommand{\ClassCode}{L02}
+\renewcommand{\GroupName}{K24 Warriors}
+\renewcommand{\Semester}{Học kỳ 261}
+\renewcommand{\AcademicYear}{2026 -- 2027}
+\renewcommand{\PlaceAndDate}{TP. Hồ Chí Minh, tháng 10/2026}
+\renewcommand{\FooterTitle}{Kiến thức nền Phase 3}
+\renewcommand{\contentsname}{Mục lục}
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \footnotesize\ttfamily Trường Đại Học Bách Khoa - ĐHQG TP.HCM\\[-1pt]
+      \footnotesize\ttfamily Khoa Khoa học và kỹ thuật máy tính
+    \end{tabular}
+  \end{tabular}}
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand*\l@section[2]{%
+  \ifnum\c@tocdepth>\z@
+    \addpenalty{\@secpenalty}\addvspace{0.35em \@plus\p@}%
+    \setlength\@tempdima{3.1em}%
+    \begingroup
+      \parindent\z@ \rightskip\@pnumwidth \parfillskip-\@pnumwidth
+      \leavevmode\bfseries \advance\leftskip\@tempdima \hskip-\leftskip
+      #1\nobreak\hfill\nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+    \endgroup
+  \fi}
+\renewcommand*\l@subsection{\@dottedtocline{2}{3.1em}{2.2em}}
+\makeatother
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\point}[1]{\par\medskip\noindent\textbf{#1}\par\nobreak\smallskip}
+\newcommand{\chapter}[1]{\clearpage\section{#1}}
+\newcommand{\glyph}[2]{%
+  \begin{figure}[H]\centering
+  \begin{tikzpicture}[font=\small,>=Stealth,
+    box/.style={draw,minimum width=30mm,minimum height=11mm,align=center},
+    smallbox/.style={draw,minimum width=22mm,minimum height=9mm,align=center}]
+    #1
+  \end{tikzpicture}\caption{#2}\end{figure}}
+\newcommand{\relation}[4]{%
+  \glyph{\node[box] (a) at (0,0) {#1};
+    \node[box] (b) at (7.2,0) {#2};
+    \draw[#3] (a.east)--(b.west);}{#4}}
+\newcommand{\diagram}[3]{%
+  \begin{figure}[H]\centering
+    \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{figures/output/#1.pdf}
+    \caption{#2}\label{#3}
+  \end{figure}}
+\fvset{fontsize=\small,frame=single,framesep=2.5mm}
+\hypersetup{pdftitle={Kiến thức nền Phase 3: kiến trúc, UML và phương thức},
+  pdfauthor={K24 Warriors},
+  pdfsubject={Deployment, implementation, class diagram, method descriptions và test cases}}
+\begin{document}
+\MakeHCMUTCover
+\begingroup\setstretch{1.0}\fontsize{10pt}{11.6pt}\selectfont\tableofcontents\endgroup
+\input{sections/01-architecture}
+\input{sections/02-deployment}
+\input{sections/03-implementation}
+\input{sections/04-class-diagram}
+\input{sections/05-method-design}
+\input{sections/06-testing}
+\input{sections/07-worked-example}
+\input{sections/08-semh-and-practice}
+\end{document}

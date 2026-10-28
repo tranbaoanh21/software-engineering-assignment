@@ -1,0 +1,240 @@
+@startuml
+title UC-PARK-01 - Đặt chỗ đỗ cho xe cá nhân
+
+skinparam shadowing false
+skinparam sequence {
+    ActivationBackgroundColor #E3EEFF
+    ActivationBorderColor #5378A8
+    LifeLineBorderColor #888888
+}
+
+hide footbox
+
+actor "Sinh viên (ACT-STU)" as STU
+boundary "ParkingUI" as UI
+control "ParkingService" as PS
+control "AccessService" as ACC
+database "SEMHDataStore" as DB
+
+== 1. Chọn Hub và xem thông tin chỗ đỗ ==
+
+STU -> UI: selectHubForParking(hubId)
+activate UI
+
+UI -> PS: getParkingAvailability(hubId)
+activate PS
+
+PS -> DB: getHubAndAvailableSpaces(hubId)
+activate DB
+DB --> PS: hub:MobilityHub, availableSpaces
+deactivate DB
+
+PS --> UI: parkingConditionsAndCount
+deactivate PS
+
+UI --> STU: displayParkingConditions()
+deactivate UI
+
+== 2. Chọn phương tiện và xác nhận đặt chỗ ==
+
+opt AF-03: Sinh viên đổi Hub hoặc phương tiện
+    STU -> UI: changeHubOrVehicleSelection()
+    activate UI
+
+    UI -> PS: getParkingAvailability(hubId)
+    activate PS
+
+    PS -> DB: getHubAndAvailableSpaces(hubId)
+    activate DB
+    DB --> PS: hub:MobilityHub, availableSpaces
+    deactivate DB
+
+    PS --> UI: parkingConditionsAndCount
+    deactivate PS
+
+    UI --> STU: displayUpdatedSelection()
+    deactivate UI
+end
+
+STU -> UI: confirmParkingReservation(hubId, privateVehicleId)
+activate UI
+
+UI -> PS: createParkingReservation(studentId, hubId, privateVehicleId, requestId)
+activate PS
+
+PS -> ACC: checkAccess(sessionId, studentId, privateVehicleId)
+activate ACC
+ACC --> PS: accessResult
+deactivate ACC
+
+alt EF-04: Phiên hoặc quyền không hợp lệ
+
+    PS -> PS: prepareAccessDeniedResult()
+
+else Quyền hợp lệ
+
+    == 3. Kiểm tra tính khả dụng ==
+
+    PS -> DB: findAvailableParkingSpace(hubId)
+    activate DB
+    DB --> PS: space:ParkingSpace, stateReliability
+    deactivate DB
+
+    alt EF-01: Trạng thái chỗ không đủ tin cậy
+
+        PS -> PS: prepareUnreliableStateResult()
+
+    else AF-01: Không còn chỗ Available
+
+        PS -> PS: prepareNoSpaceResult()
+
+    else Có chỗ Available phù hợp
+
+        == 4. Giữ chỗ nhất quán ==
+
+        loop AF-02: Thử lại khi cạnh tranh và còn chỗ khác
+
+            PS -> DB: reserveParkingSpaceAtomically(studentId, privateVehicleId, spaceId, requestId)
+            activate DB
+
+            note right of DB
+                BR-PARK-01, BR-PARK-02:
+                - Kiểm tra chỗ Available
+                - Không có lượt đặt hiệu lực trùng
+                - Tạo ParkingReservation Confirmed
+                - Chuyển ParkingSpace sang Reserved
+                - Hạn giữ tối đa 20 phút
+
+                Nếu lỗi transaction:
+                rollback toàn bộ thay đổi.
+            end note
+
+            DB --> PS: reservationResult
+            deactivate DB
+
+            opt Chỗ vừa bị giữ bởi yêu cầu khác
+
+                PS -> DB: findAnotherAvailableParkingSpace(hubId)
+                activate DB
+                DB --> PS: nextSpace:ParkingSpace / noSpace
+                deactivate DB
+
+            end
+        end
+
+        alt AF-02 / AF-01: Không còn chỗ khác
+
+            PS -> PS: prepareNoSpaceResult()
+
+        else EF-02: Không thể cập nhật nhất quán
+
+            note right of PS
+                Transaction đã rollback.
+                Không để lại lượt đặt Confirmed
+                hoặc chỗ Reserved đơn lẻ.
+            end note
+
+            PS -> PS: prepareTransactionErrorResult()
+
+        else Đặt chỗ thành công
+
+            PS -> PS: prepareConfirmationResult()
+
+        end
+    end
+end
+
+== 5. Trả kết quả và hiển thị xác nhận ==
+
+PS --> UI: reservationResult
+deactivate PS
+
+alt Đặt chỗ thành công
+
+    alt Hiển thị xác nhận bình thường
+
+        UI --> STU: displayParkingConfirmation(reservation)
+
+    else EF-03: Không tải được kết quả xác nhận
+
+        UI -> PS: getParkingReservationByRequest(requestId)
+        activate PS
+
+        PS -> DB: queryReservationByRequestId(requestId)
+        activate DB
+        DB --> PS: reservation:ParkingReservation
+        deactivate DB
+
+        PS --> UI: reservationLookupResult
+        deactivate PS
+
+        UI --> STU: displayParkingConfirmation(reservation)
+
+    end
+
+else AF-01 / AF-02: Không còn chỗ
+
+    UI --> STU: displayNoSpaceNotice()
+
+    opt Sinh viên chọn xem Hub thay thế
+        ref over STU, UI: UC-HUB-03 - Xem Hub thay thế
+    end
+
+else EF-01: Dữ liệu chưa đủ tin cậy
+
+    UI --> STU: displayDataNotReadyAndRetry()
+
+else EF-02: Giao dịch thất bại
+
+    UI --> STU: displaySystemErrorAndRetry()
+
+else EF-04: Truy cập không hợp lệ
+
+    UI --> STU: displayAccessError()
+
+end
+
+deactivate UI
+
+== 6. Hết hạn tự động trước khi check-in ==
+
+opt AF-04: ParkingReservation Confirmed đã quá hạn
+
+    note over PS, DB
+        Xử lý độc lập theo NIFR-PARK-01.
+        Chỉ hết hạn nếu chưa CheckedIn.
+    end note
+
+    PS -> PS: handleParkingReservationExpiration(reservationId)
+    activate PS
+
+    PS -> DB: expireParkingReservationAtomically(reservationId)
+    activate DB
+
+    note right of DB
+        Kiểm tra Confirmed và expiresAt.
+        ParkingReservation -> Expired.
+        Hủy giữ chỗ; chỉ Available nếu trống, an toàn,
+        đủ dữ liệu và không có ràng buộc khác (BR-PARK-02).
+        Giữ OutOfService khi lỗi; chưa rõ thì chờ xác minh.
+        Thực hiện nhất quán.
+    end note
+
+    DB --> PS: expirationResult
+    deactivate DB
+
+    opt Đã chuyển sang Expired
+
+        PS -> UI: notifyParkingExpired(reservationId)
+        activate UI
+
+        UI --> STU: displayExpirationNotice()
+        deactivate UI
+
+    end
+
+    deactivate PS
+
+end
+
+@enduml

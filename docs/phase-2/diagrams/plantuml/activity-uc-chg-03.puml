@@ -1,0 +1,166 @@
+@startuml
+title UC-CHG-03 - Biểu đồ hoạt động Điều chỉnh lịch sạc ưu tiên
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Cấu hình nét vẽ đen trắng chuẩn in ấn báo cáo
+skinparam activityBorderColor #000000
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityDiamondBorderColor #000000
+skinparam activityDiamondBackgroundColor #F2F2F2
+skinparam swimlaneBorderColor #000000
+skinparam swimlaneTitleFontStyle bold
+skinparam NoteBorderColor #000000
+skinparam NoteBackgroundColor #FAFAFA
+skinparam ArrowColor #000000
+skinparam roundcorner 6
+
+|Nhân viên vận hành\n(ACT-OPR)|
+|Giao diện sạc\n(ChargingUI)|
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+
+|Nhân viên vận hành\n(ACT-OPR)|
+start
+
+note right
+  Chỉ ACT-OPR mới có quyền điều chỉnh lịch sạc trong phạm vi được cấp (BR-GEN-02).
+  Chỉ điều chỉnh yêu cầu Pending hoặc Scheduled; giữ nguyên phiên đang Charging (BR-CHG-02).
+end note
+
+:Mở giao diện điều chỉnh và chọn các yêu cầu cần xử lý (requestIds);
+
+|Giao diện sạc\n(ChargingUI)|
+:Gửi yêu cầu tải thông tin điều chỉnh lịch sạc;
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Kiểm tra phiên đăng nhập và quyền điều chỉnh (FR-GEN-03, BR-GEN-02);
+
+if (Phiên hết hạn hoặc ngoài phạm vi quyền? [EF-04]) then (Có)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo từ chối truy cập / Yêu cầu đăng nhập lại;
+  |Nhân viên vận hành\n(ACT-OPR)|
+  stop
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Truy xuất thông tin yêu cầu và cổng sạc khả dụng theo permittedScope;
+
+if (Có yêu cầu đã ở trạng thái Charging? [Precondition 2]) then (Có)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo không thể điều chỉnh yêu cầu đang sạc;
+  |Nhân viên vận hành\n(ACT-OPR)|
+  stop
+endif
+
+|Giao diện sạc\n(ChargingUI)|
+:Hiển thị mức pin, kế hoạch sử dụng, mức ưu tiên, cổng đang phân bổ,\ndanh sách cổng khả dụng và lịch sạc hiện tại;
+
+|Nhân viên vận hành\n(ACT-OPR)|
+repeat
+  if (Actor chọn hủy thao tác điều chỉnh? [AF-04]) then (Có)
+    |Giao diện sạc\n(ChargingUI)|
+    :Đóng giao diện điều chỉnh và giữ nguyên lịch cũ;
+    |Nhân viên vận hành\n(ACT-OPR)|
+    stop
+  endif
+
+  :Thiết lập phương án (thay đổi thứ tự ưu tiên [AF-01] hoặc đổi cổng [AF-02]) và nhập lý do;
+  :Bấm xác nhận lưu phương án điều chỉnh;
+
+  |Giao diện sạc\n(ChargingUI)|
+  :Tạo mã clientRequestId và gửi phương án điều chỉnh kèm lý do;
+
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Tái xác thực quyền trên danh sách yêu cầu và cổng sạc đích (targetPointIds);
+
+  if (Phiên hết hạn hoặc mất quyền tại thời điểm lưu? [EF-04]) then (Có)
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị thông báo lỗi phiên / Từ chối thao tác;
+    |Nhân viên vận hành\n(ACT-OPR)|
+    stop
+  endif
+
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Đọc trạng thái mới nhất của các yêu cầu và cổng sạc từ kho dữ liệu;
+
+  if (Cổng sạc được chọn gặp sự cố OutOfService? [EF-02]) then (Có)
+    :Loại cổng OutOfService khỏi phương án và xác định cổng thay thế hợp lệ;
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị cảnh báo sự cố cổng và gợi ý các cổng khả dụng thay thế;
+    |Nhân viên vận hành\n(ACT-OPR)|
+  else (Cổng hợp lệ)
+    |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+    :Khởi tạo phương án hiệu lực ban đầu (effectivePlan);
+
+    if (Có yêu cầu đã bắt đầu sạc trong lúc thao tác? [AF-03]) then (Có)
+      :Loại bỏ các yêu cầu đã Charging khỏi phương án hiệu lực (effectivePlan);
+      |Giao diện sạc\n(ChargingUI)|
+      :Hiển thị cảnh báo phạm vi bị giảm và yêu cầu xác nhận lại;
+      |Nhân viên vận hành\n(ACT-OPR)|
+      if (Actor chọn hủy khi phạm vi bị giảm? [AF-03]) then (Hủy)
+        |Giao diện sạc\n(ChargingUI)|
+        :Hủy điều chỉnh và giữ nguyên lịch sạc cũ;
+        |Nhân viên vận hành\n(ACT-OPR)|
+        stop
+      else (Xác nhận)
+        |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+        :Ghi nhận tiếp tục với phương án hiệu lực còn lại;
+      endif
+    endif
+
+    |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+    :Thẩm định phương án hiệu lực (validateSchedulePlan);
+    note right
+      Kiểm tra BR-CHG-01 (ưu tiên theo mức pin / thời điểm dùng),
+      BR-CHG-02 (không trùng cổng), BR-CHG-03 (thời lượng),
+      BR-CHG-04 (tương thích, Active, công suất Hub, hạn hoàn tất)
+      và cổng đích phải Available hoặc dành cho yêu cầu chưa sạc (AF-02).
+    end note
+
+    if (Vi phạm quy tắc ưu tiên hoặc xung đột cổng sạc? [EF-01]) then (Có)
+      |Giao diện sạc\n(ChargingUI)|
+      :Chỉ rõ yêu cầu/cổng xung đột và giữ nguyên form cho phép sửa;
+      |Nhân viên vận hành\n(ACT-OPR)|
+    else (Phương án hợp lệ)
+      |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+      :Tính lại thời lượng và phân bổ theo BR-CHG-03, BR-CHG-04;\nThiếu dữ liệu hoặc chưa có khoảng đáp ứng thì Pending;\nGiữ nguyên phiên đang Charging;
+
+      ' Vòng lặp thử lại riêng cho lỗi lưu trữ cơ sở dữ liệu EF-03
+      repeat
+        |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+        :Thực hiện lưu nguyên tử phương án và ghi nhật ký kiểm toán (NFR-AUD-01)\n(actorId, previousSchedule, updatedScheduleList, reason);
+
+        if (Giao dịch lưu cơ sở dữ liệu thất bại? [EF-03]) then (Có)
+          :Rollback transaction (hoàn tác toàn bộ thay đổi tạm thời);
+          |Giao diện sạc\n(ChargingUI)|
+          :Hiển thị thông báo lỗi lưu trữ và giữ nguyên form;
+          |Nhân viên vận hành\n(ACT-OPR)|
+        else (Thành công)
+          |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+          :Cập nhật lịch sạc mới thành công trong SEMHDataStore;
+
+          |Giao diện sạc\n(ChargingUI)|
+          :Hiển thị kết quả điều chỉnh thành công, danh sách yêu cầu bị ảnh hưởng\nvà thời gian dự kiến mới;
+
+          |Nhân viên vận hành\n(ACT-OPR)|
+          :Xem kết quả và hoàn tất quy trình;
+          stop
+        endif
+      backward:Bấm nút thử lại lưu (giữ nguyên clientRequestId);
+      repeat while (Actor muốn thử lại lưu dữ liệu?) is (Thử lại)
+      ->Hủy bỏ;
+      |Giao diện sạc\n(ChargingUI)|
+      :Thông báo lần điều chỉnh kết thúc, lịch cũ được bảo toàn;
+      |Nhân viên vận hành\n(ACT-OPR)|
+      stop
+    endif
+  endif
+
+backward:Nhân viên chỉnh sửa lại phương án hoặc chọn cổng khác;
+repeat while (Phương án chưa hợp lệ?) is (Tiếp tục chỉnh sửa)
+
+stop
+@enduml

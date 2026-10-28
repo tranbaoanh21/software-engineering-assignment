@@ -1,0 +1,106 @@
+@startuml
+title UC-TRIP-01 - Nhận phương tiện đã đặt\nActivity Diagram
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam monochrome true
+skinparam ArrowColor black
+skinparam activityBackgroundColor white
+skinparam activityDiamondBackgroundColor white
+skinparam noteBackgroundColor white
+
+|Sinh viên (ACT-STU)|
+start
+:Bước 1: Mở lượt đặt Confirmed;\nyêu cầu nhận xe;
+|Hệ thống SEMH|
+:Kiểm tra phiên, vai trò,\nquyền lượt đặt (FR-GEN-03);
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :EF-04: Đăng nhập lại / từ chối;\nkhông đọc dữ liệu riêng, không cập nhật;
+  stop
+endif
+:Bước 2: Đọc lượt đặt; hiển thị xe;\nyêu cầu mã xe;
+|Sinh viên (ACT-STU)|
+if (Quét mã QR được?) then (Có)
+  :Quét mã QR của xe;
+else (Không)
+  :AF-01: Nhập mã xe thủ công;
+endif
+:Bước 3: Gửi mã xe; xác nhận nhận;
+|Hệ thống SEMH|
+:Kiểm tra lại phiên, vai trò, quyền;
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :EF-04: Từ chối / đăng nhập lại;\nkhông tự gửi lại yêu cầu;
+  stop
+endif
+:Bước 4: Kiểm tra lượt đặt,\nxe, Hub, Trip liên kết;
+if (Lượt đặt đã có Trip?) then (Có)
+  :Hiển thị Trip hiện có;\nkhông tạo trùng;
+  stop
+endif
+if (Lượt đặt hết hạn?) then (Có)
+  :AF-02: Từ chối nhận;\nbáo Expired, tra cứu xe khác;
+  stop
+endif
+if (Đúng xe và Hub?) then (Có)
+else (Không)
+  :AF-03: Hiển thị xe / Hub đúng;\nkiểm tra, thử lại;
+  stop
+endif
+if (Lượt đặt Confirmed và\nxe đủ điều kiện?) then (Có)
+else (Không)
+  :Từ chối nhận;\nhiển thị trạng thái;
+  stop
+endif
+:Bước 5: Chờ bàn giao,\ntrạng thái xe từ StateDataGateway;
+|IoT & State Data Gateway (EXT-STATE / ACT-DAT)|
+:Trả kết quả bàn giao, Hub, pin, tình trạng\nhoặc báo chưa xác nhận;
+|Hệ thống SEMH|
+if (Xe lỗi trước bàn giao?) then (Có)
+  :AF-04: Không tạo Trip;\nSUB-OPS xử lý lỗi, ngừng cấp phát xe;
+  :Báo chọn phương án khác;
+  stop
+endif
+if (Xác nhận bàn giao hợp lệ?) then (Có)
+else (Không / timeout)
+  :EF-01: Chưa xác nhận nhận xe;\ngiữ trạng thái; thử lại / liên hệ vận hành;
+  stop
+endif
+partition "Bước 6-7: Tạo Trip, lưu thông tin" {
+  :Mở transaction; khóa lượt đặt, xe;\nkiểm tra hiệu lực, trạng thái, bàn giao, trùng Trip;
+  if (Điều kiện vẫn hợp lệ?) then (Có)
+    :VehicleReservation -> Fulfilled;\nSharedVehicle -> InUse;\ntạo Trip -> InProgress;
+    :Lưu giờ, Hub, pin, tình trạng đầu chuyến;\nghi vết trước / sau (NFR-AUD-01);
+    if (Ghi, commit thành công?) then (Có)
+    else (Không)
+      :EF-02: Rollback thay đổi chưa commit;\nghi lỗi; giữ nhất quán;
+      :Báo chưa thành công;\nxem lại / thử lại;
+      stop
+    endif
+  else (Không)
+    :EF-02: Rollback; giữ cập nhật\nhợp lệ của tiến trình khác;
+    :Báo trạng thái thay đổi;\nyêu cầu xem lại;
+    stop
+  endif
+}
+:Bước 8: Xác nhận bắt đầu Trip;
+if (Nhận được phản hồi?) then (Có)
+  :Hiển thị Trip.InProgress;
+else (Không)
+  |Sinh viên (ACT-STU)|
+  :EF-03: Mở lại trạng thái lượt đặt;
+  |Hệ thống SEMH|
+  :Kiểm tra lại phiên, vai trò, quyền;
+  if (Truy cập hợp lệ?) then (Có)
+    :Đọc Trip theo lượt đặt;\nhiển thị Trip; không tạo trùng;
+  else (Không)
+    :EF-04: Đăng nhập lại / từ chối;\nkhông tự gửi lại yêu cầu;
+    stop
+  endif
+endif
+|Sinh viên (ACT-STU)|
+:Xem Trip; bắt đầu dùng xe;
+stop
+@enduml

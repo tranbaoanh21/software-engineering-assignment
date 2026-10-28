@@ -1,0 +1,138 @@
+\clearpage
+\subsubsection{UC-OPS-04 -- Thêm và cập nhật thông tin tài nguyên}
+
+\ManagementFigure[0.65\textheight]{../diagrams/use-case/uc-ops-04.pdf}
+  {Sơ đồ Use Case UC-OPS-04 -- Thêm và cập nhật thông tin tài nguyên}
+  {fig:p2-uc-uc-ops-04}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-OPS-04 -- Thêm và cập nhật thông tin tài nguyên}\label{tab:spec-UC-OPS-04}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}.\\\hline
+  Description / Goal & Đăng ký thêm xe, chỗ đỗ hoặc cổng sạc và cập nhật thông tin mô tả trong phạm vi Hub được giao.\\\hline
+  Trigger & Operator mở danh sách tài nguyên và chọn thêm mới hoặc sửa thông tin.\\\hline
+  Preconditions & \textbf{1.} Actor có phiên hợp lệ và quyền quản lý thông tin tài nguyên tại Hub được chọn.\newline
+\textbf{2.} Hub đã tồn tại; tài nguyên cần sửa nằm trong phạm vi actor được giao.\\\hline
+  Postconditions & \textbf{Thành công:} Thông tin tài nguyên và audit được lưu nhất quán; tài nguyên mới có \texttt{ServiceStatus.Draft}, tài nguyên sửa giữ nguyên trạng thái phục vụ và vật lý.\newline
+  \textbf{Không thành công:} Không lưu thay đổi một phần; giữ dữ liệu hợp lệ và hiển thị nguyên nhân hoặc kết quả tra cứu lại.\\\hline
+  Main Flow & \textbf{1.} Actor mở danh sách tài nguyên; hệ thống kiểm tra phạm vi Hub.\newline
+\textbf{2.} Actor chọn thêm thiết bị hoặc sửa thông tin của một thiết bị.\newline
+\textbf{3.} Hệ thống hiển thị biểu mẫu theo loại; khi sửa, định danh, loại và Hub được giữ cố định.\newline
+\textbf{4.} Actor nhập tên, mô tả hoặc thông số được phép chỉnh sửa và lý do.\newline
+\textbf{5.} Hệ thống kiểm tra dữ liệu; thông số có thể ảnh hưởng cấp phát chỉ được sửa khi tài nguyên không có ràng buộc sử dụng.\newline
+\textbf{6.} Actor xem lại và xác nhận; hệ thống kiểm tra lại quyền, định danh và phiên bản bản ghi.\newline
+\textbf{7.} Hệ thống tạo bản ghi \texttt{Draft} hoặc cập nhật các trường cho phép, đồng thời ghi audit trong một giao dịch.\newline
+\textbf{8.} Hệ thống hiển thị kết quả; không sửa mức pin, vị trí thực tế hay trạng thái IoT, không tự bật tài nguyên mới.\\\hline
+  Alternative Flows & \textbf{AF-01 -- Thêm tài nguyên.} Tại bước 2: đăng ký mã duy nhất dưới Hub đã có; trạng thái phục vụ ban đầu là \texttt{Draft}.\newline
+\textbf{AF-02 -- Sửa thông tin mô tả.} Tại bước 2: đổi tên hoặc mô tả; giữ định danh, Hub, lịch sử và các trạng thái.\newline
+\textbf{AF-03 -- Thông số hoặc phạm vi không hợp lệ.} Tại bước 5: từ chối và cho sửa; không ghi đè tài nguyên ngoài phạm vi.\newline
+\textbf{AF-04 -- Hủy hoặc có thay đổi đồng thời.} Hủy không ghi dữ liệu; nếu phiên bản đã đổi, tải lại và yêu cầu xem lại trước khi lưu.\\\hline
+  Exception Flows & \textbf{EF-01 -- Lỗi tải hoặc lưu thông tin.} Không lưu một phần; thông báo lỗi, giữ bản ghi trước đó.\newline
+\textbf{EF-02 -- Mất phản hồi sau lưu.} Tra cứu lại kết quả theo mã yêu cầu trước khi gửi lại.\newline
+  \textbf{EF-03 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\\\hline
+  Liên quan & \texttt{FR-OPS-04}, \texttt{FR-OPS-05}; \texttt{FR-GEN-03}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-\texttt{GEN}-02}, \texttt{BR-OPS-03}, \texttt{BR-OPS-04}.\\\hline
+  Dependencies & Hub do \texttt{UC-\texttt{GEN}-03} khai báo; tài nguyên mới cần \texttt{UC-OPS-05} để kích hoạt. Không thay thế quy trình điều chuyển \texttt{UC-OPS-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\ManagementFigure[0.68\textheight]{../mockups/uc-ops-04.png}
+  {Danh sách và thông tin tài nguyên -- UC-OPS-04}
+  {fig:p2-ui-uc-ops-04}
+\end{minipage}\par
+
+\clearpage
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\ManagementFigure{../diagrams/sequence/uc-ops-04.pdf}
+  {Biểu đồ tuần tự -- UC-OPS-04}
+  {fig:p2-seq-uc-ops-04}
+
+\clearpage
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\ManagementFigure{../diagrams/activity/uc-ops-04.pdf}
+  {Biểu đồ hoạt động -- UC-OPS-04}
+  {fig:p2-act-uc-ops-04}
+
+\clearpage
+\subsubsection{UC-OPS-05 -- Kích hoạt hoặc ngừng phục vụ tài nguyên}
+
+\ManagementFigure[0.65\textheight]{../diagrams/use-case/uc-ops-05.pdf}
+  {Sơ đồ Use Case UC-OPS-05 -- Kích hoạt hoặc ngừng phục vụ tài nguyên}
+  {fig:p2-uc-uc-ops-05}
+
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-OPS-05 -- Kích hoạt hoặc ngừng phục vụ tài nguyên}\label{tab:spec-UC-OPS-05}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}.\\\hline
+  Description / Goal & Đổi trạng thái cho phép phục vụ của Hub hoặc tài nguyên mà không điều khiển điện hoặc ghi đè trạng thái cảm biến.\\\hline
+  Trigger & Operator mở chi tiết tài nguyên và chọn kích hoạt hoặc ngừng phục vụ.\\\hline
+  Preconditions & \textbf{1.} Actor có phiên hợp lệ và quyền đổi trạng thái phục vụ tại Hub được giao.\newline
+\textbf{2.} Tài nguyên đã có trong danh mục; hệ thống có thể kiểm tra các ràng buộc đặt, sử dụng, sạc và điều phối liên quan.\\\hline
+  Postconditions & \textbf{Thành công:} \texttt{ServiceStatus} được cập nhật cùng audit; không hủy nghiệp vụ, không giả lập xác nhận vật lý và không tự chuyển \texttt{OutOfService} thành \texttt{Available}.\newline
+  \textbf{Không thành công:} Không lưu thay đổi một phần; giữ dữ liệu hợp lệ và hiển thị nguyên nhân hoặc kết quả tra cứu lại.\\\hline
+  Main Flow & \textbf{1.} Actor mở chi tiết tài nguyên; hệ thống kiểm tra phạm vi quyền.\newline
+\textbf{2.} Hệ thống hiển thị \texttt{ServiceStatus}, trạng thái vận hành, thời điểm đồng bộ và các ràng buộc đang có.\newline
+\textbf{3.} Actor chọn kích hoạt hoặc ngừng phục vụ, nhập lý do.\newline
+\textbf{4.} Nếu kích hoạt, hệ thống kiểm tra danh mục, điều kiện theo loại, Hub cha \texttt{Active} và không còn lỗi chưa được kỹ thuật xác nhận xử lý.\newline
+\textbf{5.} Nếu ngừng phục vụ, hệ thống kiểm tra tài nguyên không có lượt giữ, phiên sử dụng, phân bổ sạc hoặc kế hoạch đang ràng buộc; với Hub kiểm tra cả tài nguyên con.\newline
+\textbf{6.} Actor xem kết quả kiểm tra và xác nhận.\newline
+\textbf{7.} Hệ thống kiểm tra lại quyền, phiên bản và các ràng buộc trong cùng giao dịch với thay đổi \texttt{ServiceStatus} và ghi audit; việc cấp phát mới dùng cùng kiểm tra trạng thái để không xảy ra cạnh tranh.\newline
+\textbf{8.} Hệ thống hiển thị \texttt{Active} hoặc \texttt{Inactive}; chỉ tài nguyên \texttt{Active} đồng thời đủ điều kiện vận hành mới được cấp phát.\\\hline
+  Alternative Flows & \textbf{AF-01 -- Chưa đủ điều kiện kích hoạt.} Tại bước 4: giữ \texttt{Draft} hoặc \texttt{Inactive}; hiển thị điều kiện còn thiếu, không tự ghi \texttt{Available}.\newline
+\textbf{AF-02 -- Tài nguyên đang được giữ hoặc sử dụng.} Tại bước 5 hoặc 7: từ chối ngừng phục vụ; nêu ràng buộc để xử lý bằng quy trình hiện có, không tự hủy lượt đặt hay chuyến đi.\newline
+\textbf{AF-03 -- Đã ở trạng thái đích.} Tại bước 2 hoặc 7: trả trạng thái hiện hành; không tạo chuyển trạng thái hoặc audit thay đổi trùng.\newline
+\textbf{AF-04 -- Hủy hoặc trạng thái đã thay đổi.} Trước lưu: hủy không tác động; nếu phiên bản hoặc ràng buộc đổi, tải lại và yêu cầu xác nhận mới.\\\hline
+  Exception Flows & \textbf{EF-01 -- Không lấy được dữ liệu kiểm tra.} Không cho phép chuyển trạng thái khi không xác định được điều kiện; giữ trạng thái trước đó.\newline
+\textbf{EF-02 -- Lưu thất bại hoặc mất phản hồi.} Hoàn tác nếu chưa commit; nếu chưa rõ kết quả, đọc lại theo mã yêu cầu trước khi gửi lại.\newline
+  \textbf{EF-03 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\\\hline
+  Liên quan & \texttt{FR-OPS-06}, \texttt{FR-OPS-07}; \texttt{FR-GEN-03}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-\texttt{GEN}-02}, \texttt{BR-HUB-02}, \texttt{BR-OPS-02}, \texttt{BR-OPS-03}, \texttt{BR-OPS-05}.\\\hline
+  Dependencies & Danh mục từ \texttt{UC-\texttt{GEN}-03} hoặc \texttt{UC-OPS-04}; xử lý lỗi phần cứng qua \texttt{UC-OPS-02}. Cấp phát mới phải kiểm tra \texttt{ServiceStatus.Active} đồng thời với trạng thái vận hành.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
+\paragraph{Thiết kế giao diện (UI Mockup)}
+\ManagementFigure[0.68\textheight]{../mockups/uc-ops-05.png}
+  {Điều kiện và trạng thái phục vụ -- UC-OPS-05}
+  {fig:p2-ui-uc-ops-05}
+\end{minipage}\par
+
+\clearpage
+\paragraph{Biểu đồ tuần tự (Sequence Diagram)}
+\ManagementFigure{../diagrams/sequence/uc-ops-05.pdf}
+  {Biểu đồ tuần tự -- UC-OPS-05}
+  {fig:p2-seq-uc-ops-05}
+
+\clearpage
+\paragraph{Biểu đồ hoạt động (Activity Diagram)}
+\ManagementFigure{../diagrams/activity/uc-ops-05.pdf}
+  {Biểu đồ hoạt động -- UC-OPS-05}
+  {fig:p2-act-uc-ops-05}
+
+\clearpage
+\subsubsection{Biểu đồ trạng thái -- ServiceStatus}
+\ManagementFigure{../diagrams/state/resource-service-status.pdf}
+  {Biểu đồ trạng thái cho phép phục vụ tài nguyên}
+  {fig:p2-state-resource-service-status}
+\clearpage

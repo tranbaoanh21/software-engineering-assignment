@@ -1,0 +1,26 @@
+@startuml
+!include guide-style.puml
+allowmixing
+top to bottom direction
+package "Web client" {
+  component "Enrollment UI" as UI
+}
+package "Backend: presentation" as PresentationPkg {
+  component "EnrollmentController" as Controller
+}
+package "Backend: application" as ApplicationPkg {
+  component "EnrollmentService" as Service
+  interface "EnrollmentStore\n(contract)" as Store <<interface>> {
+  }
+}
+package "Backend: domain" as DomainPkg {
+  component "Student, Course, Registration,\nCourseSession, EnrollmentPolicy,\nBasicEnrollmentPolicy" as Domain
+}
+component "SqlEnrollmentStore\n(infrastructure)" as SQL
+UI -down..> PresentationPkg : dùng API
+PresentationPkg -down..> ApplicationPkg
+ApplicationPkg -down..> DomainPkg
+Service -right..> Store
+SQL -left..|> Store
+SQL -left..> DomainPkg : ánh xạ dữ liệu
+@enduml

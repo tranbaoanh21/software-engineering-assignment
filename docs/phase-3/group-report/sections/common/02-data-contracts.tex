@@ -1,0 +1,100 @@
+\subsubsection{Kiểu dữ liệu và đơn vị}
+Các kiểu dưới đây là quy ước kỹ thuật dùng chung của Submission 3. Chúng không bổ sung use case hoặc trạng thái nghiệp vụ. Kiểu lưu vật lý và cách serialize được ánh xạ khi chọn công nghệ.
+
+\begin{longtable}{|L{38mm}|L{101mm}|}
+\caption{Kiểu và đơn vị dữ liệu dùng chung}\\\hline
+\textbf{Kiểu / trường} & \textbf{Quy ước}\\\hline
+\endfirsthead
+\hline\textbf{Kiểu / trường} & \textbf{Quy ước}\\\hline\endhead
+\texttt{Identifier} & Chuỗi định danh không rỗng, coi là opaque; không dùng tên hiển thị làm khóa, không đổi chữ hoa/thường của ID nhận được.\\\hline
+Các kiểu ID & \texttt{AccountId}, \texttt{HubId}, \texttt{VehicleId}, \texttt{ReservationId}, \texttt{TripId}, \texttt{RunId} là các tên theo vai trò của Identifier; không truyền nhầm loại ID chỉ vì cùng là chuỗi.\\\hline
+\texttt{DateTime} & Mốc thời gian tuyệt đối, trao đổi/lưu theo ISO-8601 có múi giờ và chuẩn hóa UTC; giao diện hiển thị theo múi giờ sử dụng. Không dùng giờ địa phương thiếu offset cho so sánh thời hạn.\\\hline
+Duration & Giá trị số không âm; tên trường nêu đơn vị như \texttt{durationSeconds} hoặc \texttt{etaMinutes}. Quy đổi trước khi tính, giữ đơn vị nghiệp vụ đã đặc tả.\\\hline
+Khoảng cách & Chuẩn nội bộ là mét, trường \texttt{distanceMeters}; hiển thị km là bước chuyển đổi giao diện.\\\hline
+Tọa độ & Vĩ độ/kinh độ theo độ thập phân WGS84; latitude trong $[-90,90]$, longitude trong $[-180,180]$. Adapter chuyển nguồn khác về cùng quy ước.\\\hline
+Pin và năng lượng & \texttt{batteryPercent} trong $[0,100]$; dung lượng/năng lượng dùng kWh, công suất dùng kW. Không trộn pin 0--1 với phần trăm 0--100.\\\hline
+\texttt{Version} & Số nguyên không âm khi thiết kế dùng kiểm soát phiên bản; thay đổi đã commit cập nhật version theo hợp đồng của owner. Mọi đường ghi liên quan tuân theo cùng cơ chế.\\\hline
+Optional / tập hợp & \texttt{T [0..1]} là có thể thiếu một giá trị; \texttt{List<T>} là tập có thứ tự, có thể rỗng nếu không có ràng buộc khác. Rỗng, 0 và lỗi nguồn là các ý nghĩa riêng.\\\hline
+Trạng thái & Dùng đúng enum ở Phần I; tên tiếng Việt trên UI được ánh xạ, không lưu một bộ trạng thái thứ hai theo nhãn giao diện.\\\hline
+\end{longtable}
+
+Các phép so sánh nghiệp vụ dùng giá trị gốc có đơn vị thống nhất; làm tròn hiển thị không thay đổi điều kiện pin, thời hạn hoặc công suất. ID thiết bị ngoài cần ánh xạ sang tài nguyên SEMH; nguồn không tự tạo bản ghi tài nguyên hoặc kích hoạt phục vụ qua telemetry.
+
+\subsubsection{Ngữ cảnh yêu cầu và danh tính}
+\texttt{OperationContext} là dữ liệu kỹ thuật đi cùng một thao tác, không phải actor mới và không thay thế kiểm tra quyền.
+\begin{longtable}{|L{39mm}|L{100mm}|}
+\caption{Ngữ cảnh thao tác dùng chung}\\\hline
+\textbf{Trường} & \textbf{Ý nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Trường} & \textbf{Ý nghĩa}\\\hline\endhead
+\texttt{correlationId} & Nhận diện đường xử lý để đối chiếu log; không tự có tác dụng chống gửi lặp.\\\hline
+\texttt{accountId [0..1]} & Danh tính đã được hệ thống xác thực cho thao tác người dùng; không tin accountId do form gửi để nhận quyền sở hữu.\\\hline
+\texttt{sourceId [0..1]} & Nguồn/tác vụ được nhận diện khi xử lý sự kiện ngoài hoặc tác vụ nền.\\\hline
+\texttt{receivedAt} & Thời điểm hệ thống nhận thao tác, dùng DateTime.\\\hline
+\texttt{idempotencyKey [0..1]} & Khóa nhận diện cùng một yêu cầu thay đổi có khả năng gửi lại; gắn với chủ thể, loại thao tác và nội dung.\\\hline
+\texttt{expectedVersion [0..1]} & Phiên bản của đối tượng đích được chỉ rõ trong hợp đồng khi dùng optimistic concurrency. Với nhiều đối tượng, input phương thức có các version riêng, không dùng một số cho mọi đối tượng.\\\hline
+\end{longtable}
+
+Quyền và phạm vi được giải quyết từ dữ liệu hiện hành qua \texttt{AccessService}. Context không chứa cờ \texttt{isAdmin} hoặc \texttt{isSystem} do bên gọi tự gửi để bỏ qua kiểm tra. Tác vụ nền có nguồn thực thi tin cậy và phạm vi riêng; một request công khai không được giả dạng tác vụ nền.
+
+Trong sequence hiện hành, lời gọi \texttt{verifyAccess(session, permission, target)} biểu diễn kiểm tra phiên, hành động và phạm vi/đối tượng. Khi hiện thực, giữ ý nghĩa này dù tách DTO hoặc helper. Mở lại tài khoản không khôi phục phiên đã thu hồi; Admin không mặc nhiên có quyền Operator.
+
+\subsubsection{Kết quả và lỗi qua ranh giới}
+\texttt{OperationResult<T>} thống nhất cách mô tả kết quả application/API trong thiết kế. Adapter có thể ánh xạ nó sang giao thức được chọn; entity không cần phụ thuộc DTO giao thức.
+\begin{longtable}{|L{39mm}|L{100mm}|}
+\caption{Kết quả thao tác và lỗi có cấu trúc}\\\hline
+\textbf{Trường} & \textbf{Quy tắc}\\\hline
+\endfirsthead
+\hline\textbf{Trường} & \textbf{Quy tắc}\\\hline\endhead
+\texttt{isSuccess: Boolean} & Cho biết thao tác hoàn tất theo hợp đồng của điểm gọi; tiếp nhận run thành công chưa có nghĩa SimulationRun.Completed.\\\hline
+\texttt{data: T [0..1]} & Kết quả khi thành công; có thể vắng với operation không trả dữ liệu.\\\hline
+\texttt{error [0..1]} & \texttt{OperationError} bắt buộc khi thất bại; thành công không có error, thất bại không trả data như một kết quả thành công.\\\hline
+\texttt{correlationId} & Liên kết kết quả với đường xử lý.\\\hline
+\texttt{OperationError.code} & Mã lỗi ổn định cho bên gọi xử lý; không dùng câu thông báo làm mã.\\\hline
+\texttt{message} & Nội dung an toàn cho người đọc, không lộ token, password, SQL hoặc stack trace.\\\hline
+\texttt{fieldErrors [0..*]} & Chi tiết trường nhập sai khi phù hợp; không lộ dữ liệu ngoài quyền.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{46mm}|L{93mm}|}
+\caption{Nhóm mã lỗi dùng chung}\\\hline
+\textbf{Mã} & \textbf{Ngữ nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Mã} & \textbf{Ngữ nghĩa}\\\hline\endhead
+\texttt{VALIDATION\_ERROR} & Input thiếu, sai kiểu, đơn vị hoặc miền giá trị.\\\hline
+\texttt{UNAUTHENTICATED} & Phiên không có, hết hiệu lực hoặc đã bị thu hồi.\\\hline
+\texttt{FORBIDDEN} & Không có quyền với hành động/đối tượng/phạm vi; phản hồi không tiết lộ dữ liệu bị bảo vệ.\\\hline
+\texttt{NOT\_FOUND} & Không có đối tượng có thể cung cấp theo hợp đồng và chính sách truy cập.\\\hline
+\texttt{RULE\_VIOLATION} & Input hợp thức nhưng điều kiện nghiệp vụ không đạt; mã chi tiết liên hệ quy tắc của từng module.\\\hline
+\texttt{CONFLICT} & Trạng thái hoặc version đã đổi, hoặc thao tác tranh tài nguyên không được cấp phát.\\\hline
+\texttt{DEPENDENCY\_UNAVAILABLE} & Nguồn ngoài hoặc lưu trữ không đáp ứng; không đồng nghĩa kết quả rỗng/hết tài nguyên.\\\hline
+\texttt{RESULT\_UNKNOWN} & Chưa xác định được thay đổi đã hoàn tất hay chưa; phải đọc lại/hòa giải theo cùng yêu cầu.\\\hline
+\texttt{INTERNAL\_ERROR} & Lỗi kỹ thuật nội bộ; chi tiết chẩn đoán giữ trong log an toàn.\\\hline
+\end{longtable}
+
+Mã lỗi là hợp đồng kỹ thuật, không phân loại lại AF/EF đã chốt ở use case. Không tìm thấy dữ liệu, nguồn gián đoạn và kết quả đã commit nhưng mất phản hồi phải được bên gọi phân biệt. Domain có thể dùng lỗi/kiểu kết quả nội bộ; application chuyển chúng sang hợp đồng chung tại ranh giới.
+
+\subsubsection{Sự kiện trạng thái và audit}
+\texttt{StateEvent} là dữ liệu đã được adapter chuẩn hóa từ nguồn ngoài, khác với trạng thái tài nguyên được lưu.
+\begin{longtable}{|L{39mm}|L{100mm}|}
+\caption{Các trường sự kiện trạng thái}\\\hline
+\textbf{Trường} & \textbf{Ý nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Trường} & \textbf{Ý nghĩa}\\\hline\endhead
+\texttt{sourceId, eventId} & Cặp nhận diện sự kiện để phát hiện gửi lặp trong phạm vi nguồn.\\\hline
+\texttt{resourceId, resourceType} & Tài nguyên đã ánh xạ và loại đối tượng trong danh mục SEMH.\\\hline
+\texttt{observedAt} & Thời điểm nguồn đo/phát sinh trạng thái.\\\hline
+\texttt{receivedAt} & Thời điểm SEMH nhận sự kiện; nhận muộn không làm dữ liệu trở thành mới hơn.\\\hline
+\texttt{sourceVersion [0..1]} & Thứ tự/phiên bản trong phạm vi nguồn được thỏa thuận; không so sánh trực tiếp version của hai nguồn khác nhau.\\\hline
+\texttt{payload} & Giá trị, đơn vị và trạng thái theo loại tài nguyên; được kiểm tra trước khi áp dụng.\\\hline
+\end{longtable}
+
+\texttt{AuditEntry} lưu tối thiểu \texttt{occurredAt}, chủ thể/nguồn kích hoạt, loại và ID đối tượng, hành động, trạng thái trước/sau, kết quả và \texttt{correlationId}. \texttt{deviceId} chỉ có khi nguồn tương ứng là thiết bị. Bản ghi tác động thành công phải thống nhất với thay đổi đã lưu; lần bị từ chối không được ghi thành một thay đổi đã áp dụng.
+
+Audit không sửa qua chức năng nghiệp vụ thông thường. Log kỹ thuật giữ chi tiết chẩn đoán, được phân biệt với audit nghiệp vụ; cả hai không lưu password hoặc token. Thời hạn lưu audit là tham số chính sách được nhóm chọn khi triển khai, không tự gán một con số khác vào baseline hiện hành.
+
+\subsubsection{Quy tắc đặc tả phương thức}
+Mỗi operation được khai báo trên class diagram có owner và mô tả tương ứng, kể cả helper, interface và xử lý nền được vẽ. Hợp đồng gồm mục đích/nguồn yêu cầu, signature/visibility, input/output, precondition, xử lý, postcondition, lỗi, side effect, transaction và hành vi khi cạnh tranh/gửi lại.
+
+Một phương thức dùng ở nhiều UC được mô tả một lần tại owner. Interface ghi bảo đảm cho bên dùng; implementation mô tả cách hiện thực bảo đảm đó và lỗi đặc thù. Phương thức chỉ đọc nêu rõ không thay đổi nghiệp vụ; command chỉ báo thành công sau mốc hoàn tất được định nghĩa trong hợp đồng.
+
+Định dạng signature là \texttt{+ methodName(parameter: Type): ReturnType}. Dùng \texttt{-}, \texttt{\#}, \texttt{\textasciitilde} cho visibility phù hợp. Một kiểu technical DTO được chốt ở đây khi xuất hiện trên class diagram cũng cần mô tả các thuộc tính và operation thực sự được sử dụng.

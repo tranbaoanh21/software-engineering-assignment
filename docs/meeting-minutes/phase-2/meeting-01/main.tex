@@ -1,0 +1,124 @@
+\documentclass[10pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{2em}
+
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section{THÔNG TIN BUỔI HỌP}
+\begin{center}
+\begin{tabularx}{\textwidth}{|>{\bfseries}L{43mm}|Y|}
+  \hline
+  Lần họp & Buổi 01 -- Phase 2\\\hline
+  Ngày họp & 30/09/2026\\\hline
+  Thời gian bắt đầu & 21:30\\\hline
+  Hình thức & Họp trực tuyến\\\hline
+  Nhóm / Lớp & K24 Warriors / L02\\\hline
+  Chủ đề & Tìm hiểu kiến thức nền, xác định nội dung Submission 2 và phân công công việc\\\hline
+  Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\\hline
+  Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\\hline
+\end{tabularx}
+\end{center}
+
+\section{THÀNH PHẦN NHÓM}
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+\stepcounter{table}
+
+\section{MỤC TIÊU BUỔI HỌP}
+Sau khi hoàn thiện Submission 1, nhóm bắt đầu chuẩn bị phần thiết kế giao diện và biểu đồ hành vi. Buổi họp tập trung vào việc hiểu rõ từng loại biểu đồ, xác định các sản phẩm cần bàn giao và chia công việc theo phạm vi đã phân tích. Nhóm cần thống nhất cách làm ngay từ đầu để giao diện, sequence, activity và state chart không mô tả những phiên bản nghiệp vụ khác nhau.
+
+\section{NỘI DUNG THẢO LUẬN}
+
+\subsection{Phạm vi công việc của Submission 2}
+Nhóm sử dụng báo cáo Submission 1 đã chốt làm cơ sở: giữ bảy phân hệ, 18 use case, tên actor, các yêu cầu và trạng thái nghiệp vụ. Phase 2 tiếp tục làm rõ cách người dùng thao tác và cách các thành phần phối hợp để thực hiện những luồng này, không mở rộng tính năng chỉ để có thêm màn hình hoặc sơ đồ.
+
+Nội dung cần chuẩn bị gồm:
+\begin{itemize}
+  \item \textbf{UI Mockup:} giao diện website theo ba vai trò, các màn hình phục vụ use case, thành phần dùng chung, thông báo và luồng chuyển màn hình. Đây là phần làm chung của cả nhóm.
+  \item \textbf{Sequence Diagram:} tương tác theo thứ tự thời gian của từng use case, kèm giải thích thành phần tham gia, thông điệp và điều kiện rẽ nhánh.
+  \item \textbf{Activity Diagram:} quy trình thực hiện từng use case, các quyết định, nhánh thay thế, ngoại lệ và kết quả kết thúc.
+  \item \textbf{State-chart Diagram:} vòng đời của các đối tượng có thay đổi trạng thái đáng kể. Đây là phần bonus; nhóm dự kiến thực hiện theo khung đã thống nhất, sau khi bảo đảm các nội dung chính.
+\end{itemize}
+
+Nhóm giữ cách trình bày theo phân hệ. Trong mỗi use case lần lượt đặt mockup, sequence và activity; state chart đặt sau các use case của phân hệ sở hữu đối tượng. Không vẽ lại cùng một vòng đời ở nhiều use case.
+
+\subsection{Tìm hiểu Activity Diagram}
+Nhóm trao đổi về điểm bắt đầu, hành động, luồng điều khiển và điểm kết thúc; cách dùng decision để rẽ nhánh và merge để nhập các đường đi thay thế. Điều kiện trên các nhánh cần rõ ràng, chẳng hạn yêu cầu hợp lệ hay không hợp lệ, tài nguyên còn khả dụng hay đã thay đổi trạng thái.
+
+Fork/join chỉ dùng khi có những công việc thực sự được thực hiện song song. Swimlane dùng để phân biệt trách nhiệm của actor với hệ thống hoặc các bên tham gia. Nhóm thống nhất không biến activity thành danh sách màn hình nối với nhau; biểu đồ phải thể hiện được xử lý nghiệp vụ, kể cả khi một bước không xuất hiện trên giao diện.
+
+\subsection{Tìm hiểu Sequence Diagram}
+Nhóm tìm hiểu actor, participant, lifeline, activation và các loại thông điệp; đọc thứ tự tương tác từ trên xuống. Các khối \texttt{alt}, \texttt{opt} và \texttt{loop} lần lượt dùng để biểu diễn các nhánh lựa chọn, xử lý có điều kiện và xử lý lặp khi cần.
+
+Mỗi sequence cần thể hiện được người dùng gửi yêu cầu, hệ thống kiểm tra điều kiện, thực hiện nghiệp vụ và trả kết quả. Với các luồng được bảo vệ, phải có bước kiểm tra phiên và quyền. Không chép toàn bộ quy trình đăng nhập vào từng use case; các thao tác tra cứu công khai của SUB-HUB vẫn giữ đúng phạm vi đã chốt.
+
+Nhóm phân biệt rõ thành phần nội bộ với hệ thống bên ngoài. \texttt{StateDataGateway} cung cấp dữ liệu trạng thái; \texttt{MapService} cung cấp thông tin vị trí và khoảng cách khi luồng cần dùng. Không mặc định rằng mọi use case đều phải gọi cả hai bên này.
+
+\subsection{Tìm hiểu State-chart Diagram}
+State chart mô tả trạng thái của một đối tượng và sự kiện làm đối tượng chuyển trạng thái, không mô tả việc chuyển màn hình. Một chuyển trạng thái cần được hiểu theo sự kiện, điều kiện bảo vệ và hành động liên quan; không thêm trạng thái mới chỉ vì một bước xử lý có tên khác.
+
+Nhóm làm rõ sự khác nhau giữa trạng thái của tài nguyên và trạng thái của giao dịch. Ví dụ, chuyến đi \texttt{Completed} không đồng nghĩa phương tiện lập tức \texttt{Available}; yêu cầu sạc và phiên sạc cũng có vòng đời riêng. Vòng đời \texttt{SharedVehicle} đặt tại SUB-TRIP nhưng phải bao quát các chuyển liên quan đến đặt xe, sử dụng, sạc và sự cố.
+
+\subsection{Quy chuẩn thuật ngữ và cách bàn giao}
+Các thành viên dùng bộ thuật ngữ Submission 2 để thống nhất tên actor, đối tượng, service và trạng thái. Các mã \texttt{UC-*}, \texttt{FR-*}, \texttt{BR-*} giữ theo Submission 1. Khi một thành phần xuất hiện trong nhiều sơ đồ, không đổi tên giữa các phần.
+
+Thành viên có thể gửi nội dung giải thích bằng Docs, DOCX hoặc Markdown và đính kèm nguồn sơ đồ cùng bản xuất hình. Nhóm trưởng tổng hợp sang LaTeX, kiểm tra bố cục và biên dịch PDF. Phần giải thích đi cùng hình tập trung vào các quyết định thiết kế và nhánh quan trọng, không chép lại toàn bộ đặc tả Phase 1.
+
+\subsection{Chuẩn bị thiết kế UI trên Figma}
+Nhóm thống nhất làm website và cùng thiết kế UI trên Figma. Trước khi đi vào từng màn hình, các thành viên tìm mẫu phù hợp với tra cứu Hub, tài nguyên và dashboard vận hành, gửi vào nhóm để cùng lựa chọn. Không lấy nguyên các chức năng của mẫu nếu chúng nằm ngoài phạm vi SEMH.
+
+UI cần phục vụ đúng ba vai trò: Sinh viên sử dụng dịch vụ; Nhân viên vận hành giám sát và quản lý nghiệp vụ; Nhân viên kỹ thuật xử lý sự cố được giao. Nhóm chưa chốt mẫu giao diện trong buổi này, dành buổi tiếp theo để lựa chọn và bắt đầu chỉnh sửa chi tiết.
+
+\section{PHÂN CÔNG CÔNG VIỆC}
+UI Mockup do cả bảy thành viên cùng thực hiện trên file Figma chung. Phần biểu đồ hành vi giữ phân công theo phân hệ từ Phase 1:
+
+\begingroup
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{|L{37mm}|L{24mm}|L{81mm}|}
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Thành viên} & \textbf{Phân hệ} & \textbf{Nội dung phụ trách}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Thành viên} & \textbf{Phân hệ} & \textbf{Nội dung phụ trách (tiếp theo)}\\\hline
+  \endhead
+  Nguyễn Quốc Trung & SUB-HUB & Sequence, activity và giải thích của UC-HUB-01--03. Không thêm state chart riêng cho thao tác tra cứu.\\\hline
+  Phan Võ Bảo Trâm & SUB-RES & Sequence, activity và giải thích của UC-RES-01--02; state chart \texttt{VehicleReservation}.\\\hline
+  Lê Nguyễn Tường Vi & SUB-TRIP & Sequence, activity và giải thích của UC-TRIP-01--02; state chart \texttt{Trip}, \texttt{SharedVehicle}.\\\hline
+  Nguyễn Ngọc Hân & SUB-PARK & Sequence, activity và giải thích của UC-PARK-01--03; state chart \texttt{ParkingReservation}, \texttt{ParkingSpace}.\\\hline
+  Trần Thị Hương Giang & SUB-CHG & Sequence, activity và giải thích của UC-CHG-01--03; state chart \texttt{ChargingRequest}, \texttt{ChargingSession}, \texttt{ChargingPoint}.\\\hline
+  Nguyễn Thị Minh Anh & SUB-OPS & Sequence, activity và giải thích của UC-OPS-01--03; state chart \texttt{Incident}, \texttt{RedistributionPlan}.\\\hline
+  Trần Nhật Bảo Anh & SUB-SIM & Sequence, activity và giải thích của UC-SIM-01--02; state chart \texttt{SimulationRun}; tổng hợp và kiểm soát báo cáo.\\\hline
+\end{longtable}
+\endgroup
+
+Mỗi người chịu trách nhiệm hoàn thiện gói biểu đồ của phân hệ mình. Khi gặp điểm giao giữa các phân hệ, thành viên nêu rõ vấn đề để nhóm trưởng thống nhất cách biểu diễn; không tự sửa mã hoặc trạng thái đã dùng chung.
+
+\section{KẾT QUẢ VÀ CÔNG VIỆC TIẾP THEO}
+\begin{enumerate}
+  \item Giữ nội dung nghiệp vụ đã chốt ở Submission 1; thiết kế mockup và cặp sequence/activity cho đủ 18 use case.
+  \item Cả nhóm tìm hiểu ký hiệu UML trước khi vẽ; dùng tài liệu kiến thức và quy chuẩn thuật ngữ chung khi thực hiện.
+  \item Từng thành viên bắt đầu phác thảo biểu đồ của phân hệ được giao, ghi lại những nhánh hoặc tương tác chưa rõ để trao đổi khi tổng hợp.
+  \item Cả nhóm tìm và đề xuất mẫu UI website trước buổi họp ngày 07/10; ưu tiên mẫu dễ chỉnh sửa và có bố cục phù hợp với cả tra cứu lẫn dashboard.
+  \item Nhóm trưởng tổng hợp nội dung và định dạng báo cáo; mỗi thành viên đọc lại phần của mình trong bản PDF sau khi tích hợp.
+\end{enumerate}
+
+Các điểm cần theo dõi là việc dùng sai ký hiệu, lệch tên trạng thái và thêm thao tác không có trong đặc tả. Nếu thiếu thời gian, nhóm ưu tiên mockup, sequence và activity trước phần state chart bonus. Không dùng việc làm đẹp sơ đồ để thay cho việc kiểm tra nội dung nghiệp vụ.
+
+\section{KẾT LUẬN BUỔI HỌP}
+Nhóm đã thống nhất nội dung cần hoàn thành trong Submission 2 và cách phân chia phần thiết kế hành vi theo bảy phân hệ. UI là công việc chung, thực hiện trên Figma sau khi chọn mẫu. Các thành viên tiếp tục tìm hiểu ký hiệu, chuẩn bị biểu đồ và đề xuất giao diện để buổi họp tiếp theo có thể đi vào thiết kế chi tiết.
+
+\end{document}

@@ -1,0 +1,94 @@
+\chapter{Thiết kế lớp và mô tả phương thức}
+\subsection{Vì sao tên method chưa đủ?}
+Hai người có thể cùng viết \code{cancelReservation(id)} nhưng một người hủy mọi trạng thái, người kia chỉ hủy khi Confirmed. Nếu không có hợp đồng, tích hợp vẫn sai dù tên giống hệt. Method description xác định những điều bên gọi được dựa vào và bên hiện thực phải giữ.
+
+Không phải viết lại toàn bộ main flow vào mọi method. Một use case thường đi qua nhiều method; mỗi method mô tả đúng phần trách nhiệm của mình. Ngược lại, một method có thể được nhiều UC dùng chung.
+
+\subsection{Mô tả class trước khi mô tả operation}
+Một class nên có: tên và vai trò, trách nhiệm chính, thuộc tính quan trọng, invariant và các quan hệ cần giữ. Nếu khó nói trách nhiệm bằng một câu rõ nghĩa, class có thể đang ôm quá nhiều việc hoặc tồn tại mà không có lý do.
+
+Ví dụ Course giữ khả năng tiếp nhận đăng ký và kiểm soát số người đã nhận. Invariant: capacity không âm, enrolledCount không âm và không vượt capacity. Course không cần biết token HTTP được đặt trong header nào.
+
+\subsection{Những trường cần có trong một hợp đồng}
+\begin{longtable}{|L{33mm}|L{109mm}|}\hline
+\textbf{Trường} & \textbf{Nội dung cần quyết định}\\\hline
+\endfirsthead
+\hline
+\textbf{Trường} & \textbf{Nội dung cần quyết định}\\\hline
+\endhead
+Owner và signature & Class sở hữu; tên method; tên, kiểu tham số và kiểu trả về.\\\hline
+Mục đích & Một trách nhiệm kiểm chứng được, không chỉ viết ``xử lý dữ liệu''.\\\hline
+Input & Đơn vị, miền giá trị, trường bắt buộc, nguồn danh tính và trường có thể thiếu.\\\hline
+Precondition & Điều kiện cần đúng trước khi thao tác được thực hiện hợp lệ.\\\hline
+Postcondition & Điều được bảo đảm sau thành công; nêu cả trạng thái và giá trị trả về.\\\hline
+Error/failure & Trường hợp không thực hiện được và trạng thái phải được giữ sau lỗi.\\\hline
+Side effect & Dữ liệu ghi, log/audit, sự kiện hoặc lệnh ra ngoài; ghi ``không'' nếu chỉ đọc.\\\hline
+Concurrency & Transaction, khóa/version, điều kiện cập nhật và cách tránh ghi đè/đặt trùng.\\\hline
+Retry và idempotency & Có thể thử lại không; nhận diện yêu cầu cũ thế nào; khi nào không được tự lặp.\\\hline
+Liên hệ và kiểm chứng & UC/BR liên quan, caller chính và test kiểm chứng hành vi.\\\hline
+\end{longtable}
+
+Không bắt buộc mọi method đơn giản có một bảng dài bằng nhau. Một getter thuần có thể mô tả gọn. Nhưng không được bỏ qua transaction hoặc side effect của thao tác đặt, xác nhận và kết thúc chỉ để bảng ngắn.
+
+\subsection{Precondition, validation, guard và invariant}
+\point{Precondition không miễn kiểm tra ở server}
+``Lượt đặt thuộc người dùng'' là điều kiện thực hiện; không có nghĩa server tin vào ID do UI gửi. Điểm vào hệ thống vẫn xác minh điều kiện. Bên trong một helper private có thể dựa vào caller, nhưng phải nói rõ phạm vi tin cậy đó.
+
+\point{Validation}
+Là hành động kiểm tra. Cần tách hình thức dữ liệu, quyền truy cập và điều kiện nghiệp vụ. Một số hợp lệ về cú pháp vẫn có thể bị từ chối vì không đủ chỗ hoặc không có quyền.
+
+\point{Guard}
+Là điều kiện cho một chuyển trạng thái hoặc nhánh. Ví dụ chỉ Confirmed mới được đổi sang Expired khi đã tới expiresAt và chưa bàn giao. Method làm transition cần giữ chính guard đó, không chỉ gán một chuỗi status.
+
+\point{Invariant}
+Phải giữ ở các trạng thái hợp lệ của đối tượng/miền. Nếu kiểm tra rồi cập nhật bằng hai thao tác độc lập, một luồng khác có thể chen vào làm invariant bị phá. Hợp đồng phải nói cơ chế bảo vệ chứ không chỉ nêu mong muốn.
+
+\subsection{Return value và lỗi}
+Có thể dùng exception có kiểu, result object hoặc mã lỗi nhất quán; không cần ép mọi ngôn ngữ theo một mẫu. Phải phân biệt không tìm thấy, không đủ điều kiện, không có quyền, xung đột phiên bản và lỗi hạ tầng khi bên gọi cần xử lý khác nhau.
+
+Ví dụ một \code{EnrollmentResult} có mã Confirmed, Full, Duplicate, Inactive hoặc Conflict. Một lỗi kết nối dữ liệu không nên bị trả thành Full vì bên gọi sẽ hiểu sai tình trạng khóa học.
+
+Không trả \code{null} cho tất cả lỗi rồi bắt UI tự suy ra. Không đưa stack trace hoặc chi tiết database nhạy cảm ra response công khai.
+
+\subsection{Query và command}
+\textbf{Query} lấy thông tin; \textbf{command} thay đổi trạng thái nghiệp vụ. Một query có thể ghi log kỹ thuật hoặc metric, nhưng không nên âm thầm tạo booking hay phân bổ lại lịch sạc. Nếu có side effect, phải nêu rõ và đánh giá việc gọi lặp.
+
+Ví dụ xem lịch sạc không được tự điều chỉnh một phiên đang Charging chỉ vì người dùng làm mới màn hình. Tên method bắt đầu bằng get không tự chứng minh nó chỉ đọc; cần kiểm tra nội dung hợp đồng.
+
+\subsection{Transaction và thay đổi nguyên tử}
+Transaction gom các thay đổi cần thành công hoặc thất bại cùng nhau. Ví dụ vừa tăng số người đăng ký vừa tạo Registration: không được tăng số lượng rồi mất bản ghi đăng ký nếu bước sau thất bại.
+
+\glyph{\node[draw,minimum width=111mm,minimum height=31mm] (tx) at (0,0) {};
+  \node[above] at (tx.north) {Một transaction};
+  \node[smallbox] (a) at (-3.5,0) {Kiểm tra\ trạng thái};
+  \node[smallbox] (b) at (0,0) {Cập nhật\ số lượng};
+  \node[smallbox] (c) at (3.5,0) {Ghi\ đăng ký};
+  \draw[->] (a)--(b);\draw[->] (b)--(c);}
+  {Các bước cần cùng giữ một kết quả nhất quán}
+
+Atomicity không có nghĩa mọi vấn đề cạnh tranh đã được giải quyết. Còn phải chọn isolation, khóa, điều kiện ghi hoặc ràng buộc phù hợp. Chỉ đặt hai lệnh ghi trong transaction mà không bảo vệ bước kiểm tra vẫn có thể sai.
+
+Lệnh gửi ra thiết bị ngoài không tự rollback theo transaction SQL. Nếu gửi lệnh rồi mất phản hồi, cần đọc lại trạng thái hoặc có quy trình hòa giải. Đừng viết ``rollback'' như một thao tác có thể đưa thế giới vật lý về trước.
+
+\subsection{Ba cơ chế cạnh tranh cần hiểu}
+\begin{enumerate}
+  \item \textbf{Khóa}: ngăn thao tác cạnh tranh sửa cùng tài nguyên trong một phạm vi. Phải biết khóa ở đâu, giữ tới khi nào và có bao phủ nhiều process không.
+  \item \textbf{Optimistic version / compare-and-set}: chỉ ghi nếu version hoặc trạng thái vẫn như lúc đọc. Không đạt điều kiện thì trả conflict và không ghi một phần.
+  \item \textbf{Unique constraint}: nơi lưu dữ liệu từ chối những tổ hợp không được trùng. Với ràng buộc ``đang hiệu lực'', cần mô hình phù hợp; unique toàn bộ lịch sử thường quá chặt.
+\end{enumerate}
+Có thể kết hợp các cơ chế. Mutex trong một process không bảo vệ hai backend process khác nhau. Một file JSON cũng không tự có transaction an toàn chỉ vì thao tác ghi tương đối nhanh.
+
+\subsection{Idempotency: thử lại mà không tạo tác động trùng}
+Idempotent nói về hiệu ứng: gửi lại cùng một thao tác hợp lệ theo hợp đồng không nhân đôi tác động dự định. Response không nhất thiết giống từng byte. Một yêu cầu mới khác người dùng hoặc khác payload không được coi là yêu cầu cũ chỉ vì tình cờ dùng cùng ID.
+
+Với yêu cầu có thể mất phản hồi, lưu request ID cùng kết quả trong cùng transaction khi cần. Khi thử lại, đối chiếu danh tính và nội dung; trả kết quả đã xác nhận hoặc báo key dùng sai. Không tạo booking lần hai chỉ vì UI chưa nhận được response lần đầu.
+
+\subsection{Thời gian, tác vụ nền và dữ liệu ngoài}
+Nêu rõ expiresAt tính từ thời điểm nào, đơn vị gì và dùng đồng hồ nào. Trong code kiểm thử có thể truyền Clock thay vì chờ thật 10 phút. Khi sự kiện hết hạn và nhận xe cạnh tranh, method cần kiểm tra trạng thái hiện tại một cách nhất quán.
+
+Dữ liệu bên ngoài cần quy định event ID, tài nguyên, thời điểm đo/nhận, thứ tự/version và độ hợp lệ. Một sự kiện đến muộn không được vô điều kiện ghi đè trạng thái mới. Nguồn ngoài không được tự mở tài nguyên đã Inactive bằng một giá trị Available.
+
+\subsection{Từ sequence tới method descriptions}
+Đọc từng thông điệp nghiệp vụ trong sequence và xác định receiver chịu trách nhiệm. Sau đó chốt signature, chuyển điều kiện nhánh thành validation/guard, xác định dữ liệu được ghi và nhóm các ghi cần nguyên tử. Cuối cùng đối chiếu transition trong state chart.
+
+Không chuyển mọi mũi tên UI thành một method domain. Cũng không bỏ tác vụ tự động chỉ vì nó không có nút bấm. Với method xuất hiện ở nhiều UC, mô tả hợp đồng một lần tại class chuẩn rồi dẫn chiếu các nơi dùng.

@@ -1,0 +1,177 @@
+@startuml
+title UC-CHG-02 - Biểu đồ hoạt động Theo dõi lịch và phiên sạc
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+' Cấu hình nét vẽ đen trắng chuẩn in ấn báo cáo
+skinparam activityBorderColor #000000
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityDiamondBorderColor #000000
+skinparam activityDiamondBackgroundColor #F2F2F2
+skinparam swimlaneBorderColor #000000
+skinparam swimlaneTitleFontStyle bold
+skinparam NoteBorderColor #000000
+skinparam NoteBackgroundColor #FAFAFA
+skinparam ArrowColor #000000
+skinparam roundcorner 6
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+|Giao diện sạc\n(ChargingUI)|
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+start
+
+note right
+  Dữ liệu trạng thái và telemetry từ ACT-DAT (EXT-STATE) được tiếp nhận
+  qua tiến trình nền độc lập và lưu tại SEMHDataStore.
+  UC-CHG-02 là tác vụ chỉ đọc (read-only), không làm thay đổi trạng thái lịch/phiên sạc.
+end note
+
+:Mở màn hình theo dõi và chọn bộ lọc tra cứu;
+
+|Giao diện sạc\n(ChargingUI)|
+:Gửi yêu cầu tải dữ liệu tổng quan theo bộ lọc (filters);
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Kiểm tra phiên làm việc và phạm vi phân quyền (FR-GEN-03);
+
+if (Phiên hết hạn hoặc không hợp lệ?) then (Có - EF-04)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo yêu cầu đăng nhập lại;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+endif
+
+if (Không có quyền xem hoặc vượt phạm vi được cấp?) then (Có - EF-01)
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Ghi nhận sự kiện từ chối truy cập (recordAccessDenial);
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo từ chối truy cập;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Truy xuất danh sách ChargingRequest và ChargingSession thuộc phạm vi;
+
+if (Tải dữ liệu từ kho lưu trữ thất bại?) then (Có - EF-03)
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo lỗi tải dữ liệu và giữ nguyên bộ lọc;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Đọc trạng thái cổng sạc, mức pin và telemetry hợp lệ gần nhất;
+
+if (Có yêu cầu Pending chưa được phân bổ cổng?) then (Có - AF-01)
+  :Lấy vị trí số thứ tự trong hàng đợi sạc;
+endif
+
+:Bắt đầu tổng hợp dữ liệu cho từng yêu cầu / phiên sạc;
+
+while (Còn mục trong danh sách cần tổng hợp?) is (Có)
+  if (Không có dữ liệu trạng thái hợp lệ?) then (Có - EF-02)
+    :Đánh dấu tiến độ và thời gian dự kiến là chưa sẵn sàng;
+  else (Dữ liệu hợp lệ)
+    if (Dữ liệu pin có thể đã cũ theo NFR-REL-01?) then (Có - AF-04)
+      :Gắn cờ cảnh báo dữ liệu cũ (staleWarning kèm updatedAt);
+      note right
+        Dữ liệu cũ (AF-04) không tự động làm
+        thay đổi phiên sạc sang Interrupted.
+      end note
+    endif
+
+    if (Phiên sạc đang ở trạng thái Paused hoặc Interrupted?) then (Có - AF-03)
+      :Gắn thông tin nguyên nhân tạm dừng / gián đoạn đã biết;
+    endif
+
+    if (Yêu cầu ở trạng thái Pending chưa phân bổ cổng?) then (Có - AF-01)
+      :Thiết lập thông tin hiển thị vị trí hàng đợi chờ;
+    else (Đã có cổng / Đang sạc)
+      if (Đủ dữ liệu hợp lệ để ước tính\ntheo BR-CHG-03?) then (Có)
+        :Đọc lịch đã lưu;\nƯớc tính thời gian còn lại theo BR-CHG-03;\nKhông xếp lại hoặc ghi thay đổi lịch;
+      else (Thiếu dữ liệu)
+        :Đánh dấu thời gian hoàn tất là chưa sẵn sàng;
+      endif
+    endif
+  endif
+endwhile (Đã duyệt xong)
+
+:Đóng gói dữ liệu tổng quan giám sát (overview);
+
+|Giao diện sạc\n(ChargingUI)|
+:Hiển thị danh sách giám sát lịch sạc và tiến độ các phiên sạc;
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+while (Người dùng yêu cầu làm mới dữ liệu?) is (Có - AF-02)
+  :Bấm nút làm mới danh sách;
+  
+  |Giao diện sạc\n(ChargingUI)|
+  :Gửi yêu cầu làm mới dữ liệu kèm bộ lọc;
+
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Tái xác thực quyền và phiên truy cập;
+  if (Phiên hết hạn hoặc không có quyền?) then (Có)
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị thông báo lỗi phiên / Từ chối thao tác;
+    |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+    stop
+  endif
+
+  |Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+  :Thực hiện lại bước truy xuất và tổng hợp dữ liệu mới nhất;
+
+  if (Tải dữ liệu thất bại?) then (Có - EF-03)
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị thông báo lỗi và giữ nguyên trạng thái cũ;
+  else (Thành công)
+    |Giao diện sạc\n(ChargingUI)|
+    :Hiển thị danh sách tổng quan đã được làm mới;
+  endif
+
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+endwhile (Không)
+
+:Chọn một mục sạc cụ thể để xem chi tiết (selectChargingItem);
+
+|Giao diện sạc\n(ChargingUI)|
+:Gửi yêu cầu xem chi tiết mục sạc (requestId);
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Xác minh quyền truy cập đối với mục sạc đã chọn;
+
+if (Mục sạc không thuộc quyền hoặc phiên hết hạn?) then (Có - EF-01, EF-04)
+  :Ghi nhận từ chối truy cập (recordAccessDenial);
+  |Giao diện sạc\n(ChargingUI)|
+  :Hiển thị thông báo từ chối truy cập / Yêu cầu đăng nhập;
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+endif
+
+|Hệ thống SEMH\n(ChargingService / SEMHDataStore)|
+:Truy xuất thông tin chi tiết, lịch sử trạng thái và cảnh báo liên quan;
+
+|Giao diện sạc\n(ChargingUI)|
+:Hiển thị màn hình chi tiết mục sạc, lịch sử và các cảnh báo;
+
+|Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+if (ACT-OPR muốn điều chỉnh lịch và yêu cầu là Pending hoặc Scheduled?) then (Có)
+  |Giao diện sạc\n(ChargingUI)|
+  :Mở giao diện điều chỉnh lịch sạc ưu tiên;
+  note right
+    Tham chiếu quy trình UC-CHG-03.
+    UC-CHG-02 chỉ chuyển hướng, không trực tiếp cập nhật lịch.
+  end note
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+else (Không)
+  |Sinh viên / Nhân viên vận hành\n(ACT-STU / ACT-OPR)|
+  stop
+endif
+
+@enduml

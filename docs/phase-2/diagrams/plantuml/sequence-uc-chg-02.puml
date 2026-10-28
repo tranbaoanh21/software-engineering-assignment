@@ -1,0 +1,228 @@
+@startuml
+title UC-CHG-02 - Theo dõi lịch và phiên sạc
+
+hide footbox
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 130
+skinparam roundcorner 4
+
+skinparam monochrome true
+skinparam ParticipantPadding 10
+skinparam BoxPadding 10
+
+' Đường gióng và thanh kích hoạt (Activation Bar)
+skinparam LifeLineBorderColor #000000
+skinparam LifeLineBackgroundColor #D9D9D9
+
+' Đối tượng tham gia
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+
+' Các khối nhóm điều khiển
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupHeaderBackgroundColor #E0E0E0
+skinparam SequenceGroupBackgroundColor #FFFFFF
+
+' Ghi chú và phân bước
+skinparam NoteBorderColor #000000
+skinparam NoteBackgroundColor #FAFAFA
+skinparam SequenceDividerBorderColor #000000
+skinparam SequenceDividerBackgroundColor #F0F0F0
+skinparam SequenceDividerFontStyle bold
+skinparam ArrowColor #000000
+
+actor "Sinh viên (ACT-STU)\nhoặc Nhân viên vận hành (ACT-OPR)" as ACT
+boundary "Giao diện sạc\n(ChargingUI)" as ChargingUI
+control "Dịch vụ sạc\n(ChargingService)" as ChargingService
+control "Kiểm soát truy cập\n(AccessService)" as AccessService
+database "Kho dữ liệu SEMH\n(SEMHDataStore)" as SEMHDataStore
+
+note over ChargingService, SEMHDataStore
+  Dữ liệu trạng thái và telemetry từ ACT-DAT (EXT-STATE) được tiếp nhận
+  qua tiến trình nền độc lập và lưu trữ tại SEMHDataStore.
+  UC-CHG-02 là tác vụ chỉ đọc (read-only), không làm thay đổi trạng thái lịch/phiên sạc.
+end note
+
+== Bước 1: Mở chức năng và kiểm tra phạm vi truy cập ==
+ACT -> ChargingUI : openChargingMonitoring(filters)
+activate ChargingUI
+
+ChargingUI -> ChargingService : getChargingOverview(filters)
+activate ChargingService
+
+ChargingService -> AccessService : verifyChargingViewAccess(filters)
+activate AccessService
+AccessService --> ChargingService : authResult + permittedScope
+deactivate AccessService
+
+break [Phiên không hợp lệ / Hết phiên - EF-04]
+  ChargingService --> ChargingUI : sessionExpired
+  ChargingUI --> ACT : showLoginRequired()
+end
+
+break [Không có quyền truy cập - EF-01]
+  ChargingService --> ChargingUI : accessDenied
+  ChargingUI --> ACT : showAccessDenied()
+end
+
+break [Yêu cầu ngoài phạm vi phân quyền - EF-01]
+  ChargingService -> ChargingService : recordAccessDenial()
+  ChargingService --> ChargingUI : itemAccessDenied
+  ChargingUI --> ACT : showAccessDenied()
+end
+
+== Bước 2: Truy xuất yêu cầu và phiên sạc thuộc phạm vi ==
+ChargingService -> SEMHDataStore : getChargingRequestsAndSessions(permittedScope, filters)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : requestSessionResult
+deactivate SEMHDataStore
+
+break [Không thể tải dữ liệu theo dõi - EF-03]
+  ChargingService --> ChargingUI : trackingLoadError
+  ChargingUI --> ACT : showLoadErrorAndKeepFilters()
+end
+
+== Bước 3: Lấy trạng thái và telemetry đã chấp nhận ==
+ChargingService -> SEMHDataStore : getLatestAcceptedChargingTelemetry(requestIds)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : pointStatus + batteryLevel + telemetry + updatedAt
+deactivate SEMHDataStore
+
+opt [Có yêu cầu Pending chưa phân bổ cổng - AF-01]
+  ChargingService -> SEMHDataStore : getChargingQueuePositions(pendingRequestIds)
+  activate SEMHDataStore
+  SEMHDataStore --> ChargingService : queuePositions
+  deactivate SEMHDataStore
+end
+
+== Bước 4: Tổng hợp tiến độ và thời gian dự kiến cho từng mục ==
+loop [Với từng ChargingRequest và ChargingSession liên quan]
+  alt [Có dữ liệu trạng thái hợp lệ]
+    opt [Dữ liệu pin có thể đã cũ - AF-04 / NFR-REL-01]
+      ChargingService -> ChargingService : markStaleTelemetry(updatedAt)
+      note right of ChargingService
+        Dữ liệu cũ (AF-04) không tự làm
+        thay đổi phiên sạc sang Interrupted.
+      end note
+    end
+  else [Không có dữ liệu trạng thái hợp lệ - EF-02]
+    ChargingService -> ChargingService : markProgressAndEstimateUnavailable()
+  end
+
+  opt [ChargingSession Paused hoặc Interrupted - AF-03]
+    ChargingService -> ChargingService : attachKnownPauseOrInterruptionReason()
+  end
+
+  alt [ChargingRequest Pending chưa có cổng - AF-01]
+    ChargingService -> ChargingService : preparePendingQueueOverview()
+  else [Yêu cầu đã có lịch hoặc phiên sạc liên quan]
+    opt [Đủ dữ liệu hợp lệ để ước tính thời gian]
+      ChargingService -> ChargingService : estimateRemainingTime() - BR-CHG-03
+      note right of ChargingService
+        Lịch phân bổ lấy từ dữ liệu đã lưu (BR-CHG-04).
+        Chỉ ước tính phần còn lại; không ghi hoặc xếp lại lịch.
+      end note
+    end
+  end
+end
+
+ChargingService -> ChargingService : composeChargingOverview()
+note right of ChargingService
+  overview gồm:
+  - ChargingRequest: status, priority
+  - ChargingPoint được phân bổ
+  - ChargingSession: status
+  - batteryLevel, estimatedTime
+end note
+
+== Bước 5: Hiển thị danh sách và tiến độ sạc ==
+ChargingService --> ChargingUI : overview + updatedAt + warnings
+deactivate ChargingService
+
+ChargingUI --> ACT : showChargingOverview()
+deactivate ChargingUI
+
+loop [Actor yêu cầu làm mới trạng thái - AF-02]
+  ACT -> ChargingUI : refreshChargingOverview(filters)
+  activate ChargingUI
+
+  ChargingUI -> ChargingService : refreshChargingOverview(filters)
+  activate ChargingService
+
+  ChargingService -> AccessService : verifyChargingViewAccess(filters)
+  activate AccessService
+  AccessService --> ChargingService : authResult + permittedScope
+  deactivate AccessService
+
+  alt [Phiên hoặc quyền không hợp lệ - EF-04, EF-01]
+    ChargingService --> ChargingUI : authorizationError
+    ChargingUI --> ACT : showAccessDeniedOrLoginRequired()
+  else [Quyền truy cập hợp lệ]
+    ref over ChargingService, SEMHDataStore
+      Thực hiện lại Bước 2-4 bằng trạng thái mới nhất đã chấp nhận
+      (Bao gồm xử lý EF-03 nếu tải dữ liệu thất bại)
+    end ref
+
+    alt [Không thể tải dữ liệu mới - EF-03]
+      ChargingService --> ChargingUI : trackingLoadError
+      ChargingUI --> ACT : showLoadErrorAndKeepFilters()
+    else [Làm mới dữ liệu thành công]
+      ChargingService --> ChargingUI : updatedOverview + updatedAt + warnings
+      ChargingUI --> ACT : showUpdatedChargingOverview()
+    end
+  end
+
+  deactivate ChargingService
+  deactivate ChargingUI
+end
+
+== Bước 6: Xem lịch sử trạng thái và cảnh báo của mục được chọn ==
+ACT -> ChargingUI : selectChargingItem(requestId)
+activate ChargingUI
+
+ChargingUI -> ChargingService : getChargingItemDetails(requestId)
+activate ChargingService
+
+ChargingService -> AccessService : verifyChargingItemAccess(requestId)
+activate AccessService
+AccessService --> ChargingService : authResult
+deactivate AccessService
+
+break [Mục không thuộc phạm vi được xem - EF-01]
+  ChargingService -> ChargingService : recordAccessDenial()
+  ChargingService --> ChargingUI : itemAccessDenied
+  ChargingUI --> ACT : showAccessDenied()
+end
+
+break [Phiên hết hạn hoặc thiếu quyền - EF-04]
+  ChargingService --> ChargingUI : authorizationError
+  ChargingUI --> ACT : showAccessDeniedOrLoginRequired()
+end
+
+ChargingService -> SEMHDataStore : getChargingItemDetailsAndHistory(requestId)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : itemDetails + statusHistory + relatedAlerts
+deactivate SEMHDataStore
+
+ChargingService --> ChargingUI : itemDetails + statusHistory + relatedAlerts
+deactivate ChargingService
+
+ChargingUI --> ACT : showChargingItemDetails()
+deactivate ChargingUI
+
+opt [ACT-OPR chọn yêu cầu Pending hoặc Scheduled để điều chỉnh]
+  ACT -> ChargingUI : openChargingAdjustment(requestId)
+  activate ChargingUI
+  ref over ChargingUI, ChargingService
+    UC-CHG-03: Điều chỉnh lịch sạc ưu tiên
+    (Kiểm tra quyền điều chỉnh và cập nhật lịch tại UC-CHG-03)
+  end ref
+  deactivate ChargingUI
+end
+
+@enduml

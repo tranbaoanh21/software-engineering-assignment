@@ -1,0 +1,28 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+!pragma layout smetana
+hide empty description
+title ServiceStatus - Cho phép phục vụ tài nguyên
+[*] --> Draft : / tạo bản ghi danh mục và audit
+Draft --> Active : resourceActivated [đủ điều kiện theo loại; Hub cha Active nếu có]\n/ lưu lý do và audit
+Active -down-> Inactive : resourceDeactivated\n[không còn ràng buộc sử dụng]\n/ chặn cấp phát mới;\nghi lý do và audit
+Inactive -right-> Active : resourceActivated\n[đủ điều kiện; không còn lỗi]\n/ ghi lý do và audit
+note right of Active
+  ServiceStatus độc lập với trạng thái vật lý.
+  Available không đủ để cấp phát nếu chưa Active.
+  Không đổi OutOfService thành Available bằng kích hoạt.
+  ACT-MNT xác nhận lỗi đã khắc phục qua UC-OPS-02.
+end note
+note bottom of Inactive
+  Ngừng Hub kiểm tra cả tài nguyên con.
+  Không tự hủy lượt đặt, Trip, sạc hoặc kế hoạch.
+  Kiểm tra trạng thái và ràng buộc trong giao dịch;
+  cấp phát mới phải kiểm tra cùng điều kiện để tránh race.
+end note
+@enduml

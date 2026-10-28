@@ -1,0 +1,82 @@
+\chapter{Thiết kế test case (Bonus)}
+\subsection{Test case là gì?}
+Test case xác định một tình huống kiểm tra cụ thể: dữ liệu và trạng thái ban đầu, thao tác, kết quả mong đợi. ``Kiểm tra đăng ký'' là một mục tiêu quá rộng; ``Khóa học còn một chỗ, gửi hai yêu cầu đồng thời, chỉ một đăng ký được xác nhận'' mới là tình huống kiểm chứng được.
+
+Thiết kế test case không đồng nghĩa đã chạy test. Expected result được viết trước theo yêu cầu. Actual result và trạng thái Pass/Fail chỉ được ghi sau khi có lần chạy và kết quả thật.
+
+\subsection{Các mức kiểm thử}
+\begin{longtable}{|L{26mm}|L{116mm}|}\hline
+\textbf{Mức} & \textbf{Kiểm tra gì và ví dụ}\\\hline
+\endfirsthead
+\hline
+\textbf{Mức} & \textbf{Kiểm tra gì và ví dụ}\\\hline
+\endhead
+Unit & Một đơn vị logic được cô lập, như Course.hasSeat hoặc công thức tính thời lượng sạc. Nhanh, nhưng không chứng minh transaction database thật hoạt động.\\\hline
+Integration & Các phần phối hợp, như repository với database hoặc adapter với nguồn sự kiện giả lập. Kiểm tra mapping, ràng buộc và rollback.\\\hline
+API/service & Luồng request qua xác thực, validation, nghiệp vụ và response. Có thể gồm nhiều thành phần và không cần mở trình duyệt.\\\hline
+System / end-to-end & Luồng sử dụng trên hệ thống kết hợp, từ màn hình tới kết quả. Bao phủ trải nghiệm nhưng thường chậm và khó định vị lỗi hơn.\\\hline
+\end{longtable}
+Đây là cách phân biệt thực dụng cho bài nhóm; không cần tranh luận một tên công cụ thuộc duy nhất mức nào. Cần mô tả ranh giới đang kiểm tra và phần nào đã được thay thế bằng test double.
+
+\subsection{Stub, mock và fake}
+\textbf{Stub} trả dữ liệu đã chuẩn bị, như gateway trả một mức pin xác định. \textbf{Mock} thường dùng để kiểm tra tương tác kỳ vọng, như lệnh mở khóa chỉ được gửi một lần. \textbf{Fake} là hiện thực đơn giản vẫn có hành vi, như store trong bộ nhớ.
+
+Tên gọi trong framework có thể khác, nên nói rõ cách test dùng nó. Fake không có isolation/ràng buộc giống database thật có thể khiến test concurrent đặt xe vượt qua mà lỗi vẫn tồn tại khi chạy thực tế.
+
+\subsection{Cấu trúc một test case}
+\begin{longtable}{|L{31mm}|L{111mm}|}\hline
+\textbf{Trường} & \textbf{Ý nghĩa}\\\hline
+\endfirsthead
+\hline
+\textbf{Trường} & \textbf{Ý nghĩa}\\\hline
+\endhead
+ID và mục tiêu & Nhận diện tình huống và hành vi/rủi ro cần kiểm chứng.\\\hline
+Liên quan & UC, BR/FR/NFR và class/method mục tiêu.\\\hline
+Precondition & Trạng thái tài nguyên, quyền actor và môi trường ban đầu.\\\hline
+Test data & Input, ID, mức pin, thời gian, phiên bản và phản hồi nguồn ngoài.\\\hline
+Steps & Các bước có thể lặp lại; chỉ rõ nếu phải gửi đồng thời.\\\hline
+Expected result & Response cùng tác động dữ liệu và điều không được xảy ra.\\\hline
+Actual / evidence & Kết quả thực tế, phiên bản chạy, log hoặc báo cáo test; chưa chạy thì ghi rõ.\\\hline
+\end{longtable}
+
+Arrange--Act--Assert là cách đọc ngắn: chuẩn bị dữ liệu, thực hiện thao tác, kiểm tra kết quả. Không chỉ assert mã HTTP mà bỏ trạng thái trong store. HTTP thành công nhưng tài nguyên bị gán hai lần vẫn là lỗi.
+
+\subsection{Equivalence partition và boundary value}
+Chia input thành các lớp có hành vi tương đương để không thử ngẫu nhiên quá nhiều. Ví dụ số chỗ còn lại: không còn chỗ, còn chỗ hợp lệ và dữ liệu sức chứa không hợp lệ.
+
+Ưu tiên giá trị sát biên. Nếu một quy tắc cho phép mức pin từ 30\% thì thử 29\%, 30\%, 31\%. Nếu input cho phép số thập phân, chọn giá trị sát biên theo độ chính xác đã thống nhất, không mặc nhiên chỉ có số nguyên.
+
+Với thời hạn expiresAt, thử ngay trước, đúng bằng và ngay sau thời hạn. Hợp đồng phải quyết định \code{now >= expiresAt} có bị coi là hết hạn không; người viết test không tự chọn thay nghiệp vụ.
+
+\subsection{Decision table và state-transition test}
+\begin{center}\begin{tabularx}{\linewidth}{|C{23mm}|C{24mm}|C{24mm}|Y|}\hline
+\textbf{Có quyền} & \textbf{Còn hiệu lực} & \textbf{Xe hợp lệ} & \textbf{Kết quả mong đợi}\\\hline
+Không & Bất kỳ & Bất kỳ & Từ chối; không thay đổi dữ liệu.\\\hline
+Có & Không & Bất kỳ & Không bàn giao; xử lý theo trạng thái hiện tại.\\\hline
+Có & Có & Không & Không bắt đầu chuyến đi; giữ kết quả kiểm tra thực tế.\\\hline
+Có & Có & Có & Chỉ bắt đầu khi nhận xác nhận bàn giao hợp lệ.\\\hline
+\end{tabularx}\end{center}
+Decision table giúp thấy những tổ hợp bị bỏ sót. State-transition test kiểm tra cả chuyển hợp lệ và chuyển bị cấm: không phải chỉ chạy theo chuỗi thành công từ đầu tới cuối.
+
+\subsection{Kiểm thử cạnh tranh và lỗi giữa chừng}
+Khởi chạy nhiều tác vụ sau cùng một điểm đồng bộ, không dùng một vòng for gọi lần lượt rồi gọi đó là concurrent. Mỗi request có dữ liệu và actor phù hợp; khi thử cạnh tranh cùng xe, tránh một điều kiện khác đã làm tất cả request bị từ chối trước.
+
+Sau khi hoàn tất, kiểm tra số lượt thành công, số active reservation, trạng thái xe và audit quan trọng. Với idempotency, thử lại cùng key; với một yêu cầu mới, dùng key khác. Đây là hai tình huống khác nhau.
+
+Đưa lỗi vào giữa quá trình ghi để kiểm tra không có bản ghi mồ côi hoặc số lượng bị tăng sai. Nếu hệ thống đã gửi lệnh ra ngoài rồi mất phản hồi, phải kiểm tra phương án đọc lại/hòa giải chứ không chỉ assert có gọi rollback.
+
+\subsection{Kiểm thử NFR}
+Đo hiệu suất cần nêu tác vụ, điều kiện tải, thời gian chạy, phân vị hoặc thống kê sử dụng và tỷ lệ lỗi. Một request chạy nhanh trên máy cá nhân không chứng minh hệ thống chịu được giờ cao điểm.
+
+Độ sẵn sàng theo tháng không thể được xác nhận chỉ bằng vài phút demo. Kiểm thử phục hồi có thể đo một phần mục tiêu nhưng không thay thế số liệu vận hành. Tương tự, có hash mật khẩu chưa chứng minh toàn bộ hệ thống an toàn.
+
+\clearpage
+\subsection{Ví dụ test đã thiết kế, chưa phải kết quả chạy}
+\begin{longtable}{|L{25mm}|L{117mm}|}\hline
+ID & TC-COURSE-03\\\hline
+Mục tiêu & Hai người cùng đăng ký một chỗ còn lại.\\\hline
+Ban đầu & Cùng Course còn một chỗ; hai Student đang hoạt động và chưa đăng ký; store hỗ trợ điều kiện ghi/version như thiết kế.\\\hline
+Thao tác & Gửi hai yêu cầu với request ID khác nhau cùng lúc; đợi cả hai hoàn tất.\\\hline
+Mong đợi & Đúng một đăng ký Confirmed; số người không vượt capacity. Yêu cầu còn lại nhận Full hoặc Conflict theo hợp đồng đã chọn; không có bản ghi xác nhận thứ hai.\\\hline
+Kết quả thực tế & Chưa chạy; đây là ví dụ thiết kế test case.\\\hline
+\end{longtable}

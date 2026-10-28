@@ -1,0 +1,78 @@
+\chapter{Từ phân tích yêu cầu đến thiết kế kiến trúc}
+\subsection{Phase 3 cần trả lời điều gì?}
+Phase 1 xác định hệ thống cần làm gì và điều kiện nghiệp vụ nào phải được giữ. Phase 2 làm rõ người dùng thao tác ra sao, các bước xử lý và các thành phần trao đổi với nhau. Phase 3 quyết định \textbf{phần mềm được tổ chức và hiện thực bằng những thành phần nào}, chúng chạy ở đâu và hợp tác qua hợp đồng nào.
+
+Ví dụ: ``Không được xác nhận hai lượt đặt cho cùng một xe'' là yêu cầu. ``Hai yêu cầu phải cạnh tranh trong một transaction có ràng buộc duy nhất'' là quyết định thiết kế để giữ yêu cầu đó. Viết lại requirement bằng từ khó hơn chưa phải là thiết kế.
+
+Theo đề bài, Submission 3 gồm \textbf{Deployment View}, \textbf{Development / Implementation View}, \textbf{Class Diagram và mô tả mọi phương thức xuất hiện trên sơ đồ}. Test case là phần bonus. Không có yêu cầu phải dùng microservices, cloud, ngôn ngữ cụ thể hoặc database thật. Tuy nhiên, nhóm vẫn phải giải thích thiết kế bảo đảm các quy tắc đã cam kết như thế nào.
+
+\subsection{Bốn mức nhìn một phần mềm}
+\begin{center}\begin{tabularx}{\linewidth}{|L{29mm}|Y|L{39mm}|}\hline
+\textbf{Mức nhìn} & \textbf{Câu hỏi} & \textbf{Ví dụ}\\\hline
+Nghiệp vụ & Người dùng muốn đạt mục tiêu gì? & Đăng ký khóa học\\\hline
+Kiến trúc & Chia hệ thống thành những khối trách nhiệm nào? & Web, API, miền đăng ký, lưu trữ\\\hline
+Thiết kế lớp & Đối tượng nào giữ dữ liệu, hành vi và quan hệ? & Course, Registration, EnrollmentService\\\hline
+Phương thức & Một thao tác nhận gì, kiểm tra gì và thay đổi gì? & enroll(request)\\\hline
+\end{tabularx}\end{center}
+Không phải bốn sản phẩm độc lập. Chúng phải diễn tả cùng một hệ thống ở các mức chi tiết khác nhau. Một class không nhất thiết ứng với một màn hình hoặc một bảng dữ liệu.
+
+\subsection{Architecture, view và diagram}
+\point{Architecture: kiến trúc}
+Kiến trúc là các quyết định lớn về trách nhiệm, cách chia phần mềm, phụ thuộc, dữ liệu, tích hợp và các ràng buộc khó thay đổi. Tên công nghệ chỉ là một phần. Liệt kê React, Node.js và PostgreSQL mà không nêu chúng liên hệ thế nào thì chưa giải thích được kiến trúc.
+
+\point{View: một góc nhìn phục vụ một mối quan tâm}
+Deployment View nhìn hệ thống khi chạy: máy, môi trường chạy và kết nối. Development/Implementation View nhìn mã nguồn: module, package, component và chiều phụ thuộc. Class diagram nhìn cấu trúc các kiểu đối tượng. Một view có thể cần hình cùng phần giải thích, không chỉ một ảnh.
+
+\point{Diagram: cách biểu diễn một phần của view}
+Không phải hình nào có các ô và mũi tên cũng là cùng một loại sơ đồ. Cần nói rõ ô là máy, module hay class; mũi tên là kết nối mạng, phụ thuộc mã nguồn hay quan hệ đối tượng. Nếu không nêu ý nghĩa, người đọc rất dễ suy diễn sai.
+
+\subsection{Các khái niệm dễ nhầm}
+\begin{longtable}{|L{34mm}|L{108mm}|}\hline
+\textbf{Khái niệm} & \textbf{Cách hiểu}\\\hline
+\endfirsthead
+\hline
+\textbf{Khái niệm} & \textbf{Cách hiểu}\\\hline
+\endhead
+Module/package & Cách gom mã nguồn theo trách nhiệm. Có thể chỉ là thư mục hoặc package trong cùng ứng dụng.\\\hline
+Component & Một thành phần có trách nhiệm và hợp đồng tương tác rõ. Không mặc nhiên là một server riêng.\\\hline
+Process & Một lần chương trình đang thực thi, có bộ nhớ và trạng thái chạy. Một process có thể chứa nhiều module.\\\hline
+Artifact & Sản phẩm cụ thể được tạo và triển khai: bundle JavaScript, executable, container image hoặc gói cấu hình.\\\hline
+Node & Tài nguyên tính toán hoặc môi trường thực thi có thể chứa artifact.\\\hline
+Class / object & Class là kiểu định nghĩa cấu trúc và hành vi; object là một thể hiện cụ thể của kiểu đó.\\\hline
+Interface & Hợp đồng mà bên sử dụng dựa vào; không phải giao diện màn hình.\\\hline
+\end{longtable}
+
+\subsection{Layer, tier và module nghiệp vụ}
+\textbf{Layer} là phân chia trách nhiệm trong thiết kế/mã nguồn. \textbf{Tier} là phân chia nơi thực thi. Một backend có presentation, application, domain và infrastructure vẫn có thể chạy trong một process trên một máy.
+
+\glyph{\node[draw,minimum width=92mm,minimum height=43mm] (host) at (0,0) {};
+  \node[above] at (host.north) {Một backend process};
+  \foreach \name/\y in {Presentation/1.4,Application/0.45,Domain/-0.5,Infrastructure/-1.45}
+    {\node[draw,minimum width=73mm,minimum height=7mm] at (0,\y) {\name};}}
+  {Nhiều layer không có nghĩa nhiều máy chủ}
+
+Module nghiệp vụ là cách chia theo chức năng, ví dụ đăng ký, thanh toán, thông báo. Layer chia theo vai trò kỹ thuật. Hai cách có thể kết hợp: bên trong mỗi module có application và domain, còn adapter dùng chung được tổ chức riêng khi hợp lý.
+
+\subsection{Một số lựa chọn kiến trúc}
+\point{Layered architecture}
+Tách phần nhận yêu cầu, xử lý nghiệp vụ và truy cập dữ liệu. Quy định rõ tầng nào được gọi tầng nào. Không để controller chứa toàn bộ quy tắc rồi coi service là lớp chuyển tiếp rỗng.
+
+\point{Modular monolith}
+Một ứng dụng triển khai chung, bên trong có các module nghiệp vụ có ranh giới. Hữu ích để bảy người chia việc mà chưa phải vận hành bảy dịch vụ qua mạng. Đổi lại, cần giữ kỷ luật phụ thuộc; đặt tên thư mục riêng chưa tự tạo ra ranh giới tốt.
+
+\point{Microservices}
+Các dịch vụ được triển khai độc lập và trao đổi qua hợp đồng mạng. Đổi lại là xử lý lỗi mạng, dữ liệu phân tán, giám sát và triển khai phức tạp hơn. ``Bảy phân hệ'' không suy ra ``bảy microservices''. Chỉ chọn khi có nhu cầu và năng lực vận hành tương ứng.
+
+\point{MVC và Clean Architecture không phải hai tên thay thế cho mọi thứ}
+MVC phân biệt model, view và controller ở một phạm vi tổ chức giao diện/ứng dụng. Clean Architecture nhấn mạnh ranh giới và chiều phụ thuộc hướng về chính sách nghiệp vụ. Không cần áp dụng đầy đủ mọi mẫu; cần giải thích cấu trúc thực sự dùng.
+
+\subsection{Đánh giá một quyết định thiết kế}
+\textbf{Cohesion cao}: các trách nhiệm trong một khối liên quan chặt với nhau. \textbf{Coupling thấp}: khối không phải biết quá nhiều chi tiết bên trong của khối khác. Không phải càng nhiều class càng tốt; chia thành hàng chục lớp chỉ chuyển tiếp lời gọi cũng làm khó hiểu.
+
+Một quyết định nên có bốn ý: vấn đề cần giải quyết, lựa chọn, lý do và đánh đổi. Ví dụ: ``Dùng optimistic version để ngăn hai thao tác ghi đè. Đổi lại, request có thể bị conflict và phải đọc lại dữ liệu.'' Câu đó có giá trị hơn ``dùng kiến trúc tối ưu, linh hoạt''.
+
+\point{Architectural driver}
+Đây là yêu cầu ảnh hưởng mạnh đến kiến trúc: cạnh tranh tài nguyên, khả năng phục hồi, độ trễ, bảo mật hoặc cách ly mô phỏng. Không phải mọi màu nút hay tên màn hình đều là architectural driver.
+
+\point{Giữ phân biệt thiết kế và bằng chứng}
+``Sẽ dùng transaction'' là phương án. ``Đã kiểm thử 50 yêu cầu đồng thời và chỉ một yêu cầu thành công'' là kết quả cần bằng chứng chạy. Một sơ đồ không chứng minh phần mềm đã được triển khai hoặc đạt hiệu suất.

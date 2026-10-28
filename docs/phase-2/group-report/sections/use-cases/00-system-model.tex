@@ -1,0 +1,77 @@
+\clearpage
+\section{Mô hình, đặc tả và thiết kế use case}
+\subsection{Mô hình use case toàn hệ thống}
+
+\subsubsection{Actor Catalog}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Actor của Smart E-Mobility Hub}
+  \label{tab:actors}
+  \begin{tabularx}{\textwidth}{|L{22mm}|L{34mm}|Y|L{40mm}|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{Mã} & \centering\arraybackslash\textbf{Actor} & \centering\arraybackslash\textbf{Mục tiêu chính} & \centering\arraybackslash\textbf{Phân hệ tương tác}\\
+    \hline
+    ACT-STU & Sinh viên & Tìm và sử dụng xe dùng chung; đặt chỗ đỗ, đăng ký sạc và theo dõi tài nguyên cho xe cá nhân. & HUB, RES, TRIP, PARK, CHG\\\hline
+    ACT-OPR & Nhân viên vận hành & Thêm, sửa thông tin và bật/tắt phục vụ tài nguyên tại Hub được giao; giám sát, quản lý sạc, sự cố, điều phối và mô phỏng; không quản trị tài khoản. & CHG, OPS, SIM\\\hline
+    ACT-ADM & Quản trị viên & Quản lý tài khoản, phân quyền, danh mục tài nguyên ban đầu; hỗ trợ khẩn cấp về truy cập, không thay thế vận hành hoặc kỹ thuật. & GEN (dùng chung)\\\hline
+    ACT-MNT & Nhân viên kỹ thuật & Tiếp nhận công việc kỹ thuật, cập nhật kết quả khắc phục và xác nhận tài nguyên đủ điều kiện trở lại phục vụ. & OPS\\\hline
+    ACT-DAT & IoT \& State Data Gateway & Cung cấp trạng thái xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành từ \texttt{EXT-STATE}. & HUB, TRIP, PARK, CHG, OPS\\\hline
+    ACT-MAP & Map \& Geolocation Service & Chuẩn hóa địa chỉ hoặc tọa độ, tính khoảng cách và xác định các Hub trong vùng tìm kiếm từ \texttt{EXT-MAP}. & HUB\\\hline
+  \end{tabularx}
+\end{table}
+
+\subsubsection{Danh mục 23 use case}
+
+\begin{longtable}{|L{26mm}|L{58mm}|L{25mm}|L{25mm}|}
+  \caption{Danh mục use case nghiệp vụ và quản trị dùng chung}\label{tab:system-use-cases}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Use Case ID} & \centering\arraybackslash\textbf{Tên use case} & \textbf{Phân hệ} & \textbf{Actor chính}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Use Case ID} & \centering\arraybackslash\textbf{Tên use case} & \textbf{Phân hệ} & \textbf{Actor chính}\\
+  \hline
+  \endhead
+  UC-HUB-01 & Tra cứu Hub phù hợp & SUB-HUB & ACT-STU\\\hline
+  UC-HUB-02 & Xem trạng thái tài nguyên tại Hub & SUB-HUB & ACT-STU\\\hline
+  UC-HUB-03 & Xem Hub thay thế & SUB-HUB & ACT-STU\\\hline
+  UC-RES-01 & Đặt phương tiện dùng chung & SUB-RES & ACT-STU\\\hline
+  UC-RES-02 & Hủy lượt đặt phương tiện & SUB-RES & ACT-STU\\\hline
+  UC-TRIP-01 & Nhận phương tiện đã đặt & SUB-TRIP & ACT-STU\\\hline
+  UC-TRIP-02 & Trả phương tiện và kết thúc chuyến đi & SUB-TRIP & ACT-STU\\\hline
+  UC-PARK-01 & Đặt chỗ đỗ cho xe cá nhân & SUB-PARK & ACT-STU\\\hline
+  UC-PARK-02 & Check-in phương tiện cá nhân & SUB-PARK & ACT-STU\\\hline
+  UC-PARK-03 & Check-out phương tiện cá nhân & SUB-PARK & ACT-STU\\\hline
+  UC-CHG-01 & Đăng ký nhu cầu sạc & SUB-CHG & ACT-STU, ACT-OPR\\\hline
+  UC-CHG-02 & Theo dõi lịch và phiên sạc & SUB-CHG & ACT-STU, ACT-OPR\\\hline
+  UC-CHG-03 & Điều chỉnh lịch sạc ưu tiên & SUB-CHG & ACT-OPR\\\hline
+  UC-OPS-01 & Giám sát mạng lưới Mobility Hub & SUB-OPS & ACT-OPR\\\hline
+  UC-OPS-02 & Xử lý sự cố vận hành & SUB-OPS & ACT-OPR\\\hline
+  UC-OPS-03 & Điều phối phương tiện giữa các Hub & SUB-OPS & ACT-OPR\\\hline
+  UC-OPS-04 & Thêm và cập nhật thông tin tài nguyên & SUB-OPS & ACT-OPR\\\hline
+  UC-OPS-05 & Kích hoạt hoặc ngừng phục vụ tài nguyên & SUB-OPS & ACT-OPR\\\hline
+  UC-SIM-01 & Chạy kịch bản What-if Simulation & SUB-SIM & ACT-OPR\\\hline
+  UC-SIM-02 & Phân tích kết quả và khuyến nghị điều phối & SUB-SIM & ACT-OPR\\\hline
+  UC-GEN-01 & Quản lý tài khoản & GEN & ACT-ADM\\\hline
+  UC-GEN-02 & Quản lý vai trò và phạm vi truy cập & GEN & ACT-ADM\\\hline
+  UC-GEN-03 & Thiết lập danh mục tài nguyên ban đầu & GEN & ACT-ADM\\\hline
+\end{longtable}
+
+\clearpage
+\subsubsection{Use-case Diagram toàn hệ thống}
+
+Sơ đồ khái quát actor, bảy phân hệ và quản trị dùng chung (\texttt{GEN}); chi tiết 23 use case theo Bảng~\ref{tab:system-use-cases}.
+
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{\PhaseTwoSystemDiagramPath/system-use-case.pdf}
+  \captionof{figure}{Use-case Diagram tổng quát của Smart E-Mobility Hub}
+  \label{fig:system-use-case}
+\end{minipage}\par\medskip
+
+\clearpage

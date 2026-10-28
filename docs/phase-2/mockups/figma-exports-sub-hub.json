@@ -1,0 +1,43 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "figmaAccess": "Exported signed-in student variants with shared six-item AppHeader; original public lookup screens remain unchanged.",
+  "reportSection": "SUB-HUB",
+  "assets": [
+    {
+      "file": "uc-hub-01.png",
+      "nodeId": "503:965",
+      "screen": "02 Khám phá Mobility Hub · Sinh viên đã đăng nhập",
+      "format": "png",
+      "updatedOn": "2026-10-24",
+      "publicNodeId": "18:232"
+    },
+    {
+      "file": "uc-hub-02.png",
+      "nodeId": "503:1121",
+      "screen": "03 Chi tiết Hub · Sinh viên đã đăng nhập",
+      "format": "png",
+      "updatedOn": "2026-10-24",
+      "publicNodeId": "18:284"
+    },
+    {
+      "file": "uc-hub-03.png",
+      "nodeId": "503:1178",
+      "screen": "02f Khám phá Hub · Hub thay thế · Sinh viên đã đăng nhập",
+      "format": "png",
+      "updatedOn": "2026-10-24",
+      "publicNodeId": "197:2594"
+    }
+  ],
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "navbarLabels": [
+    "Khám phá Hub",
+    "Hoạt động của tôi",
+    "Lượt đặt xe",
+    "Chuyến đi",
+    "Chỗ đỗ của tôi",
+    "Sạc của tôi"
+  ],
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

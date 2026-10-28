@@ -1,0 +1,27 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+!pragma layout smetana
+hide empty description
+title Account - Trạng thái truy cập
+[*] --> Active : / khởi tạo tài khoản;\nquyền được cấp riêng qua UC-GEN-02
+Active --> Locked : accountLocked [không phải Admin hoạt động cuối cùng]\n/ lưu lý do và audit; thu hồi phiên
+Locked --> Active : accountUnlocked\n/ lưu lý do và audit; yêu cầu đăng nhập mới
+Active : permissionChanged / kiểm tra quyền mới ở yêu cầu tiếp theo
+Locked : permissionChanged / không cho truy cập dù đã có quyền
+note bottom of Active
+  Active không đồng nghĩa có mọi quyền.
+  Admin không kế thừa Operator hoặc Kỹ thuật.
+  Không khóa hoặc thu hồi quyền Admin hoạt động cuối cùng.
+end note
+note bottom of Locked
+  Không tự hủy lượt đặt, chuyến đi, sạc hoặc mô phỏng.
+  Không xóa dữ liệu và lịch sử của tài khoản.
+  Mở lại không khôi phục phiên cũ.
+end note
+@enduml

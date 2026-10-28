@@ -1,0 +1,142 @@
+\chapter{Class diagram: lý thuyết và từng ký hiệu}
+\subsection{Class diagram dùng để làm gì?}
+Class diagram mô tả \textbf{cấu trúc tĩnh}: các kiểu đối tượng, thuộc tính, operation và quan hệ. ``Tĩnh'' không có nghĩa dữ liệu không đổi; nghĩa là hình không diễn tả thứ tự các lần gọi theo thời gian.
+
+Use case là mục tiêu tương tác, không phải class. Screen là giao diện, không phải entity. Database table là cấu trúc lưu trữ, không tự động là toàn bộ class diagram. Thiết kế cần cả các lớp điều phối và hợp đồng nếu chúng thực sự có trách nhiệm trong hệ thống.
+
+\subsection{Class và object}
+Class Course định nghĩa những course có thuộc tính và hành vi nào. Hai object cụ thể có thể là \code{courseA:Course} và \code{courseB:Course}; chúng có cùng kiểu nhưng capacity hoặc enrolledCount khác nhau.
+
+Trong object diagram, tên object thường được gạch dưới. Trong class diagram, tên Course không gạch dưới; gạch dưới một member lại mang nghĩa static. Cần đọc đúng vị trí ký hiệu.
+
+\subsection{Hộp class và ba ngăn}
+\glyph{\node[draw,inner sep=0pt] {\begin{tabular}{l}
+  \hspace{12mm}\textbf{Course}\hspace{12mm}\\\hline
+  - courseId: UUID\\
+  - capacity: Integer\\
+  - enrolledCount: Integer\\\hline
+  + hasSeat(): Boolean\\
+  + occupySeat(): Void\\
+\end{tabular}};}{Ba ngăn lần lượt là tên, thuộc tính và operation}
+Ngăn tên trả lời ``đây là kiểu gì''. Ngăn thuộc tính ghi trạng thái và dữ liệu quan trọng. Ngăn operation ghi các hành vi mà đối tượng cung cấp. Có thể ẩn ngăn trống hoặc bớt chi tiết trên hình tổng quan nếu nói rõ phạm vi.
+
+Operation là hợp đồng thao tác ở mức mô hình; method là cách hiện thực hành vi đó trong code. Trong bài, ``method descriptions'' là phần giải thích đầy đủ cho các thao tác được vẽ, không chỉ chép lại tên.
+
+\subsection{Attribute: tên, kiểu, số lượng và giá trị mặc định}
+Cú pháp thường dùng:
+\begin{Verbatim}
+visibility name: Type [multiplicity] = defaultValue
+- expiresAt: DateTime
+- roles: Role [0..*]
+- retryCount: Integer = 0
+/remainingSeats: Integer
+\end{Verbatim}
+Không cần dùng tất cả thành phần trên mọi dòng. Kiểu dữ liệu phải có ý nghĩa: thời gian dùng DateTime/Instant có quy ước múi giờ; số tiền phải có đơn vị và cách làm tròn; phần trăm pin cần quy định thang đo.
+
+Dấu \code{/} trước remainingSeats nghĩa là thuộc tính \textbf{dẫn xuất}, có thể tính từ dữ liệu khác. Nếu vẫn lưu nó, phải thiết kế cách đồng bộ; không được giả định nó luôn đúng mà không có cơ chế.
+
+\subsection{Visibility: ai được truy cập?}
+\begin{center}\begin{tabularx}{\linewidth}{|C{13mm}|L{29mm}|Y|}\hline
+\textbf{Dấu} & \textbf{Tên} & \textbf{Ý nghĩa}\\\hline
+\code{+} & public & Có thể dùng từ bên ngoài theo hợp đồng công khai.\\\hline
+\code{-} & private & Chỉ bên trong classifier/lớp sở hữu theo quy tắc mô hình.\\\hline
+\code{\#} & protected & Dành cho lớp và các lớp chuyên biệt hóa theo quy tắc ngôn ngữ.\\\hline
+\code{\textasciitilde} & package & Phạm vi package; cách ánh xạ sang code tùy ngôn ngữ.\\\hline
+\end{tabularx}\end{center}
+Đây không phải quyền của Sinh viên, Admin hay Operator. Một method public vẫn phải kiểm tra quyền nghiệp vụ khi thực hiện yêu cầu được bảo vệ. JavaScript, Java và C\# cũng không ánh xạ mọi mức visibility giống hệt nhau.
+
+Encapsulation không chỉ là thêm private: đối tượng cần kiểm soát cách thay đổi trạng thái. Nếu ai cũng được đặt status tùy ý qua setter thì invariant vẫn có thể bị phá.
+
+\subsection{Operation và signature}
+\begin{Verbatim}
++ enroll(request: EnrollmentRequest): EnrollmentResult
++ findById(id: UUID): Registration [0..1]
+- validateCapacity(course: Course): Void
+\end{Verbatim}
+Signature nêu tên, tham số và kiểu trả về. \code{[0..1]} cho biết có thể không tìm thấy một đối tượng. Có thể dùng ký hiệu \code{Registration?} như quy ước ngôn ngữ, nhưng cần giải thích rằng đây là dạng optional/nullable, không tự trộn hai cách viết.
+
+Đặt tên bằng động từ và mục tiêu, như confirm, cancel hoặc calculateDuration. Không dùng một method \code{handle()} cho mọi thứ rồi để người đọc tự đoán nó nhận hoặc thay đổi gì.
+
+\subsection{Static, abstract và interface}
+\glyph{\node[draw,inner sep=1mm] {\begin{tabular}{l}
+  \textit{PricingPolicy}\\\hline
+  \textit{+ calculate(input): Money}\\\hline
+  \underline{+ defaultCurrency: String}\\
+\end{tabular}};}{Chữ nghiêng thường biểu diễn abstract; gạch dưới biểu diễn static}
+Static gắn với classifier, không với từng object. Abstract chỉ phần tử chưa có hiện thực đầy đủ hoặc không được tạo instance trực tiếp theo mô hình. Trong code PlantUML có thể dùng \code{\{static\}} và \code{\{abstract\}} để diễn đạt.
+
+\glyph{\node[box,minimum width=59mm,minimum height=20mm]
+  {\guillemotleft interface\guillemotright\\EnrollmentPolicy\\+ check(student, course): Void};}
+  {Interface định nghĩa hợp đồng, không phải một màn hình}
+Một class hiện thực interface phải đáp ứng hợp đồng của nó. Không tạo instance trực tiếp từ một interface chỉ có khai báo operation; ở runtime cần một implementation cụ thể.
+
+\subsection{Stereotype, enumeration và constraint}
+\glyph{\node[box,minimum width=48mm,minimum height=25mm]
+  {\guillemotleft enumeration\guillemotright\\RegistrationStatus\\Pending\\Confirmed};}
+  {Enumeration gom các giá trị trạng thái được phép}
+Stereotype viết trong cặp dấu \guillemotleft\ \guillemotright, như \code{\guillemotleft interface\guillemotright}. Các nhãn entity, service, DTO hoặc repository trong tài liệu có thể là quy ước nhóm, không có nghĩa mọi nhãn đó đều là một kiểu ký hiệu chuẩn riêng của UML.
+
+Constraint thường ghi trong ngoặc nhọn hoặc note, ví dụ \code{\{enrolledCount <= capacity\}}. Invariant là điều kiện phải giữ ở các trạng thái hợp lệ, không phải công việc xảy ra trước công việc khác.
+
+\subsection{Association: các đối tượng có liên hệ}
+\glyph{\node[box] (s) at (0,0) {Student};\node[box] (r) at (8,0) {Registration};
+  \draw (s.east)--(r.west);
+  \node[above] at (2,0.1) {1};\node[above] at (6,0.1) {0..*};}
+  {Một Student có thể liên hệ nhiều Registration; mỗi Registration thuộc một Student}
+Association là quan hệ giữa các instance. Đường liền không tự có nghĩa gửi request, gọi method hoặc có foreign key. Vai trò ở đầu quan hệ có thể ghi để làm rõ, chẳng hạn registrations và student.
+
+Không bắt buộc thêm field registrations nếu hình đã biểu diễn quan hệ và chưa muốn khóa cách lưu. Khi hiện thực, quan hệ có thể được giữ bằng tham chiếu object, ID hoặc truy vấn theo khóa; phải giữ ngữ nghĩa của mô hình.
+
+\subsection{Multiplicity: đọc số ở đầu nào?}
+Số \textbf{đặt gần B} cho biết với \textbf{một A} đang xét có bao nhiêu B liên hệ qua quan hệ đó. Sau đó đổi chiều để đọc đầu còn lại. Không đọc cả hai số theo một chiều trái--phải duy nhất.
+
+\begin{center}\begin{tabularx}{\linewidth}{|L{22mm}|Y|}\hline
+\textbf{Ký hiệu} & \textbf{Ý nghĩa}\\\hline
+\code{1} & Đúng một.\\\hline
+\code{0..1} & Có thể không có, hoặc có một.\\\hline
+\code{0..*}, \code{*} & Không hoặc nhiều, không đặt giới hạn trên trong mô hình.\\\hline
+\code{1..*} & Ít nhất một.\\\hline
+\code{2..5} & Từ hai đến năm.\\\hline
+\end{tabularx}\end{center}
+Multiplicity phải xét \textbf{phạm vi thời gian và loại quan hệ}. Một xe có nhiều lượt đặt trong lịch sử nhưng tối đa một lượt đặt hiệu lực. Vì vậy có thể dùng association 0..* cho lịch sử và thêm constraint về active reservation; không sửa multiplicity lịch sử thành 0..1 để che mất dữ liệu cũ.
+
+\subsection{Navigability: biết cách đi tới đối tượng khác}
+\relation{Registration}{Student}{->}{Đầu mũi tên mở biểu diễn khả năng điều hướng tới Student}
+Navigability thể hiện khả năng từ một đầu đi tới đầu kia theo mô hình. Nó không phải đường đi của HTTP request. Quan hệ không có đầu mũi tên không nên bị tự diễn giải là code bắt buộc có hai field tham chiếu qua lại; cần nêu quy ước điều hướng nếu điều đó quan trọng.
+
+\subsection{Aggregation: quan hệ toàn thể--bộ phận yếu}
+\relation{StudyGroup}{Student}{{Diamond[open,length=3mm,width=3mm]}-}{Hình thoi rỗng ở phía toàn thể}
+Aggregation thường dùng khi muốn nhấn mạnh tập hợp/toàn thể và phần tử vẫn có thể tồn tại độc lập. Shared aggregation trong UML không tự quy định một chính sách vòng đời thống nhất cho mọi mô hình; cần giải thích ý nghĩa cụ thể. Nếu chỉ biết A liên hệ B mà chưa có ngữ nghĩa đặc biệt, association thường rõ hơn.
+
+\subsection{Composition: sở hữu bộ phận chặt hơn}
+\relation{Course}{CourseSession}{{Diamond[length=3mm,width=3mm]}-}{Hình thoi đặc đặt ở đầu composite, không phải ở đầu bộ phận}
+Trong composite aggregation, một part không thuộc đồng thời nhiều composite owner. Khi composite bị xóa, các part còn thuộc nó cũng bị xóa theo ngữ nghĩa mô hình; part có thể được tách trước đó nếu mô hình cho phép. Đây là ràng buộc về đối tượng và vòng đời, không chỉ là ``A có danh sách B''.
+
+Trong phần mềm có lịch sử hoặc yêu cầu audit, thao tác xóa có thể bị cấm hoặc dùng lưu trữ/ẩn thay vì xóa vật lý. Không suy ra rằng cứ vẽ composition là phải đặt SQL \code{ON DELETE CASCADE}. Với Hub và xe có thể điều chuyển, không nên chọn composition chỉ vì xe đang nằm ở Hub.
+
+\subsection{Generalization: kế thừa kiểu}
+\relation{ElectricBike}{Vehicle}{-{Triangle[open,length=3mm,width=3mm]}}{Đường liền, tam giác rỗng hướng tới kiểu tổng quát}
+Generalization nói rằng kiểu chuyên biệt có thể được xem là một trường hợp của kiểu tổng quát. Mũi tên hướng từ con lên cha. Không dùng kế thừa để nói ``được cấp nhiều quyền hơn'' hoặc ``được thao tác lên''.
+
+Đặc biệt, Admin và Operator là các vai trò quyền hạn, không mặc nhiên là hai class có quan hệ cha--con. Một account có thể gắn các assignment theo thiết kế quyền mà không cần một class cho mỗi role.
+
+\subsection{Realization: hiện thực hợp đồng}
+\relation{SqlEnrollmentStore}{EnrollmentStore}{dashed,-{Triangle[open,length=3mm,width=3mm]}}{Nét đứt, tam giác rỗng hướng tới interface}
+SqlEnrollmentStore hiện thực EnrollmentStore. Khác generalization ở kiểu đường nét đứt, và khác dependency ở đầu tam giác rỗng. Không nối ngược chiều chỉ vì interface được viết trước trong tài liệu.
+
+\subsection{Dependency: cần dùng một kiểu khác}
+\relation{EnrollmentService}{EnrollmentRequest}{dashed,->}{Dependency là nét đứt với đầu mũi tên mở hướng tới bên được dùng}
+Nếu một class chỉ nhận một kiểu làm tham số hoặc tạo nó trong một thao tác, dependency có thể đủ. Nếu giữ một tham chiếu lâu dài như store của service, association có thể thể hiện cấu trúc rõ hơn. Không cần vẽ hai cạnh trùng nhau chỉ để biểu diễn cùng một ý.
+
+\subsection{Association class: dữ liệu thuộc về một quan hệ}
+\glyph{\node[box] (s) at (0,0) {Student};\node[box] (c) at (8,0) {Course};
+  \draw (s.east)--(c.west) coordinate[midway] (link);
+  \node[box] (r) at (4,-1.7) {Registration\\registeredAt: DateTime};
+  \draw[dashed] (link)--(r.north);}
+  {Association class gắn bằng nét đứt vào chính đường association}
+Đăng ký giữa Student và Course có thể có thời điểm và trạng thái riêng. Có thể mô hình bằng association class, hoặc dùng class Registration liên kết hai đầu như ví dụ trong tài liệu. Không dùng đồng thời cả hai cách cho cùng quan hệ rồi coi là hai thực thể khác nhau.
+
+\subsection{Chọn class từ đâu và tránh vẽ quá nhiều}
+Lấy danh từ nghiệp vụ để tìm entity/value object, lấy trách nhiệm trong use case để tìm service, lấy các ranh giới để tìm controller, interface và adapter. Không phải mọi danh từ đều thành class: ``nút áp dụng'' có thể chỉ là chi tiết UI.
+
+Với hình tổng thể, giữ các lớp/quan hệ chính và tách hình chi tiết theo module. Không ép một class diagram cho mỗi UC nếu chúng dùng chung một tập lớp. Mỗi class và operation cần xuất hiện ở nơi có trách nhiệm rõ, không nhân bản chỉ vì nhiều người dùng tới.

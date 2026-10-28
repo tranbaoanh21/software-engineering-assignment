@@ -1,33 +1,64 @@
-\section{Test Cases (Bonus)}
+\section{Test Case (Bonus)}
 
-Test case là phần bonus của Submission 3. Nếu thực hiện, nhóm ưu tiên các business rule, nhánh lỗi và NFR có rủi ro cao thay vì chỉ kiểm thử happy path.
+\subsection{Phạm vi và môi trường kiểm thử}
+Unit test kiểm tra business rule và transition tại lớp/chính sách miền. Integration test kiểm tra hợp đồng lưu trữ, transaction, cạnh tranh và adapter nguồn ngoài. Test API/luồng đi qua xác thực, phạm vi và kết quả nghiệp vụ; test UI kiểm tra các luồng chính theo mockup đã chốt.
 
-\subsection{Test strategy và phạm vi}
+Dữ liệu test tách khỏi dữ liệu chạy demo; mỗi ca có trạng thái đầu và expected result rõ ràng. Thời gian có thể được kiểm soát qua cơ chế đồng hồ cung cấp cho test để kiểm tra trước/đúng/sau expiresAt. Nguồn IoT giả lập cần hỗ trợ bản tin hợp lệ, trùng, tới muộn, sai định dạng và mất kết nối.
 
-Phân biệt unit test cho domain rule, integration test cho repository/external adapter, API test cho use-case flow và system test cho demonstration. Ghi rõ dữ liệu test, môi trường, oracle và tiêu chí pass/fail.
+Test double phục vụ cô lập logic không thay thế bằng chứng transaction/isolation của cơ chế lưu thực. Test cạnh tranh khởi chạy các yêu cầu qua điểm đồng bộ, đợi hoàn tất rồi kiểm tra cả response, trạng thái tài nguyên và số bản ghi còn hiệu lực. Các ca từ chối kiểm tra không đổi dữ liệu và không lộ thông tin ngoài quyền.
+% Test case là bonus. Thiết kế test không đồng nghĩa đã chạy hoặc đã đạt NFR.
 
-\subsection{Mẫu test case}
-
-\begin{longtable}{|L{25mm}|L{108mm}|}
-  \caption{Mẫu đặc tả test case}\\
-  \hline
-  \rowcolor{gray!15}\textbf{Trường} & \textbf{Nội dung cần điền}\\\hline
-  Test Case ID & \texttt{TC-[SUB]-[SỐ]}\\\hline
-  Traceability & UC/FR/BR/NFR và method liên quan\\\hline
-  Mục tiêu & Hành vi hoặc rủi ro cần kiểm chứng\\\hline
-  Precondition & Trạng thái dữ liệu và môi trường ban đầu\\\hline
-  Test data & Input, mock/stub và dữ liệu IoT giả lập\\\hline
-  Steps & Các bước thực hiện có thể lặp lại\\\hline
-  Expected result & Kết quả định lượng hoặc trạng thái mong đợi\\\hline
-  Actual result & Kết quả khi chạy, evidence và thời điểm chạy\\\hline
+\subsection{Đặc tả test case}
+% Lặp bảng này cho từng tình huống; có thể chuyển bảng vào file theo phân hệ khi bổ sung.
+\begin{longtable}{|L{34mm}|L{111mm}|}
+\caption{Đặc tả test case}\\\hline
+\textbf{Trường} & \textbf{Nội dung}\\\hline
+\endfirsthead
+\hline\textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline\endhead
+ID và mục tiêu & \ToFill{TC-[phạm vi]-[số] và hành vi cần kiểm chứng}\\\hline
+Đối tượng kiểm tra & \ToFill{UC/BR/FR/NIFR/NFR và lớp.phương thức}\\\hline
+Trạng thái ban đầu & \ToFill{actor, quyền, tài nguyên và môi trường}\\\hline
+Dữ liệu & \ToFill{input, thời gian, sự kiện ngoài hoặc phản hồi giả lập}\\\hline
+Các bước thực hiện & \ToFill{thứ tự thao tác, cách gửi đồng thời nếu có}\\\hline
+Kết quả mong đợi & \ToFill{response, dữ liệu, audit và hành vi không được xảy ra}\\\hline
+Kết quả thực tế & Chưa thực thi.\\\hline
 \end{longtable}
 
-\subsection{Tổ chức test theo use case}
+\subsection{Test case theo phạm vi}
+\subsubsection{GEN -- Quản trị và truy cập}
+\ToFill{test xác thực, quyền/phạm vi, khóa tài khoản, thu hồi quyền, Admin cuối cùng và danh mục Draft}
+\subsubsection{SUB-HUB}
+\ToFill{test tìm kiếm, Hub thay thế, dữ liệu mới/cũ/thiếu và dịch vụ ngoài gián đoạn}
+\subsubsection{SUB-RES}
+\ToFill{test cạnh tranh cùng xe, giới hạn lượt đặt, hủy, hết hạn và gửi lặp}
+\subsubsection{SUB-TRIP}
+\ToFill{test điều kiện bàn giao/trả xe, xác nhận vật lý và mất phản hồi}
+\subsubsection{SUB-PARK}
+\ToFill{test giữ chỗ, hết hạn khi phát sinh lỗi và sự kiện cảm biến trùng/tới muộn}
+\subsubsection{SUB-CHG}
+\ToFill{test ưu tiên, tương thích, giới hạn công suất và cổng sạc lỗi}
+\subsubsection{SUB-OPS}
+\ToFill{test sự cố, điều chuyển, thêm/sửa và điều kiện kích hoạt/ngừng phục vụ}
+\subsubsection{SUB-SIM}
+\ToFill{test tham số, snapshot, lần chạy lỗi, kết quả rỗng và cách ly vận hành}
 
-Test nghiệp vụ được đặt trong phần UC tương ứng của Class Diagram và Method Descriptions. Phần này chỉ giữ chiến lược dùng chung, kiểm thử NFR và bảng tổng hợp kết quả. Cách tổ chức đó giúp mỗi test truy ngược được đến UC, FR/BR, method và dữ liệu đầu vào mà không tạo một danh sách test tách rời thiết kế.
+\subsection{Test case yêu cầu phi chức năng}
+\begin{longtable}{|L{27mm}|L{112mm}|}
+\caption{Thiết kế kiểm tra NFR dùng chung}\\\hline
+\textbf{NFR} & \textbf{Kịch bản và tiêu chí}\\\hline
+\endfirsthead
+\hline\textbf{NFR} & \textbf{Kịch bản và tiêu chí}\\\hline\endhead
+\texttt{NFR-PERF-01} & Ít nhất 20 Hub, 500 xe; 50 người dùng ảo; chạy ít nhất ba lần cùng môi trường. Ghi p95 tra cứu $\leq2$ giây, đặt xe $\leq3$ giây, lỗi hệ thống $<1\%$.\\\hline
+\texttt{NFR-SEC-01} & Kiểm tra đủ bốn vai trò; không phiên, đăng xuất, hết hạn 30 phút không hoạt động; đọc dữ liệu của người khác, Hub ngoài phạm vi, khóa tài khoản/thu hồi quyền và bảo toàn Admin cuối cùng. Mọi từ chối không đổi dữ liệu hoặc làm lộ nội dung bị bảo vệ.\\\hline
+\texttt{NFR-CON-01} & 50 yêu cầu hợp lệ cùng tranh một xe/chỗ; đúng một xác nhận. Thử cấp phát cùng ngừng phục vụ: không có kết quả cả hai cùng thành công mâu thuẫn.\\\hline
+\texttt{NFR-REL-01} & Ngắt nguồn, gửi bản tin sai rồi khôi phục. Giữ dữ liệu hợp lệ cuối, hiển thị cảnh báo cũ và đồng bộ lại trong 60 giây sau khôi phục.\\\hline
+\texttt{NFR-USA-01} & 10 Sinh viên mới thực hiện luồng đặt xe không hỗ trợ; ít nhất 9 hoàn tất, trung vị $\leq60$ giây, luồng chính không quá năm thao tác chọn.\\\hline
+\texttt{NFR-AUD-01} & Chuỗi giao dịch gồm cả nghiệp vụ tài nguyên và quản trị. Đối chiếu audit với trạng thái đã lưu; đủ trường và không sửa được qua chức năng thông thường.\\\hline
+\texttt{NFR-MNT-01} & Kiểm tra tách rule khỏi UI, chạy bộ test logic cốt lõi của MVP và thu statement coverage $\geq80\%$.\\\hline
+\end{longtable}
+Các mã trong bảng thuộc nhóm \texttt{NFR-*} tương ứng của baseline; đây là thiết kế kiểm tra, chưa phải kết quả thực thi.
+% Lưu số liệu thực sau khi có hiện thực; không suy ra đạt NFR từ sơ đồ hoặc fake test.
 
-Bao phủ tối thiểu: concurrent reservation không double-booking; reservation hết hạn; trả xe không hợp lệ; check-in và check-out bãi đỗ theo cảm biến; ưu tiên sạc; xử lý sự cố và điều phối; cô lập simulation; fallback khi dữ liệu IoT hoặc bản đồ không khả dụng.
-
-\subsection{Kiểm thử NFR và bằng chứng}
-
-Ghi công cụ, phiên bản, cấu hình, số lần chạy, sample size và kết quả đo cho performance, reliability, security, consistency, usability, auditability và maintainability nếu nhóm tuyên bố đã kiểm chứng.
+\subsection{Kết quả thực thi}
+Chưa thực thi. Khi có hiện thực, mỗi ca bổ sung phiên bản, môi trường, thời điểm chạy, Actual result, Pass/Fail và bằng chứng tương ứng; kết quả đo NFR được lưu theo từng lần chạy.
+% Khi chạy: ghi phiên bản, môi trường, ngày chạy, Actual result, Pass/Fail và evidence.

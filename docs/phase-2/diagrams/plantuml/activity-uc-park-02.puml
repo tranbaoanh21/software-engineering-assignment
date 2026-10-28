@@ -1,0 +1,202 @@
+@startuml
+title UC-PARK-02 - Check-in phương tiện cá nhân
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    DiamondBackgroundColor White
+    DiamondBorderColor Black
+}
+
+|Sinh viên (ACT-STU)|
+start
+
+:Mở ParkingReservation cần check-in;
+
+' == 1. Mở lượt đặt và kiểm tra hiệu lực ==
+
+|ParkingUI|
+:Gửi yêu cầu xem thông tin lượt đặt;
+
+|AccessService|
+:Kiểm tra phiên và quyền truy cập;
+
+if (Phiên và quyền hợp lệ?) then (Không - EF-04)
+    |ParkingUI|
+    :Thông báo từ chối truy cập;\nYêu cầu đăng nhập lại nếu hết phiên;
+    stop
+else (Có)
+endif
+
+|SEMHDataStore|
+:Truy xuất ParkingReservation\nvà ParkingSpace liên quan;
+
+|ParkingService|
+if (Lượt đặt đã Expired\nhoặc quá hạn?) then (Có - AF-02)
+    |ParkingUI|
+    :Thông báo lượt đặt hết hạn;\nHướng dẫn tra cứu chỗ đỗ hiện tại;
+    stop
+else (Không)
+endif
+
+if (Confirmed còn hạn, đúng Sinh viên,\nPrivateVehicle, Hub và chỗ Reserved?) then (Không)
+    |ParkingUI|
+    :Thông báo lượt đặt hoặc chỗ đỗ\nkhông đủ điều kiện check-in;
+    stop
+else (Có)
+endif
+
+|ParkingUI|
+:Hiển thị MobilityHub và\nParkingSpace đã phân bổ;
+
+' == 2. Đưa phương tiện vào chỗ và xác nhận ==
+
+|Sinh viên (ACT-STU)|
+:Đưa phương tiện cá nhân\nvào chỗ đã phân bổ;
+
+if (Đã hoàn tất đưa xe vào chỗ?) then (Không - AF-03)
+    :Dừng thao tác, chưa xác nhận check-in;
+    note right
+        Nếu chưa hết hạn:
+        ParkingReservation vẫn Confirmed.
+        ParkingSpace vẫn Reserved.
+    end note
+    stop
+else (Có)
+    :Xác nhận đã đưa xe vào chỗ;
+endif
+
+|ParkingUI|
+:Gửi yêu cầu check-in;
+
+|AccessService|
+:Kiểm tra lại phiên và quyền truy cập;
+
+if (Phiên và quyền hợp lệ?) then (Không - EF-04)
+    |ParkingUI|
+    :Thông báo từ chối check-in;\nYêu cầu đăng nhập lại nếu hết phiên;
+    stop
+else (Có)
+endif
+
+' == 3. Xác minh lại lượt đặt và chỗ đỗ ==
+
+|SEMHDataStore|
+:Xác minh lại trạng thái,\nthời hạn và chỗ đỗ của lượt đặt;
+
+|ParkingService|
+if (Lượt đặt vừa hết hạn?) then (Có - AF-02)
+    |ParkingUI|
+    :Thông báo hết hạn;\nKhông cho check-in bằng lượt cũ;
+    stop
+else (Không)
+endif
+
+if (Lượt đặt và chỗ đỗ\nvẫn hợp lệ?) then (Không)
+    |ParkingUI|
+    :Thông báo dữ liệu lượt đặt\nhoặc chỗ đỗ không hợp lệ;
+    stop
+else (Có)
+endif
+
+' == 4. Xác nhận hiện diện từ cảm biến ==
+
+|StateDataGateway|
+:Cung cấp dữ liệu hiện diện\ntại ParkingSpace được phân bổ;
+
+|ParkingService|
+if (Cảm biến cập nhật chậm?) then (Có - AF-01)
+
+    |ParkingUI|
+    :Hiển thị trạng thái đang xác minh;
+
+    |ParkingService|
+    while (Chưa có kết quả xác định\nvà còn thời gian chờ?) is (Có)
+
+        |StateDataGateway|
+        :Cập nhật dữ liệu hiện diện;
+
+        |ParkingService|
+        :Kiểm tra phản hồi cảm biến;
+
+    endwhile (Không)
+
+else (Không)
+endif
+
+|ParkingService|
+if (ParkingSpace báo lỗi?) then (Có - EF-02)
+
+    |OperationsService|
+    :Tiếp nhận thông tin sự cố chỗ đỗ;
+
+    |ParkingUI|
+    :Thông báo không thể check-in\nvì chỗ đỗ có sự cố;
+    stop
+
+else (Không)
+endif
+
+if (Có xác nhận hiện diện hợp lệ\ntại đúng chỗ?) then (Không - EF-01)
+
+    |ParkingUI|
+    :Chỉ rõ chỗ đỗ đã phân bổ;\nYêu cầu kiểm tra lại và thử lại;
+    stop
+
+else (Có)
+endif
+
+' == 5. Cập nhật trạng thái nhất quán ==
+
+|SEMHDataStore|
+:Kiểm tra lại điều kiện\ntrong giao dịch check-in;
+
+if (Lượt đặt hết hạn trước cập nhật?) then (Có - AF-02)
+
+    |ParkingService|
+    :Từ chối cập nhật check-in;
+
+    note right
+        NIFR-PARK-01 xử lý hết hạn độc lập:
+
+        ParkingReservation:
+        Confirmed -> Expired
+
+        ParkingSpace:
+        Chỉ Reserved -> Available khi an toàn;
+        giữ OutOfService nếu lỗi; thiếu dữ liệu thì chờ xác minh
+
+        Chỉ áp dụng nếu chưa CheckedIn.
+    end note
+
+    |ParkingUI|
+    :Thông báo lượt đặt đã hết hạn;
+    stop
+
+else (Không)
+endif
+
+|SEMHDataStore|
+:Thực hiện cập nhật nguyên tử:\nParkingReservation: Confirmed -> CheckedIn\nParkingSpace: Reserved -> Occupied\nGhi nhận thời điểm check-in;
+
+if (Giao dịch thành công?) then (Không - EF-03)
+
+    :Rollback toàn bộ thay đổi check-in;
+
+    |ParkingUI|
+    :Thông báo lỗi cập nhật;\nCho phép thử lại;
+    stop
+
+else (Có)
+endif
+
+' == 6. Trả kết quả và hiển thị xác nhận ==
+
+|ParkingUI|
+:Hiển thị xác nhận check-in\nvà thông tin lượt đỗ;
+
+stop
+@enduml

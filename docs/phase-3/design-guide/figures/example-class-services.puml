@@ -1,0 +1,36 @@
+@startuml
+!include guide-style.puml
+top to bottom direction
+skinparam defaultFontSize 13
+class EnrollmentController {
+  + enroll(req: EnrollmentRequest): EnrollmentResult
+}
+class EnrollmentService {
+  + enroll(req: EnrollmentRequest): EnrollmentResult
+}
+interface EnrollmentPolicy <<interface>> {
+  + check(s: Student, c: Course): Void
+}
+class BasicEnrollmentPolicy {
+  + check(s: Student, c: Course): Void
+}
+interface EnrollmentStore <<interface>> {
+  + findStudent(id: UUID): Student [0..1]
+  + findCourse(id: UUID): Course [0..1]
+  + findByRequest(key: UUID): Registration [0..1]
+  + commit(r: Registration, c: Course, sv: Integer, cv: Integer): Registration
+}
+class SqlEnrollmentStore {
+  + findStudent(id: UUID): Student [0..1]
+  + findCourse(id: UUID): Course [0..1]
+  + findByRequest(key: UUID): Registration [0..1]
+  + commit(r: Registration, c: Course, sv: Integer, cv: Integer): Registration
+}
+EnrollmentController --> "1" EnrollmentService : service
+EnrollmentService --> "1" EnrollmentPolicy : policy
+EnrollmentService --> "1" EnrollmentStore : store
+BasicEnrollmentPolicy ..|> EnrollmentPolicy
+SqlEnrollmentStore ..|> EnrollmentStore
+hide EnrollmentStore methods
+hide SqlEnrollmentStore methods
+@enduml

@@ -1,0 +1,143 @@
+@startuml
+!include sim-style.puml
+hide footbox
+autonumber
+title UC-SIM-01 - Chạy kịch bản What-if Simulation
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as OPR
+boundary SimulationUI as UI
+control SimulationService as SIM
+control AccessService as ACCESS
+database SEMHDataStore as DB
+
+OPR -> UI : openScenarioEditor()
+UI -> SIM : prepareScenario(session, mode)
+SIM -> ACCESS : verifyAccess(session, hubScope)
+ACCESS --> SIM : accessResult, scope
+break Phiên hết hạn hoặc thiếu quyền - EF-04
+  SIM --> UI : accessDenied
+  UI --> OPR : Từ chối; đăng nhập lại nếu hết phiên
+end
+opt Sao chép kịch bản cũ - AF-02
+  SIM -> DB : getScenario(scenarioId, scope)
+  DB --> SIM : scenarioParameters
+  SIM -> SIM : copyScenarioParameters()
+end
+SIM -> DB : getBaseStates(scope)
+DB --> SIM : baseStateOptions, timestamps
+SIM --> UI : scenarioEditorData
+UI --> OPR : Hiển thị cấu hình kịch bản
+
+== UC-SIM-01 - Tham số và kịch bản nháp ==
+
+OPR -> UI : editScenario(scenarioInput)
+break Chọn lưu kịch bản nháp - AF-01
+  OPR -> UI : saveScenarioDraft()
+  UI -> SIM : saveScenarioDraft(session, input)
+  ref over SIM, ACCESS : Kiểm tra phiên và quyền - EF-04
+  SIM -> DB : saveScenario(input, scope)
+  DB --> SIM : scenarioId
+  SIM --> UI : scenarioSaved
+  UI --> OPR : Đã lưu kịch bản; chưa tạo run
+end
+loop Kiểm tra tham số; sửa đến khi hợp lệ
+  UI -> SIM : validateScenario(session, input)
+  ref over SIM, ACCESS
+    Kiểm tra phiên và quyền - EF-04
+    Từ chối thì dừng yêu cầu, không đọc/ghi
+  end ref
+  SIM -> SIM : validateInputs()
+  alt Tham số thiếu, ngoài miền hoặc mâu thuẫn - EF-01
+    SIM --> UI : validationErrors
+    UI --> OPR : Hiển thị trường cần sửa
+    OPR -> UI : editScenario(scenarioInput)
+  else Tham số hợp lệ
+    SIM --> UI : validatedScenario
+    UI --> OPR : Cho phép xác nhận chạy
+  end
+end
+UI --> OPR : Hiển thị giả định và mốc cơ sở để xác nhận
+
+== UC-SIM-01 - Xác nhận và khởi chạy ==
+
+OPR -> UI : confirmSimulation()
+UI -> SIM : startSimulation(session, input)
+SIM -> ACCESS : verifyAccess(session, hubScope)
+ACCESS --> SIM : accessResult, scope
+break Phiên hoặc quyền không hợp lệ - EF-04
+  SIM --> UI : accessDenied
+  UI --> OPR : Từ chối; không tự gửi lại lệnh sau đăng nhập
+end
+SIM -> SIM : validateInputs()
+break Tham số không còn hợp lệ - EF-01
+  SIM --> UI : validationErrors
+  UI --> OPR : Sửa tham số; chưa tạo lần chạy
+end
+== UC-SIM-01 - Snapshot và khởi động lần chạy ==
+SIM -> DB : createSnapshot(baseTime, scope)
+DB --> SIM : snapshotResult
+break Không đủ dữ liệu cơ sở - EF-02
+  SIM --> UI : snapshotUnavailable
+  UI --> OPR : Thông báo phạm vi thiếu; không khởi chạy
+end
+SIM -> DB : saveScenarioAndRun(runInput)
+DB --> SIM : scenarioId, runId
+SIM -> DB : startRun(runId)
+DB --> SIM : runId, Running
+SIM ->> SIM : executeSimulation(runId)
+SIM --> UI : runStarted(runId, Running)
+UI --> OPR : Hiển thị mã lần chạy và tiến độ
+
+note over SIM, DB
+  Draft: chuẩn bị run sau khi có snapshot.
+  Kịch bản lưu nháp chưa có run.
+  Snapshot gốc không đổi; dùng bản sao riêng.
+end note
+
+== UC-SIM-01 - Thực thi nền và xem tiến độ ==
+
+par Thực thi nền độc lập với màn hình
+  SIM -> DB : getSnapshot(snapshotId)
+  DB --> SIM : immutableSnapshot
+  SIM -> SIM : createWorkingCopy(snapshot)
+  loop Các bước mô phỏng đến khi hoàn tất hoặc phát hiện lỗi
+    SIM -> SIM : simulateStep(workingState, parameters)
+    SIM -> DB : saveProgress(runId, progress)
+    DB --> SIM : progressSaved
+  end
+  alt Thực thi hoặc lưu kết quả thất bại - EF-03
+    SIM -> DB : markRunFailed(runId, failureReason)
+    DB --> SIM : Failed
+  else Thực thi thành công; kết quả đầy đủ
+    SIM -> DB : saveResultsAndCompleteRun(runId, metrics)
+    DB --> SIM : Completed, resultId
+    SIM -> SIM : generateRecommendations(runId) - NIFR-SIM-01
+    SIM -> DB : saveRecommendationAnalysis(runId, recommendations)
+    DB --> SIM : analysisRecorded
+  end
+else Xem tiến độ độc lập với tiến trình nền
+== UC-SIM-01 - Theo dõi độc lập với xử lý nền ==
+loop Người dùng xem hoặc mở lại tiến độ
+  OPR -> UI : viewRunProgress(runId)
+  UI -> SIM : getRunProgress(session, runId)
+  ref over SIM, ACCESS : Kiểm tra phiên và quyền với lần chạy - EF-04
+  SIM -> DB : getRunProgress(runId, scope)
+  DB --> SIM : runProgress
+  SIM --> UI : runProgress
+  UI --> OPR : Hiển thị Running, Completed hoặc Failed
+end
+opt Rời màn hình khi lần chạy đang Running - AF-04
+  OPR -> UI : leaveProgressView()
+  note over OPR, SIM
+    Đóng UI không hủy lần chạy.
+    Mở lại phải kiểm tra truy cập.
+  end note
+end
+note over SIM, DB
+  UI độc lập với xử lý nền.
+  Không ghi trạng thái tài nguyên thật.
+  Lỗi lưu trữ: ghi lỗi, cập nhật Failed khi có thể.
+  Chưa lưu đủ kết quả thì chưa Completed.
+end note
+end
+@enduml

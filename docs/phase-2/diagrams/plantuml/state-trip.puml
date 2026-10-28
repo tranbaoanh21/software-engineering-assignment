@@ -1,0 +1,66 @@
+@startuml
+title Trip - Biểu đồ trạng thái
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam monochrome true
+skinparam ArrowColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+skinparam state {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+!pragma layout smetana
+hide empty description
+top to bottom direction
+
+state InProgress
+state Completed
+state Interrupted
+
+[*] --> InProgress
+InProgress -down-> Completed : safeReturnConfirmed\n[đủ điều kiện trả xe; lưu thành công]\n/ lưu thông tin cuối chuyến; cập nhật xe, Hub; ghi lịch sử thay đổi
+Completed --> [*]
+
+note left of InProgress
+  UC-TRIP-01: Xác nhận bàn giao hợp lệ.
+  Lượt đặt Confirmed, còn hạn, đúng chủ, xe và Hub.
+  Cập nhật đồng bộ: lượt đặt Fulfilled,
+  xe InUse; tạo Trip.InProgress, lưu thông tin đầu chuyến.
+  Thất bại: không tạo Trip; đọc lại để tránh tạo trùng.
+end note
+
+note right of InProgress
+  UC-TRIP-02: Hủy trả, Hub không hợp lệ
+  hoặc thiếu xác nhận: giữ Trip.InProgress.
+  Phiên / quyền không hợp lệ: từ chối truy cập.
+  Cập nhật thất bại: hoàn tác thay đổi của yêu cầu;
+  giữ thay đổi hợp lệ từ xử lý khác.
+end note
+
+note right of Interrupted
+  Thuộc TripStatus; chưa có đặc tả
+  sự kiện và điều kiện chuyển vào / ra.
+end note
+
+note bottom of Completed
+  Trip.Completed không đồng nghĩa SharedVehicle.Available.
+  Giữ bản ghi Trip sau khi hoàn tất.
+  Sau khi lưu thành công: chuyển xe cần sạc qua SUB-CHG;
+  xe lỗi sang OutOfService và chuyển SUB-OPS.
+end note
+
+legend bottom
+  Nguồn: UC-TRIP-01/02; BR-TRIP-01/02; FR-GEN-03; NFR-REL-01, NFR-AUD-01.
+  Điều kiện trả xe: phiên / quyền hợp lệ; đúng chủ Trip và xe;
+  Trip.InProgress, xe InUse;
+  Hub hợp lệ, có thể nhận xe; xác nhận vị trí và trả xe an toàn.
+  safeReturnConfirmed ở bước 5; kiểm tra lại và cập nhật đồng bộ Trip, xe ở bước 7.
+  Cập nhật đồng bộ: lưu toàn bộ; nếu lỗi thì hoàn tác.
+  Thông tin đầu / cuối chuyến: thời điểm, Hub, pin, tình trạng; cuối chuyến có thêm thời lượng.
+  Mất nguồn hoặc hết phiên không tự chuyển Trip sang Interrupted.
+endlegend
+@enduml

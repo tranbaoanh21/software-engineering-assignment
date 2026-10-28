@@ -1,51 +1,76 @@
 \section{Development/Implementation View}
 
-Implementation view mô tả cách mã nguồn được chia thành module/package, dependency được phép và vị trí hiện thực các trách nhiệm từ Phase 1-2. View này phải đủ rõ để bảy thành viên phát triển song song mà không tạo vòng phụ thuộc hoặc trùng business logic.
+\subsection{Cấu trúc phần mềm và chiều phụ thuộc}
+Mô hình logic chia theo GEN và bảy phân hệ nghiệp vụ. Trong mỗi phạm vi, phần nhận yêu cầu chuyển sang application service; service điều phối các đối tượng/chính sách miền và hợp đồng dữ liệu. Adapter hiện thực việc giao tiếp với nơi lưu hoặc nguồn ngoài. Miền nghiệp vụ không phụ thuộc UI, giao thức truyền tải hoặc driver lưu trữ.
 
-\subsection{Kiến trúc tổng thể}
+Package dùng tên \texttt{access}, \texttt{administration}, \texttt{hub}, \texttt{reservation}, \texttt{trip}, \texttt{parking}, \texttt{charging}, \texttt{operations}, \texttt{simulation} theo phạm vi tương ứng. \texttt{shared} chỉ chứa kiểu/hợp đồng được nhiều module dùng và không phụ thuộc ngược vào module nghiệp vụ. Đây là cách đặt tên logic, không bắt buộc một process hoặc service mạng cho mỗi package.
 
-Nêu architectural style đã chọn và lý do. Với modular monolith hoặc layered architecture, cần làm rõ presentation, application, domain và infrastructure; với service tách rời, cần chỉ ra contract, ownership dữ liệu và failure boundary.
+Lời gọi liên phân hệ đi qua hợp đồng công khai, không truy cập private member hoặc sao chép business rule của owner. Cơ chế ghép object/adapter và nơi chạy được xác định sau khi chọn công nghệ và phương án triển khai.
+\DesignFigure{../architecture/implementation-view.pdf}{Development/Implementation View của SEMH}{fig:p3-implementation}
+% Biểu diễn module/package/component và interface; không nhầm thành sơ đồ server.
 
-\ArtifactBrief{IMPLEMENTATION VIEW}{IMP-SEMH-01}{Thể hiện module/package chính, dependency direction, shared kernel và adapter kết nối external system.}{Development/Implementation view tổng thể}
-
-\subsection{Danh mục component và interface}
-
-\begin{longtable}{|L{25mm}|L{32mm}|L{38mm}|L{41mm}|}
-  \caption{Danh mục component/module}\\
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Component ID} & \textbf{Module} & \textbf{Interface cung cấp/sử dụng} & \textbf{Trách nhiệm và truy vết}\\\hline
-  \endfirsthead
-  \hline
-  \rowcolor{gray!15}
-  \textbf{Component ID} & \textbf{Module} & \textbf{Interface cung cấp/sử dụng} & \textbf{Trách nhiệm và truy vết}\\\hline
-  \endhead
-  \texttt{CMP-*} & Tên module/package & \texttt{IF-*}, API hoặc event & UC/FR/BR/NFR được hiện thực\\\hline
+\subsection{Trách nhiệm của module}
+\begin{longtable}{|L{21mm}|L{75mm}|L{43mm}|}
+\caption{Phạm vi trách nhiệm các module}\\\hline
+\textbf{Phạm vi} & \textbf{Trách nhiệm nghiệp vụ} & \textbf{Package / component}\\\hline
+\endfirsthead
+\hline\textbf{Phạm vi} & \textbf{Trách nhiệm nghiệp vụ} & \textbf{Package / component}\\\hline\endhead
+GEN & Xác thực, kiểm tra quyền; quản trị tài khoản, phân quyền và danh mục ban đầu. & \texttt{access}, \texttt{administration}\\\hline
+SUB-HUB & Tra cứu Hub, tài nguyên và Hub thay thế; khai thác trạng thái đã đồng bộ. & \texttt{hub}\\\hline
+SUB-RES & Đặt, hủy và hết hạn lượt đặt phương tiện; bảo đảm cấp phát nhất quán. & \texttt{reservation}\\\hline
+SUB-TRIP & Nhận/trả phương tiện, chuyến đi và xác nhận từ thiết bị ngoài. & \texttt{trip}\\\hline
+SUB-PARK & Giữ chỗ, check-in/out và hết hạn lượt đặt chỗ cho xe cá nhân. & \texttt{parking}\\\hline
+SUB-CHG & Yêu cầu, lịch, phiên sạc và xử lý thay đổi/cổng sạc lỗi. & \texttt{charging}\\\hline
+SUB-OPS & Giám sát, sự cố, điều chuyển; thêm/sửa thông tin và bật/tắt phục vụ tài nguyên. & \texttt{operations}\\\hline
+SUB-SIM & Kịch bản, lần chạy cô lập, kết quả và khuyến nghị. & \texttt{simulation}\\\hline
 \end{longtable}
 
-\subsection{Phân rã theo bảy phân hệ}
+\ReserveSpace{11\baselineskip}
+\subsection{Interface, dữ liệu và tích hợp ngoài}
+\begin{longtable}{|L{30mm}|L{32mm}|L{32mm}|L{43mm}|}
+\caption{Giao diện giữa các thành phần}\\\hline
+\textbf{Interface / contract} & \textbf{Bên cung cấp} & \textbf{Bên sử dụng} & \textbf{Dữ liệu và quy tắc lỗi}\\\hline
+\endfirsthead
+\hline\textbf{Interface / contract} & \textbf{Bên cung cấp} & \textbf{Bên sử dụng} & \textbf{Dữ liệu và quy tắc lỗi}\\\hline\endhead
+\texttt{AccessService} & GEN & Các điểm vào được bảo vệ & Phiên, hành động, đối tượng/phạm vi; quyết định theo quyền hiện hành.\\\hline
+Hợp đồng store & Owner dữ liệu và adapter lưu trữ & Application service liên quan & Truy vấn, ghi và bảo đảm transaction; không lộ chi tiết driver ra miền.\\\hline
+\texttt{StateData\allowbreak Adapter} & Thành phần tích hợp nội bộ & Nguồn ngoài và module nhận trạng thái & Chuẩn hóa StateEvent từ StateDataGateway; xác minh nguồn, thứ tự và đơn vị.\\\hline
+\texttt{MapAdapter} & Thành phần tích hợp nội bộ & HUB, TRIP, PARK theo nhu cầu đã có & Ánh xạ MapService ngoài sang dữ liệu vị trí/khoảng cách; phân biệt lỗi nguồn và không có kết quả.\\\hline
+\end{longtable}
+Các tên adapter là quy ước thiết kế nội bộ của Submission 3. Hai nguồn ngoài giữ nguyên tên/mã từ Submission 2. Quyền sở hữu lớp và dữ liệu ở Phần IV được dùng cho mọi đường đọc/ghi liên quan.
+% Phân biệt contract, implementation và source bên ngoài; không đổi ACT-DAT thành DB.
 
-\subsubsection{SUB-HUB - Tra cứu Hub và tài nguyên}
-Chỉ ra module tra cứu, nguồn vị trí/bản đồ, repository snapshot và adapter dữ liệu trạng thái.
+\subsection{Xử lý nền và đồng bộ dữ liệu}
+\begin{longtable}{|L{31mm}|L{66mm}|L{42mm}|}
+\caption{Trách nhiệm xử lý tự động}\\\hline
+\textbf{Yêu cầu} & \textbf{Xử lý cần được thiết kế} & \textbf{Owner và trigger}\\\hline
+\endfirsthead
+\hline\textbf{Yêu cầu} & \textbf{Xử lý cần được thiết kế} & \textbf{Owner và trigger}\\\hline\endhead
+\texttt{NIFR-HUB-01} & Tiếp nhận/đồng bộ trạng thái Hub và tài nguyên. & HUB và tích hợp; sự kiện mới hoặc chu kỳ làm mới cấu hình.\\\hline
+\texttt{NIFR-RES-01} & Giải phóng lượt đặt phương tiện hết hạn. & RES; đến expiresAt, còn Confirmed và chưa nhận xe.\\\hline
+\texttt{NIFR-PARK-01} & Hết hạn giữ chỗ, giữ trạng thái lỗi nếu chưa đủ điều kiện phục vụ. & PARK; đến hạn, còn Confirmed và chưa check-in.\\\hline
+\texttt{NIFR-CHG-01/02} & Tính lại ưu tiên và xử lý cổng sạc gặp sự cố. & CHG; hàng đợi/tài nguyên/công suất đổi hoặc có sự kiện cổng lỗi.\\\hline
+\texttt{NIFR-OPS-01/02} & Phát hiện sự cố và cảnh báo mất cân bằng. & OPS; có lỗi mới hoặc trạng thái tổng hợp Hub đổi.\\\hline
+\texttt{NIFR-SIM-01} & Phân tích kết quả và tạo khuyến nghị sau mô phỏng. & SIM; run Completed và kết quả đủ điều kiện phân tích.\\\hline
+\end{longtable}
+\texttt{StateDataGateway} cung cấp bản tin. \texttt{StateDataAdapter} nhận diện nguồn, ánh xạ tài nguyên và chuẩn hóa. Module owner kiểm tra điều kiện áp dụng rồi ghi trạng thái được chấp nhận. UI tra cứu qua ứng dụng, không đọc/ghi trực tiếp luồng thiết bị.
 
-\subsubsection{SUB-RES - Đặt phương tiện dùng chung}
-Chỉ ra transaction boundary, kiểm soát concurrent reservation, timeout và giải phóng tài nguyên.
+Bản tin thiếu/sai đơn vị, tài nguyên không tồn tại hoặc nguồn không hợp lệ không ghi đè trạng thái đã chấp nhận. Cặp sourceId/eventId nhận diện sự kiện trùng. Thứ tự so sánh theo phiên bản của cùng nguồn/tài nguyên khi có; thời điểm đo và thời điểm nhận được giữ riêng. Nếu chưa xác định được thứ tự, giữ trạng thái hợp lệ cuối và ghi nhận nhu cầu xác minh.
 
-\subsubsection{SUB-TRIP - Quản lý chuyến đi}
-Chỉ ra module bắt đầu/kết thúc chuyến, xác nhận khóa xe và cập nhật trạng thái phương tiện.
+Gián đoạn nguồn không đồng nghĩa thiết bị đã hỏng. Khi chưa có trạng thái hợp lệ, ứng dụng trả tình trạng chưa xác định; khi dữ liệu cũ, giữ dữ liệu cùng thời điểm cập nhật/cảnh báo. Mọi cấp phát mới vẫn kiểm tra điều kiện theo baseline, không dựa riêng vào hình hiển thị cũ.
+% Không vẽ tác vụ nền, timer hoặc scheduler thành actor ngoài hệ thống.
 
-\subsubsection{SUB-PARK - Quản lý chỗ đỗ xe cá nhân}
-Chỉ ra module reservation/check-in/check-out và adapter nhận dữ liệu cảm biến chỗ đỗ.
+\subsection{Cơ chế dùng chung}
+\textbf{Truy cập.} Hệ thống kiểm tra phiên, hành động, ownership và phạm vi hiện hành; các thao tác quản trị và vận hành giữ quyền riêng. Kiểm tra tại UI chỉ hỗ trợ trải nghiệm, không thay kiểm tra ở hệ thống.
 
-\subsubsection{SUB-CHG - Quản lý sạc và lịch sạc}
-Chỉ ra scheduler, charging queue, session monitoring và adapter trụ sạc giả lập.
+\textbf{Thay đổi nhất quán.} Kiểm tra trạng thái phục vụ, trạng thái vận hành và các ràng buộc cấp phát nằm trong cùng quyết định ghi. Các thay đổi cần đồng thời có hiệu lực phải cùng transaction hoặc cơ chế tương đương. Chi tiết khóa/version/constraint được ghi trong hợp đồng của từng owner; một mutex riêng process không đại diện bảo đảm toàn hệ thống.
 
-\subsubsection{SUB-OPS - Giám sát và điều phối vận hành}
-Chỉ ra dashboard query, incident handling, redistribution plan và audit trail.
+\textbf{Gửi lặp và kết quả chưa rõ.} Với command có thể gửi lại, idempotencyKey gắn chủ thể và nội dung. Cùng yêu cầu đã hoàn tất đọc lại kết quả cũ; cùng key khác nội dung bị từ chối. Mất response không tự chứng minh chưa commit; lệnh vật lý đã gửi cần xác minh trạng thái thay vì chỉ rollback dữ liệu.
 
-\subsubsection{SUB-SIM - What-if Simulation và khuyến nghị}
-Chỉ ra scenario configuration, snapshot isolation, simulation engine, result analysis và recommendation.
+\textbf{Thời gian.} Đồng hồ hệ thống là căn cứ thời hạn; countdown UI là hiển thị. Tại bước kiểm tra hạn, \texttt{now >= expiresAt} được coi là hết hạn. Tác vụ hết hạn đọc lại trạng thái hiện hành trong cơ chế ghi nhất quán để không ghi đè nhận xe/check-in đã hoàn tất.
 
-\subsection{Cross-cutting concerns}
+\textbf{Audit và lỗi.} Kết quả công bố cho người dùng phải đúng mốc hoàn tất đã định nghĩa. Thay đổi quan trọng ghi audit thống nhất với dữ liệu đã lưu. Cấu trúc kết quả/lỗi và các trường sự kiện dùng chung ở Phần IV; lỗi kỹ thuật không bị biến thành dữ liệu khả dụng giả.
 
-Mô tả authentication/authorization, validation, transaction, logging, audit, error model, configuration, time handling và event/data ingestion. Business rule phải nằm ở domain/application layer thay vì bị lặp trong UI hoặc controller.
+\textbf{Mô phỏng.} Đầu vào lần chạy có mốc rõ ràng, bản sao làm việc và kết quả tách khỏi kho vận hành. Khuyến nghị không tự áp dụng; quy trình OPS kiểm tra quyền và ràng buộc khi tạo/thực hiện kế hoạch thật.
+% Phân biệt AccountStatus, ServiceStatus và trạng thái vận hành.
+% Không cho IoT tự kích hoạt lại tài nguyên Inactive; không mặc định Admin có quyền Operator.

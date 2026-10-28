@@ -1,0 +1,7 @@
+% Trích quy tắc truy cập để báo cáo đọc độc lập, không chép toàn bộ Phần II.
+\subsection{Xác thực và phân quyền dùng chung}
+\label{sec:common-access}
+
+Theo \texttt{FR-GEN-03}, trước mỗi yêu cầu được bảo vệ, hệ thống kiểm tra tài khoản, phiên, quyền hiện hành và phạm vi đối tượng, kể cả khi gọi trực tiếp API. Từ chối không được làm lộ dữ liệu hoặc thay đổi trạng thái nghiệp vụ. Ba UC-HUB là tra cứu công khai.
+
+Quyền lấy từ cấu hình quản trị, không lấy từ vai trò người dùng tự gửi. Sinh viên thao tác trên dữ liệu của mình; Operator theo phạm vi Hub; Kỹ thuật chỉ cập nhật công việc được giao; Admin không mặc nhiên có quyền vận hành. Phiên hết hiệu lực sau đăng xuất hoặc 30 phút không hoạt động; bản tin IoT không kéo dài phiên. Hết phiên không hủy chuyến đi, phiên sạc hoặc mô phỏng; đăng nhập lại không tự gửi lại lệnh.

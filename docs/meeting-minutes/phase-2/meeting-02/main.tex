@@ -1,0 +1,105 @@
+\documentclass[10pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../../assets}
+\input{../../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{2em}
+
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+
+\section{THÔNG TIN BUỔI HỌP}
+\begin{center}
+\begin{tabularx}{\textwidth}{|>{\bfseries}L{43mm}|Y|}
+  \hline
+  Lần họp & Buổi 02 -- Phase 2\\\hline
+  Ngày họp & 07/10/2026\\\hline
+  Thời gian bắt đầu & 21:30\\\hline
+  Hình thức & Họp trực tuyến\\\hline
+  Nhóm / Lớp & K24 Warriors / L02\\\hline
+  Chủ đề & Thống nhất mẫu UI website và bắt đầu thiết kế chi tiết trên Figma\\\hline
+  Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\\hline
+  Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\\hline
+\end{tabularx}
+\end{center}
+
+\section{THÀNH PHẦN NHÓM}
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+
+\section{MỤC TIÊU BUỔI HỌP}
+Buổi họp tiếp nối phần tìm hiểu kiến thức và phân công ngày 30/09. Trọng tâm lần này là cùng chọn một hướng giao diện cho website Smart E-Mobility Hub, thống nhất các thành phần dùng chung và bắt đầu thiết kế màn hình cụ thể trên Figma. Nhóm cần có một mẫu chung để mọi người cùng chỉnh sửa, thay vì mỗi người làm một bộ giao diện riêng rồi mới ghép lại.
+
+\section{NỘI DUNG THẢO LUẬN}
+
+\subsection{Thống nhất mẫu UI phù hợp với SEMH}
+Nhóm cùng xem các phương án giao diện theo hai nhu cầu chính: tra cứu và sử dụng dịch vụ của Sinh viên; theo dõi tài nguyên và xử lý công việc của nhân viên. Mẫu được chọn cần có bố cục rõ, dễ tìm thông tin, hỗ trợ danh sách, bộ lọc, biểu mẫu và dashboard, đồng thời có thể chỉnh sửa để phù hợp với đề tài.
+
+Nhóm thống nhất sử dụng mẫu tham khảo làm nền về bố cục và hình thức, sau đó thay nội dung theo nghiệp vụ SEMH. Không đưa thanh toán, ví, quản lý tài khoản hay những chức năng có sẵn trong mẫu vào bài nếu Submission 1 không có yêu cầu tương ứng. Các nút và thông tin trên màn hình phải phục vụ một thao tác hoặc quyết định cụ thể của người dùng.
+
+\subsection{Thống nhất phong cách và thành phần dùng chung}
+Nhóm chọn hướng Ocean Mobility, kết hợp xanh navy, xanh teal và các nền xanh nhạt. Khu vực làm việc giữ nền sáng, nội dung chính đặt trong các thẻ dễ đọc; gradient dùng có chọn lọc ở những vùng nhấn để không làm giảm độ rõ của bảng và biểu mẫu.
+
+Các thành phần cần thống nhất trước khi làm nhiều màn hình gồm logo và tên hệ thống, kiểu chữ, khoảng cách, nút, ô nhập liệu, bộ lọc, thẻ tài nguyên, bảng dữ liệu, nhãn trạng thái và thông báo. Cùng một thao tác hoặc trạng thái phải có cách thể hiện nhất quán. Màu cảnh báo và lỗi luôn đi cùng chữ hoặc biểu tượng, không để người dùng chỉ dựa vào màu để hiểu kết quả.
+
+Nhóm hạn chế các câu giới thiệu dài trên màn hình thao tác. Nội dung giao diện ưu tiên tên trang, thông tin cần xem, hành động có thể thực hiện và hướng xử lý khi gặp lỗi.
+
+\subsection{Xác định màn hình và quyền theo vai trò}
+\begin{itemize}
+  \item \textbf{Dùng chung:} đăng nhập, tra cứu Hub công khai, chi tiết Hub và các phản hồi về phiên hoặc quyền truy cập. Tài khoản và vai trò được cấp sẵn; không thêm đăng ký, OTP hoặc tự chọn vai trò.
+  \item \textbf{Sinh viên:} tìm Hub và tài nguyên; đặt, hủy và nhận phương tiện; theo dõi, kết thúc chuyến đi; sử dụng chỗ đỗ cá nhân và đăng ký, theo dõi sạc.
+  \item \textbf{Nhân viên vận hành:} tổng quan mạng lưới, quản lý sạc, sự cố, kế hoạch điều chuyển và mô phỏng. Các tác vụ cần có dữ liệu và điều kiện kiểm tra trước khi xác nhận.
+  \item \textbf{Nhân viên kỹ thuật:} công việc được giao, thông tin sự cố, cập nhật tiến độ và kết quả kiểm tra. Không có quyền phân công lại, phê duyệt điều chuyển hoặc xác nhận đóng sự cố thay Nhân viên vận hành.
+\end{itemize}
+
+Một màn hình có thể phục vụ nhiều use case. Nhóm không tách thêm trang chỉ để mỗi use case có một ảnh riêng; form, tab và panel có thể nằm trong cùng trang nếu giúp người dùng thực hiện tác vụ thuận tiện hơn. Tuy nhiên, các bước quan trọng và những trạng thái khác nhau vẫn cần có mockup thể hiện rõ.
+
+\subsection{Bắt đầu thiết kế chi tiết trên Figma}
+Nhóm thống nhất cùng chỉnh sửa trên một file Figma. File được tổ chức thành khu vực thành phần dùng chung và các nhóm màn hình theo vai trò để dễ tìm, tham khảo và sử dụng lại. Các thành viên bắt đầu đưa thông tin nghiệp vụ vào mẫu, điều chỉnh bố cục và bổ sung những thao tác còn thiếu theo đặc tả Phase 1.
+
+Khi làm màn hình, cần thể hiện đủ thông tin để người dùng biết đang chọn Hub hoặc tài nguyên nào, trạng thái hiện tại ra sao và tác động của thao tác xác nhận. Dữ liệu mẫu phải nhất quán giữa các màn hình liên tiếp: mã xe, mã lượt đặt, Hub, thời hạn và kết quả không được thay đổi vô lý khi chuyển trang.
+
+Các thành phần lặp lại sử dụng component và Auto Layout khi phù hợp. Trước khi sửa thành phần chung, thành viên trao đổi trong nhóm và giữ phiên bản cũ để đối chiếu.
+
+\subsection{Phản hồi, trạng thái và luồng điều hướng}
+Nhóm trao đổi về các tình huống cần thể hiện ngoài đường thành công: đang tải, không có kết quả, nhập sai, tài nguyên vừa hết khả dụng, dữ liệu có thể đã cũ, không tải được dữ liệu và phiên hết hạn. Thông báo cần nói rõ điều gì xảy ra và người dùng có thể làm gì tiếp theo; không chỉ hiện một dòng lỗi chung chung.
+
+Mockup phải phân biệt trạng thái của giao dịch với trạng thái tài nguyên. Ví dụ, kết thúc chuyến đi không tự bảo đảm xe đã khả dụng; kỹ thuật ghi kết quả chưa đạt thì sự cố vẫn đang xử lý và tài nguyên chưa được đưa lại vào phục vụ. Kết quả mô phỏng chỉ là thông tin và khuyến nghị, không tự thay đổi mạng lưới thực hoặc tự phê duyệt điều chuyển.
+
+Nhóm bắt đầu nối các màn hình liên quan để kiểm tra đường đi từ danh sách tới chi tiết, thao tác xác nhận, kết quả và quay lại. Prototype dùng để kiểm tra trải nghiệm và trình bày luồng, không thay cho phần xử lý hệ thống sẽ được hiện thực ở giai đoạn sau.
+
+\subsection{Đồng bộ UI với biểu đồ hành vi}
+Phân công sequence, activity và state chart vẫn giữ theo buổi 01. Khi thiết kế UI, người phụ trách từng phân hệ đối chiếu lại các bước trong đặc tả để góp ý về thông tin, hành động và phản hồi của màn hình; UI vẫn là sản phẩm chung của cả nhóm.
+
+Sequence mô tả các tương tác cần thiết phía sau thao tác; activity mô tả quy trình và nhánh xử lý. Không đưa màu sắc hoặc chi tiết bố cục vào biểu đồ hành vi. Nếu việc thiết kế phát hiện một điểm nghiệp vụ chưa rõ, nhóm trưởng thống nhất cách xử lý trước khi cập nhật cả giao diện lẫn sơ đồ liên quan.
+
+\section{KẾT QUẢ THỐNG NHẤT}
+\begin{enumerate}
+  \item Chọn một hướng UI chung cho website SEMH; chỉnh sửa mẫu tham khảo theo phạm vi bài, không giữ những tính năng thừa của mẫu.
+  \item Dùng phong cách Ocean Mobility và bộ thành phần chung để các màn hình đồng nhất về màu, chữ, khoảng cách và cách thể hiện trạng thái.
+  \item Cả nhóm cùng làm UI trên Figma, không chia trách nhiệm UI thành bảy bộ giao diện riêng.
+  \item Màn hình phân biệt đúng ba vai trò và quyền thao tác; giữ tra cứu công khai và phạm vi xác thực đã chốt.
+  \item Tiếp tục làm biểu đồ theo phân công cũ; đối chiếu UI với các luồng của Submission 1 trước khi đưa vào báo cáo.
+\end{enumerate}
+
+\section{CÔNG VIỆC SAU BUỔI HỌP}
+\begin{itemize}
+  \item \textbf{Cả nhóm:} tiếp tục hoàn thiện các màn hình trên file Figma, dùng lại thành phần chung, bổ sung các trạng thái và nối luồng điều hướng cần trình bày.
+  \item \textbf{Từng thành viên:} hoàn thiện sequence/activity của phân hệ được giao và phần giải thích; chuẩn bị state chart theo khung khi các phần chính đã ổn.
+  \item \textbf{Nhóm trưởng:} giữ thống nhất bố cục và thuật ngữ, tổng hợp góp ý, kiểm tra những màn hình giao giữa các phân hệ và đưa bản đã chốt vào LaTeX.
+  \item \textbf{Khi bàn giao:} gửi nguồn sơ đồ cùng bản xuất hình, ghi rõ use case và phiên bản; không dùng ảnh cũ sau khi luồng đã thay đổi. Mockup chỉ xuất để nộp sau khi kiểm tra chữ, dữ liệu mẫu và vị trí các thao tác.
+\end{itemize}
+
+Các điểm cần theo dõi gồm chỉnh sửa đồng thời làm lệch component chung, UI không khớp quyền của actor và dữ liệu mẫu không thống nhất giữa các trang. Nhóm ưu tiên hoàn thiện luồng sử dụng trước, sau đó tinh chỉnh hình thức và xuất các hình cần đưa vào báo cáo.
+
+\section{KẾT LUẬN BUỔI HỌP}
+Nhóm đã chốt hướng giao diện và bắt đầu thiết kế chi tiết trên Figma. Cả nhóm tiếp tục hoàn thiện UI; từng thành viên làm biểu đồ theo phân hệ đã giao. Nhóm trưởng tổng hợp và kiểm tra sự thống nhất trước khi đưa vào báo cáo.
+
+\end{document}

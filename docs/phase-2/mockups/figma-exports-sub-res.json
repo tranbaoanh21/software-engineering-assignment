@@ -1,0 +1,46 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-RES",
+  "figmaAccess": "Completed reservation details and cancellation views with editable Ocean Mobility components. Existing draft content 19:120 is preserved but hidden; off-canvas teammate drafts are unchanged.",
+  "assets": [
+    {
+      "file": "uc-res-01.png",
+      "nodeId": "19:88",
+      "contentNodeId": "443:465",
+      "screen": "05 Chi tiết lượt đặt xe",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-res-02.png",
+      "nodeId": "442:465",
+      "screen": "05.1 Hủy lượt đặt · Ocean Mobility",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    }
+  ],
+  "prototypeOnly": [
+    {
+      "nodeId": "442:466",
+      "screen": "05.2 Lượt đặt đã hủy · Ocean Mobility"
+    },
+    {
+      "nodeId": "446:594",
+      "screen": "05.3 Hoạt động sau hủy lượt đặt"
+    }
+  ],
+  "existingDiagrams": {
+    "sourceFolder": "local/phase-2-submissions/Bảo Trâm - SUB RES",
+    "verified": "Both sequence and both activity PNGs already match the supplied originals byte for byte."
+  },
+  "leftBlank": [],
+  "stateDiagram": {
+    "source": "../diagrams/plantuml/state-vehicle-reservation.puml",
+    "artifact": "../diagrams/state/vehicle-reservation.pdf",
+    "note": "Added from the existing UC-RES-01/02, UC-TRIP-01 and NIFR-RES-01 baseline on 2026-10-23."
+  },
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

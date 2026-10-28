@@ -1,0 +1,43 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-SIM",
+  "assets": [
+    { "file": "uc-sim-01.png", "nodeId": "20:407", "screen": "15 Không gian mô phỏng", "format": "png" },
+    { "file": "uc-sim-02.png", "nodeId": "20:472", "screen": "16 Kết quả mô phỏng và khuyến nghị", "format": "png" }
+  ],
+  "prototype": {
+    "flowName": "SUB-SIM · Chạy và phân tích mô phỏng",
+    "startNode": "20:407",
+    "confirmationNode": "455:1352",
+    "runningNode": "455:1431",
+    "resultsNode": "20:472",
+    "savedScenarioNode": "455:1568",
+    "prefilledOperationalPlanNode": "455:1696",
+    "path": "Configure -> confirm -> running -> completed results -> prefilled UC-OPS-03",
+    "previewCompletionDelaySeconds": 3
+  },
+  "figmaChanges": [
+    "Completed the two existing simulation shells using native editable layers and existing SEMH Input, Button, Stat, StatusChip and TableRow instances.",
+    "Kept Ocean Mobility colors, component bindings, Be Vietnam Pro typography and the existing logo/sidebar. Previous placeholder content remains hidden for recovery.",
+    "Added confirmation, running-progress and saved-scenario states plus a separate unsaved operational handoff; original SUB-OPS screens were not changed.",
+    "Checked navigation targets: no missing destination, self-navigation or navigation to a non-top-level frame."
+  ],
+  "illustrativeScenario": {
+    "name": "Giờ cao điểm · Hub B6",
+    "hubScope": ["A4", "B6", "C2", "D1"],
+    "baseSnapshot": "2026-10-23T13:30:00+07:00",
+    "simulationWindow": "2026-10-23 14:00-16:00 +07:00",
+    "assumptions": ["B6 demand +40%", "B6-03 charging point unavailable in simulation only"],
+    "recommendation": "Move three vehicles from A4 to B6 at 14:30; operator review and approval are required in UC-OPS-03."
+  },
+  "modelingNotes": [
+    "Displayed values are illustrative mockup data, not output from an implemented simulation engine or live IoT feed.",
+    "The prototype timer only previews completion. It is not an implemented background task.",
+    "Saving a SimulationScenario draft does not create a SimulationRun.",
+    "The handoff prefills a new form and does not persist, approve or physically execute a RedistributionPlan.",
+    "The report imports only one representative UI per UC. Detailed prototype states stay in Figma.",
+    "The existing two sequence, two activity and SimulationRun state diagrams are retained unchanged."
+  ]
+}

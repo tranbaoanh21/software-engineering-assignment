@@ -1,0 +1,79 @@
+@startuml
+title SharedVehicle - Biểu đồ trạng thái
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam monochrome true
+skinparam ArrowColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+skinparam state {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+!pragma layout smetana
+hide empty description
+top to bottom direction
+skinparam nodesep 55
+skinparam ranksep 65
+
+state Available
+state Reserved
+state InUse
+state Charging
+state OutOfService
+
+[*] --> Available
+Available -down-> Reserved : reservationConfirmed\n[pin >= 30%; không có lượt giữ còn hiệu lực]\n/ tạo lượt đặt Confirmed; giữ xe
+Reserved -down-> InUse : handoverConfirmed\n[lượt đặt còn hạn; đúng chủ / xe / Hub]\n/ lượt đặt Fulfilled; tạo Trip InProgress
+Reserved --> Available : reservationCancelled [xe đủ điều kiện]\n/ giải phóng xe
+Reserved --> Available : after(10 phút) [chưa nhận; xe đủ điều kiện]\n/ lượt đặt Expired; giải phóng xe
+InUse --> Available : safeReturnConfirmed\n[đủ điều kiện trả xe và phục vụ; lưu thành công]\n/ Trip -> Completed; cập nhật Hub; ghi lịch sử thay đổi
+InUse -right-> OutOfService : safeReturnConfirmed\n[đủ điều kiện trả xe; xe lỗi / đến hạn kiểm tra; lưu thành công]\n/ Trip -> Completed; cập nhật Hub; ghi lịch sử thay đổi
+
+Available --> OutOfService : faultDetected\n/ chặn cấp phát; ghi sự cố
+Reserved --> OutOfService : faultDetected\n/ chặn cấp phát; ghi sự cố
+InUse --> OutOfService : faultDetected\n/ chặn cấp phát; ghi sự cố
+Charging --> OutOfService : faultDetected\n/ chặn cấp phát; ghi sự cố
+OutOfService --> Available : technicalResultAccepted\n[ACT-MNT xác nhận đạt; xe đủ điều kiện]\n/ đưa xe trở lại phục vụ
+
+note top of Available
+  Xe đủ điều kiện phục vụ khi pin >= 30%, không có lỗi;
+  không gắn với Trip đang hoạt động, lượt giữ còn hiệu lực
+  hoặc ràng buộc ngăn cấp phát.
+end note
+
+note left of InUse
+  AF-01: Trả xe an toàn nhưng pin thấp:
+  hoàn tất Trip; không chuyển xe sang Available.
+  Chuyển SUB-CHG sau khi lưu thành công.
+  Trạng thái chờ sạc chưa được đặc tả.
+end note
+
+note right of Charging
+  SUB-CHG chưa quy định chuyển vào / ra
+  SharedVehicle.Charging.
+  Pin thấp không đồng nghĩa xe đang sạc.
+end note
+
+note bottom of OutOfService
+  faultDetected: lỗi phần cứng hoặc đạt 1.000 km từ lần bảo trì.
+  SUB-OPS chặn cấp phát; không tự hoàn tất Trip.
+  Lỗi cổng sạc không đồng nghĩa xe bị lỗi.
+end note
+
+legend bottom
+  Nguồn: UC-RES-01/02; UC-TRIP-01/02; SUB-CHG; UC-OPS-02; BR-HUB-01/02.
+  Điều kiện trả xe: phiên / quyền hợp lệ; đúng chủ Trip và xe;
+  Trip.InProgress, xe InUse;
+  Hub hợp lệ, có thể nhận xe; xác nhận vị trí và trả xe an toàn.
+  safeReturnConfirmed ở bước 5; xét lại pin, tình trạng và cập nhật đồng bộ cùng Trip ở bước 7.
+  Xét lỗi / hạn kiểm tra trước mức pin; chuyển SUB-CHG / SUB-OPS sau khi lưu thành công nếu cần.
+  Thời hạn 10 phút tính từ khi lượt đặt Confirmed.
+  Dữ liệu lỗi hoặc mất nguồn: giữ trạng thái hợp lệ cuối cùng.
+  Lưu toàn bộ thay đổi cùng nhau; nếu lỗi thì hoàn tác.
+  Ghi lịch sử thay đổi (NFR-AUD-01); sự cố: BR-OPS-02, NIFR-OPS-01.
+endlegend
+@enduml

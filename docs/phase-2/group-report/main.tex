@@ -3,8 +3,34 @@
 \newcommand{\HCMUTAssetPath}{../../../assets}
 \input{../../../assets/latex-template/hcmut-report.sty}
 \input{cover-page}
+\input{../../phase-1/shared/use-case-table}
+
+% Hình Phase 1 được tái sử dụng, không sao chép hoặc sửa bản đã nộp.
+\newcommand{\PhaseOneDiagramPath}{../../phase-1/diagrams/plantuml/output}
+% Sơ đồ tổng quát cập nhật Admin riêng cho Submission 2.
+\newcommand{\PhaseTwoSystemDiagramPath}{../diagrams/system}
+\newcommand{\UseCaseDiagram}[4]{%
+  \par\medskip
+  \noindent\begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseOneDiagramPath/#1}
+    \captionof{figure}{Sơ đồ Use Case #2 -- #3}
+    \label{#4}
+  \end{minipage}
+  \par\medskip
+}
+\newcommand{\ManagementFigure}[4][0.90\textheight]{%
+  \begingroup
+  \setlength{\intextsep}{0pt}%
+  \InsertArtifact[#1]{#2}{#3}{#4}{}%
+  \endgroup
+}
 \usepackage{float}
+\usepackage{amsmath}
 \setlength{\emergencystretch}{3em}
+% Thu gọn khoảng cách bảng, không đổi font hoặc kích thước diagram.
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.4em}
 
 \fancyhead[L]{%
   \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
@@ -22,6 +48,7 @@
 \setcounter{tocdepth}{3}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh sách hình}
+\renewcommand{\listtablename}{Danh sách bảng}
 \makeatletter
 \renewcommand*\l@section[2]{%
   \ifnum\c@tocdepth>\z@
@@ -48,29 +75,15 @@
 }
 \makeatother
 
-% Nội dung trong ngoặc vuông là vị trí thay bằng bài làm của nhóm.
-\newcommand{\PlaceholderText}[1]{%
-  \begin{sloppypar}\noindent{\color{black!65}\itshape [#1]}\end{sloppypar}
-}
-
-% Ghi chú phân công, không đưa tên thành viên vào mục lục.
-\newcommand{\AssignmentNote}[2]{%
-  \par\begingroup\small\color{black!65}
-  \noindent\textit{Phụ trách: #1. #2}\par
-  \endgroup\smallskip
-}
-
-% Khi có PDF hình tại đường dẫn này, hình được đưa vào báo cáo tự động.
-% Có thể gọi nhiều lần để trình bày thêm màn hình hoặc sơ đồ của cùng một UC.
+% Chèn hình có sẵn; giữ vùng trống và caption cho hình chưa được bổ sung.
+% Tham số cuối được giữ để tương thích với các lời gọi hiện có.
 \newcommand{\InsertArtifact}[5][0.68\textheight]{%
   \begin{figure}[H]
     \centering
     \IfFileExists{#2}{%
       \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}%
     }{%
-      \begin{minipage}{0.94\linewidth}
-        \centering\small\color{black!65}\itshape [#5]
-      \end{minipage}%
+      \vspace{0.12\textheight}%
     }
     \caption{#3}\label{#4}
   \end{figure}
@@ -100,7 +113,6 @@
 \end{center}
 \normalsize
 
-UI Mockup toàn hệ thống, gồm giao diện dùng chung ở Phần I và giao diện của 18 use case ở Phần II, do cả bảy thành viên cùng thực hiện trên Figma. Nhóm cùng đề xuất mẫu, chọn một bộ giao diện và chỉnh sửa trên file chung để thống nhất bố cục, thành phần và luồng điều hướng của website. Từ phần thiết kế hành vi theo phân hệ, mỗi người phụ trách sequence, activity, state chart nếu có và phần giải thích tương ứng của phân hệ đã được giao; UI trong từng phân hệ vẫn là phần làm chung. State chart SharedVehicle thuộc SUB-TRIP, do Tường Vi thực hiện. Bảo Anh tổng hợp và kiểm soát nội dung báo cáo.
 
 \clearpage\ReferenceTableOfContents
 \clearpage
@@ -109,7 +121,14 @@ UI Mockup toàn hệ thống, gồm giao diện dùng chung ở Phần I và gia
   \listoffigures
 \endgroup
 
-\clearpage\input{sections/01-ui-design}
-\clearpage\input{sections/02-use-case-design}
+\clearpage
+\begingroup
+  \setstretch{1.0}\small
+  \listoftables
+\endgroup
+
+\clearpage\input{sections/01-project-details}
+\input{sections/02-requirements}
+\input{sections/02-use-case-design}
 
 \end{document}

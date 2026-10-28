@@ -5,9 +5,12 @@
 ## Điều hướng tài liệu
 
 - [Báo cáo chính Phase 1](docs/phase-1/group-report/output/pdf/phase-1-group-report-outline.pdf): bản báo cáo Submission 1 đã hoàn thiện;
-- [Khung báo cáo Phase 2](docs/phase-2/group-report/output/pdf/phase-2-group-report-outline.pdf): cấu trúc UI design và behavioral diagrams;
+- [Báo cáo tích hợp Phase 2](docs/phase-2/group-report/output/pdf/phase-2-group-report-outline.pdf): nội dung Phase 1 cùng UI mockup và behavioral diagrams tại từng use case;
 - [Khung báo cáo Phase 3](docs/phase-3/group-report/output/pdf/phase-3-group-report-outline.pdf): cấu trúc deployment view, implementation view, class/method design và test case bonus;
 - [Khung Final Report](docs/final-report/output/pdf/final-report-outline.pdf): cấu trúc hợp nhất ba submission, MVP demonstration và khai báo AI;
+- [Báo cáo cá nhân Phase 2](docs/phase-2/individual-work/README.md): bảy bản báo cáo theo phần việc của từng thành viên;
+- [Biên bản họp Phase 2](docs/meeting-minutes/phase-2/README.md): ba buổi họp và chốt Submission 2;
+- [Quy ước thuật ngữ Phase 2](docs/phase-2/uml-conventions.md): tên actor, đối tượng, thành phần và trạng thái dùng chung;
 - [Biên bản họp nhóm buổi 01](docs/meeting-minutes/phase-1/meeting-01/output/pdf/meeting-minutes-01.pdf): buổi tìm hiểu đề tài và xác định các vấn đề cần làm rõ;
 - [Biên bản họp nhóm buổi 02](docs/meeting-minutes/phase-1/meeting-02/output/pdf/meeting-minutes-02.pdf): kết quả làm rõ yêu cầu và phân công công việc Phase 1;
 - [Biên bản họp nhóm buổi 03](docs/meeting-minutes/phase-1/meeting-03/output/pdf/meeting-minutes-03.pdf): rà soát khó khăn và thống nhất hướng hoàn thiện Submission 1;
@@ -16,6 +19,19 @@
 - [Đề bài gốc](BTL_SoftwareEngineering_HK261_v1.pdf).
 
 Toàn bộ tài liệu theo từng phase được lưu trong thư mục [`docs/`](docs/).
+
+```text
+assets/                  Mẫu LaTeX, logo trường và bộ nhận diện SEMH
+docs/
+├── phase-1/             Submission 1 đã chốt
+├── phase-2/             Báo cáo tích hợp, cá nhân, UI và UML đã hoàn thiện
+├── phase-3/             Khung thiết kế, quy ước chung và tài liệu kiến thức nền
+├── final-report/        Khung báo cáo tổng hợp
+└── meeting-minutes/     Biên bản theo từng phase
+local/                   Bài gốc thành viên và bản xuất cũ, chỉ lưu tại máy
+```
+
+PDF chuẩn nằm trong `output/pdf/` của từng báo cáo. Nguồn sơ đồ và hình dùng trong báo cáo được giữ trong `docs/phase-2/`; bài gốc thành viên được lưu riêng tại `local/phase-2-submissions/` và không cần để biên dịch. `local/`, tài liệu tự học riêng và các bộ prompt cá nhân không đưa vào Git.
 
 ## 1. Đề tài đang giải quyết bài toán gì?
 
@@ -194,6 +210,10 @@ Tùy phạm vi của từng phân hệ, dữ liệu này có thể bao gồm v�
 Giảng viên cung cấp nguồn [Connected Vehicles Dataset](https://iotdataset.com/topic/connected-vehicles) để nhóm tham khảo dữ liệu mẫu. Việc xây dựng luồng xử lý IoT theo thời gian thực không phải yêu cầu cốt lõi, nhưng nếu thực hiện được, nhóm sẽ được cộng **0,25 điểm** vào tổng điểm bài tập lớn. [Azure Stream Analytics](https://learn.microsoft.com/en-us/azure/stream-analytics/stream-analytics-get-started-with-azure-stream-analytics-to-process-data-from-iot-devices) là một giải pháp có thể tham khảo để mô phỏng và xử lý dòng dữ liệu cảm biến, đặc biệt hữu ích cho chức năng What-if Simulation.
 
 ### Xác thực và phân quyền dùng chung
+
+**Cập nhật Submission 2:** đã bổ sung `ACT-ADM`, UC-GEN-01/02/03 (tài khoản, quyền, danh mục ban đầu) và UC-OPS-04/05 (thêm/sửa, bật/tắt phục vụ tài nguyên), nâng tổng danh mục lên 23 UC mà không đổi mã cũ hoặc tạo phân hệ thứ tám. Các UC mới có đặc tả, use-case/sequence/activity, UI và prototype Figma; có state `AccountStatus` và `ServiceStatus`. Admin không mặc nhiên có quyền Operator/Kỹ thuật. `ServiceStatus` độc lập với trạng thái vật lý, thao tác tắt bị chặn nếu còn ràng buộc sử dụng. Chưa thay đổi include/extend, AF/EF của UC cũ hoặc thuật toán lập lịch sạc. Nội dung báo cáo và prototype chưa phải backend đã hiện thực. Submission 1 đã nộp giữ nguyên.
+
+**Baseline Submission 1 đã nộp:**
 
 Nhóm thống nhất bổ sung một mục nhỏ trong Phần II của Submission 1, không tạo thêm phân hệ, actor hoặc use case nghiệp vụ. `FR-GEN-01`--`FR-GEN-03` mô tả đăng nhập, đăng xuất và kiểm tra quyền; `BR-GEN-01`--`BR-GEN-03` quy định quyền được cấu hình trước, giới hạn theo vai trò và đối tượng, cùng hiệu lực phiên. Tài khoản demo được cấp sẵn; đăng ký, khôi phục mật khẩu, OTP và SSO thật nằm ngoài phạm vi.
 

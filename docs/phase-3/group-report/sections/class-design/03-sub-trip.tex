@@ -1,0 +1,40 @@
+\clearpage
+\subsection{SUB-TRIP -- Quản lý chuyến đi}
+% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
+Xác nhận bàn giao và trả xe dựa trên bằng chứng hợp lệ từ thiết bị. SharedVehicle được định nghĩa chuẩn tại phạm vi này; các phân hệ khác tham chiếu cùng lớp. Trip.Completed không mặc nhiên khiến xe Available.
+
+\subsubsection{Class diagram}
+\DesignFigure{../diagrams/class/03-sub-trip.pdf}{Class diagram -- SUB-TRIP}{fig:p3-class-03-sub-trip}
+
+\subsubsection{Mô tả các lớp}
+% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
+\begin{ClassDescription}{\textit{[Tên lớp]}}
+Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
+Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
+Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
+\end{ClassDescription}
+
+\ReserveSpace{0.60\textheight}
+\subsubsection{Đặc tả các phương thức}
+% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
+% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
+\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
+Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
+Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
+Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
+Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
+Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
+Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
+Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
+Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
+\end{MethodDescription}
+
+\subsubsection{Các use case được hỗ trợ}
+\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
+\caption{Use case và phương thức -- SUB-TRIP}\\\hline
+\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\endfirsthead
+\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
+\texttt{UC-TRIP-01} & Nhận phương tiện đã đặt & \ToFill{lớp.phương thức}\\\hline
+\texttt{UC-TRIP-02} & Trả phương tiện và kết thúc chuyến đi & \ToFill{lớp.phương thức}\\\hline
+\end{longtable}

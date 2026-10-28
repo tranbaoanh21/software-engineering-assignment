@@ -1,0 +1,143 @@
+\chapter{Ví dụ hoàn chỉnh: đăng ký khóa học}
+\subsection{Bối cảnh và quy tắc của ví dụ}
+Đây là ví dụ ngoài SEMH. Một sinh viên đã xác thực chọn khóa học và yêu cầu đăng ký. Khóa học có sức chứa; tài khoản phải đang hoạt động. Mỗi sinh viên chỉ có một đăng ký được xác nhận cho cùng khóa học trong phạm vi ví dụ. Không có thanh toán, hủy đăng ký hay danh sách chờ.
+
+Một request có requestId để khi mất phản hồi có thể gửi lại mà không tạo thêm đăng ký. Hai người cùng chọn chỗ cuối không được làm enrolledCount vượt capacity. Các quy tắc này là dữ liệu đầu vào của thiết kế, không phải điều tự suy ra từ hình.
+
+CourseSession là buổi học thuộc nội dung Course. Ví dụ chọn composition cho nó vì đối tượng buổi học không có owner độc lập trong mô hình này. Chính sách lưu lịch sử ngoài phạm vi; không dùng điều này làm lý do tự xóa dữ liệu đăng ký.
+
+\subsection{Deployment View của ví dụ}
+\diagram{example-deployment}{Nơi chạy các artifact của hệ thống đăng ký demo}{fig:ex-deployment}
+
+\point{Cách đọc}
+Trình duyệt nạp web bundle và gửi request đến API runtime. Artifact backend chứa các phần nhận request, nghiệp vụ và truy cập dữ liệu. Runtime database giữ dữ liệu và cấu hình lưu trữ. Hai đường nối là đường giao tiếp, không phải main flow của việc đăng ký.
+
+\point{Giả định môi trường}
+HTTP 8080 và SQL 5432 là cấu hình minh họa của ví dụ, không phải port bắt buộc cho SEMH. Máy người dùng và máy demo có thể là hai thiết bị; khi chạy local, các runtime cũng có thể cùng nằm trên một máy. Khi lên môi trường công khai cần xem xét HTTPS, secret, giới hạn truy cập database và dữ liệu bền vững.
+
+\subsection{Development/Implementation View của ví dụ}
+\diagram{example-implementation}{Phụ thuộc giữa các phần mã nguồn; không phải các server riêng}{fig:ex-implementation}
+
+Web UI sử dụng API của controller. Controller gọi EnrollmentService. Service làm việc với các đối tượng miền và hợp đồng EnrollmentStore/EnrollmentPolicy. SqlEnrollmentStore là hiện thực lưu trữ; BasicEnrollmentPolicy là chính sách kiểm tra.
+
+Mũi tên từ SqlEnrollmentStore về EnrollmentStore cho biết implementation đáp ứng contract. Ở runtime, service được truyền một object SqlEnrollmentStore rồi gọi nó. Không có request mạng từ interface đến SQL class như một server độc lập.
+
+\subsection{Class diagram miền}
+\diagram{example-class-domain}{Các đối tượng miền và quan hệ của ví dụ}{fig:ex-domain}
+
+\begin{itemize}
+  \item Student liên hệ nhiều Registration; mỗi Registration ứng với đúng một Student và một Course.
+  \item Course giữ capacity, enrolledCount và version. \code{0 <= enrolledCount <= capacity} là invariant.
+  \item Registration.confirm chỉ thay đổi object trong bộ nhớ; muốn trở thành kết quả đã lưu còn phải commit thành công.
+  \item CourseSession không có operation trên hình này nên không cần bịa thêm getter để lấp ngăn method.
+\end{itemize}
+
+Hai giá trị RegistrationStatus chỉ là phạm vi ví dụ. Chúng không thay cho các trạng thái VehicleReservation của SEMH. Nhiều đăng ký lịch sử vẫn được biểu diễn 0..*; ràng buộc không trùng theo sinh viên và khóa học được kiểm tra riêng.
+
+\subsection{Class diagram điều phối và lưu trữ}
+\diagram{example-class-services}{Các lớp điều phối, interface và implementation tương ứng}{fig:ex-services}
+
+Hình trên ẩn các operation lưu trữ để giữ cỡ chữ dễ đọc. Hình dưới mở đúng hai kiểu đó, không tạo thêm interface hoặc adapter khác.
+
+\diagram{example-class-store}{Chi tiết hợp đồng lưu trữ và class hiện thực}{fig:ex-store}
+
+Trong signature commit, \code{sv} là version Student đã kiểm tra, \code{cv} là version Course đã đọc. Dùng tên ngắn trên hình để dễ dàn trang; khi hiện thực nên đặt expectedStudentVersion và expectedCourseVersion rõ nghĩa. Registration đã chứa requestId nên không cần truyền key lặp lại vào commit.
+
+\point{Các kiểu dữ liệu truyền qua ranh giới}
+\begin{center}\begin{tabularx}{\linewidth}{|L{39mm}|Y|}\hline
+\textbf{Kiểu} & \textbf{Nội dung}\\\hline
+EnrollmentRequest & studentId lấy từ danh tính đã xác thực ở server; courseId do người dùng chọn; requestId để nhận diện lần gửi lặp.\\\hline
+EnrollmentResult & Mã kết quả; registrationId khi thành công; thông tin lỗi nghiệp vụ an toàn cho bên gọi. Không trả object lưu trữ nguyên vẹn ra UI.\\\hline
+UUID / DateTime & Kiểu định danh và mốc thời gian dùng chung trong ví dụ; DateTime được quy ước UTC khi trao đổi/lưu.\\\hline
+\end{tabularx}\end{center}
+
+\clearpage
+\subsection{Hợp đồng các operation miền}
+\begin{longtable}{|L{15mm}|L{43mm}|L{82mm}|}\hline
+\textbf{ID} & \textbf{Owner / operation} & \textbf{Hợp đồng}\\\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Owner / operation} & \textbf{Hợp đồng}\\\hline
+\endhead
+M01 & Student.isActive() & Trả true khi tài khoản hoạt động; không ghi dữ liệu, không thay đổi quyền. Dữ liệu tài khoản phải đã được nạp.\\\hline
+M02 & Course.hasSeat() & Trả enrolledCount nhỏ hơn capacity. Không giữ chỗ và không bảo đảm chỗ còn tồn tại khi một request khác vừa commit.\\\hline
+M03 & Course.occupySeat() & Chỉ tăng một đơn vị khi còn chỗ. Không còn chỗ thì báo lỗi miền và không thay đổi object. Chỉ sửa trong bộ nhớ, chưa là một giao dịch lưu.\\\hline
+M04 & Registration\newline confirm(at) & Chỉ từ Pending sang Confirmed; ghi confirmedAt bằng at hợp lệ. Trạng thái không phù hợp thì từ chối, giữ nguyên object. Không tự tăng số người của Course.\\\hline
+\end{longtable}
+
+\subsection{Hợp đồng điều phối và policy}
+\begin{longtable}{|L{15mm}|L{43mm}|L{82mm}|}\hline
+\textbf{ID} & \textbf{Owner / operation} & \textbf{Hợp đồng}\\\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Owner / operation} & \textbf{Hợp đồng}\\\hline
+\endhead
+M05 & {\small EnrollmentController}\newline enroll(req) & Nhận input, kiểm tra phiên và dữ liệu hình thức; gán studentId từ danh tính server; gọi service và ánh xạ kết quả sang response. Không tự tăng enrolledCount. Không có phiên thì không gọi thao tác nghiệp vụ.\\\hline
+M06 & {\small EnrollmentService}\newline enroll(req) & Điều phối kiểm tra request ID, tải dữ liệu, policy, thay đổi object và commit. Trả kết quả đã xác nhận hoặc lỗi có nghĩa; không trả thành công trước commit. Request lặp cùng nội dung trả kết quả cũ.\\\hline
+M07 & {\small EnrollmentPolicy}\newline check(s,c) & Contract: với Student/Course đã nạp, cho đi tiếp nếu tài khoản hoạt động và còn chỗ; nếu không thì báo Inactive hoặc Full. Không ghi dữ liệu.\\\hline
+M08 & {\small BasicEnrollmentPolicy}\newline check(s,c) & Hiện thực M07 bằng s.isActive() và c.hasSeat(). Không kiểm tra quyền HTTP, không commit; kết quả chỉ phản ánh trạng thái đã đọc, chưa giải quyết cạnh tranh.\\\hline
+\end{longtable}
+
+\subsection{Hợp đồng của interface lưu trữ}
+\begin{longtable}{|L{15mm}|L{43mm}|L{82mm}|}\hline
+\textbf{ID} & \textbf{Operation của EnrollmentStore} & \textbf{Hợp đồng}\\\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Operation của EnrollmentStore} & \textbf{Hợp đồng}\\\hline
+\endhead
+M09 & findStudent(id) & Trả Student cùng version hoặc không tìm thấy. Chỉ đọc; lỗi lưu trữ khác với kết quả không tồn tại.\\\hline
+M10 & findCourse(id) & Trả Course cùng capacity, enrolledCount và version, hoặc không tìm thấy. Không tăng số người và không tạo đăng ký.\\\hline
+M11 & findByRequest(key) & Tra cứu đăng ký đã commit theo requestId. Service phải đối chiếu owner và course trước khi trả lại; không để key dùng lại sai nội dung gây lộ dữ liệu hoặc tạo tác động khác.\\\hline
+M12 & commit(r,c,sv,cv) & Trong một transaction: bảo đảm version Student/Course vẫn khớp sv/cv; không trùng student--course hoặc requestId; ghi đăng ký Confirmed và số lượng mới; tăng version Course. Thất bại phải không ghi một phần. Request trùng đã commit được phân biệt để đọc lại kết quả.\\\hline
+\end{longtable}
+
+\subsection{Hợp đồng implementation và bao phủ toàn bộ method}
+SqlEnrollmentStore hiện thực đủ bốn operation M09--M12. Không bỏ phần mô tả implementation chỉ vì đã có interface; cần bổ sung cơ chế và lỗi đặc thù:
+\begin{longtable}{|L{15mm}|L{43mm}|L{82mm}|}\hline
+\textbf{ID} & \textbf{Operation của SqlEnrollmentStore} & \textbf{Bổ sung cho contract interface}\\\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Operation của SqlEnrollmentStore} & \textbf{Bổ sung cho contract interface}\\\hline
+\endhead
+M13 & findStudent(id) & Ánh xạ dòng tài khoản sang Student; giữ đúng version; lỗi kết nối được báo là lỗi hạ tầng, không biến thành ``không có sinh viên''.\\\hline
+M14 & findCourse(id) & Đọc đúng enrolledCount/capacity/version từ cùng trạng thái lưu trữ thích hợp. Không tự chọn khóa phân tán ngoài hợp đồng; bảo vệ cạnh tranh nằm ở commit.\\\hline
+M15 & findByRequest(key) & Query theo key duy nhất. Không có bản ghi là optional rỗng; có bản ghi trả đúng owner/course/status để M06 kiểm tra replay.\\\hline
+M16 & commit(r,c,sv,cv) & Hiện thực M12 bằng kiểm tra version có khóa hoặc điều kiện cập nhật, ràng buộc duy nhất và transaction SQL. Nếu xác nhận rollback, giữ nguyên dữ liệu cũ; nếu kết quả commit chưa rõ, báo cần đọc lại theo requestId, không khẳng định chắc chắn chưa có đăng ký.\\\hline
+\end{longtable}
+
+Ba hình class diagram thể hiện tổng cộng \textbf{16 operation phân biệt theo owner}, tương ứng M01--M16; hai hình điều phối và lưu trữ là các góc nhìn bổ sung của cùng thiết kế. Constructor và getter không xuất hiện không được tính là đã mô tả trên hình. Nếu sau này thêm operation lên sơ đồ, phải bổ sung hợp đồng của nó; không dùng số 16 như một chỉ tiêu cố định.
+
+\subsection{Đọc đường xử lý của EnrollmentService}
+\begin{enumerate}
+  \item Kiểm tra request hợp lệ và studentId đã được xác thực từ server.
+  \item Tra theo requestId. Nếu đã có kết quả cùng Student/Course, trả lại kết quả đó; nếu khác nội dung, từ chối key dùng sai.
+  \item Tải Student và Course; không tìm thấy thì kết thúc mà không ghi.
+  \item Lưu version gốc sv/cv; gọi policy kiểm tra các điều kiện nghiệp vụ.
+  \item Gọi Course.occupySeat(), tạo Registration Pending và confirm bằng thời điểm hợp lệ.
+  \item Gọi commit để ghi tất cả. Chỉ sau thành công mới trả Confirmed.
+  \item Nếu conflict do tác vụ cạnh tranh, không tự dùng lại object cũ để ghi. Trả Conflict hoặc đọc lại và đánh giá lại theo chính sách retry hữu hạn.
+\end{enumerate}
+
+Đăng ký cùng course của cùng Student cũng cần ràng buộc duy nhất. Version Course giúp tránh ghi đè số lượng nhưng không tự thay thế mọi ràng buộc nghiệp vụ.
+
+\subsection{Hai request cạnh tranh một chỗ}
+Giả sử capacity là 10, enrolledCount là 9, version Course là 7. Hai request cùng đọc bản 7 và cùng tính số lượng mới là 10. Chỉ transaction đầu ghi thành công với expected version 7, rồi tăng version thành 8. Transaction còn lại gặp version khác nên không thể ghi tiếp theo dữ liệu cũ.
+
+Không được để cả hai cùng lưu Registration Confirmed trong khi enrolledCount chỉ tăng một lần. Transaction phải bao trùm cả bản ghi Registration, cập nhật Course và các ràng buộc liên quan.
+
+\subsection{Test case rút ra trực tiếp từ thiết kế}
+\begin{longtable}{|L{23mm}|L{58mm}|L{59mm}|}\hline
+\textbf{Tình huống} & \textbf{Input / trạng thái} & \textbf{Expected result}\\\hline
+\endfirsthead
+\hline
+\textbf{Tình huống} & \textbf{Input / trạng thái} & \textbf{Expected result}\\\hline
+\endhead
+Thành công & Student active, còn chỗ, request ID mới & Một đăng ký Confirmed; enrolledCount tăng một; đúng thời điểm xác nhận.\\\hline
+Hết chỗ & enrolledCount bằng capacity & Full; không tăng số lượng, không ghi Registration mới.\\\hline
+Gửi lặp & Cùng request ID, Student và Course & Trả đăng ký cũ; không có tác động thứ hai.\\\hline
+Sai key & Cùng request ID nhưng đổi Course/owner & Từ chối nội dung không khớp; không lộ bản ghi của người khác.\\\hline
+Cạnh tranh & Hai Student cùng chọn chỗ cuối & Chỉ một xác nhận; request còn lại Full hoặc Conflict theo hợp đồng.\\\hline
+Lỗi ghi & Giao dịch lỗi trước commit và rollback được xác nhận & Không có thay đổi một phần; không trả Confirmed.\\\hline
+Mất phản hồi & Commit có thể đã thành công nhưng mất kết nối & Đọc lại cùng request ID; không mặc định tạo yêu cầu mới.\\\hline
+\end{longtable}
+Tất cả dòng trên là \textbf{test được thiết kế}, chưa phải bằng chứng đã chạy một ứng dụng. Ví dụ cho thấy các view và method descriptions nối với nhau thế nào, không áp đặt stack của nó lên hệ thống SEMH.

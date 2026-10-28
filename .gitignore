@@ -17,3 +17,12 @@ assignment-reference.pdf
 *.xdv
 *.synctex.gz
 **/tmp/
+
+# Local originals, superseded exports, and private study material.
+/local/
+/phase-1-study-guide.md
+/docs/phase-2/individual-work/*prompts*.txt
+
+# Keep the canonical report exports under output/pdf/.
+/docs/phase-2/group-report/main.pdf
+/docs/phase-3/group-report/main.pdf

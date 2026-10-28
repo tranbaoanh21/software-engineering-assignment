@@ -1,0 +1,188 @@
+
+@startuml
+title UC-CHG-01 - Đăng ký nhu cầu sạc
+
+hide footbox
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 130
+skinparam roundcorner 6
+
+' Tùy biến màu sắc
+skinparam ParticipantPadding 10
+skinparam BoxPadding 10
+skinparam LifeLineBorderColor #1B4F72
+skinparam LifeLineBackgroundColor #D4E6F1
+skinparam SequenceGroupBorderColor #2C3E50
+skinparam SequenceGroupBackgroundColor #FAFAFA
+
+actor "Sinh viên (ACT-STU)\nhoặc Nhân viên vận hành (ACT-OPR)" as ACT
+boundary "Giao diện sạc\n(ChargingUI)" as ChargingUI
+control "Dịch vụ sạc\n(ChargingService)" as ChargingService
+control "Kiểm soát truy cập\n(AccessService)" as AccessService
+database "Kho dữ liệu SEMH\n(SEMHDataStore)" as SEMHDataStore
+participant "IoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateDataGateway
+
+== Bước 1: Mở màn hình đăng ký và kiểm tra quyền ==
+
+ACT -> ChargingUI : openChargingRegistration(vehicleId, hubId)
+activate ChargingUI
+
+ChargingUI -> ChargingService : getChargingRegistrationInfo(vehicleId, hubId)
+activate ChargingService
+
+ChargingService -> AccessService : verifyChargingAccess(vehicleId, hubId)
+activate AccessService
+AccessService --> ChargingService : authResult
+deactivate AccessService
+
+break  Không có quyền - EF-01
+  ChargingService --> ChargingUI : accessDenied
+  ChargingUI --> ACT : showAccessDenied()
+end
+
+break  Phiên hết hạn / Không hợp lệ - EF-04
+  ChargingService --> ChargingUI : sessionExpired
+  ChargingUI --> ACT : showLoginRequired()
+end
+
+== Bước 2: Hiển thị phương tiện và trạng thái ban đầu ==
+
+ChargingService -> SEMHDataStore : getVehicleAndHub(vehicleId, hubId)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : vehicleInfo + hubInfo
+deactivate SEMHDataStore
+
+break  Phương tiện hoặc Hub không tồn tại - EF-02
+  ChargingService --> ChargingUI : invalidVehicleOrHub
+  ChargingUI --> ACT : showValidationError()
+end
+
+alt Gateway hoạt động bình thường
+  ChargingService -> StateDataGateway : getLatestAcceptedState(vehicleId)
+  activate StateDataGateway
+  StateDataGateway --> ChargingService : currentState(batteryLevel, status, timestamp)
+  deactivate StateDataGateway
+
+else Gateway gián đoạn - NFR-REL-01
+  ChargingService -> SEMHDataStore : getLastKnownValidState(vehicleId)
+  activate SEMHDataStore
+  SEMHDataStore --> ChargingService : currentState + staleWarning
+  deactivate SEMHDataStore
+end
+
+ChargingService --> ChargingUI : registrationInfo + currentState + staleWarning
+deactivate ChargingService
+
+ChargingUI --> ACT : showRegistrationForm()
+deactivate ChargingUI
+
+== Bước 3: Nhập và xác nhận nhu cầu sạc ==
+
+ACT -> ChargingUI : enterChargingDetails(deadline, nextUseTime)
+activate ChargingUI
+ChargingUI --> ACT : showDraftSummary()
+deactivate ChargingUI
+
+loop Người dùng sửa thông tin trước khi xác nhận - AF-03
+  ACT -> ChargingUI : updateChargingDetails(deadline, nextUseTime)
+  activate ChargingUI
+  ChargingUI -> ChargingUI : recalculateDraftPreview()
+  ChargingUI --> ACT : showUpdatedDraft()
+  deactivate ChargingUI
+end
+
+ACT -> ChargingUI : confirmChargingRequest(requestData, clientRequestId)
+activate ChargingUI
+
+ChargingUI -> ChargingService : submitChargingRequest(requestData, clientRequestId)
+activate ChargingService
+
+ChargingService -> AccessService : verifyChargingAccess(vehicleId, hubId)
+activate AccessService
+AccessService --> ChargingService : authResult
+deactivate AccessService
+
+break  Không có quyền / Hết phiên - EF-01, EF-04
+  ChargingService --> ChargingUI : authorizationError
+  ChargingUI --> ACT : showAccessDeniedOrLoginRequired()
+end
+
+== Bước 4: Kiểm tra dữ liệu và xác định ưu tiên tại thời điểm xác nhận ==
+
+ChargingService -> SEMHDataStore : getVehicleAndHub(vehicleId, hubId)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : currentVehicleInfo + currentHubInfo
+deactivate SEMHDataStore
+
+ChargingService -> SEMHDataStore : getLatestAcceptedVehicleState(vehicleId)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : latestState(batteryLevel, status, timestamp)
+deactivate SEMHDataStore
+
+ChargingService -> ChargingService : validateChargingRequest(requestData, currentVehicleInfo, currentHubInfo, latestState)
+note right of ChargingService
+  EF-02: định danh, phương tiện hoặc thời hạn không hợp lệ;
+  pin đã đạt mục tiêu thì không tạo yêu cầu.
+  Thiếu thông số ước tính xử lý Pending theo AF-04.
+end note
+
+break  Dữ liệu hoặc phương tiện không hợp lệ - EF-02
+  ChargingService --> ChargingUI : invalidRequestData
+  ChargingUI --> ACT : showValidationError()
+end
+
+ChargingService -> ChargingService : calculateInitialPriority(batteryLevel, nextUseTime)
+
+alt Pin dưới 20% hoặc cần dùng trong 60 phút - AF-02
+  ChargingService -> ChargingService : assignHighPriority()
+else Mức ưu tiên thông thường
+  ChargingService -> ChargingService : assignNormalPriority()
+end
+
+== Bước 5: Xác định lịch sạc dự kiến ==
+
+alt Pin đã cũ hoặc thiếu thông số ước tính / hạn mức Hub - AF-04
+  ChargingService -> ChargingService : preparePendingRequestWithStaleWarning()
+
+else Dữ liệu trạng thái đủ tin cậy
+  ChargingService -> ChargingService : estimateDuration(C, batteryLevel, pointPower, vehiclePower) - BR-CHG-03
+  ChargingService -> SEMHDataStore : findCompatibleChargingSlot(hubId, requestData, priority)
+  activate SEMHDataStore
+  SEMHDataStore --> ChargingService : slotResult
+  deactivate SEMHDataStore
+  note over ChargingService, SEMHDataStore
+    BR-CHG-04: cổng tương thích, cổng và Hub Active;
+    không lỗi, không trùng lịch; tổng công suất không vượt Hub.
+    Chọn khoảng sớm nhất kịp hạn, hòa thì theo mã cổng.
+    Thiếu nextUseTime: xét ưu tiên bằng pin (BR-CHG-01).
+  end note
+
+  alt Có cổng khả dụng và khung giờ phù hợp
+    ChargingService -> ChargingService : prepareScheduledRequest(slotResult)
+  else Không có phân bổ đáp ứng cổng, công suất hoặc hạn - AF-01
+    ChargingService -> ChargingService : preparePendingRequest()
+  end
+end
+
+== Bước 6: Lưu yêu cầu và hiển thị kết quả ==
+
+ChargingService -> SEMHDataStore : saveChargingRequestAndSlotAtomically(clientRequestId, request, proposedSlot)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : saveResult (requestSaved / saveFailed)
+deactivate SEMHDataStore
+
+alt Lưu thất bại - EF-03
+  ChargingService --> ChargingUI : saveFailed
+  ChargingUI --> ACT : showSaveError()
+
+else Lưu thành công
+  ChargingService --> ChargingUI : requestStatus + priority + estimatedTime + timestamp + warning
+  ChargingUI --> ACT : showChargingRequestResult()
+end
+
+deactivate ChargingService
+deactivate ChargingUI
+
+@enduml

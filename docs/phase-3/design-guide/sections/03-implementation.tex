@@ -1,0 +1,106 @@
+\chapter{Development/Implementation View}
+\subsection{Lý thuyết từ đầu}
+View này trả lời: mã nguồn được chia thành những phần nào, trách nhiệm của từng phần là gì và phần nào được phép phụ thuộc phần nào. Nó giúp một thành viên biết nơi cần viết code và hợp đồng phải giữ khi tích hợp với người khác.
+
+Không nhầm ``implementation'' với việc phải hoàn tất code ngay trong tài liệu. Đây là thiết kế cấu trúc hiện thực. Một sơ đồ thư mục có thể hỗ trợ giải thích, nhưng cần thêm trách nhiệm và các quan hệ mà tên thư mục không thể tự nói lên.
+
+\subsection{Package và component}
+\glyph{\draw (0,0) rectangle (4.9,1.65);\draw (0,1.65) rectangle (2.2,2.15);
+  \node at (1.1,1.9) {enrollment};\node at (2.45,0.8) {Các phần tử liên quan};}
+  {Package là cách tổ chức các phần tử theo một phạm vi}
+Package thường biểu diễn một module hoặc namespace. Đường bao package không tự bảo đảm tính đóng gói: vẫn cần quy định phần tử nào công khai, phần tử nào nội bộ và ai được import.
+
+\glyph{\node[draw,minimum width=54mm,minimum height=21mm] (c) at (0,0) {};
+  \draw (1.72,0.52) rectangle (2.25,0.86);
+  \draw (1.72,0.02) rectangle (2.25,0.36);
+  \node[align=center] at (-0.25,-0.2) {Enrollment\\component};}
+  {Component có thể dùng biểu tượng UML nhỏ ở góc hoặc stereotype component}
+Component cần có trách nhiệm và interface cung cấp/sử dụng. Một component có thể được hiện thực bởi nhiều class. Một artifact cũng có thể đóng gói nhiều component; không bắt buộc một--một.
+
+\subsection{Provided interface và required interface}
+\glyph{\node[box] (p) at (0,0) {Registration};
+  \draw (p.east)--(2.8,0);\draw (3,0) circle (2mm);
+  \node[above] at (2.6,0.35) {Enrollment API};
+  \node[box] (c) at (8,0) {Web UI};
+  \draw (c.west)--(5.44,0);
+  \draw (5.2,0.24) arc[start angle=90,end angle=-90,radius=2.4mm];}
+  {Lollipop biểu diễn cung cấp interface; socket biểu diễn cần interface}
+Provided interface là năng lực component cung cấp; required interface là năng lực nó cần từ bên khác. Khi nối cặp tương thích có thể dùng assembly connector. Không coi mọi REST endpoint là một vòng tròn bắt buộc phải vẽ riêng.
+
+Interface ở mức component có thể là nhóm chức năng. Interface ở class diagram liệt kê operation cụ thể. Hai mức cần tương thích nhưng không phải cùng một hình vẽ.
+
+\subsection{Port ở biên component}
+\glyph{\node[draw,minimum width=60mm,minimum height=22mm] (c) at (0,0) {Enrollment};
+  \draw[fill=white] (2.85,-0.15) rectangle (3.15,0.15);
+  \draw (3.15,0)--(4.1,0);\draw (4.3,0) circle (2mm);
+  \node[above] at (3.7,0.4) {public API};}
+  {Ô vuông nhỏ trên biên là một port logic}
+Port gom một điểm tương tác của component với môi trường. Không cần vẽ port cho mọi mũi tên. Không gọi ô vuông này là cổng mạng 8080 trừ khi đang ghi một quy ước bổ sung rất rõ.
+
+\subsection{Dependency và chiều mũi tên}
+\relation{Web module}{Enrollment API}{dashed,->}{Nét đứt đi từ bên sử dụng đến phần mà nó phụ thuộc}
+Nếu Web module cần hợp đồng của Enrollment API để được viết hoặc kiểm tra kiểu, mũi tên dependency hướng từ Web tới API. Đây không phải chiều dữ liệu duy nhất khi chương trình chạy: API còn trả response về Web.
+
+Vòng phụ thuộc A tới B rồi B tới A làm thay đổi và kiểm thử khó hơn. Không phải mọi vòng đều không thể hiện thực, nhưng cần lý do rõ ràng thay vì coi đó là tình trạng mặc định.
+
+\subsection{Bốn vai trò thường gặp trong backend}
+\begin{longtable}{|L{31mm}|L{111mm}|}\hline
+\textbf{Vai trò} & \textbf{Trách nhiệm và giới hạn}\\\hline
+\endfirsthead
+\hline
+\textbf{Vai trò} & \textbf{Trách nhiệm và giới hạn}\\\hline
+\endhead
+Presentation & Nhận request, kiểm tra hình thức dữ liệu, chuyển lỗi sang response; không là nơi duy nhất giữ quy tắc nghiệp vụ.\\\hline
+Application & Điều phối một use case, kiểm tra quyền, mở transaction, gọi đối tượng miền và adapter; không đồng nghĩa mỗi thao tác đều cần một service riêng.\\\hline
+Domain & Đối tượng, invariant và chính sách nghiệp vụ; tránh phụ thuộc chi tiết HTTP, SQL hoặc giao diện.\\\hline
+Infrastructure & Cách truy cập dữ liệu, gửi/nhận sự kiện, tích hợp nguồn ngoài; hiện thực các hợp đồng mà ứng dụng cần.\\\hline
+\end{longtable}
+
+Ví dụ một yêu cầu đăng ký được controller nhận, application service điều phối, Course kiểm tra chỗ và adapter lưu thay đổi. Gọi thẳng SQL từ một nút giao diện làm ranh giới khó kiểm soát và bỏ qua quyền ở server.
+
+\subsection{Dependency inversion: vì sao cần interface?}
+Giả sử EnrollmentService gọi trực tiếp một class SQL cụ thể. Khi thay dữ liệu bằng bộ nhớ để học hoặc kiểm thử, service phải sửa theo chi tiết lưu trữ. Có thể tách một interface EnrollmentStore do phía ứng dụng định nghĩa nhu cầu, rồi để SqlEnrollmentStore hiện thực.
+
+\glyph{\node[box] (s) at (0,0) {EnrollmentService};
+  \node[box] (i) at (7.8,0) {\guillemotleft interface\guillemotright\\EnrollmentStore};
+  \node[box] (d) at (7.8,-2) {SqlEnrollmentStore};
+  \draw[dashed,->] (s.east)--(i.west);
+  \draw[dashed,-{Triangle[open,length=3mm,width=3mm]}] (d.north)--(i.south);}
+  {Cả service và adapter cụ thể dựa vào hợp đồng thay vì service dựa vào SQL}
+
+Khi chạy, object service vẫn gọi object adapter đã được truyền vào. \textbf{Chiều phụ thuộc mã nguồn và đường gọi runtime là hai chuyện khác nhau}. Dependency injection là cách cung cấp object phù hợp; có thể truyền qua constructor, không bắt buộc dùng framework.
+
+Không tạo interface cho mọi class chỉ để hình trông đầy đủ. Tách ở những ranh giới cần thay cách hiện thực, kiểm thử độc lập hoặc che giấu chi tiết quan trọng.
+
+\subsection{Repository, service, DTO và adapter}
+\point{Repository / data-store interface}
+Định nghĩa cách truy vấn và lưu các đối tượng cần thiết. Chỉ nói rõ method là chưa đủ: phải biết nó đọc snapshot hay trạng thái hiện tại, có khóa không và nằm trong transaction nào.
+
+\point{DTO}
+Data Transfer Object mang dữ liệu qua một ranh giới, ví dụ EnrollmentRequest hoặc EnrollmentResult. DTO không mặc nhiên là entity lưu trong database. Hạn chế trả trực tiếp object có password hash, quyền nội bộ hoặc thông tin nhạy cảm ra UI.
+
+\point{Application service và domain service}
+Application service điều phối use case. Domain service chứa chính sách nghiệp vụ không hợp lý khi gắn vào một entity đơn lẻ. Không cần tách domain service nếu hành vi đặt ngay trên entity đã rõ và dễ kiểm thử.
+
+\point{Adapter}
+Chuyển đổi hợp đồng nội bộ sang cách giao tiếp cụ thể của SQL, HTTP hoặc luồng sự kiện. Nếu nguồn ngoài đổi định dạng pin từ 0--1 sang 0--100, phần chuyển đổi không nên bị lặp ở mọi UI.
+
+\subsection{Từ view đến cấu trúc thư mục}
+Một cách tổ chức minh họa, không bắt buộc theo ngôn ngữ cụ thể:
+\begin{Verbatim}
+src/
+  enrollment/
+    presentation/    # controller, request/response
+    application/     # use-case service, store contract
+    domain/          # Course, Registration, policy
+    infrastructure/  # SQL store implementation
+  shared/            # types/contracts truly shared
+  bootstrap/         # construct objects, configuration
+tests/
+\end{Verbatim}
+Tên thư mục chỉ có ích khi tương ứng trách nhiệm thực tế. \code{shared} không phải nơi đổ mọi class chưa biết đặt ở đâu. Một lớp dùng chung cần người quản lý định nghĩa, tránh mỗi phân hệ viết lại cùng kiểu dữ liệu theo một cách khác.
+
+\subsection{Cross-cutting concerns}
+Xác thực, phân quyền, audit, transaction, cấu hình, thời gian và lỗi được dùng ở nhiều module. Có thể có cơ chế chung, nhưng từng use case vẫn phải xác định đối tượng/phạm vi cần kiểm tra và dữ liệu nào được phép thay đổi.
+
+Log kỹ thuật phục vụ chẩn đoán; audit ghi nhận ai thực hiện thao tác nghiệp vụ nào và tác động ra sao. Không ghi password hoặc token vào hai loại log này. Một thông báo ``lỗi'' không thay thế hợp đồng lỗi rõ ràng giữa module.

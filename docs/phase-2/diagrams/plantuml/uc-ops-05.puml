@@ -1,0 +1,31 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam packageBackgroundColor white
+skinparam usecaseBackgroundColor white
+skinparam rectangleBackgroundColor white
+skinparam actorBackgroundColor white
+skinparam noteBackgroundColor white
+skinparam nodesep 45
+skinparam ranksep 65
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as Operator
+rectangle "SMART E-MOBILITY HUB SYSTEM" {
+  usecase "Kích hoạt hoặc ngừng\nphục vụ tài nguyên\n(UC-OPS-05)" as Main
+  usecase "Xác minh quyền quản lý\ntrong phạm vi Hub" as Access
+  usecase "Đánh giá điều kiện\nchuyển trạng thái phục vụ" as Validate
+  usecase "Lưu ServiceStatus\nvà nhật ký thay đổi" as Persist
+  usecase "Tra cứu lại kết quả\nthao tác theo mã yêu cầu" as Lookup
+}
+Operator --> Main
+Main ..> Access : <<include>>
+Main ..> Validate : <<include>>
+Main ..> Persist : <<include>>
+Main <.. Lookup : <<extend>>\n[EF-02: kết quả lưu chưa rõ]
+
+@enduml

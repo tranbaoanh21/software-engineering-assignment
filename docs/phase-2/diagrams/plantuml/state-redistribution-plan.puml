@@ -1,0 +1,57 @@
+@startuml
+!pragma layout smetana
+!include sim-style.puml
+top to bottom direction
+title Vòng đời RedistributionPlan — UC-OPS-03
+
+state Draft
+state Approved
+state InProgress
+state Completed
+state Cancelled
+
+[*] --> Draft : lưu kế hoạch\n[dữ liệu hợp lệ]
+Draft : Kế hoạch chưa có hiệu lực điều chuyển.
+Draft : Có thể lưu nháp, sửa xe, Hub và thời gian.
+Draft --> Draft : chỉnh sửa\n/ kiểm tra lại phương án
+Draft --> Approved : phê duyệt\n[có quyền và phương án còn khả thi]
+Approved : Ghi người và thời điểm phê duyệt.
+Approved : Phê duyệt không có nghĩa xe đã di chuyển.
+Approved --> InProgress : cập nhật bắt đầu\n[có quyền và ghi nhận thực hiện]
+InProgress : Vận chuyển vật lý diễn ra ngoài SEMH.
+InProgress : Lưu tiến độ thực tế; không tự suy diễn vị trí xe.
+InProgress --> InProgress : cập nhật tiến độ\n[dữ liệu hợp lệ]
+InProgress --> Completed : xác nhận hoàn tất\n[kết quả hợp lệ, đối chiếu trạng thái Hub]
+Completed : Lưu kết quả thực tế và lịch sử hoàn thành.
+
+Draft --> Cancelled : hủy\n[có quyền, có lý do]
+Approved --> Cancelled : hủy\n[có quyền, có lý do]
+InProgress --> Cancelled : hủy trước khi hoàn tất\n[có quyền, có lý do]
+Cancelled : Lưu lý do và lịch sử hủy.
+Cancelled : Không tự hoàn tác việc vận chuyển đã diễn ra.
+
+note right of Draft
+  Tạo từ cảnh báo, chủ động hoặc dữ liệu điền trước
+  từ Recommendation đều phải được xem lại.
+  Khuyến nghị không tự phê duyệt kế hoạch.
+end note
+
+note right of Approved
+  Kiểm tra lại khi phê duyệt: xe thuộc Hub nguồn,
+  Available, không bị giữ bởi nghiệp vụ khác;
+  Hub đích có khả năng tiếp nhận.
+  Nếu không đạt: giữ Draft, yêu cầu điều chỉnh.
+end note
+
+note bottom of InProgress
+  Yêu cầu ghi được kiểm tra phiên, quyền và trạng thái hiện tại.
+  Lỗi lưu: giữ trạng thái trước đó, cho phép thử lại.
+  Không tự đổi trạng thái xe khi cập nhật kế hoạch thất bại.
+end note
+
+legend bottom
+  Recommended có trong danh mục trạng thái dùng chung,
+  nhưng UC-OPS-03 hiện chưa quy định sự kiện vào/ra trạng thái này.
+  Sơ đồ không tự bổ sung chuyển trạng thái ngoài baseline.
+endlegend
+@enduml

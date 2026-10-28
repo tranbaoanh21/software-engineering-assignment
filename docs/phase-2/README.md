@@ -1,84 +1,109 @@
-# Submission 2 - Giao diện và biểu đồ hành vi
+# Submission 2 - Báo cáo tích hợp phân tích và thiết kế
 
-Bản khung dùng để thống nhất bố cục bài nộp của nhóm. Các mục đã có số thứ tự, mục lục, danh sách hình và vị trí điền nội dung; nội dung trong ngoặc vuông được thay bằng bài làm khi tổng hợp.
+Submission 2 được soạn tiếp trên nội dung Submission 1, không nộp một báo cáo chỉ có UI và diagram mới. Bản đã nộp Submission 1 trong `docs/phase-1/` được giữ nguyên; bản đang làm tiếp nằm trong `docs/phase-2/group-report/`.
 
-[Đọc PDF khung báo cáo](group-report/output/pdf/phase-2-group-report-outline.pdf).
+[Đọc báo cáo tích hợp](group-report/output/pdf/phase-2-group-report-outline.pdf). Tên tệp PDF được giữ để không làm hỏng các liên kết đã chia sẻ; nội dung bên trong đã chuyển sang bố cục tích hợp.
 
-[Thuật ngữ dùng chung — Submission 2](uml-conventions.md): tên và mã phân hệ, actor, hệ thống ngoài, đối tượng nghiệp vụ, thành phần trong sequence và trạng thái để dùng thống nhất khi vẽ sơ đồ.
+- [Thuật ngữ dùng chung](uml-conventions.md): tên phân hệ, actor, đối tượng, thành phần và trạng thái.
+- [Danh sách màn hình website](ui-screen-inventory.md): màn hình, form và các trạng thái cần thiết kế trên Figma.
+- [Bảy báo cáo cá nhân](individual-work/README.md): bản trích theo phân công, dùng trực tiếp nội dung và hình của báo cáo nhóm; GEN nằm trong báo cáo Bảo Anh dưới nhãn nội dung chung.
 
-## Nội dung báo cáo
+## Bố cục báo cáo
 
-1. **Thiết kế giao diện tổng thể:** đăng nhập và kiểm soát truy cập, bố cục theo ba vai trò, thành phần và trạng thái giao diện dùng chung, luồng điều hướng tổng quát.
-2. **Thiết kế giao diện và hành vi theo phân hệ:** bảy phân hệ, giữ nguyên mã và tên của 18 use case ở Submission 1. Mỗi use case có ba mục: UI Mockup, Sequence Diagram và Activity Diagram; mỗi mục có hình và phần giải thích. State chart của các đối tượng nghiệp vụ được đặt sau các use case trong phân hệ tương ứng.
+1. **Phần I - Tổng quan và đặc tả dự án:** kế thừa Submission 1, cập nhật vai trò và phạm vi Admin.
+2. **Phần II - Yêu cầu hệ thống:** kế thừa BR, FR, NIFR, NFR; cập nhật quản trị và phân quyền dùng chung.
+3. **Phần III - Mô hình, đặc tả và thiết kế use case:**
+   - Mô hình toàn hệ thống: Actor Catalog, danh mục 23 use case và use-case diagram tổng quát.
+   - Thiết kế giao diện dùng chung: đăng nhập, điều hướng theo vai trò, thành phần và trạng thái giao diện.
+   - Nhóm quản trị dùng chung GEN: UC-GEN-01, UC-GEN-02, UC-GEN-03; không phải phân hệ thứ tám.
+   - Bảy phân hệ SUB-HUB, SUB-RES, SUB-TRIP, SUB-PARK, SUB-CHG, SUB-OPS và SUB-SIM.
 
-Vòng đời `SharedVehicle` được đặt cuối SUB-TRIP, sau state chart của `Trip`. Hình bao quát các chuyển trạng thái liên quan đến đặt xe, chuyến đi, sạc và xử lý sự cố; chỉ xuất hiện một lần, không tách thành chương riêng.
+Trong mỗi use case, nội dung được đặt liền nhau theo thứ tự:
 
-Mục lục hiển thị đến tên use case và đối tượng có state chart. Các đề mục UI, sequence và activity vẫn có số thứ tự trong nội dung nhưng không lặp lại trên mục lục.
+1. Use-case Diagram.
+2. Use Case Specification.
+3. UI Mockup.
+4. Sequence Diagram.
+5. Activity Diagram.
 
-Theo đề bài, UI Mockup là group work; Sequence Diagram và Activity Diagram là individual work; State-chart Diagram là bonus. Nhóm thống nhất chuẩn bị mockup và cặp sequence/activity cho toàn bộ 18 use case. Phần state chart là nội dung bổ sung, không phải điều kiện bắt buộc của Submission 2.
+State chart đặt sau các use case trong phân hệ quản lý đối tượng. Vòng đời `SharedVehicle` đặt tại SUB-TRIP và chỉ xuất hiện một lần, dù có chuyển trạng thái liên quan đến RES, CHG và OPS. Không tách trạng thái thành một phần riêng hoặc lặp một vòng đời dưới nhiều use case.
 
-Báo cáo không có chương baseline, ma trận truy vết, checklist, hướng dẫn làm việc hay working demonstration. Phần demonstration bằng chuỗi màn hình thuộc báo cáo cuối theo đề.
+Mục lục hiển thị mô hình toàn hệ thống, các mục giao diện dùng chung, tên use case và đối tượng có state chart. Các đề mục bên trong mỗi use case có số trong nội dung nhưng không làm mục lục dài thêm.
 
-## Phần mỗi thành viên chuẩn bị
+## Nội dung đã hoàn thiện
 
-Cả bảy thành viên cùng làm UI Mockup website trên Figma, gồm giao diện dùng chung ở Phần I và giao diện của 18 use case ở Phần II. Nhóm cùng đề xuất mẫu, chọn một bộ giao diện và chỉnh sửa trên file chung; thống nhất màu sắc, kiểu chữ, thành phần và luồng điều hướng. UI trong từng phân hệ vẫn là phần làm chung, không giao riêng theo bảng dưới.
+Nội dung phân tích của Submission 1, sơ đồ use case và bảng đặc tả được tích hợp cùng mockup và diagram Phase 2. Đã bổ sung đủ hình SUB-PARK và SUB-CHG theo khung hiện tại: 12 sequence/activity và 5 state chart. Hai state chart ChargingSession/ChargingPoint được bổ sung khi tổng hợp. Các hình được chèn nguyên vẹn trên trang A4 dọc; báo cáo dùng PDF vector để người đọc phóng to.
 
-Phần thiết kế hành vi mới chia riêng theo phân hệ: mỗi thành viên chuẩn bị sequence, activity, state chart nếu có và phần giải thích tương ứng.
+Đã cập nhật riêng việc phân biệt `ACT-ADM` và `ACT-OPR` theo quyết định của nhóm: stakeholder, phạm vi, FR/BR dùng chung, bảng quyền, Actor Catalog, sơ đồ context/tổng quát và convention. Admin phụ trách tài khoản, quyền và danh mục ban đầu; không mặc nhiên kế thừa quyền vận hành hoặc kỹ thuật. Sơ đồ mới nằm trong `diagrams/system/`, không ghi đè Submission 1 đã nộp.
+
+Đã bổ sung UC-OPS-04/05 và UC-GEN-01/02/03 với đặc tả, use-case diagram, sequence, activity, UI và prototype Figma; thêm state Account và ServiceStatus. Tổng danh mục là 23 UC, các mã cũ giữ nguyên. Admin và Operator tách quyền; thêm/sửa/bật/tắt không ghi đè telemetry. Quan hệ include/extend và phân loại AF/EF cũ giữ nguyên; chưa chốt MVP. Đây là bản phân tích, thiết kế và prototype; không đồng nghĩa đã hiện thực backend, thiết bị hoặc kiểm thử runtime.
+
+Bản rút gọn giữ đủ các UC và hình, bỏ metadata lặp trong bảng đặc tả và ghép UI vào khoảng trống phù hợp. Quy tắc hết hạn chỗ đỗ không ghi đè OutOfService hoặc check-in cạnh tranh. Lịch sạc demo được xác định tại BR-CHG-01 đến BR-CHG-04: ưu tiên/FIFO, thời lượng ước tính, cổng tương thích và hạn mức công suất Hub. Chỉ cập nhật bản tích hợp Submission 2, không sửa bản Submission 1 đã nộp hoặc các tệp nguồn thành viên.
+
+Không thêm chương checklist, ma trận truy vết hoặc hướng dẫn làm việc vào PDF báo cáo. Nội dung hướng dẫn tổng hợp chỉ nằm trong README này.
+
+## Phân công
+
+UI Mockup website do cả bảy thành viên cùng làm trên Figma, gồm giao diện dùng chung và màn hình của các use case. Sequence, activity và state chart được phân công theo phân hệ:
 
 | Thành viên | Phân hệ | Use case | State chart |
 | --- | --- | --- | --- |
-| Nguyễn Quốc Trung | SUB-HUB | UC-HUB-01, UC-HUB-02, UC-HUB-03 | Không thêm state chart riêng cho thao tác tra cứu |
+| Nguyễn Quốc Trung | SUB-HUB | UC-HUB-01, UC-HUB-02, UC-HUB-03 | Không thêm state chart cho thao tác tra cứu |
 | Phan Võ Bảo Trâm | SUB-RES | UC-RES-01, UC-RES-02 | `VehicleReservation` |
 | Lê Nguyễn Tường Vi | SUB-TRIP | UC-TRIP-01, UC-TRIP-02 | `Trip`, `SharedVehicle` |
 | Nguyễn Ngọc Hân | SUB-PARK | UC-PARK-01, UC-PARK-02, UC-PARK-03 | `ParkingReservation`, `ParkingSpace` |
 | Trần Thị Hương Giang | SUB-CHG | UC-CHG-01, UC-CHG-02, UC-CHG-03 | `ChargingRequest`, `ChargingSession`, `ChargingPoint` |
-| Nguyễn Thị Minh Anh | SUB-OPS | UC-OPS-01, UC-OPS-02, UC-OPS-03 | `Incident`, `RedistributionPlan` |
+| Nguyễn Thị Minh Anh | SUB-OPS | UC-OPS-01–UC-OPS-05 | `Incident`, `RedistributionPlan` |
 | Trần Nhật Bảo Anh | SUB-SIM | UC-SIM-01, UC-SIM-02 | `SimulationRun` |
 
-Trần Nhật Bảo Anh tổng hợp và kiểm soát nội dung báo cáo. Mỗi thành viên hoàn thành phần thiết kế hành vi của phân hệ mình, đồng thời cùng cả nhóm hoàn thiện UI để thông tin hiển thị, thao tác và phản hồi khớp với Submission 1.
+Phần I do Bảo Anh phụ trách, Phần II do Quốc Trung phụ trách, mô hình use case toàn hệ thống do Tường Vi phụ trách. Bảo Anh tổng hợp báo cáo. State chart là bonus theo đề bài.
 
-Mockup đăng nhập dùng chung đặt tại `mockups/ui-login.pdf`, gồm thông báo sai thông tin, hết phiên, thiếu quyền và thao tác đăng xuất. Tài khoản cùng vai trò được cấp sẵn; không thêm đăng ký, khôi phục mật khẩu, OTP hoặc tự chọn vai trò. Ba UC của SUB-HUB cho phép tra cứu công khai; 15 UC còn lại kiểm tra phiên và quyền trước truy cập dữ liệu. Sequence/activity thể hiện nhánh từ chối theo `FR-GEN-03`, không chép lại quy trình đăng nhập trong từng UC. Phiên hết hiệu lực sau đăng xuất hoặc 30 phút không có yêu cầu được bảo vệ hợp lệ; nghiệp vụ đang chạy không tự bị hủy.
-
-Với mỗi use case, gửi sequence diagram và giải thích tương tác, activity diagram và giải thích các nhánh. Nội dung phải dựa trên luồng chính, luồng thay thế và luồng ngoại lệ của bản Submission 1 đã chốt. Giữ nguyên actor, thuật ngữ và tên trạng thái; dữ liệu IoT đi qua `EXT-STATE/ACT-DAT`, dịch vụ bản đồ qua `EXT-MAP/ACT-MAP` khi có liên quan.
-
-State chart mô tả toàn bộ vòng đời của đối tượng, bao gồm các chuyển do use case, sự kiện bên ngoài và thời gian tự động. Mỗi đối tượng có một hình; không tách vòng đời thành các hình rời cho từng use case. Ví dụ `VehicleReservation` được trình bày tại SUB-RES; use case nhận xe trong SUB-TRIP sử dụng cùng mô hình đó. `SharedVehicle` đặt tại SUB-TRIP, do Lê Nguyễn Tường Vi thực hiện, gồm cả các chuyển do SUB-RES, SUB-CHG và SUB-OPS. Khi giải thích một UC, có thể dẫn đến hình trạng thái liên quan thay vì chép lại hình.
-
-Thành viên có thể gửi nội dung bằng Docs, DOCX hoặc Markdown và đính kèm nguồn sơ đồ để nhóm trưởng tổng hợp sang LaTeX. Mockup dùng chung có thể đặt một lần rồi dẫn đến cùng hình trong các mục sử dụng nó; bổ sung hình khác khi cần trình bày nhiều màn hình hoặc nhiều nhánh.
-
-## Tệp để điền nội dung
+## Tệp đang làm tiếp
 
 ```text
 group-report/
 ├── main.tex
 ├── cover-page.tex
 ├── sections/
-│   ├── 01-ui-design.tex
-│   ├── 02-use-case-design.tex
+│   ├── 01-project-details.tex     Phần I
+│   ├── 02-requirements.tex        Phần II
+│   ├── 02-use-case-design.tex     Ghép toàn bộ Phần III
+│   ├── 01-ui-design.tex           Giao diện dùng chung trong Phần III
 │   └── use-cases/
+│       ├── 00-common-administration.tex
+│       ├── 00-system-model.tex
 │       ├── 01-sub-hub.tex
-│       ├── 02-sub-res.tex        UC và vòng đời VehicleReservation
-│       ├── 03-sub-trip.tex       UC và vòng đời Trip, SharedVehicle
-│       ├── 04-sub-park.tex       UC và vòng đời ParkingReservation, ParkingSpace
-│       ├── 05-sub-chg.tex        UC và vòng đời yêu cầu, phiên và cổng sạc
-│       ├── 06-sub-ops.tex        UC và vòng đời Incident, RedistributionPlan
-│       └── 07-sub-sim.tex        UC và vòng đời SimulationRun
+│       ├── 02-sub-res.tex
+│       ├── 03-sub-trip.tex
+│       ├── 04-sub-park.tex
+│       ├── 05-sub-chg.tex
+│       ├── 06-sub-ops.tex
+│       └── 07-sub-sim.tex
 └── output/pdf/phase-2-group-report-outline.pdf
 
-mockups/                         UI theo vai trò và theo use case
-diagrams/sequence/               Sequence diagram
-diagrams/activity/               Activity diagram
-diagrams/state/                  State-chart diagram (bonus)
+mockups/                          UI dùng chung và theo use case
+diagrams/sequence/                Sequence diagram
+diagrams/activity/                Activity diagram
+diagrams/state/                   State chart
 ```
 
-Mỗi use case có các mục LaTeX riêng để thay hình và lời giải thích trực tiếp. Ví dụ với UC-HUB-01:
+Các tên tệp `01-ui-design.tex` và `02-use-case-design.tex` được giữ để tiếp tục sử dụng những đường dẫn đang có; số phần trong PDF do cấu trúc LaTeX quyết định, không phụ thuộc tiền tố tên tệp.
 
-- Mockup: `mockups/uc-hub-01.pdf`.
-- Sequence: `diagrams/sequence/uc-hub-01.pdf`.
-- Activity: `diagrams/activity/uc-hub-01.pdf`.
+Phần I, II và nội dung phân tích của từng use case đã được đưa vào nguồn Submission 2. Từ đây điền và sửa trên các tệp trong Phase 2, không sửa ngược bản đã nộp Phase 1. Hình use case vẫn dùng các tài sản có sẵn tại `docs/phase-1/diagrams/plantuml/output/`; nếu cần sửa hình cho Submission 2, xuất bản mới vào thư mục Phase 2 và đổi đường dẫn hình tương ứng.
 
-Các lệnh `\InsertArtifact` đã chỉ đến đường dẫn tương ứng. Khi có hình PDF, biên dịch sẽ tự chèn hình; khi chưa có, báo cáo hiển thị lời nhắc trong ngoặc vuông, không vẽ khung chữ nhật giả sơ đồ. Có thể thêm lệnh chèn hình cho các màn hình hoặc sơ đồ bổ sung và chỉnh đường dẫn khi dùng tên tệp khác. Giữ nguồn sơ đồ để sửa về sau; quy tắc vẽ PlantUML nằm ở [hướng dẫn chung](../phase-1/diagrams/plantuml/README.md).
+## Chèn nội dung
 
-Hình giữ nguyên tỉ lệ và được giới hạn theo chiều rộng trang, không kéo giãn. Chiều cao tối đa mặc định là `0.68\textheight`; có thể chọn riêng cho hình dài bằng `\InsertArtifact[0.80\textheight]{đường-dẫn}{chú-thích}{nhãn}{placeholder}`. Mỗi state chart đã có đường dẫn PDF riêng ở `diagrams/state/`, và không đổi đường dẫn khi chuyển vị trí trình bày.
+Mỗi use case có sẵn bảng đặc tả và các vị trí thêm mockup, sequence, activity. Không tạo lại một mục use case thứ hai ở cuối báo cáo.
+
+Ví dụ UC-HUB-01:
+
+- UI: `mockups/uc-hub-01.pdf`.
+- Sequence và activity: dùng đường dẫn đã ghi trong `sections/use-cases/01-sub-hub.tex`.
+- Những ảnh JPG của SUB-HUB và PDF vector của SUB-SIM đã chèn được giữ nguyên.
+
+Lệnh `\InsertArtifact` chèn hình nếu tệp tồn tại; nhánh dự phòng không tạo hình giả hoặc lời nhắc trong bản nộp. Hiện các tệp hình được tham chiếu trong phần use case đều đã có. Giữ nguồn sơ đồ để sửa về sau và tuân theo [quy tắc PlantUML](../phase-1/diagrams/plantuml/README.md).
+
+Hình giữ nguyên tỉ lệ. Các sequence/activity dài của HUB và SIM vẫn để nguyên một hình trên trang A4 dọc, giới hạn chiều cao riêng cho từng hình. Không chia hình thành nhiều diagram nhỏ.
 
 ## Biên dịch
 
@@ -87,5 +112,11 @@ cd docs/phase-2/group-report
 latexmk -xelatex -interaction=nonstopmode -halt-on-error \
   -jobname=phase-2-group-report-outline -outdir=output/pdf main.tex
 ```
+
+Bản PDF chuẩn để kiểm tra và tổng hợp là tệp trong `output/pdf/`. Bản `main.pdf` cũ đã được chuyển vào kho local để tránh nhầm với bản nộp.
+
+## Lưu trữ bài gốc và tài sản
+
+Bài gốc của sáu thành viên được giữ nguyên trong `local/phase-2-submissions/` tại máy tổng hợp và không đưa vào Git. Báo cáo sử dụng bản đã tích hợp trong `diagrams/` và `mockups/`; các mã PlantUML có thể chỉnh sửa được giữ trong `diagrams/plantuml/`. Bộ logo SEMH nằm ở `assets/branding/` tại root dự án. Tệp tạm LaTeX và ảnh kiểm tra không nằm trong bộ tài liệu nộp.
 
 Deadline trên LMS: **25/10/2026**. Review dự kiến trên lớp: **Tuần 11**.

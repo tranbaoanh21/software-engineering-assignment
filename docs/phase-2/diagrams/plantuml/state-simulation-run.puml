@@ -1,0 +1,25 @@
+@startuml
+!include sim-style.puml
+!pragma layout smetana
+top to bottom direction
+title SimulationRun - Vòng đời một lần chạy mô phỏng
+state Draft
+state Running
+state Completed
+state Failed
+[*] --> Draft : createRun [snapshot hợp lệ]\n/ liên kết kịch bản và snapshot
+Draft --> Running : startExecution [có quyền]\n/ ghi startedAt
+Running --> Completed : runFinished\n[kết quả đã lưu và đầy đủ]\n/ ghi finishedAt
+Running --> Failed : executionFailed hoặc\nresultPersistenceFailed\n/ ghi lỗi, finishedAt
+Draft : entry / chuẩn bị dữ liệu của lần chạy
+Running : do / tính toán trên bản sao cô lập
+Running : progressUpdated / lưu tiến độ
+Running : viewClosed / không hủy lần chạy
+Completed : entry / phát runCompleted (NIFR-SIM-01)
+Completed : Kết quả dùng trong UC-SIM-02
+Failed : Kết quả không dùng để sinh khuyến nghị
+note left of Draft
+  Chuẩn bị nội bộ sau khi có snapshot.
+  Lưu kịch bản nháp chưa tạo run.
+end note
+@enduml

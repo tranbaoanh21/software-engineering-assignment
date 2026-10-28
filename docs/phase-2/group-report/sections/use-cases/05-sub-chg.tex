@@ -1,111 +1,251 @@
+% Bản tích hợp Submission 2; nội dung phân tích kế thừa từ Submission 1.
 \subsection{SUB-CHG -- Quản lý sạc và lịch sạc}
 
-\AssignmentNote{Hương Giang}{Sequence, activity và phần giải thích của UC-CHG-01--UC-CHG-03; state chart ChargingRequest, ChargingSession và ChargingPoint.}
 
 \subsubsection{UC-CHG-01 -- Đăng ký nhu cầu sạc}
 
-\noindent\textbf{Tác nhân thực hiện:} Sinh viên; Nhân viên vận hành.
+\UseCaseDiagram{uc-chg-01.pdf}{UC-CHG-01}{Đăng ký nhu cầu sạc}{fig:uc-chg-01}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-CHG-01 -- Đăng ký nhu cầu sạc}\label{tab:spec-UC-CHG-01}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-STU}, \texttt{ACT-OPR}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Tạo \texttt{ChargingRequest}, nhận trạng thái, ưu tiên và lịch dự kiến khi đủ điều kiện.\\\hline
+  Trigger & Sinh viên đăng ký sạc cho xe cá nhân hoặc Nhân viên vận hành tạo nhu cầu sạc cho phương tiện thuộc mạng lưới.\\\hline
+  Preconditions &
+    \textbf{1.} Actor đã đăng nhập với phiên hợp lệ và có quyền tạo yêu cầu cho phương tiện đã chọn.\newline
+    \textbf{2.} Phương tiện và Hub sạc tồn tại trong SEMH.\newline
+    \textbf{3.} Hệ thống có dữ liệu cần thiết để xác định yêu cầu hợp lệ hoặc có thể chỉ rõ dữ liệu còn thiếu.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Một \texttt{ChargingRequest} \texttt{Pending} hoặc \texttt{Scheduled} được tạo, gắn với phương tiện, actor khởi tạo, mức ưu tiên và lịch dự kiến nếu đã phân bổ được cổng.\newline
+    \textbf{Thất bại:} Không có yêu cầu sạc mới và không có cổng sạc nào bị giữ bởi yêu cầu thất bại.\\\hline
+  Main Flow &
+    \textbf{1.} Actor chọn phương tiện, Hub và chức năng đăng ký nhu cầu sạc.\newline
+    \textbf{2.} Hệ thống kiểm tra phiên và quyền với phương tiện trước khi hiển thị trạng thái, mức pin gần nhất và điều kiện sạc.\newline
+    \textbf{3.} Actor cung cấp thời hạn mong muốn hoặc kế hoạch sử dụng gần nhất, rồi xác nhận yêu cầu.\newline
+    \textbf{4.} Hệ thống xác minh quyền của actor, phương tiện và tính đầy đủ của dữ liệu.\newline
+    \textbf{5.} Hệ thống lấy mức pin và trạng thái hợp lệ gần nhất từ dữ liệu đã nhận qua \texttt{ACT-DAT}.\newline
+    \textbf{6.} Hệ thống xác định mức ưu tiên ban đầu theo \texttt{BR-CHG-01}.\newline
+    \textbf{7.} Hệ thống ước tính thời lượng theo \texttt{BR-CHG-03}, chọn cổng và khung giờ theo \texttt{BR-CHG-04}, rồi tạo yêu cầu \texttt{Scheduled}; nếu chưa đủ dữ liệu hoặc không có phân bổ đáp ứng thì tạo \texttt{Pending}.\newline
+    \textbf{8.} Hệ thống hiển thị trạng thái tiếp nhận, mức ưu tiên và lịch dự kiến khi có.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Chưa có phân bổ đáp ứng.} \textit{Tại bước 7.} Thiếu cổng tương thích, không đủ công suất hoặc không kịp hạn hoàn tất: giữ \texttt{Pending}, nêu lý do và chờ lần tính lịch tiếp theo.\newline
+    \textbf{AF-02 -- Yêu cầu được ưu tiên cao.} \textit{Tại bước 6.} Nếu pin dưới 20\% hoặc phương tiện có kế hoạch sử dụng trong 60 phút, hệ thống gán mức ưu tiên cao theo \texttt{BR-CHG-01}.\newline
+    \textbf{AF-03 -- Actor sửa thông tin trước xác nhận.} \textit{Rẽ từ bước 3.} Hệ thống cập nhật dữ liệu dự kiến và tính lại thông tin hiển thị; chưa tạo yêu cầu.\newline
+    \textbf{AF-04 -- Chưa đủ dữ liệu ước tính.} \textit{Tại bước 5 hoặc 7.} Pin đã cũ hoặc thiếu dữ liệu theo \texttt{BR-CHG-03}/\texttt{BR-CHG-04}: hiển thị phần còn hợp lệ, tạo \texttt{Pending}, chưa giữ cổng; ưu tiên theo dữ liệu hiện có tại \texttt{BR-CHG-01}.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Actor không có quyền với phương tiện.} \textit{Tại bước 2 hoặc 4.} Hệ thống từ chối yêu cầu, không tiết lộ dữ liệu ngoài phạm vi và không thay đổi lịch sạc.\newline
+    \textbf{EF-02 -- Phương tiện hoặc yêu cầu không hợp lệ.} \textit{Tại bước 4 hoặc 5.} Sai phương tiện, thiếu định danh, mốc giờ không hợp lệ hoặc pin đã đạt mục tiêu: không tạo yêu cầu, nêu nguyên nhân. Thiếu thông số ước tính xử lý tại AF-04.\newline
+    \textbf{EF-03 -- Không thể lưu yêu cầu.} \textit{Tại bước 7.} Hệ thống hoàn tác mọi phân bổ tạm thời, thông báo lỗi và cho phép gửi lại mà không tạo bản ghi trùng.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-CHG-01}; \texttt{NIFR-CHG-01}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}, \texttt{NFR-AUD-01}; \texttt{BR-GEN-02}; \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.\KeepUseCaseRow
+  Dependencies & Sử dụng trạng thái từ \texttt{EXT-STATE}/\texttt{ACT-DAT}; lịch có thể được tính lại bởi \texttt{NIFR-CHG-01}. Yêu cầu được theo dõi trong \texttt{UC-CHG-02} và có thể được điều chỉnh qua \texttt{UC-CHG-03}.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-chg-01.pdf}
-  {UI Mockup -- UC-CHG-01}
+\InsertArtifact{../mockups/uc-chg-01.png}
+  {Đăng ký nhu cầu sạc cho phương tiện cá nhân -- UC-CHG-01}
   {fig:p2-ui-uc-chg-01}
-  {Chèn mockup: Biểu mẫu yêu cầu sạc, phương tiện và Hub, mức pin và nhu cầu sử dụng; xác nhận yêu cầu, thời gian dự kiến hoặc trạng thái chờ.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-chg-01.pdf}
+\ManagementFigure{../diagrams/sequence/uc-chg-01.pdf}
   {Biểu đồ tuần tự -- UC-CHG-01}
   {fig:p2-seq-uc-chg-01}
-  {Chèn sequence diagram: Kiểm tra quyền, phương tiện và dữ liệu liên quan, tạo yêu cầu sạc và xếp lịch theo ưu tiên; nhánh chưa có cổng phù hợp hoặc dữ liệu chưa đủ tin cậy.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-chg-01.pdf}
+\ManagementFigure{../diagrams/activity/uc-chg-01.pdf}
   {Biểu đồ hoạt động -- UC-CHG-01}
   {fig:p2-act-uc-chg-01}
-  {Chèn activity diagram: Nhập yêu cầu, kiểm tra điều kiện, ghi nhận và xem khả năng phân bổ lịch; phân biệt yêu cầu được ghi nhận với phiên sạc đã bắt đầu.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
+
 \subsubsection{UC-CHG-02 -- Theo dõi lịch và phiên sạc}
 
-\noindent\textbf{Tác nhân thực hiện:} Sinh viên; Nhân viên vận hành.
+\UseCaseDiagram{uc-chg-02.pdf}{UC-CHG-02}{Theo dõi lịch và phiên sạc}{fig:uc-chg-02}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-CHG-02 -- Theo dõi lịch và phiên sạc}\label{tab:spec-UC-CHG-02}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-STU}, \texttt{ACT-OPR}. \textbf{Supporting:} \texttt{ACT-DAT}.\\\hline
+  Description / Goal & Sinh viên theo dõi yêu cầu của mình; Operator theo dõi yêu cầu, cổng, phiên sạc và thời gian dự kiến trong phạm vi được cấp.\\\hline
+  Trigger & Actor mở danh sách hoặc chi tiết lịch và phiên sạc.\\\hline
+  Preconditions &
+    \textbf{1.} Actor đã đăng nhập với phiên hợp lệ.\newline
+    \textbf{2.} Actor chỉ được truy cập yêu cầu của mình hoặc phạm vi vận hành được cấp quyền.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Trạng thái \texttt{ChargingRequest}, \texttt{ChargingSession}, cổng sạc, mức pin và thời gian dự kiến khi tính được được hiển thị cùng thời điểm cập nhật; không có lịch nào bị thay đổi.\newline
+    \textbf{Thất bại:} Không thay đổi dữ liệu sạc; actor nhận thông báo và có thể thử lại.\\\hline
+  Main Flow &
+    \textbf{1.} Actor mở chức năng theo dõi lịch và phiên sạc.\newline
+    \textbf{2.} Hệ thống xác định phạm vi dữ liệu actor được phép xem.\newline
+    \textbf{3.} Hệ thống truy xuất các \texttt{ChargingRequest} và \texttt{ChargingSession} liên quan.\newline
+    \textbf{4.} Hệ thống lấy trạng thái cổng sạc, mức pin và telemetry hợp lệ gần nhất từ dữ liệu đã nhận qua \texttt{ACT-DAT}.\newline
+    \textbf{5.} Hệ thống hiển thị lịch đã lưu; nếu đủ dữ liệu, ước tính thời gian còn lại theo \texttt{BR-CHG-03}. Thao tác xem không xếp lại hoặc ghi thay đổi lịch.\newline
+    \textbf{6.} Hệ thống hiển thị trạng thái yêu cầu, mức ưu tiên, cổng được phân bổ, trạng thái phiên, mức pin và thời điểm cập nhật.\newline
+    \textbf{7.} Actor chọn một mục để xem lịch sử chuyển trạng thái và cảnh báo liên quan.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Yêu cầu đang chờ.} \textit{Tại bước 5.} Nếu yêu cầu \texttt{Pending} chưa được phân bổ cổng, hệ thống hiển thị vị trí trong hàng đợi và chưa hiển thị thời điểm hoàn tất chắc chắn.\newline
+    \textbf{AF-02 -- Làm mới trạng thái.} \textit{Rẽ từ bước 6.} Actor yêu cầu làm mới; hệ thống thực hiện lại bước 3--6 bằng dữ liệu mới nhất đã chấp nhận.\newline
+    \textbf{AF-03 -- Phiên bị tạm dừng hoặc gián đoạn.} \textit{Tại bước 4.} Hệ thống hiển thị \texttt{Paused} hoặc \texttt{Interrupted}, nguyên nhân đã biết và thời gian dự kiến mới nếu tính được.\newline
+    \textbf{AF-04 -- Dữ liệu có thể đã cũ.} \textit{Tại bước 4.} Hệ thống dùng trạng thái hợp lệ gần nhất, gắn cảnh báo và thời điểm cập nhật theo \texttt{NFR-REL-01}.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Actor không có quyền xem mục được chọn.} \textit{Tại bước 2 hoặc 3.} Hệ thống từ chối truy cập, không tiết lộ nội dung và ghi nhận kết quả.\newline
+    \textbf{EF-02 -- Không có dữ liệu trạng thái hợp lệ.} \textit{Tại bước 4.} Hệ thống vẫn hiển thị thông tin yêu cầu nhưng đánh dấu tiến độ và dự báo chưa sẵn sàng.\newline
+    \textbf{EF-03 -- Không thể tải dữ liệu theo dõi.} \textit{Tại bước 3.} Hệ thống giữ bộ lọc hiện tại, thông báo lỗi và cho phép thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-CHG-02}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-REL-01}; \texttt{BR-GEN-02}; \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.\KeepUseCaseRow
+  Dependencies & Theo dõi yêu cầu từ \texttt{UC-CHG-01}; sử dụng \texttt{EXT-STATE}/\texttt{ACT-DAT}. Nhân viên vận hành có thể mở \texttt{UC-CHG-03} từ một lịch chưa bắt đầu.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-chg-02.pdf}
-  {UI Mockup -- UC-CHG-02}
+\InsertArtifact{../mockups/uc-chg-02.png}
+  {Theo dõi yêu cầu và tiến độ phiên sạc của Sinh viên -- UC-CHG-02}
   {fig:p2-ui-uc-chg-02}
-  {Chèn mockup: Lịch sạc, trạng thái yêu cầu, tiến độ và thông tin phiên sạc; phạm vi của Sinh viên và góc nhìn vận hành; dữ liệu cũ, phiên gián đoạn hoặc gặp lỗi.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-chg-02.pdf}
+\ManagementFigure{../diagrams/sequence/uc-chg-02.pdf}
   {Biểu đồ tuần tự -- UC-CHG-02}
   {fig:p2-seq-uc-chg-02}
-  {Chèn sequence diagram: Kiểm tra quyền xem, truy xuất lịch và phiên sạc, tổng hợp trạng thái đã chấp nhận từ EXT-STATE; nhánh dữ liệu thiếu, gián đoạn hoặc không có quyền.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-chg-02.pdf}
+\ManagementFigure{../diagrams/activity/uc-chg-02.pdf}
   {Biểu đồ hoạt động -- UC-CHG-02}
   {fig:p2-act-uc-chg-02}
-  {Chèn activity diagram: Mở lịch hoặc phiên sạc, xác định phạm vi được xem, tải và hiển thị trạng thái; các nhánh xem lại, làm mới hoặc xử lý thông tin chưa sẵn sàng.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
+
 \subsubsection{UC-CHG-03 -- Điều chỉnh lịch sạc ưu tiên}
 
-\noindent\textbf{Tác nhân thực hiện:} Nhân viên vận hành.
+\UseCaseDiagram{uc-chg-03.pdf}{UC-CHG-03}{Điều chỉnh lịch sạc ưu tiên}{fig:uc-chg-03}
 
+\paragraph{Đặc tả Use Case (Use Case Specification).}
+\small
+\begin{longtable}{|L{32mm}|L{112mm}|}
+  \caption{Đặc tả Use Case UC-CHG-03 -- Điều chỉnh lịch sạc ưu tiên}\label{tab:spec-UC-CHG-03}\\
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung}\\
+  \hline
+  \endfirsthead
+  \noalign{\vskip 8mm}
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Trường} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)}\\
+  \hline
+  \endhead
+  Actors & \textbf{Primary:} \texttt{ACT-OPR}. \textbf{Supporting:} Không có actor bên ngoài tham gia trực tiếp.\\\hline
+  Description / Goal & Điều chỉnh thứ tự hoặc cổng của yêu cầu chưa bắt đầu, tuân thủ quy tắc ưu tiên và ghi lý do; không ngắt phiên đang sạc.\\\hline
+  Trigger & Nhân viên vận hành chọn một lịch sạc và yêu cầu điều chỉnh.\\\hline
+  Preconditions &
+    \textbf{1.} Nhân viên vận hành đã đăng nhập với phiên hợp lệ và có quyền điều chỉnh lịch trong phạm vi được cấp.\newline
+    \textbf{2.} Các yêu cầu được chọn đang \texttt{Pending} hoặc \texttt{Scheduled}, chưa có phiên \texttt{Charging}.\newline
+    \textbf{3.} Hệ thống có trạng thái cổng sạc và lịch hiện tại đủ để kiểm tra xung đột.\\\hline
+  Postconditions &
+    \textbf{Thành công:} Thứ tự hoặc phân bổ của các yêu cầu chưa bắt đầu được cập nhật; không cổng nào có hai phiên \texttt{Charging}; lý do, actor và trạng thái trước--sau được ghi nhận.\newline
+    \textbf{Thất bại:} Lịch cũ được bảo toàn và không có phiên đang sạc nào bị thay đổi.\\\hline
+  Main Flow &
+    \textbf{1.} Nhân viên vận hành mở lịch sạc và chọn các yêu cầu cần điều chỉnh.\newline
+    \textbf{2.} Hệ thống xác minh quyền và kiểm tra các yêu cầu chưa bắt đầu.\newline
+    \textbf{3.} Hệ thống hiển thị mức pin, kế hoạch sử dụng, mức ưu tiên và cổng đang được phân bổ.\newline
+    \textbf{4.} Nhân viên vận hành thay đổi thứ tự hoặc chọn cổng sạc khác, nhập lý do và xác nhận.\newline
+    \textbf{5.} Hệ thống kiểm tra ưu tiên, tương thích cổng, công suất Hub, hạn hoàn tất và xung đột theo \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.\newline
+    \textbf{6.} Hệ thống tính lại thời lượng và phân bổ của các yêu cầu chưa bắt đầu theo \texttt{BR-CHG-03}/\texttt{BR-CHG-04}, giữ nguyên phiên đang \texttt{Charging}.\newline
+    \textbf{7.} Hệ thống lưu lịch mới, ghi nhận lý do và lịch sử thay đổi.\newline
+    \textbf{8.} Hệ thống hiển thị kết quả cùng các yêu cầu bị thay đổi thời gian dự kiến.\\\hline
+  Alternative Flows &
+    \textbf{AF-01 -- Chỉ thay đổi thứ tự ưu tiên.} \textit{Tại bước 4.} Nhân viên không đổi cổng; hệ thống tính lại thời gian dự kiến từ bước 5.\newline
+    \textbf{AF-02 -- Phân bổ lại cổng sạc.} \textit{Tại bước 4.} Nhân viên chọn cổng khác; hệ thống xác minh cổng \texttt{Available} hoặc có thể được dành cho yêu cầu chưa bắt đầu.\newline
+    \textbf{AF-03 -- Điều chỉnh bị giảm phạm vi.} \textit{Tại bước 5.} Một số yêu cầu đã bắt đầu trong lúc thao tác; hệ thống loại chúng khỏi phương án, hiển thị thay đổi và yêu cầu xác nhận lại phần còn hợp lệ.\newline
+    \textbf{AF-04 -- Hủy trước khi xác nhận.} \textit{Rẽ từ bước 4.} Use case kết thúc và lịch sạc không thay đổi.\\\hline
+  Exception Flows &
+    \textbf{EF-01 -- Vi phạm quy tắc ưu tiên hoặc xung đột cổng.} \textit{Tại bước 5.} Hệ thống từ chối phương án, chỉ rõ yêu cầu hoặc cổng xung đột và cho phép chỉnh sửa.\newline
+    \textbf{EF-02 -- Cổng được chọn vừa gặp sự cố.} \textit{Tại bước 5 hoặc 6.} Hệ thống loại cổng, giữ lịch cũ và cung cấp các cổng hợp lệ còn lại nếu có.\newline
+    \textbf{EF-03 -- Không thể lưu toàn bộ lịch mới.} \textit{Tại bước 7.} Hệ thống hoàn tác thay đổi, bảo toàn lịch trước đó và thông báo thử lại.\newline
+    \textbf{EF-04 -- Phiên hoặc quyền không hợp lệ.} Theo Mục~\ref{sec:common-access}; từ chối yêu cầu, đăng nhập lại nếu hết phiên.\KeepUseCaseRow
+  Liên quan & \texttt{FR-GEN-03}; \texttt{FR-CHG-03}; \texttt{NIFR-CHG-01}, \texttt{NIFR-CHG-02}; \texttt{NFR-SEC-01}, \texttt{NFR-AUD-01}; \texttt{BR-GEN-02}; \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.\KeepUseCaseRow
+  Dependencies & Điều chỉnh các yêu cầu tạo từ \texttt{UC-CHG-01} và quan sát qua \texttt{UC-CHG-02}. Sự cố cổng được xử lý tự động bởi \texttt{NIFR-CHG-02} và theo dõi trong SUB-OPS.\\\hline
+\end{longtable}
+\normalsize
+
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \paragraph{Thiết kế giao diện (UI Mockup)}
-\InsertArtifact{../mockups/uc-chg-03.pdf}
-  {UI Mockup -- UC-CHG-03}
+\InsertArtifact{../mockups/uc-chg-03.png}
+  {Điều chỉnh phân bổ cổng và lịch sạc chưa bắt đầu -- UC-CHG-03}
   {fig:p2-ui-uc-chg-03}
-  {Chèn mockup: Hàng đợi sạc, thứ tự ưu tiên, cổng phân bổ, biểu mẫu điều chỉnh và lý do; xác nhận lịch mới hoặc thông báo xung đột.}
-\PlaceholderText{Mô tả thông tin hiển thị, thao tác của người dùng và phản hồi ở các trạng thái được minh họa.}
+  {}
+\end{minipage}\par
 
+\clearpage
 \paragraph{Biểu đồ tuần tự (Sequence Diagram)}
-\InsertArtifact{../diagrams/sequence/uc-chg-03.pdf}
+\ManagementFigure{../diagrams/sequence/uc-chg-03.pdf}
   {Biểu đồ tuần tự -- UC-CHG-03}
   {fig:p2-seq-uc-chg-03}
-  {Chèn sequence diagram: Xác minh quyền, lấy các yêu cầu chưa bắt đầu, kiểm tra ưu tiên và cổng hợp lệ, tính rồi lưu lịch mới; nhánh yêu cầu đã bắt đầu, cổng lỗi hoặc lưu thất bại.}
-\PlaceholderText{Giải thích thành phần tham gia, thứ tự trao đổi, các điều kiện rẽ nhánh và kết quả xử lý.}
 
+\clearpage
 \paragraph{Biểu đồ hoạt động (Activity Diagram)}
-\InsertArtifact{../diagrams/activity/uc-chg-03.pdf}
+\ManagementFigure{../diagrams/activity/uc-chg-03.pdf}
   {Biểu đồ hoạt động -- UC-CHG-03}
   {fig:p2-act-uc-chg-03}
-  {Chèn activity diagram: Chọn yêu cầu cần điều chỉnh, thay ưu tiên hoặc cổng, kiểm tra và xác nhận; giữ các phiên đang Charging ngoài phạm vi chỉnh lịch.}
-\PlaceholderText{Giải thích các quyết định, trách nhiệm thực hiện và điểm kết thúc của luồng chính, luồng thay thế và luồng ngoại lệ.}
 
 \clearpage
-\subsubsection{Biểu đồ trạng thái -- ChargingRequest (Bonus)}
 
-\InsertArtifact{../diagrams/state/charging-request.pdf}
+\subsubsection{Biểu đồ trạng thái -- ChargingRequest}
+
+\ManagementFigure{../diagrams/state/charging-request.pdf}
   {Biểu đồ trạng thái của ChargingRequest}
   {fig:p2-state-charging-request}
-  {Chèn state-chart diagram: Các trạng thái Pending, Scheduled, Charging, Completed, Cancelled và Rejected; điều kiện xếp lịch, bắt đầu, kết thúc và hủy yêu cầu.}
-\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
 
 \clearpage
 
-\subsubsection{Biểu đồ trạng thái -- ChargingSession (Bonus)}
+\subsubsection{Biểu đồ trạng thái -- ChargingSession}
 
-\InsertArtifact{../diagrams/state/charging-session.pdf}
+\ManagementFigure{../diagrams/state/charging-session.pdf}
   {Biểu đồ trạng thái của ChargingSession}
   {fig:p2-state-charging-session}
-  {Chèn state-chart diagram: Các trạng thái Ready, Charging, Paused, Completed, Interrupted và Failed; sự kiện bắt đầu, tạm dừng, tiếp tục, hoàn tất và lỗi.}
-\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
 
 \clearpage
 
-\subsubsection{Biểu đồ trạng thái -- ChargingPoint (Bonus)}
+\subsubsection{Biểu đồ trạng thái -- ChargingPoint}
 
-\InsertArtifact{../diagrams/state/charging-point.pdf}
+\ManagementFigure{../diagrams/state/charging-point.pdf}
   {Biểu đồ trạng thái của ChargingPoint}
   {fig:p2-state-charging-point}
-  {Chèn state-chart diagram: Vòng đời cổng sạc với các trạng thái Available, Reserved, Charging và OutOfService; phân biệt lỗi cổng với việc phiên sạc hoàn tất.}
-\PlaceholderText{Mô tả ý nghĩa trạng thái, sự kiện gây chuyển trạng thái, điều kiện bảo vệ và tác động khi chuyển; làm rõ các chuyển trạng thái do sự kiện hoặc thời gian tự động.}
 
 \clearpage

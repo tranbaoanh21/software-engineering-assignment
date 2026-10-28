@@ -1,0 +1,18 @@
+@startuml
+!include guide-style.puml
+top to bottom direction
+skinparam defaultFontSize 15
+interface EnrollmentStore <<interface>> {
+  + findStudent(id: UUID): Student [0..1]
+  + findCourse(id: UUID): Course [0..1]
+  + findByRequest(key: UUID): Registration [0..1]
+  + commit(r: Registration, c: Course, sv: Integer, cv: Integer): Registration
+}
+class SqlEnrollmentStore {
+  + findStudent(id: UUID): Student [0..1]
+  + findCourse(id: UUID): Course [0..1]
+  + findByRequest(key: UUID): Registration [0..1]
+  + commit(r: Registration, c: Course, sv: Integer, cv: Integer): Registration
+}
+SqlEnrollmentStore -up..|> EnrollmentStore
+@enduml

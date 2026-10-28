@@ -25,4 +25,4 @@ node render-examples.mjs /path/to/plantuml.jar
 
 Script dựng các ví dụ, chuyển sang PDF vector và dịch một số nhãn trong hình tổng quan state chart để tránh đường cong và viền composite do Smetana dàn tự động. Các nút, đường nối và nội dung không thay đổi. Có thể chỉ định đường dẫn chương trình bằng `UML_JAVA_BIN` và `UML_RSVG_BIN`.
 
-Sau đó chạy lại lệnh LaTeX ở trên. Các file hình cũ không có tiền tố `example-` không còn được bản tài liệu này sử dụng.
+Sau đó chạy lại lệnh LaTeX ở trên. Các file hình cũ không có tiền tố `example-` không còn được tài liệu sử dụng và đã chuyển vào `local/superseded-guide-figures/` tại máy tổng hợp.

@@ -1,0 +1,89 @@
+@startuml
+!include sim-style.puml
+title UC-SIM-01 - Chạy kịch bản What-if Simulation
+
+|Nhân viên vận hành (ACT-OPR)|
+start
+:Mở cấu hình kịch bản;
+|SEMH|
+:Kiểm tra phiên, quyền và phạm vi Hub;
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :Từ chối yêu cầu - EF-04;
+  stop
+endif
+|Nhân viên vận hành (ACT-OPR)|
+if (Dùng lại kịch bản?) then (Có)
+  |SEMH|
+  :Sao chép tham số - AF-02;
+else (Không)
+  |SEMH|
+  :Hiển thị cấu hình mới;
+endif
+repeat
+  |Nhân viên vận hành (ACT-OPR)|
+  :Nhập hoặc sửa tham số;\nchọn Hub và mốc cơ sở - AF-03;
+  |SEMH|
+  :Kiểm tra phiên và quyền của yêu cầu;
+  if (Truy cập hợp lệ?) then (Có)
+  else (Không)
+    :Từ chối yêu cầu - EF-04;
+    stop
+  endif
+  |Nhân viên vận hành (ACT-OPR)|
+  if (Lưu kịch bản nháp?) then (Có)
+    |SEMH|
+    :Lưu SimulationScenario - AF-01;\nkhông tạo SimulationRun;
+    stop
+  else (Tiếp tục)
+    |SEMH|
+    :Kiểm tra đầy đủ, kiểu, miền giá trị\nvà mâu thuẫn giữa tham số;
+  endif
+  if (Tham số hợp lệ?) then (Có)
+  else (Không)
+    :Hiển thị trường cần sửa - EF-01;
+  endif
+repeat while (Cần sửa tham số?) is (Có) not (Không)
+|Nhân viên vận hành (ACT-OPR)|
+:Xác nhận chạy với giả định đã chọn;
+|SEMH|
+:Kiểm tra lại phiên, quyền và tham số;
+if (Yêu cầu hợp lệ?) then (Có)
+else (Không)
+  :Từ chối - EF-01 hoặc EF-04;
+  stop
+endif
+:Tạo snapshot bất biến;
+if (Snapshot đủ và hợp lệ?) then (Có)
+else (Không)
+  :Không tạo run - EF-02;
+  stop
+endif
+:Lưu kịch bản, tạo SimulationRun Draft;\nchuyển sang Running;
+:Khởi chạy nền, trả runId cho UI;
+:Tạo bản sao làm việc cô lập;
+note right
+  Đóng UI hoặc hết phiên không hủy run - AF-04.
+  Xem lại tiến độ phải kiểm tra quyền.
+end note
+repeat
+  :Thực thi bước mô phỏng;\nghi tiến độ;
+repeat while (Còn bước và chưa lỗi?) is (Có) not (Không)
+if (Thực thi thành công?) then (Có)
+  :Kiểm tra và lưu kết quả;
+  if (Kết quả đầy đủ và đã lưu?) then (Có)
+    :Chuyển SimulationRun sang Completed;
+    :Kích hoạt NIFR-SIM-01;\nlưu phân tích và Recommendation;
+  else (Không)
+    :Ghi lỗi, đánh dấu Failed - EF-03;
+  endif
+else (Không)
+  :Ghi lỗi, đánh dấu Failed - EF-03;
+endif
+note right
+  Lỗi tạo khuyến nghị không đổi run Completed thành Failed.
+  Lỗi kho lưu trữ: ghi lỗi, cập nhật Failed khi có thể.
+  Không cập nhật trạng thái vận hành thật.
+end note
+stop
+@enduml

@@ -1,0 +1,125 @@
+{
+  "description": "Diagram sources imported from teammate submissions; canonical copies may receive baseline corrections; original folders retained.",
+  "integrationAdjustments": [
+    "UC-CHG-03 sequence: separate activate SEMHDataStore from message text.",
+    "UC-CHG-02 sequence: Arial and vector glyph outlines for valid Cairo PDF output.",
+    "ParkingReservation: remove unsupported manual Pending approval workflow; retain declared states.",
+    "Parking expiry: atomically expire only still-Confirmed/unconsumed reservations; release only safe vacant spaces, preserve OutOfService and concurrent check-in (BR-PARK-02).",
+    "Charging demo: duration estimate, compatible earliest feasible slot and Hub power budget per BR-CHG-03/04; synchronized sequence/activity diagrams."
+  ],
+  "additionalDiagrams": [
+    "state/charging-session",
+    "state/charging-point"
+  ],
+  "diagrams": [
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/sd01/sd01.svg",
+      "folder": "sequence",
+      "target": "uc-park-01",
+      "puml": "sequence-uc-park-01",
+      "recover": true
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-01 - sequence/uc-chg-01 - sequence.svg",
+      "folder": "sequence",
+      "target": "uc-chg-01",
+      "puml": "sequence-uc-chg-01",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-01 - sequence.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/sd02/sd02.svg",
+      "folder": "sequence",
+      "target": "uc-park-02",
+      "puml": "sequence-uc-park-02",
+      "recover": true
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-02 - sequence/uc-chg-02 - sequence.svg",
+      "folder": "sequence",
+      "target": "uc-chg-02",
+      "puml": "sequence-uc-chg-02",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-02 - sequence.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/sd03/sd03.svg",
+      "folder": "sequence",
+      "target": "uc-park-03",
+      "puml": "sequence-uc-park-03",
+      "recover": true,
+      "sourceRecovery": "SVG retained; compressed metadata not decoded"
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-03 - sequence/uc-chg-03 - sequence.svg",
+      "folder": "sequence",
+      "target": "uc-chg-03",
+      "puml": "sequence-uc-chg-03",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-03 - sequence.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/ad01/ad01.svg",
+      "folder": "activity",
+      "target": "uc-park-01",
+      "puml": "activity-uc-park-01",
+      "recover": true,
+      "sourceRecovery": "PlantUML source recovered from SVG metadata; canonical copy updated to BR-PARK-02"
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-01 - activity/uc-chg-01 - activity.svg",
+      "folder": "activity",
+      "target": "uc-chg-01",
+      "puml": "activity-uc-chg-01",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-01 - activity.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/ad02/ad02.svg",
+      "folder": "activity",
+      "target": "uc-park-02",
+      "puml": "activity-uc-park-02",
+      "recover": true,
+      "sourceRecovery": "PlantUML source recovered from SVG metadata; canonical copy updated to BR-PARK-02"
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-02 - activity/uc-chg-02 - activity.svg",
+      "folder": "activity",
+      "target": "uc-chg-02",
+      "puml": "activity-uc-chg-02",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-02 - activity.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/ad03/ad03.svg",
+      "folder": "activity",
+      "target": "uc-park-03",
+      "puml": "activity-uc-park-03",
+      "recover": true
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/uc-chg-03 - activity/uc-chg-03 - activity.svg",
+      "folder": "activity",
+      "target": "uc-chg-03",
+      "puml": "activity-uc-chg-03",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/uc-chg-03 - activity.puml"
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/sc-ParkingReservation/sc-ParkingReservation.svg",
+      "folder": "state",
+      "target": "parking-reservation",
+      "puml": "state-parking-reservation",
+      "recover": true
+    },
+    {
+      "source": "local/phase-2-submissions/Ngọc Hân - SUB PARK/out/sc-ParkingSpace/sc-ParkingSpace.svg",
+      "folder": "state",
+      "target": "parking-space",
+      "puml": "state-parking-space",
+      "recover": true,
+      "sourceRecovery": "PlantUML source recovered from SVG metadata; canonical copy updated to BR-PARK-02"
+    },
+    {
+      "source": "local/phase-2-submissions/Hương Giang - SUB CHG/out/state-chart/state-chart.svg",
+      "folder": "state",
+      "target": "charging-request",
+      "puml": "state-charging-request",
+      "originalPuml": "local/phase-2-submissions/Hương Giang - SUB CHG/plantuml/state-chart.puml"
+    }
+  ]
+}

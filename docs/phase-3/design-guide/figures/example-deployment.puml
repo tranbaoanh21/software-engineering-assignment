@@ -1,0 +1,19 @@
+@startuml
+!include guide-style.puml
+top to bottom direction
+node "Máy người dùng" as Client <<device>> {
+  node "Trình duyệt" as Browser <<executionEnvironment>> {
+    artifact "web.bundle.js" as Web
+  }
+}
+node "Máy chạy ứng dụng demo" as Server <<device>> {
+  node "API runtime" as API <<executionEnvironment>> {
+    artifact "registration-api.jar" as App
+  }
+  node "Database runtime" as DB <<executionEnvironment>> {
+    artifact "registration data\n+ schema/config" as Data
+  }
+}
+Browser -- API : HTTP / TCP 8080\n(demo local)
+API -- DB : SQL / TCP 5432\n(mạng nội bộ)
+@enduml

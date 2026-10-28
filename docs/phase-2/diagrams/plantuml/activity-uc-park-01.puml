@@ -1,0 +1,182 @@
+@startuml
+title UC-PARK-01 - Đặt chỗ đỗ cho xe cá nhân
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    DiamondBackgroundColor White
+    DiamondBorderColor Black
+}
+
+|Sinh viên (ACT-STU)|
+start
+
+:Chọn MobilityHub đích;
+
+' == 1. Tra cứu và lựa chọn ==
+
+repeat
+    |ParkingUI|
+    :Yêu cầu xem thông tin chỗ đỗ;
+
+    |ParkingService|
+    :Tra cứu Hub và chỗ đỗ khả dụng;
+
+    |SEMHDataStore|
+    :Trả danh sách ParkingSpace\nvà điều kiện giữ chỗ;
+
+    |ParkingUI|
+    :Hiển thị số chỗ khả dụng,\nđiều kiện và thời hạn giữ chỗ;
+
+    |Sinh viên (ACT-STU)|
+    :Chọn PrivateVehicle;\nCó thể điều chỉnh Hub hoặc phương tiện;
+
+repeat while (Đổi Hub hoặc phương tiện?\nAF-03) is (Có) not (Không)
+
+: Xác nhận yêu cầu đặt chỗ;
+
+' == 2. Kiểm tra quyền truy cập ==
+
+|ParkingUI|
+:Gửi yêu cầu tạo ParkingReservation;
+
+|AccessService|
+:Kiểm tra phiên và quyền đặt chỗ;
+
+if (Phiên và quyền hợp lệ?) then (Không)
+    |ParkingUI|
+    :EF-04: Thông báo từ chối truy cập;\nYêu cầu đăng nhập lại nếu hết phiên;
+    stop
+else (Có)
+endif
+
+' == 3. Kiểm tra tính khả dụng ==
+
+|ParkingService|
+:Yêu cầu dữ liệu ParkingSpace hiện tại;
+
+|SEMHDataStore|
+:Truy xuất trạng thái chỗ đỗ tại Hub;
+
+|ParkingService|
+if (Trạng thái đủ tin cậy?) then (Không)
+    |ParkingUI|
+    :EF-01: Thông báo dữ liệu\nchưa sẵn sàng và cho phép thử lại;
+    stop
+else (Có)
+endif
+
+|ParkingService|
+:Tìm ParkingSpace Available phù hợp;
+
+' == 4. Giữ chỗ nhất quán ==
+
+while (Còn chỗ Available\nphù hợp để thử?) is (Có)
+
+    |ParkingService|
+    :Chọn ParkingSpace để giữ chỗ;
+
+    |SEMHDataStore|
+    :Kiểm tra và giữ chỗ nguyên tử;
+
+    note right
+        BR-PARK-01, BR-PARK-02:
+        - Kiểm tra ParkingSpace Available
+        - Không có lượt đặt hiệu lực xung đột
+        - Tạo ParkingReservation Confirmed
+        - Chuyển ParkingSpace sang Reserved
+        - expiresAt tối đa 20 phút
+
+        Nếu lỗi transaction:
+        rollback toàn bộ thay đổi.
+    end note
+
+    if (Giữ chỗ thành công?) then (Có)
+
+        ' == 5. Trả kết quả xác nhận ==
+
+        |ParkingService|
+        :Nhận ParkingReservation Confirmed;
+
+        |ParkingUI|
+        if (Tải được kết quả xác nhận?) then (Có)
+
+            :Hiển thị mã lượt đặt, Hub,\nvị trí, expiresAt và hướng dẫn check-in;
+
+        else (Không - EF-03)
+
+            :Yêu cầu đọc lại theo requestId;
+
+            |ParkingService|
+            :Truy vấn lượt đặt đã tạo;
+
+            |SEMHDataStore|
+            :Trả ParkingReservation\nứng với requestId;
+
+            |ParkingUI|
+            :Hiển thị lại kết quả xác nhận;\nKhông gửi yêu cầu tạo mới;
+
+        endif
+
+        ' == 6. Kết quả và xử lý hết hạn ==
+
+        |ParkingService|
+        note right
+            Luồng đặt chỗ chính đã thành công.
+
+            AF-04 là xử lý tự động độc lập,
+            chỉ phát sinh sau xác nhận.
+        end note
+
+        if (Đến expiresAt, vẫn Confirmed\nvà chưa CheckedIn?) then (Có - AF-04)
+
+            :NIFR-PARK-01 xử lý hết hạn;
+
+            |SEMHDataStore|
+            :Kiểm tra lại Confirmed, chưa CheckedIn;\nChuyển Expired và hủy giữ chỗ nguyên tử;\nChỉ Available nếu trống, an toàn, không ràng buộc;\nGiữ OutOfService khi lỗi; thiếu dữ liệu thì chờ xác minh;
+
+            |ParkingUI|
+            :Thông báo lượt đặt hết hạn;
+
+        else (Không)
+        endif
+
+        stop
+
+    else (Không)
+
+        |ParkingService|
+        if (Lỗi cập nhật nhất quán?) then (Có - EF-02)
+
+            |SEMHDataStore|
+            :Rollback toàn bộ giao dịch;\nKhông giữ lại thay đổi đơn lẻ;
+
+            |ParkingUI|
+            :Thông báo lỗi hệ thống\nvà cho phép thử lại;
+            stop
+
+        else (Cạnh tranh - AF-02)
+
+            |ParkingService|
+            :Tìm ParkingSpace Available\nkhác trong cùng Hub;
+
+        endif
+    endif
+
+endwhile (Không)
+
+' == 7. Không còn chỗ khả dụng ==
+
+|ParkingUI|
+:AF-01: Thông báo không còn chỗ phù hợp;
+
+if (Sinh viên muốn xem Hub thay thế?) then (Có)
+    :Mở UC-HUB-03 - Xem Hub thay thế;
+else (Không)
+endif
+
+stop
+@enduml

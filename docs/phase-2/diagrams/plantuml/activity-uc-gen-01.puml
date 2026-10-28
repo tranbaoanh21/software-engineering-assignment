@@ -1,0 +1,64 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+title UC-GEN-01 - Quản lý tài khoản
+|Quản trị viên (ACT-ADM)|
+start
+:Mở chức năng quản lý;
+|SEMH|
+:Kiểm tra tài khoản, phiên, quyền và phạm vi;
+if (Có quyền?) then (Có)
+else (Không)
+  :Từ chối - EF-03;
+  stop
+endif
+:Tải dữ liệu hiện hành và phiên bản;
+if (Tải được dữ liệu?) then (Có)
+else (Không)
+  :Báo lỗi tải - EF-01;
+  stop
+endif
+repeat
+  |Quản trị viên (ACT-ADM)|
+  :Chọn thao tác, nhập dữ liệu và lý do;
+  if (Hủy?) then (Có)
+    :Kết thúc; không lưu thay đổi;
+    stop
+  endif
+  :Xem lại và xác nhận;
+  |SEMH|
+  :Kiểm tra lại quyền trước yêu cầu;
+  if (Quyền còn hợp lệ?) then (Có)
+  else (Không)
+    :Từ chối - EF-03;
+    stop
+  endif
+  :validateAccountChange;
+  note right
+    Định danh duy nhất\n    thông tin hợp lệ\n    không khóa Admin cuối cùng
+  end note
+  if (Đủ điều kiện?) then (Có)
+  else (Không)
+    :Hiển thị nguyên nhân; không thay đổi dữ liệu;
+  endif
+repeat while (Điều kiện chưa đạt?) is (Có) not (Không)
+:Trong giao dịch: kiểm tra lại phiên bản,\nđiều kiện và requestId; lưu thay đổi + audit;
+if (Commit thành công?) then (Có)
+  :Hiển thị kết quả đã lưu;
+else (Không)
+  if (Xung đột điều kiện hoặc phiên bản?) then (Có)
+    :Tải lại; yêu cầu actor xác nhận lại;
+  else (Lỗi kỹ thuật)
+    :Hoàn tác nếu chưa commit - EF-01;\nđọc lại theo requestId nếu mất phản hồi - EF-02;
+  endif
+endif
+note right
+  Account.Active hoặc Locked\n  không đổi các quy trình nghiệp vụ.
+end note
+stop
+@enduml

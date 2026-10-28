@@ -1,0 +1,180 @@
+@startuml
+title UC-PARK-03 - Check-out phương tiện cá nhân
+
+skinparam shadowing false
+skinparam monochrome true
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+    DiamondBackgroundColor White
+    DiamondBorderColor Black
+}
+
+|Sinh viên (ACT-STU)|
+start
+:Mở ParkingReservation đang sử dụng;
+
+' == 1. Mở lượt đỗ và kiểm tra trạng thái ==
+
+|ParkingUI|
+:Gửi yêu cầu xem lượt đỗ;
+
+|AccessService|
+:Kiểm tra phiên và quyền truy cập;
+
+if (Phiên và quyền hợp lệ?) then (Không - EF-04)
+    |ParkingUI|
+    :Thông báo từ chối truy cập;\nYêu cầu đăng nhập lại nếu hết phiên;
+    stop
+else (Có)
+endif
+
+|SEMHDataStore|
+:Truy xuất ParkingReservation\nvà ParkingSpace liên quan;
+
+|ParkingService|
+if (Lượt đặt thuộc đúng Sinh viên,\nđang CheckedIn và chỗ Occupied?) then (Không)
+    |ParkingUI|
+    :Thông báo lượt đỗ hoặc chỗ đỗ\nkhông đủ điều kiện check-out;
+    stop
+else (Có)
+endif
+
+|ParkingUI|
+:Hiển thị ParkingSpace đang sử dụng;\nYêu cầu đưa phương tiện ra khỏi chỗ;
+
+' == 2. Đưa phương tiện ra khỏi chỗ và xác nhận ==
+
+|Sinh viên (ACT-STU)|
+:Đưa PrivateVehicle ra khỏi chỗ;
+
+if (Sinh viên xác nhận đã hoàn tất?) then (Không - AF-03)
+    :Dừng thao tác check-out;
+    note right
+        ParkingReservation vẫn CheckedIn.
+        ParkingSpace vẫn Occupied.
+        Không phát sinh cập nhật check-out.
+    end note
+    stop
+else (Có)
+    :Xác nhận đã đưa phương tiện ra;
+endif
+
+|ParkingUI|
+:Gửi yêu cầu check-out;
+
+|AccessService|
+:Kiểm tra lại phiên và quyền truy cập;
+
+if (Phiên và quyền hợp lệ?) then (Không - EF-04)
+    |ParkingUI|
+    :Từ chối check-out;\nYêu cầu đăng nhập lại nếu hết phiên;
+    stop
+else (Có)
+endif
+
+' == 3. Xác minh lại lượt đỗ ==
+
+|SEMHDataStore|
+:Kiểm tra lại quyền sở hữu,\ntrạng thái lượt đặt và chỗ đỗ;
+
+|ParkingService|
+if (Lượt đặt còn CheckedIn,\nchỗ vẫn Occupied và thông tin khớp?) then (Không)
+    |ParkingUI|
+    :Thông báo lượt đỗ\nkhông còn hợp lệ;
+    stop
+else (Có)
+endif
+
+' == 4. Xác nhận phương tiện đã rời chỗ ==
+
+|StateDataGateway|
+:Cung cấp dữ liệu hiện diện\nvà tình trạng ParkingSpace;
+
+|ParkingService|
+if (Cảm biến cập nhật chậm?) then (Có - AF-01)
+
+    |ParkingUI|
+    :Hiển thị trạng thái đang xác minh;
+
+    |ParkingService|
+    while (Chưa có dữ liệu xác định\nvà còn thời gian chờ?) is (Có)
+
+        |StateDataGateway|
+        :Cập nhật dữ liệu hiện diện\nvà tình trạng chỗ đỗ;
+
+        |ParkingService|
+        :Kiểm tra dữ liệu cảm biến;
+
+    endwhile (Không)
+
+else (Không)
+endif
+
+|ParkingService|
+if (Nhận được dữ liệu trạng thái hợp lệ?) then (Không - EF-02)
+    |ParkingUI|
+    :Thông báo chưa thể xác nhận xe đã rời;\nGiữ chỗ chưa giải phóng và cho phép thử lại;
+    stop
+else (Có)
+endif
+
+if (Phương tiện vẫn hiện diện tại chỗ?) then (Có - EF-01)
+    |ParkingUI|
+    :Từ chối check-out;\nYêu cầu kiểm tra và đưa xe ra khỏi chỗ;
+    stop
+else (Không)
+endif
+
+' == 5. Cập nhật trạng thái nhất quán ==
+
+|ParkingService|
+if (Chỗ đỗ phát sinh sự cố\nsau khi xe rời?) then (Có - AF-02)
+    :Xác định trạng thái chỗ đỗ đích\nlà OutOfService;
+else (Không)
+    :Xác định trạng thái chỗ đỗ đích\nlà Available;
+endif
+
+|SEMHDataStore|
+:Kiểm tra lại điều kiện cập nhật;\nHoàn tất lượt đỗ bằng giao dịch nguyên tử;
+
+note right
+    Kiểm tra ParkingReservation CheckedIn
+    và ParkingSpace Occupied.
+
+    ParkingReservation: CheckedIn -> Completed
+    Ghi nhận thời điểm check-out.
+
+    ParkingSpace: Occupied -> Available
+    nếu không có sự cố.
+
+    ParkingSpace: Occupied -> OutOfService
+    nếu có sự cố (AF-02).
+
+    Nếu giao dịch thất bại:
+    rollback toàn bộ thay đổi.
+end note
+
+if (Giao dịch cập nhật thành công?) then (Không - EF-03)
+    :Rollback toàn bộ thay đổi check-out;\nKhông giải phóng chỗ hoặc cấp lượt mới;
+    |ParkingUI|
+    :Thông báo lỗi cập nhật;\nCho phép thử lại;
+    stop
+else (Có)
+endif
+
+' == 6. Trả kết quả và hiển thị xác nhận ==
+
+|ParkingService|
+if (ParkingSpace đã chuyển OutOfService?) then (Có - AF-02)
+    |OperationsService|
+    :Tiếp nhận thông tin sự cố chỗ đỗ\nđể SUB-OPS theo dõi;
+else (Không)
+endif
+
+|ParkingUI|
+:Hiển thị xác nhận check-out,\nthời điểm hoàn tất và kết quả chỗ đỗ;
+
+stop
+@enduml

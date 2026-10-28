@@ -1,0 +1,85 @@
+@startuml
+!include sim-style.puml
+title UC-SIM-02 - Phân tích kết quả và khuyến nghị điều phối
+|Nhân viên vận hành (ACT-OPR)|
+start
+:Chọn lần chạy cần xem;
+|SEMH|
+:Kiểm tra phiên và quyền với lần chạy;
+if (Truy cập hợp lệ?) then (Có)
+else (Không)
+  :Từ chối - EF-04;
+  stop
+endif
+:Truy xuất trạng thái, kịch bản,\nsnapshot và kết quả;
+if (SimulationRun là Completed?) then (Có)
+else (Không)
+  :Hiển thị trạng thái hiện tại;\nkhông phân tích - EF-01;
+  stop
+endif
+:Kiểm tra tính đầy đủ và liên kết;
+if (Dữ liệu phân tích hợp lệ?) then (Có)
+else (Không)
+  :Ghi lỗi, không tạo khuyến nghị - EF-02;
+  stop
+endif
+:Hiển thị chỉ số và so sánh cơ sở;
+:Truy xuất phân tích NIFR-SIM-01;
+if (Phân tích khuyến nghị đã xong?) then (Có)
+  if (Có Recommendation?) then (Có)
+    :Hiển thị hành động, cơ sở\nvà tác động dự kiến;
+  else (Không)
+    :Không phát sinh khuyến nghị - AF-01;
+  endif
+else (Chưa)
+  :Giữ chỉ số đã có;\nthông báo khuyến nghị đang xử lý;
+endif
+|Nhân viên vận hành (ACT-OPR)|
+:Xem kết quả;
+while (Muốn xem thêm?) is (Có)
+  :Chọn lọc, chi tiết\nhoặc giả định;
+  |SEMH|
+  :Kiểm tra phiên, quyền\nvà phạm vi;
+  if (Truy cập hợp lệ?) then (Có)
+  else (Không)
+    :Từ chối - EF-04;
+    stop
+  endif
+  if (Chọn lọc?) then (Có)
+    :Lọc kết quả - AF-02;
+  else (Không)
+    if (Chọn giả định?) then (Có)
+      :Xem giả định - AF-04;\nkhông chạy lại;
+    else (Xem chi tiết)
+      :Xem chi tiết khuyến nghị;
+    endif
+  endif
+  |Nhân viên vận hành (ACT-OPR)|
+  :Đánh giá cơ sở và tác động;
+endwhile (Không)
+if (Mở đề xuất điều chuyển?) then (Có)
+  |SEMH|
+  :Kiểm tra quyền điều phối\nvà phạm vi Hub;
+  if (Được phép?) then (Có)
+    :Chuẩn bị dữ liệu điền trước - AF-03;
+    if (Mở quy trình thành công?) then (Có)
+      :Bàn giao đề xuất sang UC-OPS-03;
+    else (Không)
+      :Thông báo lỗi;\nkhông tạo kế hoạch nửa chừng - EF-03;
+    endif
+  else (Không)
+    :Từ chối - EF-04;
+  endif
+else (Không)
+  |Nhân viên vận hành (ACT-OPR)|
+  :Kết thúc xem kết quả;
+endif
+|SEMH|
+:Giữ nguyên dữ liệu vận hành thật;
+note right
+  Lập và phê duyệt kế hoạch
+  thuộc UC-OPS-03.
+  Không tự áp dụng đề xuất.
+end note
+stop
+@enduml

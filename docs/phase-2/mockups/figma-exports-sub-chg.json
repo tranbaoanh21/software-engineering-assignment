@@ -1,0 +1,56 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-CHG",
+  "assets": [
+    {
+      "file": "uc-chg-01.png",
+      "nodeId": "462:821",
+      "screen": "08.1 Đăng ký nhu cầu sạc",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-chg-02.png",
+      "nodeId": "19:273",
+      "screen": "08 Sạc của tôi",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-chg-03.png",
+      "nodeId": "462:2957",
+      "screen": "10.1 Điều chỉnh lịch sạc · CHG-0091",
+      "format": "png"
+    }
+  ],
+  "supportingFigmaScreens": [
+    {
+      "nodeId": "20:84",
+      "screen": "10 Quản lý sạc",
+      "purpose": "Operator view of requests, queue allocation and an active session; not an extra report image."
+    },
+    {
+      "nodeId": "462:2974",
+      "screen": "10.2 Đăng ký sạc cho xe mạng lưới",
+      "purpose": "Operator creates a charging request for a network vehicle; not an extra report image."
+    }
+  ],
+  "figmaChanges": [
+    "Completed the existing student and operator charging screens; previous placeholder content remains hidden for recovery.",
+    "Added personal-vehicle registration, network-vehicle registration and an operator schedule-adjustment form.",
+    "Reused existing component instances, Ocean Mobility variables, Be Vietnam Pro typography and native editable layers."
+  ],
+  "scope": "UI only. Sequence, activity and state diagram placeholders remain unchanged for later teammate submissions.",
+  "modelingNotes": [
+    "Student registration is for an owned personal vehicle; operator registration is for a vehicle within the operator's network scope.",
+    "Priority is derived from battery below 20 percent or planned use within 60 minutes, not freely chosen by the student. Equal-priority requests preserve confirmation order.",
+    "An accepted request can remain Pending and is distinct from a ChargingSession that has actually started.",
+    "The adjustment example moves Scheduled request CHG-0091 from A4-CS05 to available A4-CS04 and requires a reason, revalidation and confirmation. Active Charging sessions remain unchanged.",
+    "Battery, timing, availability and schedule preview values are illustrative static mockup data, not live telemetry or an implemented scheduling algorithm.",
+    "The report contains one representative UI per UC; both actor views remain available in Figma without importing all variants."
+  ],
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

@@ -1,0 +1,71 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-OPS",
+  "assets": [
+    {
+      "file": "uc-ops-01.png",
+      "nodeId": "34:326",
+      "screen": "09 Tổng quan mạng lưới · Ocean Mobility",
+      "format": "png"
+    },
+    {
+      "file": "uc-ops-02.png",
+      "nodeId": "20:217",
+      "screen": "12 Chi tiết sự cố (Vận hành)",
+      "format": "png"
+    },
+    {
+      "file": "uc-ops-03.png",
+      "nodeId": "20:343",
+      "screen": "14 Tạo và chi tiết kế hoạch điều chuyển",
+      "format": "png"
+    }
+  ],
+  "figmaChanges": [
+    "UC-OPS-03: unselected reserved vehicle 10, marked it unavailable for selection, and corrected the selected count from four to three to match the impact preview. Existing layout and other screens were preserved."
+  ],
+  "diagramSourceFolder": "local/phase-2-submissions/Minh Anh - SUB OPS",
+  "importedDiagrams": [
+    {
+      "source": "activity.png",
+      "target": "activity/uc-ops-01.png"
+    },
+    {
+      "source": "ac2.png",
+      "target": "activity/uc-ops-02.png"
+    },
+    {
+      "source": "UC-OPS-03_activity.png",
+      "target": "activity/uc-ops-03.png"
+    },
+    {
+      "source": "1792566582325_5682863000673896758_5682863000673896758_10c6b57855db1e484554e1e077dc980c.jpg",
+      "target": "sequence/uc-ops-01.jpg"
+    },
+    {
+      "source": "sq_02.png",
+      "target": "sequence/uc-ops-02.png"
+    },
+    {
+      "source": "sq_03.png",
+      "target": "sequence/uc-ops-03.png"
+    },
+    {
+      "source": "state.png",
+      "target": "state/incident.png"
+    }
+  ],
+  "generatedDiagrams": [
+    {
+      "source": "plantuml/state-redistribution-plan.puml",
+      "target": "state/redistribution-plan.pdf"
+    }
+  ],
+  "modelingNotes": [
+    "Imported teammate diagrams are unchanged raster originals; inclusion is not a claim of a complete semantic audit.",
+    "Sequence UC-OPS-01 still uses MonitoringUI, AuthService and Repository rather than the shared OperationsUI, AccessService and SEMHDataStore names. Editable source is needed to normalize the original cleanly.",
+    "Recommended is listed in the shared status catalog but entry/exit events are not specified by UC-OPS-03. The new state diagram explicitly documents this gap instead of inventing a transition."
+  ]
+}

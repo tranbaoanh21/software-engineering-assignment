@@ -1,0 +1,204 @@
+@startuml
+title UC-CHG-03 - Điều chỉnh lịch sạc ưu tiên
+
+hide footbox
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 130
+skinparam roundcorner 6
+
+' ========================================================
+' CẤU HÌNH MONOCHROME / THANG XÁM ĐỒNG BỘ VỚI UC-CHG-01
+' ========================================================
+skinparam monochrome true
+skinparam ParticipantPadding 10
+skinparam BoxPadding 10
+
+skinparam LifeLineBorderColor #000000
+skinparam LifeLineBackgroundColor #D9D9D9
+skinparam ParticipantBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ActorBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceGroupHeaderBackgroundColor #E0E0E0
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam NoteBackgroundColor #FAFAFA
+skinparam SequenceDividerBorderColor #000000
+skinparam SequenceDividerBackgroundColor #F0F0F0
+skinparam SequenceDividerFontStyle bold
+skinparam ArrowColor #000000
+
+actor "Nhân viên vận hành\n(ACT-OPR)" as ACT
+boundary "Giao diện sạc\n(ChargingUI)" as ChargingUI
+control "Dịch vụ sạc\n(ChargingService)" as ChargingService
+control "Kiểm soát truy cập\n(AccessService)" as AccessService
+database "Kho dữ liệu SEMH\n(SEMHDataStore)" as SEMHDataStore
+
+note over ACT, SEMHDataStore
+  Chỉ ACT-OPR mới có quyền điều chỉnh lịch sạc trong phạm vi được cấp (BR-GEN-02).
+  Chỉ điều chỉnh yêu cầu Pending hoặc Scheduled; giữ nguyên phiên đang Charging (BR-CHG-02).
+end note
+
+== Bước 1: Mở giao diện điều chỉnh và kiểm tra phạm vi phân quyền ==
+ACT -> ChargingUI : openChargingAdjustment(requestIds)
+activate ChargingUI
+
+ChargingUI -> ChargingService : getAdjustmentDetails(requestIds)
+activate ChargingService
+
+ChargingService -> AccessService : verifyAdjustmentAccess(requestIds)
+activate AccessService
+AccessService --> ChargingService : authResult + permittedScope
+deactivate AccessService
+
+break Phiên không hợp lệ / Hết phiên - EF-04
+  ChargingService --> ChargingUI : sessionExpired
+  ChargingUI --> ACT : showLoginRequired()
+end
+
+break Không có quyền hoặc yêu cầu ngoài phạm vi - EF-04 / BR-GEN-02
+  ChargingService --> ChargingUI : accessDenied
+  ChargingUI --> ACT : showAccessDenied()
+end
+
+== Bước 2: Truy xuất thông tin lịch và kiểm tra trạng thái chưa bắt đầu ==
+ChargingService -> SEMHDataStore : getRequestsAndAvailablePoints(permittedScope, requestIds)
+activate SEMHDataStore
+SEMHDataStore --> ChargingService : requestsData + availablePoints + previousSchedule
+deactivate SEMHDataStore
+
+break Yêu cầu đã ở trạng thái Charging - Precondition 2
+  ChargingService --> ChargingUI : cannotAdjustActiveCharging
+  ChargingUI --> ACT : showActiveChargingError()
+end
+
+ChargingService --> ChargingUI : adjustmentFormInfo(requestsData, availablePoints, previousSchedule)
+deactivate ChargingService
+
+ChargingUI --> ACT : showAdjustmentForm()
+deactivate ChargingUI
+
+== Bước 3: Thiết lập phương án điều chỉnh và nhập lý do ==
+loop Cho đến khi lưu thành công hoặc Hủy thao tác (AF-04)
+  
+  alt Hủy thao tác điều chỉnh - AF-04
+    ACT -> ChargingUI : cancelAdjustment()
+    activate ChargingUI
+    ChargingUI --> ACT : closeAdjustmentView()
+    deactivate ChargingUI
+    break Thoát vòng lặp do hủy thao tác
+      note right of ACT: Kết thúc quy trình, không có thay đổi nào.
+    end
+
+  else Xác nhận điều chỉnh lịch sạc - AF-01 / AF-02
+    ACT -> ChargingUI : submitAdjustmentPlan(adjustmentData, reason, clientRequestId)
+    activate ChargingUI
+
+    ChargingUI -> ChargingService : adjustChargingSchedule(adjustmentData, reason, clientRequestId)
+    activate ChargingService
+
+    == Bước 4: Tái xác thực và kiểm tra tính khả thi tại thời điểm lưu ==
+    ChargingService -> AccessService : verifyAdjustmentAccess(requestIds, targetPointIds)
+    activate AccessService
+    AccessService --> ChargingService : authResult
+    deactivate AccessService
+
+    break Phiên hết hạn hoặc mất quyền - EF-04
+      ChargingService --> ChargingUI : authorizationError
+      ChargingUI --> ACT : showAccessDeniedOrLoginRequired()
+    end
+
+    ChargingService -> SEMHDataStore : getLatestRequestAndPointStates(permittedScope, requestIds, targetPointIds)
+    activate SEMHDataStore
+    SEMHDataStore --> ChargingService : latestStatusList
+    deactivate SEMHDataStore
+
+    alt Cổng được chọn vừa gặp sự cố OutOfService - EF-02
+      ChargingService --> ChargingUI : pointOutOfServiceError(validAlternativePoints)
+      ChargingUI --> ACT : showPointErrorAndSuggestAlternatives()
+      note right of ACT: UI giữ form, chờ Actor chọn cổng thay thế và xác nhận lại (Tiếp tục loop)
+    
+    else Cổng hợp lệ
+      ChargingService -> ChargingService : initEffectivePlan(adjustmentData)
+
+      opt Một số yêu cầu đã bắt đầu sạc trong lúc thao tác - AF-03
+        ChargingService -> ChargingService : effectivePlan = excludeStartedRequests(adjustmentData)
+        ChargingService --> ChargingUI : scopeReducedWarning(remainingRequests, excludedRequests)
+        ChargingUI --> ACT : showScopeReducedPrompt()
+
+        alt Nhân viên hủy điều chỉnh - AF-03
+          ACT -> ChargingUI : cancelAdjustment()
+          ChargingUI -> ChargingService : cancelAdjustment()
+          ChargingService --> ChargingUI : adjustmentCancelled
+          ChargingUI --> ACT : showCancelledAndKeepPreviousSchedule()
+
+          break Điều chỉnh đã bị hủy
+            note over ACT, SEMHDataStore
+              Dừng quy trình điều chỉnh; giữ nguyên lịch sạc cũ.
+            end note
+          end
+
+        else Nhân viên xác nhận tiếp tục phạm vi còn lại
+          ACT -> ChargingUI : confirmRemainingAdjustment()
+          ChargingUI -> ChargingService : confirmRemainingAdjustment(effectivePlan)
+        end
+      end
+
+      ChargingService -> ChargingService : validateSchedulePlan(effectivePlan, latestStatusList)
+      note right of ChargingService
+        Kiểm tra BR-CHG-01 (ưu tiên theo mức pin / thời điểm dùng)
+        BR-CHG-02 (không trùng cổng), BR-CHG-03 (thời lượng),
+        BR-CHG-04 (tương thích, Active, hạn hoàn tất, công suất Hub).
+      end note
+
+      alt Vi phạm quy tắc ưu tiên hoặc xung đột cổng - EF-01
+        ChargingService --> ChargingUI : scheduleConflictOrPriorityViolation
+        ChargingUI --> ACT : showConflictErrorAndAllowEdit()
+        note right of ACT: UI giữ form, chờ Actor chỉnh sửa ưu tiên/cổng và xác nhận lại (Tiếp tục loop)
+
+      else Phương án hợp lệ
+        == Bước 5: Tính lại lịch sạc cho các yêu cầu chưa bắt đầu ==
+      ChargingService -> ChargingService : updatedScheduleList = recalculatePendingAndScheduledTimes(effectivePlan)
+      note over ChargingService, SEMHDataStore
+        Dùng công suất cố định và hiệu suất 0.9 cho ước tính.
+        Chỉ phân bổ lịch khả thi; giữ nguyên phiên Charging.
+        Thiếu dữ liệu hoặc không có khoảng đáp ứng: Pending.
+      end note
+        == Bước 6: Lưu nguyên tử và ghi nhận lịch sử kiểm toán (NFR-AUD-01) ==
+      ChargingService -> SEMHDataStore : saveScheduleAdjustmentAtomically(clientRequestId, actorId, previousSchedule, updatedScheduleList, reason)
+        activate SEMHDataStore
+
+        alt Không thể lưu toàn bộ lịch mới - EF-03
+          SEMHDataStore -> SEMHDataStore : rollbackTransaction()
+          SEMHDataStore --> ChargingService : saveFailed
+        else Lưu lịch điều chỉnh thành công
+          SEMHDataStore --> ChargingService : scheduleUpdated
+        end
+        deactivate SEMHDataStore
+
+        == Bước 7: Hiển thị kết quả ==
+        alt Lưu thất bại - EF-03
+          ChargingService --> ChargingUI : saveFailed
+          ChargingUI --> ACT : showSaveErrorAndAllowRetry()
+          note right of ACT: Giữ nguyên clientRequestId để thử lại (Tiếp tục loop)
+          
+        else Lưu thành công
+          ChargingService --> ChargingUI : updateResult(updatedScheduleList, affectedRequests, updatedAt)
+          ChargingUI --> ACT : showAdjustmentSuccess(updateResult)
+          
+          break Hoàn tất điều chỉnh thành công
+            note right of ACT: Cập nhật thành công, kết thúc vòng lặp.
+          end
+        end
+        
+      end
+    end
+    deactivate ChargingService
+    deactivate ChargingUI
+  end
+end
+
+@enduml

@@ -1,0 +1,32 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "sourceUrl": "https://www.figma.com/design/ocv5letVPfN4akHd53aQF2",
+  "exportedOn": "2026-10-23",
+  "reportSection": "SUB-TRIP",
+  "figmaAccess": "Trip content preserved; detached desktop headers replaced with shared Student AppHeader instances and prototype links.",
+  "assets": [
+    {
+      "file": "uc-trip-01.png",
+      "nodeId": "383:477",
+      "screen": "06 Nhận xe và chuyến đi",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    },
+    {
+      "file": "uc-trip-02.png",
+      "nodeId": "383:731",
+      "screen": "06.3 Chuyến đi · Đã hoàn tất",
+      "format": "png",
+      "updatedOn": "2026-10-24"
+    }
+  ],
+  "diagramSourceFolder": "local/phase-2-submissions/Tường Vi - SUB Trip",
+  "diagramCount": 6,
+  "diagramPresentationChanges": "Normalized line endings and removed the Bonus label from the two state-diagram titles. Business semantics and original teammate files are unchanged.",
+  "modelingNotes": [
+    "The supplied Trip state diagram explicitly leaves transitions into/out of Interrupted unspecified.",
+    "The supplied SharedVehicle state diagram explicitly leaves charging transitions and the low-battery waiting state unspecified; integration does not invent new baseline rules."
+  ],
+  "studentNavbarUpdatedOn": "2026-10-24",
+  "studentNavbarNote": "Same six menu labels and order on all signed-in desktop student screens; active item follows current page. Public Hub lookup remains available."
+}

@@ -3,8 +3,11 @@
 \newcommand{\HCMUTAssetPath}{../../../assets}
 \input{../../../assets/latex-template/hcmut-report.sty}
 \input{cover-page}
-\usepackage{pdflscape}
+\usepackage{float}
 \setlength{\emergencystretch}{3em}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.4em}
+\AtBeginEnvironment{longtable}{\small\renewcommand{\arraystretch}{1.15}}
 
 \fancyhead[L]{%
   \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
@@ -18,8 +21,8 @@
 \fancyfoot[L]{\scriptsize\ttfamily Bài tập lớn công nghệ phần mềm\\Niên khoá \AcademicYear}
 \fancyfoot[R]{\scriptsize\ttfamily Trang \thepage/\pageref*{LastPage}}
 
-\setcounter{secnumdepth}{4}
-\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
 \renewcommand{\contentsname}{Mục lục}
 \renewcommand{\listfigurename}{Danh sách hình}
 \renewcommand{\listtablename}{Danh sách bảng}
@@ -27,7 +30,7 @@
 \renewcommand*\l@section[2]{%
   \ifnum\c@tocdepth>\z@
     \addpenalty{\@secpenalty}\addvspace{0.3em \@plus\p@}%
-    \setlength\@tempdima{2.1em}%
+    \setlength\@tempdima{2.8em}%
     \begingroup
       \parindent\z@ \rightskip\@pnumwidth \parfillskip-\@pnumwidth
       \leavevmode\bfseries \advance\leftskip\@tempdima \hskip-\leftskip
@@ -42,33 +45,44 @@
   \@startsection{paragraph}{4}{\z@}{1.0ex \@plus 0.4ex \@minus 0.2ex}{0.35ex \@plus 0.1ex}{\normalfont\normalsize\bfseries}}
 \newcommand{\ReferenceTableOfContents}{%
   \begingroup
-    \setstretch{1.0}\fontsize{9pt}{10.7pt}\selectfont
+    \setlength{\parskip}{0pt}\setstretch{1.0}\fontsize{9pt}{10.7pt}\selectfont
     \section*{\normalfont\Large Mục lục}\vspace{-0.45em}\@starttoc{toc}%
   \endgroup
 }
 \makeatother
 
-\newcommand{\ArtifactBrief}[4]{%
-  \begin{sloppypar}\noindent\textbf{Mã artefact:} \texttt{#2}. #3\end{sloppypar}\medskip
-}
-
-\newcommand{\SubsystemClassDesign}[2]{%
-  \subsection{#1 - #2}
-  \ArtifactBrief{CLASS DIAGRAM}{CD-#1}{Bổ sung lớp biên, lớp ứng dụng, lớp miền và lớp hạ tầng cần thiết; thể hiện quan hệ, multiplicity, visibility và kiểu dữ liệu.}{Class diagram #1 - #2}
-  \noindent Class diagram này là artefact chuẩn của phân hệ. Các use case bên dưới chỉ trích các class/method thực sự tham gia, không sao chép lại toàn bộ diagram.\par
-}
-
-\newcommand{\UseCaseDesign}[5]{%
-  \subsubsection{#1 -- #2}
-  \paragraph{Nguồn thiết kế và truy vết}
-  \begin{sloppypar}Màn hình #3; behavioral diagram \texttt{SEQ-#1}, \texttt{ACT-#1}; requirement và business rule liên quan: #4.\end{sloppypar}
-  \paragraph{Lớp và thành phần tham gia}
-  Liệt kê boundary/controller, application service, domain object/service, repository và external adapter thực sự tham gia \texttt{#1}; nêu trách nhiệm và dependency direction của từng thành phần.
-  \paragraph{Đặc tả phương thức và giao diện}
-  Với mỗi method/API/event, ghi signature, input/output, precondition, postcondition, exception/error, side effect, transaction boundary và mã UC/FR/BR liên quan. Không liệt kê method không xuất hiện trong luồng thiết kế.
-  \paragraph{Kiểm thử liên quan}
-  Ưu tiên kiểm chứng #5. Mỗi test case ghi dữ liệu đầu vào, bước thực hiện, expected result, actual result và evidence khi đã chạy.
-}
+% Placeholder gọn, không đóng khung. Thay nội dung trong ngoặc vuông khi điền bài.
+\newcommand{\ToFill}[1]{\textit{[Bổ sung #1.]}}
+\newcommand{\ReserveSpace}[1]{%
+  \par\begingroup\dimen0=\pagegoal\advance\dimen0 by -\pagetotal
+  \ifdim\dimen0<#1\relax\newpage\fi\endgroup}
+\newcommand{\DesignFigure}[3]{%
+  \begin{figure}[H]\centering
+    \IfFileExists{#1}{\includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{#1}}%
+      {\par\medskip\ToFill{sơ đồ}\par\medskip}%
+    \caption{#2}\label{#3}
+  \end{figure}}
+% Bảng này được gọi nhiều lần cho các phương thức khác nhau, không giới hạn một UC.
+\newcounter{p3detailtable}
+\newenvironment{MethodDescription}[2]{%
+  \stepcounter{p3detailtable}\renewcommand{\theHtable}{detail.\arabic{p3detailtable}}%
+  \ReserveSpace{8\baselineskip}
+  \paragraph{#1}
+  \begin{longtable}{|L{34mm}|L{111mm}|}\hline
+    \textbf{Trường} & \textbf{Đặc tả}\\\hline
+    \endfirsthead
+    \hline\textbf{Trường} & \textbf{Đặc tả (tiếp theo)}\\\hline\endhead
+    Owner và signature & #2\\\hline
+}{\end{longtable}\addtocounter{table}{-1}}
+\newenvironment{ClassDescription}[1]{%
+  \stepcounter{p3detailtable}\renewcommand{\theHtable}{detail.\arabic{p3detailtable}}%
+  \ReserveSpace{6\baselineskip}
+  \paragraph{#1}
+  \begin{longtable}{|L{34mm}|L{111mm}|}\hline
+    \textbf{Trường} & \textbf{Mô tả}\\\hline
+    \endfirsthead
+    \hline\textbf{Trường} & \textbf{Mô tả (tiếp theo)}\\\hline\endhead
+}{\end{longtable}\addtocounter{table}{-1}}
 
 \begin{document}
 \pagenumbering{gobble}
@@ -81,24 +95,24 @@
   \hline
   \rowcolor{gray!15}
   \textbf{STT} & \centering\arraybackslash\textbf{Họ và tên} &
-  \textbf{MSSV} & \centering\arraybackslash\textbf{Nhiệm vụ Submission 3}\\
+  \textbf{MSSV} & \centering\arraybackslash\textbf{Phạm vi kế thừa}\\
   \hline
-  1 & Nguyễn Quốc Trung & 2413707 & Class diagram, method descriptions và test cases của SUB-HUB\\\hline
-  2 & Phan Võ Bảo Trâm & 2413576 & Class diagram, method descriptions và test cases của SUB-RES\\\hline
-  3 & Lê Nguyễn Tường Vi & 2413937 & Class diagram, method descriptions và test cases của SUB-TRIP\\\hline
-  4 & Nguyễn Ngọc Hân & 2410951 & Class diagram, method descriptions và test cases của SUB-PARK\\\hline
-  5 & Trần Thị Hương Giang & 2410845 & Class diagram, method descriptions và test cases của SUB-CHG\\\hline
-  6 & Nguyễn Thị Minh Anh & 2410126 & Class diagram, method descriptions và test cases của SUB-OPS\\\hline
-  7 & Trần Nhật Bảo Anh & 2410155 & Class diagram, method descriptions và test cases của SUB-SIM; tích hợp kiến trúc và báo cáo\\\hline
+  1 & Nguyễn Quốc Trung & 2413707 & SUB-HUB\\\hline
+  2 & Phan Võ Bảo Trâm & 2413576 & SUB-RES\\\hline
+  3 & Lê Nguyễn Tường Vi & 2413937 & SUB-TRIP\\\hline
+  4 & Nguyễn Ngọc Hân & 2410951 & SUB-PARK\\\hline
+  5 & Trần Thị Hương Giang & 2410845 & SUB-CHG\\\hline
+  6 & Nguyễn Thị Minh Anh & 2410126 & SUB-OPS\\\hline
+  7 & Trần Nhật Bảo Anh & 2410155 & SUB-SIM; tổng hợp nội dung chung\\\hline
 \end{tabularx}
 \end{center}
 \normalsize
 
-Mỗi thành viên tiếp tục sở hữu phân hệ đã phụ trách ở hai submission trước. Từng người phải cung cấp lớp, method/interface và test tương ứng với toàn bộ use case của phân hệ; nhóm trưởng hợp nhất các dependency liên phân hệ thành Deployment View, Development/Implementation View và class diagram tổng thể.
+Bảng trên ghi phạm vi kế thừa từ Submission 2 để đối chiếu nội dung. Các quy ước kỹ thuật dùng chung được trình bày trong báo cáo này; phân công thực hiện Submission 3 được chốt sau khi nhóm thống nhất phần việc. Test case là phần bonus.
 
 \clearpage\ReferenceTableOfContents
-\clearpage\listoffigures
-\clearpage\listoftables
+\clearpage\begingroup\setstretch{1.0}\small\listoffigures\endgroup
+\clearpage\begingroup\setstretch{1.0}\small\listoftables\endgroup
 
 \clearpage\input{sections/01-design-baseline}
 \clearpage\input{sections/02-deployment-view}

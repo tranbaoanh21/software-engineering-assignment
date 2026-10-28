@@ -1,0 +1,44 @@
+@startuml
+!pragma layout smetana
+title Biểu đồ trạng thái ParkingSpace
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam nodesep 100
+skinparam ranksep 110
+hide empty description
+top to bottom direction
+
+state Available
+state Reserved
+state Occupied
+state OutOfService
+state InitialCondition <<choice>>
+[*] --> InitialCondition
+InitialCondition -down-> Available : [trống, an toàn]
+InitialCondition --> OutOfService : [có lỗi]
+
+Available -down-> Reserved : reserve
+Reserved -down-> Occupied : checkIn
+Occupied -left-> Available : checkOut [an toàn]
+Reserved -up-> Available : release [an toàn]
+Reserved -right-> OutOfService : fault
+Available -right-> OutOfService : fault
+Occupied -right-> OutOfService : checkOut [có lỗi]
+OutOfService -up-> Available : recovered
+
+legend bottom
+  reserve: đủ điều kiện, không xung đột; UC-PARK-01 tạo lượt đặt Confirmed nguyên tử.
+  checkIn: còn hạn, đúng Sinh viên/xe/chỗ, cảm biến xác nhận; lượt đặt CheckedIn, ghi checkInAt.
+  checkOut: cảm biến xác nhận xe đã rời; lượt đặt Completed, ghi checkOutAt.
+  release: hết hạn chưa check-in (NIFR-PARK-01) hoặc hủy hợp lệ;
+  chuyển lượt đặt Expired/Cancelled và hủy giữ chỗ nguyên tử (BR-PARK-02).
+  Thiếu dữ liệu xác minh: chưa mở Reserved; chỉ cập nhật khi có trạng thái hợp lệ.
+  Nếu đã OutOfService, hết hạn chỉ đổi lượt đặt; không phục hồi chỗ lỗi.
+  fault: sự cố đã được xác nhận; ngừng cấp chỗ, chuyển thông tin cho SUB-OPS.
+  recovered: kỹ thuật xác nhận sửa đạt yêu cầu, chỗ trống, không ràng buộc, dữ liệu tin cậy.
+  Cấp phát mới còn cần chỗ và Hub ServiceStatus.Active (BR-HUB-02).
+endlegend
+@enduml

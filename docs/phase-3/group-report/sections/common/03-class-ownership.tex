@@ -1,0 +1,22 @@
+\subsubsection{Nơi định nghĩa chuẩn của lớp dùng chung}
+Bảng này phân chia trách nhiệm mô hình theo module, không phải phân công thành viên. Phân hệ sử dụng một lớp giữ đúng định nghĩa chuẩn và dẫn về owner; tham chiếu qua ID hoặc object được chọn ở thiết kế chi tiết, không nhân bản lớp theo mỗi UC.
+
+\begin{longtable}{|L{23mm}|L{64mm}|L{52mm}|}
+\caption{Trách nhiệm định nghĩa lớp và dữ liệu}\\\hline
+\textbf{Owner logic} & \textbf{Phạm vi chuẩn} & \textbf{Cộng tác chính}\\\hline
+\endfirsthead
+\hline\textbf{Owner logic} & \textbf{Phạm vi chuẩn} & \textbf{Cộng tác chính}\\\hline\endhead
+GEN & Account, AccessAssignment; xác thực và kiểm tra truy cập. & Tất cả module kiểm tra quyền hiện hành.\\\hline
+HUB & MobilityHub và truy vấn trạng thái Hub/tài nguyên. & Đọc trạng thái từ các owner nghiệp vụ, không tự cấp phát.\\\hline
+TRIP & Vehicle, SharedVehicle; Trip và trạng thái chuyến đi. & RES giữ xe; CHG theo dõi sạc; OPS xử lý lỗi/điều chuyển.\\\hline
+RES & VehicleReservation và thời hạn giữ phương tiện. & Dùng cùng SharedVehicle/Hub; bàn giao sang TRIP.\\\hline
+PARK & PrivateVehicle, ParkingSpace, ParkingReservation. & CHG tham chiếu xe cá nhân; cùng ID/owner, không tạo một lớp xe cá nhân khác.\\\hline
+CHG & ChargingRequest, ChargingSession, ChargingPoint. & Dùng xe, Hub, kế hoạch gần và trạng thái phục vụ liên quan.\\\hline
+OPS & Incident, RedistributionPlan; thao tác quản lý và phục vụ tài nguyên. & Thay đổi tài nguyên qua hợp đồng owner; không tạo bản sao SharedVehicle/Hub.\\\hline
+SIM & SimulationScenario, SimulationRun, Recommendation. & Nhận snapshot theo mốc; lập kế hoạch thật qua OPS.\\\hline
+Dùng chung & OperationContext, OperationResult, OperationError, StateEvent, AuditEntry. & Một định nghĩa kỹ thuật, các module cùng dùng.\\\hline
+\end{longtable}
+
+\texttt{ServiceStatus} gắn với các tài nguyên do owner dữ liệu định nghĩa. OPS điều phối bật/tắt phục vụ, GEN khai báo ban đầu ở Draft; hai luồng dùng cùng đối tượng và cùng quy tắc ghi. Adapter IoT quản lý việc tiếp nhận dữ liệu, không sở hữu một bộ lớp nghiệp vụ thay thế.
+
+Snapshot là bản sao cơ sở gắn với lần chạy và mốc dữ liệu; working copy là dữ liệu làm việc riêng. Cùng kiểu SharedVehicle trong phép tính mô phỏng không có nghĩa cùng identity/kho ghi với xe đang vận hành. Tham chiếu dữ liệu vận hành phải giữ nguồn gốc rõ ràng và không trở thành đường ghi ngược.

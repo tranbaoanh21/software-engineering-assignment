@@ -1,0 +1,112 @@
+{
+  "fileKey": "ocv5letVPfN4akHd53aQF2",
+  "updatedOn": "2026-10-24",
+  "scope": "Signed-in desktop student navigation; public lookup and screen content preserved",
+  "navbarLabels": [
+    "Khám phá Hub",
+    "Hoạt động của tôi",
+    "Lượt đặt xe",
+    "Chuyến đi",
+    "Chỗ đỗ của tôi",
+    "Sạc của tôi"
+  ],
+  "componentId": "14:73",
+  "studentPageId": "1:149",
+  "prototypeAudit": {
+    "screens": 19,
+    "navbarNavigationLinks": 102,
+    "errors": [],
+    "modal": "Cancellation confirmation keeps its modal behavior; background header uses the reservation active state."
+  },
+  "assets": [
+    {
+      "file": "common/ui-student-overview.png",
+      "nodeId": "19:2",
+      "format": "png"
+    },
+    {
+      "file": "uc-hub-01.png",
+      "nodeId": "503:965",
+      "format": "png"
+    },
+    {
+      "file": "uc-hub-02.png",
+      "nodeId": "503:1121",
+      "format": "png"
+    },
+    {
+      "file": "uc-hub-03.png",
+      "nodeId": "503:1178",
+      "format": "png"
+    },
+    {
+      "file": "uc-res-01.png",
+      "nodeId": "19:88",
+      "format": "png"
+    },
+    {
+      "file": "uc-res-02.png",
+      "nodeId": "442:465",
+      "format": "png"
+    },
+    {
+      "file": "uc-trip-01.png",
+      "nodeId": "383:477",
+      "format": "png"
+    },
+    {
+      "file": "uc-trip-02.png",
+      "nodeId": "383:731",
+      "format": "png"
+    },
+    {
+      "file": "uc-park-01.png",
+      "nodeId": "462:795",
+      "format": "png"
+    },
+    {
+      "file": "uc-park-02.png",
+      "nodeId": "19:209",
+      "format": "png"
+    },
+    {
+      "file": "uc-park-03.png",
+      "nodeId": "462:808",
+      "format": "png"
+    },
+    {
+      "file": "uc-chg-01.png",
+      "nodeId": "462:821",
+      "format": "png"
+    },
+    {
+      "file": "uc-chg-02.png",
+      "nodeId": "19:273",
+      "format": "png"
+    }
+  ],
+  "signedInHubSources": [
+    {
+      "nodeId": "503:965",
+      "publicNodeId": "18:232"
+    },
+    {
+      "nodeId": "503:1121",
+      "publicNodeId": "18:284"
+    },
+    {
+      "nodeId": "503:1178",
+      "publicNodeId": "197:2594"
+    },
+    {
+      "nodeId": "503:1272",
+      "publicNodeId": "195:1344"
+    },
+    {
+      "nodeId": "503:1328",
+      "publicNodeId": "195:1537"
+    }
+  ],
+  "note": "Prototype navigation and UI mockups only; no backend, timer, telemetry or business-state execution is implemented."
+}
+
