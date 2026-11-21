@@ -1,0 +1,22 @@
+\documentclass[12pt,a4paper]{article}
+\newcommand{\IndividualName}{Nguyễn Thị Minh Anh}
+\newcommand{\IndividualId}{2410126}
+\newcommand{\IndividualAssignment}{SUB-OPS -- Giám sát và điều phối vận hành; thiết kế lớp, mô tả phương thức cho UC-OPS-01--05 và test case liên quan.}
+\newcommand{\IndividualSharedWork}{Kiến trúc, mô hình lớp, quy ước và hợp đồng tích hợp của nhóm được dùng làm cơ sở cho thiết kế phân hệ.}
+\input{../shared/report-setup}
+% TestCases: TC-OPS-01,TC-OPS-02,TC-OPS-03,TC-OPS-04,TC-OPS-05,TC-COM-01,TC-COM-07,TC-COM-09
+
+\begin{document}
+\MakeIndividualFrontMatter
+\PhaseThreeInput{sections/01-design-baseline}
+\clearpage
+\section{Thiết kế lớp và phương thức}
+\PhaseThreeInput{sections/03-common-class-design}
+\PhaseThreeInput{sections/class-design/06-sub-ops}
+\clearpage
+\section{Hợp đồng tích hợp dùng chung}
+\input{individual-contracts}
+\clearpage
+\section{Test Case (Bonus)}
+\input{individual-test-cases}
+\end{document}

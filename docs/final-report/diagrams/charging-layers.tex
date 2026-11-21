@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage[paperwidth=150mm,paperheight=135mm,margin=2mm]{geometry}
+\usepackage{fontspec}
+\usepackage{tikz}
+\setmainfont{Arial}
+\usetikzlibrary{arrows.meta,shapes.geometric}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1mm,y=-1mm,
+  box/.style={draw,line width=0.5pt,rounded corners=1mm,inner sep=1.5mm},
+  title/.style={font=\bfseries,anchor=west,inner sep=0pt},
+  label edge/.style={font=\small,inner sep=1mm,fill=white},
+  dependency/.style={dashed,line width=0.6pt,-{Stealth[length=2mm]}},
+  realization/.style={dashed,line width=0.6pt,-{Triangle[open,length=3mm,width=2.7mm]}},
+  connection/.style={line width=0.6pt,-{Stealth[length=2mm]}}
+]
+\path[use as bounding box] (0,0) rectangle (146,130);
+\draw[rounded corners=1mm,line width=0.8pt] (1,1) rectangle (145,112);
+\node[title] at (5,6) {SUB-CHG trong SEMH Backend};
+\draw (1,11) -- (145,11);
+
+% Khung package và tab tên tầng. Các đường phụ thuộc đi qua phần thân.
+\draw (7,17) -- (34,17) -- (38,22) -- (72,22)
+  -- (72,39) -- (7,39) -- cycle;
+\node[title] at (8.7,19.6) {Presentation};
+\draw (7,22) -- (38,22);
+
+\draw (7,49) -- (33,49) -- (37,54) -- (139,54)
+  -- (139,73) -- (7,73) -- cycle;
+\node[title] at (8.7,51.6) {Application};
+\draw (7,54) -- (37,54);
+
+\draw (7,84) -- (25,84) -- (29,89) -- (72,89)
+  -- (72,106) -- (7,106) -- cycle;
+\node[title] at (8.7,86.6) {Domain};
+\draw (7,89) -- (29,89);
+
+\draw (78,84) -- (106,84) -- (110,89) -- (139,89)
+  -- (139,106) -- (78,106) -- cycle;
+\node[title] at (79.7,86.6) {Infrastructure};
+\draw (78,89) -- (110,89);
+
+\node[box] (controller) at (41,30) {ChargingController};
+\node[box] (service) at (41,63) {ChargingService};
+\node[box,align=center] (store) at (113,63)
+  {\small «interface»\\IChargingStore};
+\node[box] (policy) at (41,97) {ChargingSchedulingPolicy};
+\node[box] (adapter) at (113,97) {PrismaChargingStore};
+\node[draw,cylinder,shape border rotate=90,aspect=0.22,
+  inner xsep=2mm,inner ysep=1mm,align=center,font=\small] (db) at (113,124)
+  {PostgreSQL\\SEMHDataStore};
+
+\draw[dependency] (controller.south) -- node[label edge,right]{chuyển yêu cầu} (service.north);
+\draw[dependency] (service.east) -- node[label edge,above]{đọc và lưu lịch} (store.west);
+\draw[dependency] (service.south) -- node[label edge,right]{tính khung sạc} (policy.north);
+\draw[realization] (adapter.north) -- node[label edge,right]{hiện thực} (store.south);
+\draw[connection] (adapter.south) -- node[pos=0.17,label edge,right]{qua Prisma} (db.north);
+\end{tikzpicture}
+\end{document}

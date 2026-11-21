@@ -1,0 +1,77 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+top to bottom direction
+skinparam packageStyle folder
+skinparam nodesep 17
+skinparam ranksep 14
+skinparam folderBackgroundColor white
+skinparam ArrowThickness 1.2
+
+!procedure $module($id, $name, $entry, $services, $model, $integrations)
+  !$Presentation = $id + "Presentation"
+  !$Application = $id + "Application"
+  !$Domain = $id + "Domain"
+  !$Infrastructure = $id + "Infrastructure"
+  package "$name" as $id {
+    folder "<b>Presentation</b>\n$entry" as $Presentation
+    folder "<b>Application</b>\n$services" as $Application
+    folder "<b>Domain</b>\n$model" as $Domain
+    folder "<b>Infrastructure</b>\n$integrations" as $Infrastructure
+    $Presentation .right.> $Application
+    $Application .down.> $Domain
+    $Infrastructure .up.> $Application
+    $Presentation -[hidden]down-> $Domain
+    $Domain -[hidden]right-> $Infrastructure
+  }
+!endprocedure
+
+rectangle "«externalSystem»\nMapTileProvider (EXT-MAP)\nOpenStreetMap" as Tiles
+rectangle "«externalSystem»\nStateDataGateway (ACT-DAT / EXT-STATE)\nIoT simulator Node.js" as Source
+
+package "Smart E-Mobility Hub (SEMH)" {
+  package "Website" {
+    rectangle "React · TypeScript · Vite · Leaflet" as Web
+  }
+  package "SEMH Backend · NestJS / TypeScript · Modular monolith" as Backend {
+    rectangle "REST API · Định tuyến HTTP" as API
+    $module(GEN, "GEN · Quản trị dùng chung", "HTTP đăng nhập\nvà quản trị", "AccessService\nAdministrationService", "Account\nAccessAssignment", "Tài khoản và phiên\nqua PrismaDataStore")
+    $module(HUB, "SUB-HUB · Tra cứu Hub", "HTTP tìm / xem\nchi tiết Hub", "HubService\nHubStore", "MobilityHub\nHubAvailabilityPolicy", "Lưu Hub và đọc owner\nqua ResourceStatusReader")
+    $module(RES, "SUB-RES · Lượt đặt xe", "HTTP đặt, xem\nvà hủy lượt đặt", "ReservationService", "VehicleReservation\nReservationPolicy", "Lưu lượt đặt\nvà quét hạn")
+    $module(TRIP, "SUB-TRIP · Chuyến đi", "HTTP nhận, trả xe\nvà xem chuyến đi", "TripService", "SharedVehicle\nTrip", "Lưu xe, chuyến đi\nvà đọc bằng chứng")
+    $module(PARK, "SUB-PARK · Đỗ xe cá nhân", "HTTP đặt chỗ,\ncheck-in / out", "ParkingService\nParkingRepository", "PrivateVehicle\nParkingSpace\nParkingReservation", "Lưu lượt đỗ\nvà đọc bằng chứng")
+    $module(CHG, "SUB-CHG · Quản lý sạc", "ChargingController", "ChargingService\nIChargingStore\nChargingContextPort", "ChargingRequest\nChargingSession\nChargingPoint", "PrismaChargingStore\nOwnerChargingContextAdapter\nChargingScheduler")
+    $module(SIM, "SUB-SIM · Mô phỏng", "HTTP cấu hình,\nchạy và xem kết quả", "SimulationService\nSnapshotProvider", "SimulationScenario\nSimulationRun\nSimulationEngine", "StoreSnapshotProvider\nWorker mô phỏng")
+    $module(OPS, "SUB-OPS · Vận hành", "HTTP giám sát, sự cố\nvà điều chuyển", "OperationsService\nOperationsRepository\nResourceOwnerPort", "Incident\nRedistributionPlan", "Lưu sự cố, kế hoạch\nvà kết nối owner")
+
+    package "Tích hợp dùng chung" {
+      rectangle "StateDataAdapter · AuditService · PrismaDataStore\nProvider NestJS · Giao dịch / chống gửi lặp" as Shared
+    }
+
+    API -[hidden]down-> GENPresentation
+    API -[hidden]down-> HUBPresentation
+    GENApplication -[hidden]right-> HUBPresentation
+    RESApplication .right.> TRIPApplication : giữ / giải phóng xe
+    CHGInfrastructure .up.> PARKApplication : đọc xe cá nhân
+    SIMApplication .right.> OPSApplication : chuẩn bị điều chuyển
+
+    GENDomain -[hidden]down-> RESPresentation
+    HUBDomain -[hidden]down-> TRIPPresentation
+    RESApplication -[hidden]right-> TRIPPresentation
+    RESDomain -[hidden]down-> PARKPresentation
+    TRIPDomain -[hidden]down-> CHGPresentation
+    PARKApplication -[hidden]right-> CHGPresentation
+    PARKDomain -[hidden]down-> SIMPresentation
+    CHGDomain -[hidden]down-> OPSPresentation
+    SIMApplication -[hidden]right-> OPSPresentation
+    SIMInfrastructure -[hidden]down-> Shared
+    OPSDomain -[hidden]down-> Shared
+  }
+  database "PostgreSQL\nSEMHDataStore" as DB
+}
+
+Web .up.> Tiles : tile nền
+Web .down.> API : REST / JSON
+Source .down.> API : gửi StateEvent
+Shared .down.> DB : Prisma
+Tiles -[hidden]right-> Source
+@enduml

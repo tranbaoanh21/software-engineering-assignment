@@ -33,7 +33,7 @@ actor "Quản trị viên\n(ACT-ADM)" as ACT_ADM
 System(SEMH, "SMART E-MOBILITY HUB SYSTEM", "SEMH\nQuản lý trạng thái, đặt và sử dụng tài nguyên;\ngiám sát, điều phối, mô phỏng và quản trị truy cập")
 
 ' Cột phải: các hệ thống ngoài phạm vi.
-System_Ext(EXT_MAP, "Map & Geolocation Service", "EXT-MAP / ACT-MAP")
+System_Ext(EXT_MAP, "Map Tile Provider", "EXT-MAP")
 System_Ext(EXT_STATE, "IoT & State Data Gateway", "EXT-STATE / ACT-DAT")
 
 ' Khóa bố cục ba cột, ưu tiên khổ ngang.
@@ -50,7 +50,7 @@ BiRel_R(ACT_OPR, SEMH, "Cảnh báo, khuyến nghị /\nlệnh vận hành và m
 BiRel_R(ACT_MNT, SEMH, "Thông tin sự cố /\nkết quả xử lý")
 BiRel_R(ACT_ADM, SEMH, "Tài khoản, quyền, danh mục ban đầu /\nkết quả quản trị")
 
-BiRel_R(SEMH, EXT_MAP, "Vị trí, khoảng cách /\nyêu cầu chuẩn hóa và vùng tìm kiếm")
+BiRel_R(SEMH, EXT_MAP, "Yêu cầu tải nền /\nmảnh nền bản đồ")
 Rel_L(EXT_STATE, SEMH, "Trạng thái tài nguyên\nvà sự kiện vận hành")
 
 @enduml

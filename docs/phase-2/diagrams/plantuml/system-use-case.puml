@@ -40,13 +40,13 @@ actor "Quản trị viên\n(ACT-ADM)" as Administrator
 ' =========================================================
 
 rectangle "<<External System>>\nIoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateSource
-rectangle "<<External System>>\nMap & Geolocation Service\n(EXT-MAP / ACT-MAP)" as MapSource
+rectangle "<<External System>>\nMap Tile Provider\n(EXT-MAP)" as MapSource
 
 ' =========================================================
 ' SMART E-MOBILITY HUB SYSTEM
 ' =========================================================
 
-rectangle "SMART E-MOBILITY HUB SYSTEM" {
+rectangle "SMART E-MOBILITY HUB SYSTEM" as SEMH {
 
     package "Dịch vụ di chuyển" {
 
@@ -102,7 +102,8 @@ Administrator --> UC_Administration
 ' =========================================================
 
 UC_Hub --> StateSource : "Trạng thái Hub"
-UC_Hub --> MapSource : "Vị trí và khoảng cách"
+UC_Hub -[hidden]-> MapSource
+SEMH ..> MapSource
 UC_Trip --> StateSource : "Trạng thái bàn giao\nvà trả xe"
 UC_Parking --> StateSource : "Trạng thái\nchỗ đỗ"
 UC_Charging --> StateSource : "Trạng thái sạc"

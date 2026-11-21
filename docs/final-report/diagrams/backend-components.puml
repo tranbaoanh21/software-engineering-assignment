@@ -1,0 +1,32 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+top to bottom direction
+skinparam componentStyle uml2
+skinparam nodesep 33
+skinparam ranksep 31
+
+package "SEMH Backend · NestJS / TypeScript\nModular monolith · GEN và bảy phân hệ" {
+  component "<b>SUB-RES</b>\nLượt đặt xe dùng chung" as RES
+  component "<b>SUB-TRIP</b>\nXe dùng chung và chuyến đi" as TRIP
+  component "<b>SUB-HUB</b>\nDanh mục Hub và tra cứu" as HUB
+  component "<b>SUB-PARK</b>\nXe cá nhân, chỗ đỗ và lượt đặt chỗ" as PARK
+  component "<b>GEN</b>\nTài khoản, phiên, quyền và quản trị" as GEN
+  component "<b>SUB-CHG</b>\nCổng, yêu cầu, lịch và phiên sạc" as CHG
+  component "<b>SUB-SIM</b>\nKịch bản, lần chạy và khuyến nghị" as SIM
+  component "<b>SUB-OPS</b>\nGiám sát, sự cố và điều chuyển" as OPS
+
+  RES .right.> TRIP : giữ / giải phóng xe
+  TRIP .left.> RES : hoàn tất lượt đặt
+  HUB .right.> PARK : đọc trạng thái chỗ đỗ
+  GEN .right.> CHG : tạo cổng sạc Draft
+  SIM .right.> OPS : chuẩn bị đề xuất
+  OPS .up.> CHG : bật/tắt phục vụ cổng
+
+  RES -[hidden]down-> HUB
+  HUB -[hidden]down-> GEN
+  GEN -[hidden]down-> SIM
+  TRIP -[hidden]down-> PARK
+  PARK -[hidden]down-> CHG
+  CHG -[hidden]down-> OPS
+}
+@enduml

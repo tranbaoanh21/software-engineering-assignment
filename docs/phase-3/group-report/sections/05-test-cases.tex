@@ -1,64 +1,148 @@
 \section{Test Case (Bonus)}
+Bộ kiểm thử chức năng gồm 23 ca cho luồng chính của 23 UC và 9 ca kiểm tra rủi ro dùng chung. Các bảng ghi kết quả mong đợi; kết quả thực tế được ghi khi chạy trên bản cài đặt.
 
-\subsection{Phạm vi và môi trường kiểm thử}
-Unit test kiểm tra business rule và transition tại lớp/chính sách miền. Integration test kiểm tra hợp đồng lưu trữ, transaction, cạnh tranh và adapter nguồn ngoài. Test API/luồng đi qua xác thực, phạm vi và kết quả nghiệp vụ; test UI kiểm tra các luồng chính theo mockup đã chốt.
+Dùng DB test, tài khoản demo, đồng hồ điều khiển được và simulator. A/B là hai Hub trong fixture; mặc định tài khoản có phiên/quyền hợp lệ, tài nguyên Active với trạng thái tin cậy. Mỗi biến thể dùng fixture độc lập; đối chiếu response, dữ liệu và audit.
 
-Dữ liệu test tách khỏi dữ liệu chạy demo; mỗi ca có trạng thái đầu và expected result rõ ràng. Thời gian có thể được kiểm soát qua cơ chế đồng hồ cung cấp cho test để kiểm tra trước/đúng/sau expiresAt. Nguồn IoT giả lập cần hỗ trợ bản tin hợp lệ, trùng, tới muộn, sai định dạng và mất kết nối.
+\newenvironment{SystemTestCases}[1]{%
+  \begin{longtable}{|L{23mm}|L{59mm}|L{57mm}|}
+  \caption{#1}\\\hline
+  \textbf{ID} & \textbf{Điều kiện và thao tác} & \textbf{Kết quả mong đợi}\\\hline
+  \endfirsthead
+  \hline\textbf{ID} & \textbf{Điều kiện và thao tác (tiếp)} & \textbf{Kết quả mong đợi}\\\hline\endhead
+}{\end{longtable}}
+\newcommand{\SystemTest}[4]{{\footnotesize\mbox{#1}} & \textbf{#2}\par #3 & #4\\\hline}
 
-Test double phục vụ cô lập logic không thay thế bằng chứng transaction/isolation của cơ chế lưu thực. Test cạnh tranh khởi chạy các yêu cầu qua điểm đồng bộ, đợi hoàn tất rồi kiểm tra cả response, trạng thái tài nguyên và số bản ghi còn hiệu lực. Các ca từ chối kiểm tra không đổi dữ liệu và không lộ thông tin ngoài quyền.
-% Test case là bonus. Thiết kế test không đồng nghĩa đã chạy hoặc đã đạt NFR.
+\ReserveSpace{12\baselineskip}
+\subsection{Các luồng chức năng chính}
+\begin{SystemTestCases}{Kiểm thử quản trị và tra cứu Hub}
+\SystemTest{TC-GEN-01}{UC-GEN-01}
+{ADM tạo tài khoản, sửa tên, khóa rồi mở lại; xem danh sách tài khoản.}
+{Lưu đúng thông tin/version, mật khẩu dạng hash; khóa thu hồi phiên, mở lại không khôi phục phiên cũ. Không lộ thông tin bí mật.}
+\SystemTest{TC-GEN-02}{UC-GEN-02}
+{ADM cấp OPR phạm vi A, thử truy cập A/B, rồi thu hồi quyền.}
+{Chỉ truy cập A khi được cấp; quyền mới có hiệu lực ở yêu cầu tiếp theo. Không thể thu hồi/khóa ADM Active cuối cùng.}
+\SystemTest{TC-GEN-03}{UC-GEN-03}
+{ADM tạo Hub và danh mục xe/chỗ đỗ/cổng sạc; thử ID trùng hoặc Hub cha không có.}
+{Owner tạo Draft, không giả lập trạng thái vật lý. ID/tham chiếu sai bị từ chối, không ghi đè tài nguyên cũ.}
+\SystemTest{TC-HUB-01}{UC-HUB-01}
+{Tìm Hub theo vị trí, bán kính và nhu cầu; thử vùng không có ứng viên.}
+{Danh sách đúng tiêu chí/thứ tự, có khoảng cách và độ mới; không có ứng viên trả rỗng.}
+\SystemTest{TC-HUB-02}{UC-HUB-02}
+{Mở A với xe/chỗ/cổng khác trạng thái; cập nhật IoT hợp lệ rồi làm mới.}
+{Đếm đúng khả dụng, chỉ xe đủ pin từ 30\% và hết ràng buộc được cấp phát. Hiện đúng HubStatus, pin và mốc cập nhật.}
+\SystemTest{TC-HUB-03}{UC-HUB-03}
+{A hết tài nguyên; B trong bán kính còn đáp ứng. Yêu cầu Hub thay thế.}
+{Đề xuất B kèm khoảng cách/lý do, loại chính A; không có ứng viên thì trả rỗng, chưa đặt tài nguyên.}
+\end{SystemTestCases}
 
-\subsection{Đặc tả test case}
-% Lặp bảng này cho từng tình huống; có thể chuyển bảng vào file theo phân hệ khi bổ sung.
-\begin{longtable}{|L{34mm}|L{111mm}|}
-\caption{Đặc tả test case}\\\hline
-\textbf{Trường} & \textbf{Nội dung}\\\hline
-\endfirsthead
-\hline\textbf{Trường} & \textbf{Nội dung (tiếp theo)}\\\hline\endhead
-ID và mục tiêu & \ToFill{TC-[phạm vi]-[số] và hành vi cần kiểm chứng}\\\hline
-Đối tượng kiểm tra & \ToFill{UC/BR/FR/NIFR/NFR và lớp.phương thức}\\\hline
-Trạng thái ban đầu & \ToFill{actor, quyền, tài nguyên và môi trường}\\\hline
-Dữ liệu & \ToFill{input, thời gian, sự kiện ngoài hoặc phản hồi giả lập}\\\hline
-Các bước thực hiện & \ToFill{thứ tự thao tác, cách gửi đồng thời nếu có}\\\hline
-Kết quả mong đợi & \ToFill{response, dữ liệu, audit và hành vi không được xảy ra}\\\hline
-Kết quả thực tế & Chưa thực thi.\\\hline
-\end{longtable}
+\ReserveSpace{7\baselineskip}
+\begin{SystemTestCases}{Kiểm thử đặt xe và chuyến đi}
+\SystemTest{TC-RES-01}{UC-RES-01}
+{STU chưa có lượt giữ, đặt xe Available pin 30\% tại A lúc $t_0$.}
+{Một lượt Confirmed, xe Reserved cùng transaction; expiresAt=$t_0+10$ phút. Không tạo lượt hiệu lực thứ hai cho STU/xe.}
+\SystemTest{TC-RES-02}{UC-RES-02}
+{Chủ lượt Confirmed còn hạn hủy; thử xe đã phát sinh OutOfService.}
+{Lượt Cancelled, gỡ giữ đúng xe; chỉ trả Available khi đủ điều kiện, không ghi đè OutOfService hoặc hủy Fulfilled.}
+\SystemTest{TC-TRIP-01}{UC-TRIP-01}
+{Chủ lượt Confirmed còn hạn nhận đúng xe/Hub, có bằng chứng bàn giao.}
+{Cùng tx: Fulfilled, xe InUse/currentHubId trống và đúng một Trip.InProgress với dữ liệu đầu chuyến.}
+\SystemTest{TC-TRIP-02}{UC-TRIP-02}
+{Xe InUse, Hub B nhận được xe; xác nhận trả an toàn theo simulator.}
+{Trip Completed, lưu Hub/pin/thời điểm cuối và thời lượng; xe về B với trạng thái phù hợp, không mặc định Available.}
+\end{SystemTestCases}
 
-\subsection{Test case theo phạm vi}
-\subsubsection{GEN -- Quản trị và truy cập}
-\ToFill{test xác thực, quyền/phạm vi, khóa tài khoản, thu hồi quyền, Admin cuối cùng và danh mục Draft}
-\subsubsection{SUB-HUB}
-\ToFill{test tìm kiếm, Hub thay thế, dữ liệu mới/cũ/thiếu và dịch vụ ngoài gián đoạn}
-\subsubsection{SUB-RES}
-\ToFill{test cạnh tranh cùng xe, giới hạn lượt đặt, hủy, hết hạn và gửi lặp}
-\subsubsection{SUB-TRIP}
-\ToFill{test điều kiện bàn giao/trả xe, xác nhận vật lý và mất phản hồi}
-\subsubsection{SUB-PARK}
-\ToFill{test giữ chỗ, hết hạn khi phát sinh lỗi và sự kiện cảm biến trùng/tới muộn}
-\subsubsection{SUB-CHG}
-\ToFill{test ưu tiên, tương thích, giới hạn công suất và cổng sạc lỗi}
-\subsubsection{SUB-OPS}
-\ToFill{test sự cố, điều chuyển, thêm/sửa và điều kiện kích hoạt/ngừng phục vụ}
-\subsubsection{SUB-SIM}
-\ToFill{test tham số, snapshot, lần chạy lỗi, kết quả rỗng và cách ly vận hành}
+\ReserveSpace{7\baselineskip}
+\begin{SystemTestCases}{Kiểm thử đỗ xe cá nhân}
+\SystemTest{TC-PARK-01}{UC-PARK-01}
+{STU đặt chỗ Available cho xe cá nhân thuộc mình tại A.}
+{Confirmed/Reserved nguyên tử; hạn giữ không quá 20 phút. Sai chủ xe hoặc chỗ không đủ điều kiện bị từ chối.}
+\SystemTest{TC-PARK-02}{UC-PARK-02}
+{Lượt Confirmed còn hạn, đúng chủ/xe/chỗ và có bằng chứng hiện diện.}
+{Lượt CheckedIn, chỗ Occupied, ghi checkInAt trong cùng transaction.}
+\SystemTest{TC-PARK-03}{UC-PARK-03}
+{Lượt CheckedIn; bằng chứng xác nhận xe đã rời chỗ, sau đó check-out.}
+{Lượt Completed/checkOutAt; chỗ chỉ Available nếu trống/an toàn, có sự cố giữ OutOfService.}
+\end{SystemTestCases}
 
-\subsection{Test case yêu cầu phi chức năng}
-\begin{longtable}{|L{27mm}|L{112mm}|}
-\caption{Thiết kế kiểm tra NFR dùng chung}\\\hline
-\textbf{NFR} & \textbf{Kịch bản và tiêu chí}\\\hline
-\endfirsthead
-\hline\textbf{NFR} & \textbf{Kịch bản và tiêu chí}\\\hline\endhead
-\texttt{NFR-PERF-01} & Ít nhất 20 Hub, 500 xe; 50 người dùng ảo; chạy ít nhất ba lần cùng môi trường. Ghi p95 tra cứu $\leq2$ giây, đặt xe $\leq3$ giây, lỗi hệ thống $<1\%$.\\\hline
-\texttt{NFR-SEC-01} & Kiểm tra đủ bốn vai trò; không phiên, đăng xuất, hết hạn 30 phút không hoạt động; đọc dữ liệu của người khác, Hub ngoài phạm vi, khóa tài khoản/thu hồi quyền và bảo toàn Admin cuối cùng. Mọi từ chối không đổi dữ liệu hoặc làm lộ nội dung bị bảo vệ.\\\hline
-\texttt{NFR-CON-01} & 50 yêu cầu hợp lệ cùng tranh một xe/chỗ; đúng một xác nhận. Thử cấp phát cùng ngừng phục vụ: không có kết quả cả hai cùng thành công mâu thuẫn.\\\hline
-\texttt{NFR-REL-01} & Ngắt nguồn, gửi bản tin sai rồi khôi phục. Giữ dữ liệu hợp lệ cuối, hiển thị cảnh báo cũ và đồng bộ lại trong 60 giây sau khôi phục.\\\hline
-\texttt{NFR-USA-01} & 10 Sinh viên mới thực hiện luồng đặt xe không hỗ trợ; ít nhất 9 hoàn tất, trung vị $\leq60$ giây, luồng chính không quá năm thao tác chọn.\\\hline
-\texttt{NFR-AUD-01} & Chuỗi giao dịch gồm cả nghiệp vụ tài nguyên và quản trị. Đối chiếu audit với trạng thái đã lưu; đủ trường và không sửa được qua chức năng thông thường.\\\hline
-\texttt{NFR-MNT-01} & Kiểm tra tách rule khỏi UI, chạy bộ test logic cốt lõi của MVP và thu statement coverage $\geq80\%$.\\\hline
-\end{longtable}
-Các mã trong bảng thuộc nhóm \texttt{NFR-*} tương ứng của baseline; đây là thiết kế kiểm tra, chưa phải kết quả thực thi.
-% Lưu số liệu thực sau khi có hiện thực; không suy ra đạt NFR từ sơ đồ hoặc fake test.
+\ReserveSpace{7\baselineskip}
+\begin{SystemTestCases}{Kiểm thử sạc}
+\SystemTest{TC-CHG-01}{UC-CHG-01}
+{Xe/cổng tương thích, thông số đủ và có khung giờ hợp lệ; preview rồi đăng ký.}
+{Preview không ghi; xác nhận tạo Scheduled, allocation và một Ready. Thiếu dữ liệu/slot thì Pending kèm lý do; pin tin cậy 100\% bị từ chối.}
+\SystemTest{TC-CHG-02}{UC-CHG-02}
+{Xem lịch/phiên; phát bằng chứng bắt đầu, hoàn tất rồi cổng trống/an toàn.}
+{Hiện trạng thái, pin/độ mới và dự báo hợp lệ. Giờ dự kiến không tự đổi trạng thái; Completed chưa giải phóng cổng nếu chưa hết bindings/bằng chứng.}
+\SystemTest{TC-CHG-03}{UC-CHG-03}
+{OPR đổi thứ tự/cổng cho yêu cầu chưa bắt đầu, có lý do và version hiện hành.}
+{Chỉ đổi lịch chưa chạy, giữ phiên đang sạc; lịch mới không chồng cổng/vượt công suất. Sai version/điều kiện không lưu một phần.}
+\end{SystemTestCases}
 
-\subsection{Kết quả thực thi}
-Chưa thực thi. Khi có hiện thực, mỗi ca bổ sung phiên bản, môi trường, thời điểm chạy, Actual result, Pass/Fail và bằng chứng tương ứng; kết quả đo NFR được lưu theo từng lần chạy.
-% Khi chạy: ghi phiên bản, môi trường, ngày chạy, Actual result, Pass/Fail và evidence.
+\ReserveSpace{7\baselineskip}
+\begin{SystemTestCases}{Kiểm thử vận hành}
+\SystemTest{TC-OPS-01}{UC-OPS-01}
+{Gửi trạng thái làm A thiếu xe, B gần đầy; chạy xử lý/quét bù rồi xem tổng quan.}
+{Số liệu/cảnh báo đúng scope, không trùng cùng tình trạng; dữ liệu cũ có mốc/cảnh báo, không tự tạo kế hoạch.}
+\SystemTest{TC-OPS-02}{UC-OPS-02}
+{OPR hoặc IoT báo lỗi; OPR giao MNT, MNT ghi kết quả, OPR đóng sự cố.}
+{Incident theo vòng đời; kết quả chưa đạt giữ ngoài phục vụ. Chỉ khôi phục khi MNT/owner xác minh an toàn, không tự bật ServiceStatus hoặc tạo Incident trùng.}
+\SystemTest{TC-OPS-03}{UC-OPS-03}
+{OPR lập/sửa Draft A--B, phê duyệt khi khả thi, ghi tiến độ thực tế và hoàn tất.}
+{Đúng vòng đời; phê duyệt không tự chuyển xe. Xe bị giữ/B đầy bị từ chối; Completed cần đối chiếu thực tế, không được hủy Completed.}
+\SystemTest{TC-OPS-04}{UC-OPS-04}
+{OPR thêm và sửa thông tin thiết bị tại Hub được giao; thử ID trùng/patch đổi Hub hoặc telemetry.}
+{Owner tạo Draft/sửa trường được phép; giữ ID, Hub, lịch sử và vật lý. Trùng ID hoặc trường cấm bị từ chối.}
+\SystemTest{TC-OPS-05}{UC-OPS-05}
+{OPR kích hoạt tài nguyên đủ điều kiện rồi ngừng khi không còn ràng buộc.}
+{Chỉ ServiceStatus đổi đúng; không tự hủy nghiệp vụ hoặc biến OutOfService thành Available.}
+\end{SystemTestCases}
+
+\ReserveSpace{7\baselineskip}
+\begin{SystemTestCases}{Kiểm thử mô phỏng}
+\SystemTest{TC-SIM-01}{UC-SIM-01}
+{Lưu nháp, chọn snapshot/bộ nhu cầu, xác nhận chạy và đọc tiến độ tới hoàn tất.}
+{Nháp chưa có run; khi chạy chốt input/modelVersion, tiến độ không giảm. Đủ kết quả mới Completed; lỗi chạy ghi Failed, không công bố kết quả dở.}
+\SystemTest{TC-SIM-02}{UC-SIM-02}
+{Phân tích run Completed, so baseline/kịch bản; mở OPS từ TransferVehicles.}
+{Đúng chênh lệch và evidence; ready=false chưa được kết luận không có đề xuất. Chỉ chuyển input điền trước, chưa tạo/duyệt Plan hoặc chuyển xe thật.}
+\end{SystemTestCases}
+
+\ReserveSpace{10\baselineskip}
+\subsection{Rủi ro và tích hợp dùng chung}
+\begin{SystemTestCases}{Kiểm thử ngoại lệ và nhất quán}
+\SystemTest{TC-COM-01}{Phiên và phân quyền}
+{Đăng nhập đúng/sai, thử đúng hạn 30 phút và sau logout. STU truy cập dữ liệu người khác; OPR ngoài Hub; MNT/ADM gọi quyền vận hành không được cấp.}
+{Chỉ phiên/quyền hiện hành được dùng; sai bị từ chối tại backend, không lộ dữ liệu hoặc đổi nghiệp vụ. ADM không ngầm có quyền OPR/MNT.}
+\SystemTest{TC-COM-02}{Hết hạn và hủy giữ}
+{Điều khiển đồng hồ đến expiresAt của RES/PARK; thử nhận xe/check-in trước và đúng hạn, chạy tác vụ hết hạn lặp hoặc hủy lượt còn hợp lệ.}
+{Đúng hạn không nhận/check-in dù scheduler chưa quét; Expired/Cancelled gỡ giữ một lần và an toàn. Không đổi Fulfilled/CheckedIn hoặc mở lại tài nguyên lỗi.}
+\SystemTest{TC-COM-03}{Hai yêu cầu cạnh tranh}
+{Hai tài khoản STU demo gửi yêu cầu đặt cùng xe hoặc cùng một chỗ bằng hai tác vụ chạy song song trên DB test; fixture chỉ còn một tài nguyên.}
+{Đúng một lượt Confirmed, bên còn lại bị từ chối; không có hai lượt hiệu lực cùng tài nguyên. Đây là kiểm tra cạnh tranh cơ bản, chưa xác minh mức tải 50 yêu cầu.}
+\SystemTest{TC-COM-04}{IoT và gián đoạn nguồn}
+{Gửi bản tin hợp lệ, trùng, cũ, pin sai hoặc khóa nguồn sai; ngắt rồi khôi phục IoT. Thử tile bản đồ lỗi khi API còn hoạt động.}
+{Chỉ bản tin đúng được áp dụng một lần; giữ trạng thái hợp lệ cuối/ServiceStatus khi lỗi. Đồng bộ lại trong 60 giây sau khôi phục; tile lỗi vẫn xem được danh sách Hub.}
+\SystemTest{TC-COM-05}{Thiếu bằng chứng vật lý}
+{Thử nhận/trả xe và check-in/out với sai xe/Hub/chỗ hoặc thiếu bằng chứng hợp lệ.}
+{Không Fulfilled/Completed/CheckedIn trái điều kiện; không tự xác nhận vị trí, giải phóng xe/chỗ hoặc tạo Trip từ yêu cầu sai.}
+\SystemTest{TC-COM-06}{Ưu tiên và giới hạn sạc}
+{Xe 2 kWh, pin 50\%, công suất xe 1 kW/cổng 2 kW; thử hàng đợi ưu tiên/FIFO, cổng lỗi và hai slot vượt hạn mức Hub.}
+{Thời lượng 67 phút với hiệu suất 0,9. High theo pin dưới 20\%/cần dùng trong 60 phút; cùng ưu tiên theo receivedAt/ID. Không chồng cổng/vượt công suất; lỗi cổng tính lại lịch chưa chạy, giữ chiếm dụng thực tế.}
+\SystemTest{TC-COM-07}{Ngừng phục vụ đang bị ràng buộc}
+{Đổi ServiceStatus khi xe Reserved, chỗ Occupied, cổng còn allocation hoặc Hub còn tài nguyên đang dùng; thử cấp phát song song với ngừng phục vụ.}
+{Từ chối khi còn bindings. Không vừa ngừng thành công vừa cấp phát mới còn hiệu lực; bật không thay bước MNT xác minh phục hồi.}
+\SystemTest{TC-COM-08}{Cách ly và biên mô phỏng}
+{Thử thời lượng ngoài 1--240, hệ số ngoài 0--3 hoặc scope sai. Với run hợp lệ, sửa scenario/gửi IoT lúc Running; chạy lại cùng snapshot/input/modelVersion.}
+{Input/scope sai không chạy; run giữ bản sao đã chốt, không ghi tài nguyên thật. Cùng input cho cùng chỉ số; hệ số 0 không sinh nhu cầu mới, không chia cho 0 khi tính tỷ lệ phục vụ.}
+\SystemTest{TC-COM-09}{Gửi lại, version và rollback}
+{Gửi lại cùng requestId/nội dung, đổi nội dung giữ ID, dùng version cũ; gây lỗi ghi DB/audit giữa giữ xe--lưu lượt đặt hoặc hoàn tất lượt--tạo Trip.}
+{Không tác động trùng; ID khác nội dung/version cũ bị từ chối. Lỗi rollback cả RES/TRIP, audit/receipt; không còn xe bị giữ hoặc Trip mới từ transaction thất bại.}
+\end{SystemTestCases}
+
+\ReserveSpace{8\baselineskip}
+\subsection{Kế hoạch kiểm chứng NFR}
+Ngưỡng của Submission 2 được giữ nguyên. Các kiểm chứng dưới đây thực hiện khi có bản cài đặt và công cụ phù hợp; chưa có kết quả đạt/chưa đạt.
+\begin{itemize}
+\item \textbf{NFR-CON-01, NFR-PERF-01:} script tạo 50 yêu cầu đồng thời từ tài khoản demo, không cần 50 người thật. Dùng ít nhất 20 Hub/500 xe, chạy tải ba lần; kiểm một lượt giữ/tài nguyên, p95 tra cứu $\leq2$ giây, đặt xe $\leq3$ giây, lỗi hệ thống $<1\%$. TC-COM-03 không thay kiểm chứng này.
+\item \textbf{NFR-USA-01:} thử luồng tìm Hub--xem xe--đặt xe với 10 người chưa dùng sản phẩm; ít nhất 9 người hoàn thành, trung vị $\leq60$ giây, không quá năm thao tác chọn.
+\item \textbf{NFR-MNT-01:} chạy unit test rule cốt lõi, lưu statement coverage tối thiểu 80\%. NFR-SEC-01, NFR-REL-01 và NFR-AUD-01 được đối chiếu qua các ca quyền, IoT và rollback ở trên.
+\end{itemize}

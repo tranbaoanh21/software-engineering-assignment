@@ -1,0 +1,40 @@
+% Cấu hình nhóm được build.mjs trích nguyên vào thư mục build tạm.
+\makeatletter
+\def\input@path{{../../group-report/}}
+\makeatother
+\input{individual-group-preamble}
+\renewcommand{\HCMUTAssetPath}{../../../assets}
+\renewcommand{\PhaseThreeInput}[1]{\input{../../group-report/#1}}
+\renewcommand{\DesignFigure}[4][0.72\textheight]{%
+  \begin{figure}[H]\centering
+    \IfFileExists{../../group-report/#2}{%
+      \includegraphics[width=\linewidth,height=#1,keepaspectratio]{../../group-report/#2}%
+    }{%
+      \PackageError{individual-report}{Missing diagram: #2}{Restore the group-report asset before compiling.}%
+    }%
+    \caption{#3}\label{#4}
+  \end{figure}}
+
+\renewcommand{\ReportType}{BÁO CÁO CÁ NHÂN}
+\renewcommand{\ProjectSubtitle}{Submission 3 -- Individual Work\\[3mm]\textbf{Sinh viên:} \IndividualName\\\textbf{MSSV:} \IndividualId}
+\renewcommand{\FooterTitle}{Báo cáo cá nhân -- Submission 3}
+\fancyfoot[L]{\scriptsize\ttfamily \FooterTitle\\Niên khoá \AcademicYear}
+\hypersetup{pdftitle={Smart E-Mobility Hub -- Submission 3 -- \IndividualName},pdfauthor={\IndividualName}}
+
+\newcommand{\MakeIndividualFrontMatter}{%
+  \pagenumbering{gobble}
+  \MakeHCMUTCover
+  \section*{Nội dung thực hiện}
+  \noindent\begin{tabularx}{\textwidth}{|>{\bfseries}L{32mm}|Y|}
+    \hline
+    Sinh viên & \IndividualName\ -- \IndividualId\\\hline
+    Phần việc & \IndividualAssignment\\\hline
+    Nội dung chung & \IndividualSharedWork\\\hline
+  \end{tabularx}
+  \ReferenceTableOfContents
+  \clearpage
+  \begingroup\setlength{\parskip}{0pt}\setstretch{1.0}\small
+    \listoffigures\medskip\listoftables
+  \endgroup
+  \clearpage
+}

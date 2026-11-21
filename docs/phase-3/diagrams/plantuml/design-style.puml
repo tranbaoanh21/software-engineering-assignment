@@ -1,0 +1,20 @@
+!pragma layout smetana
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowFontSize 13
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 28
+skinparam ranksep 35
+skinparam classBackgroundColor white
+skinparam componentBackgroundColor white
+skinparam nodeBackgroundColor white
+skinparam artifactBackgroundColor white
+skinparam databaseBackgroundColor white
+skinparam rectangleBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam noteBackgroundColor white
+hide circle

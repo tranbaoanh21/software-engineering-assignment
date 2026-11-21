@@ -1,0 +1,54 @@
+' Một mô hình duy nhất, mỗi lớp xuất hiện một lần.
+' Bố cục báo cáo được cố định tại ../tikz/system-class-overview.tex.
+@startuml
+!include design-style.puml
+top to bottom direction
+hide members
+skinparam nodesep 65
+skinparam ranksep 70
+class Account
+class AccessAssignment
+abstract class Vehicle
+class PrivateVehicle
+class SharedVehicle
+class MobilityHub
+class VehicleReservation
+class Trip
+class ParkingSpace
+class ParkingReservation
+class ChargingPoint
+class ChargingRequest
+class ChargingSession
+class SimulationScenario
+class SimulationRun
+class Recommendation
+class RedistributionPlan
+class Incident
+Vehicle <|-- SharedVehicle
+Vehicle <|-- PrivateVehicle
+Account "1" -- "0..*" AccessAssignment
+Account "1" -- "0..*" PrivateVehicle : chủ xe
+Account "1" -- "0..*" VehicleReservation : sinh viên
+Account "1" -- "0..*" ParkingReservation : sinh viên
+MobilityHub "1" -- "0..*" SharedVehicle : thuộc Hub
+MobilityHub "1" -- "0..*" ParkingSpace
+MobilityHub "1" -- "0..*" ChargingPoint
+SharedVehicle "1" -- "0..*" VehicleReservation
+SharedVehicle "1" -- "0..*" Trip
+VehicleReservation "1" -- "0..1" Trip : bàn giao
+ParkingSpace "1" -- "0..*" ParkingReservation
+PrivateVehicle "1" -- "0..*" ParkingReservation
+Vehicle "1" -- "0..*" ChargingRequest
+ChargingPoint "0..1" -- "0..*" ChargingRequest : phân bổ
+ChargingPoint "1" -- "0..*" ChargingSession
+ChargingRequest "1" -- "0..*" ChargingSession
+SimulationScenario "1" -- "0..*" SimulationRun
+SimulationRun "1" -- "0..*" Recommendation
+Recommendation "0..1" -- "0..*" RedistributionPlan : nguồn đề xuất
+RedistributionPlan -[hidden]down- Incident
+note right of Incident
+  Incident: resourceType / resourceId.
+  Kế hoạch: xe, Hub nguồn / đích.
+  Giữ liên kết lịch sử khi hết hiệu lực.
+end note
+@enduml

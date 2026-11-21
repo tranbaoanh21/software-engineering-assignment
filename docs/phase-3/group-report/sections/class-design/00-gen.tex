@@ -1,41 +1,88 @@
 \clearpage
-\subsection{GEN -- Quản trị và chức năng dùng chung}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Xác thực/đăng xuất và kiểm tra quyền theo FR-GEN-01–03; tài khoản, phân quyền và danh mục ban đầu theo UC-GEN-01–03. Admin không mặc nhiên có quyền vận hành. Khóa/mở tài khoản, thu hồi quyền và bảo toàn Admin hoạt động cuối cùng phải giữ đúng baseline.
+\subsection{GEN -- Quản trị và truy cập}
+\DesignFigure[0.85\textheight]{../diagrams/class/00-gen.pdf}{Thiết kế lớp quản trị và truy cập}{fig:p3-class-00-gen}
 
-\subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/00-gen.pdf}{Class diagram -- GEN}{fig:p3-class-00-gen}
+\subsubsection{Trách nhiệm và dữ liệu}
+AccessService xử lý FR-GEN-01--03. AdministrationService xử lý UC-GEN-01--03; mọi thao tác cần quyền Admin hiện hành. Admin không kế thừa quyền Operator hoặc kỹ thuật. Khóa tài khoản/thu hồi quyền không tự hủy lượt đặt, chuyến đi, phiên sạc hoặc mô phỏng.
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
-
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
-
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- GEN}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\begin{longtable}{|L{34mm}|L{105mm}|}
+\caption{Các lớp GEN}\\\hline
+\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-GEN-01} & Quản lý tài khoản & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-GEN-02} & Quản lý vai trò và phạm vi truy cập & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-GEN-03} & Thiết lập danh mục tài nguyên ban đầu & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline\endhead
+Account & accountId bất biến; username duy nhất sau chuẩn hóa; displayName, passwordHash, status và version. Chỉ Active/Locked; không xóa lịch sử sở hữu.\\\hline
+AccessAssignment & assignmentId, accountId, role, hubIds và version. Role là STU/OPR/MNT/ADM. STU theo ownership; OPR theo Hub được giao; MNT theo công việc được giao, giới hạn thêm bởi Hub; ADM quản trị toàn hệ thống, không được tự nhận quyền vận hành.\\\hline
+Session & sessionId, accountId, tokenHash duy nhất, lastActiveAt, revokedAt tùy chọn và version. Hết hiệu lực khi revokedAt có giá trị, Account bị khóa hoặc đã đủ 30 phút không hoạt động hợp lệ.\\\hline
+AccessService & Xác thực và quyết định truy cập từ dữ liệu hiện hành; không nhận role từ client làm căn cứ quyền.\\\hline
+Administration\allowbreak Service & Quản lý tài khoản, quyền và danh mục Draft; dùng AccessService, adapter DB, AuditService và hợp đồng owner tài nguyên.\\\hline
+SEMHDataStore / PrismaDataStore & SEMHDataStore là hợp đồng lưu trữ; PrismaDataStore hiện thực truy vấn/ghi, che chi tiết SQL. Unique constraint trên username, ID tài nguyên, tokenHash và khóa request. Lưu thay đổi, receipt và audit cùng transaction.\\\hline
+\end{longtable}
+
+\textbf{Input quản trị.} LoginInput gồm username/password; AccountInput gồm username, displayName, initialPassword; AccountPatch chỉ cho phép username/displayName. AccountView trả accountId, username, displayName, status, version. AccountFilter/ResourceFilter hỗ trợ từ khóa, trạng thái, offset và limit (mặc định 20, tối đa 100).
+
+AssignmentChange gồm accountId và danh sách vai trò/phạm vi thay thế; ChangeContext.expectedVersion là version Account. Đổi quyền tăng version Account để khóa cùng thay đổi trạng thái. AccessAssignmentView gồm accountId, accountVersion và assignments. ResourceDraftInput gồm resourceType, resourceId, tên, hubId nếu không phải Hub và cấu hình theo loại (Hub có tọa độ/sức chứa). ResourceRef/ResourceSummary trả định danh, loại, Hub, ServiceStatus và version; không giả lập telemetry. AccountId và RequestId là UUID; AccountStatus dùng enum của baseline.
+
+\subsubsection{Các phương thức truy cập}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức AccessService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả}\\\hline\endhead
+\Sig{+ login(input: LoginInput): SessionView} &
+Chuẩn hóa username, kiểm tra Argon2id và Account.Active; username không tồn tại vẫn kiểm tra hash giả. Thành công tạo phiên/token cookie và CSRF; sai trả 401 chung. HTTP adapter giới hạn lần thử theo tài khoản/IP.\\\hline
+\Sig{+ logout(session: SessionToken): void} &
+Thu hồi phiên, xóa cookie, trả 204; gọi lặp an toàn. Không hủy nghiệp vụ đang chạy; DB lỗi không được báo thu hồi thành công.\\\hline
+\Sig{+ verifyAccess(session: SessionToken, permission: Permission, target: TargetRef): AccessDecision} &
+Kiểm tra hash token, revokedAt, Account.Active, hạn phiên và quyền trên đối tượng thật. STU theo ownership, OPR theo Hub, MNT theo công việc, ADM theo quản trị; hợp lệ cập nhật lastActiveAt và trả phạm vi. Command kiểm tra lại trong transaction.\\\hline
+\end{longtable}
+
+\subsubsection{Các phương thức quản trị}
+Tất cả phương thức dưới thuộc AdministrationService, gọi verifyAccess với quyền tương ứng. Query chỉ đọc dữ liệu được phép, không làm đổi trạng thái nghiệp vụ; response loại passwordHash, tokenHash và thông tin bí mật. Command dùng ChangeContext, transaction và receipt theo Mục~\ref{sec:p3-common-processing}; chỉ trả thành công sau commit.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức đọc dữ liệu quản trị}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả}\\\hline\endhead
+\Sig{+ getAccounts(session: SessionToken, filter: AccountFilter): List<AccountView>} &
+Kiểm tra bộ lọc/phân trang, trả danh sách tài khoản an toàn; không có kết quả trả rỗng.\\\hline
+\Sig{+ getAccessAssignments(session: SessionToken, accountId: AccountId): AccessAssignmentView} &
+Trả quyền/phạm vi hiện hành và version Account; tài khoản chưa có quyền trả danh sách rỗng, không tự cấp role.\\\hline
+\Sig{+ getRegistry(session: SessionToken, filter: ResourceFilter): List<ResourceSummary>} &
+Đọc danh mục qua owner, lọc theo loại/Hub/ServiceStatus; không suy ra Available khi thiếu trạng thái.\\\hline
+\Sig{+ getChangeResult(session: SessionToken, requestId: RequestId): ChangeReceipt} &
+Trả receipt đã commit sau khi kiểm tra quyền trên thao tác/đối tượng; không có trả 404, không chạy lại command.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức thay đổi dữ liệu quản trị}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả}\\\hline\endhead
+\Sig{+ createAccount(session: SessionToken, input: AccountInput, change: ChangeContext): AccountView} &
+Kiểm tra username duy nhất, định dạng/lý do; lưu passwordHash Argon2id. Tạo Active, version 0, chưa cấp role; không lưu/hiển thị lại initialPassword.\\\hline
+\Sig{+ updateAccount(session: SessionToken, id: AccountId, patch: AccountPatch, change: ChangeContext): AccountView} &
+Chỉ sửa trường cho phép khi version khớp, username không trùng; giữ ID, passwordHash, quyền và lịch sử.\\\hline
+\Sig{+ setAccountStatus(session: SessionToken, id: AccountId, status: AccountStatus, change: ChangeContext): AccountView} &
+Khóa/mở tài khoản đúng version và lý do; khóa thu hồi mọi session, mở không khôi phục phiên cũ. Luôn bảo toàn ít nhất một ADM Active có quyền quản trị, kể cả thao tác đồng thời.\\\hline
+\Sig{+ updateAccessAssignments(session: SessionToken, input: AssignmentChange, change: ChangeContext): AccessAssignmentView} &
+Kiểm tra role, Hub/phạm vi và version Account; thay tập quyền nguyên tử, tăng version, bảo toàn ADM cuối. Quyền mới áp dụng từ yêu cầu tiếp theo; ADM không ngầm có quyền OPR/MNT.\\\hline
+\Sig{+ createResourceDraft(session: SessionToken, input: ResourceDraftInput, change: ChangeContext): ResourceRef} &
+ADM gọi ResourceOwnerPort.createDraft trong transaction chung (Bảng~\ref{tab:p3-resource-owner-port}); kiểm tra ID duy nhất, Hub cha và cấu hình. Trả ResourceRef của Draft, không kích hoạt/giả lập telemetry hoặc chuyển Hub của tài nguyên cũ.\\\hline
+\end{longtable}
+
+\subsection{Tiếp nhận trạng thái và audit}
+\DesignFigure{../diagrams/class/shared-services.pdf}{Các lớp tích hợp và audit dùng chung}{fig:p3-shared-services}
+
+StateDataAdapter thuộc SEMH; StateDataGateway là nguồn ngoài ACT-DAT/EXT-STATE. AuditService ghi truy vết, không phải actor. Các lớp dùng hợp đồng owner, không giữ bản sao tài nguyên.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức tích hợp và audit}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline\endhead
+StateDataAdapter\par\Sig{+ ingest(event: StateEvent): IngestResult} &
+Xác thực nguồn; kiểm tra tài nguyên, payload/đơn vị và sequence. Chống lặp sourceId/eventId, bỏ bản tin cũ; gọi owner lưu trạng thái/mốc nguồn trong cùng transaction. Trả Applied/Duplicate/IgnoredStale; không đổi ServiceStatus. DB lỗi không áp dụng một phần.\\\hline
+AuditService\par\Sig{+ append(tx: Transaction, entry: AuditEntry): void} &
+Thêm AuditEntry đầy đủ, bất biến trong transaction caller; lỗi audit rollback nghiệp vụ. Tài khoản DB ứng dụng không được UPDATE/DELETE audit.\\\hline
 \end{longtable}

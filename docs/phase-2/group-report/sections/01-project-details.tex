@@ -163,7 +163,7 @@ Các user story dưới đây gắn giá trị sử dụng với stakeholder nee
   \hline
   US-OPS-03 & Là nhân viên vận hành, tôi muốn lập kế hoạch điều chuyển phương tiện để giảm chênh lệch cung cầu giữa các Hub. & SN-OPR-04 & SUB-OPS\\
   \hline
-  US-SIM-01 & Là nhân viên vận hành, tôi muốn chạy một kịch bản giả định trên ảnh chụp trạng thái mạng lưới để đánh giá tác động mà không làm thay đổi dữ liệu thật. & SN-OPR-06 & SUB-SIM\\
+  US-SIM-01 & Là nhân viên vận hành, tôi muốn chạy một kịch bản giả định trên ảnh chụp trạng thái mạng lưới để đánh giá tác động mà không đổi dữ liệu thật. & SN-OPR-06 & SUB-SIM\\
   \hline
   US-SIM-02 & Là nhân viên vận hành, tôi muốn xem kết quả và khuyến nghị của kịch bản để có thêm cơ sở lựa chọn phương án điều phối. & SN-OPR-06 & SUB-SIM\\
   \hline
@@ -242,7 +242,7 @@ Ranh giới phân chia trách nhiệm phần mềm với hành động vật lý
 \begin{itemize}
   \item \textbf{Phần mềm Smart E-Mobility Hub chịu trách nhiệm:} quản lý tài khoản, quyền và danh mục tài nguyên ban đầu; lưu và cập nhật trạng thái nghiệp vụ; kiểm tra điều kiện; quản lý vòng đời lượt đặt, chuyến đi, yêu cầu sạc, sự cố và kế hoạch điều chuyển; tạo cảnh báo, kết quả mô phỏng và khuyến nghị.
   \item \textbf{Con người chịu trách nhiệm:} lái, nhận, trả, di chuyển, cắm sạc hoặc sửa chữa phương tiện ngoài thực tế; nhân viên vận hành xem xét và quyết định có áp dụng khuyến nghị hay không.
-  \item \textbf{Hệ thống bên ngoài cung cấp:} \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. \textit{Map \& Geolocation Service} (\texttt{EXT-MAP}) chuẩn hóa vị trí, tính khoảng cách và xác định vùng Hub lân cận. Cách thiết bị tạo hoặc truyền dữ liệu và cách dịch vụ bản đồ xây dựng dữ liệu địa lý nằm ngoài phạm vi.
+  \item \textbf{Hệ thống bên ngoài cung cấp:} \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}) gửi trạng thái cảm biến hoặc dữ liệu giả lập về xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành. Nhà cung cấp nền bản đồ (\texttt{EXT-MAP}) cung cấp các mảnh nền bản đồ khu vực ĐHQG-HCM để thư viện Leaflet trong giao diện SEMH hiển thị. Tọa độ Hub được lưu trong SEMH; xác định vùng tìm kiếm và tính khoảng cách thuộc xử lý nội bộ. Cách thiết bị tạo dữ liệu và cách nhà cung cấp xây dựng nền bản đồ nằm ngoài phạm vi.
 \end{itemize}
 
 \noindent\begin{minipage}{\linewidth}
@@ -252,7 +252,7 @@ Ranh giới phân chia trách nhiệm phần mềm với hành động vật lý
   \label{fig:context-diagram}
 \end{minipage}\par\medskip
 
-Đơn vị quản lý Khu đô thị là stakeholder, không có tương tác trực tiếp trong phạm vi hiện tại. Thiết bị được đại diện qua \texttt{ACT-DAT}/\texttt{EXT-STATE}; dịch vụ địa lý qua \texttt{ACT-MAP}/\texttt{EXT-MAP}. Database và service nội bộ không phải actor.
+Đơn vị quản lý Khu đô thị là stakeholder, không có tương tác trực tiếp trong phạm vi hiện tại. Thiết bị được đại diện qua \texttt{ACT-DAT}/\texttt{EXT-STATE}. \texttt{EXT-MAP} là phụ thuộc kỹ thuật cung cấp nền bản đồ, không được mô hình hóa thành actor nghiệp vụ. Leaflet, database và service nội bộ là thành phần của SEMH.
 
 \subsection{Phân rã hệ thống thành bảy phân hệ nghiệp vụ}
 
@@ -298,11 +298,11 @@ Assumption là điều kiện đầu vào được giả định; constraint là
 \subsubsection*{Assumptions}
 
 \noindent\textbf{ASM-GEN-01 -- Có nguồn dữ liệu trạng thái đầu vào.}
-Hệ thống nhận được dữ liệu gần hiện tại về phương tiện, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành từ cảm biến hoặc bộ sinh dữ liệu giả lập. Nếu dữ liệu không sẵn có, các chức năng tra cứu, cảnh báo và mô phỏng phải chuyển sang trạng thái dữ liệu cuối cùng đã biết hoặc báo không đủ dữ liệu.
+Nguồn cảm biến/giả lập cung cấp trạng thái xe, pin, chỗ đỗ, cổng sạc và sự kiện. Khi thiếu nguồn, tra cứu/cảnh báo/mô phỏng dùng trạng thái hợp lệ cuối hoặc báo thiếu dữ liệu.
 
 \medskip
 \noindent\textbf{ASM-GEN-02 -- Mỗi Hub và tài nguyên có định danh duy nhất.}
-Mỗi Mobility Hub, phương tiện, chỗ đỗ và cổng sạc có một mã không trùng trong phạm vi mạng lưới. Giả định này là cơ sở để đặt chỗ, cập nhật trạng thái và truy vết sự cố đúng đối tượng.
+Mỗi Mobility Hub, phương tiện, chỗ đỗ và cổng sạc có một mã không trùng trong phạm vi mạng lưới. Định danh dùng thống nhất khi đặt, cập nhật trạng thái và theo dõi sự cố.
 
 \medskip
 \noindent\textbf{ASM-GEN-03 -- Tài khoản được quản trị tập trung.}
@@ -331,11 +331,11 @@ Nhóm được phép dùng dữ liệu cảm biến thật hoặc dữ liệu m�
 
 \medskip
 \noindent\textbf{CON-GEN-03 -- Hệ thống có tài nguyên dùng chung và thay đổi đồng thời.}
-Các thiết kế ở phase sau phải bảo toàn tính nhất quán khi nhiều actor hoặc sự kiện cùng tác động đến một tài nguyên; không được giả định mọi thao tác luôn xảy ra tuần tự mà không có cạnh tranh.
+Thiết kế phải bảo toàn nhất quán khi nhiều actor/sự kiện cùng tác động một tài nguyên, không giả định thao tác luôn tuần tự.
 
 \medskip
 \noindent\textbf{CON-GEN-04 -- Phạm vi MVP bị giới hạn bởi học kỳ và nguồn lực nhóm.}
-Nhóm có bảy thành viên và phải hoàn thành nhiều submission trong một học kỳ. Vì vậy, sản phẩm demo ưu tiên một tập luồng cốt lõi có chất lượng và khả năng trình diễn tốt thay vì triển khai dàn trải toàn bộ hệ thống mục tiêu.
+Nhóm bảy thành viên hoàn thành trong một học kỳ; MVP ưu tiên các luồng cốt lõi có thể hiện thực và trình diễn.
 
 \medskip
 \noindent\textbf{CON-GEN-05 -- Sản phẩm phải phục vụ truy vết qua nhiều phase.}

@@ -1,40 +1,88 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-RES -- Đặt phương tiện dùng chung}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Kiểm tra quyền, điều kiện phục vụ, trạng thái xe và giới hạn lượt đặt trong cùng quyết định cấp phát. Tác vụ hết hạn theo NIFR-RES-01 không giải phóng xe vô điều kiện khi xe phát sinh lỗi.
+SUB-RES quản lý đặt, hủy và hết hạn lượt đặt phương tiện dùng chung. ReservationService kiểm tra quyền và điều kiện nghiệp vụ, quản lý VehicleReservation, phối hợp TRIP giữ hoặc giải phóng xe theo BR-RES-01--04. GEN quản lý tài khoản; TRIP sở hữu xe và chuyến đi; các module phối hợp qua hợp đồng công khai.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/02-sub-res.pdf}{Class diagram -- SUB-RES}{fig:p3-class-02-sub-res}
+\DesignFigure[0.80\textheight]{../diagrams/class/02-sub-res.png}
+{Class diagram -- SUB-RES}{fig:p3-class-02-sub-res}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả lớp}
 
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-RES}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp và kiểu dữ liệu SUB-RES}\\\hline
+\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-RES-01} & Đặt phương tiện dùng chung & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-RES-02} & Hủy lượt đặt phương tiện & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+Vehicle\allowbreak Reservation & Lượt đặt thuộc một STU, xe và Hub nhận. Pending/Confirmed chiếm hạn mức: tối đa một lượt mỗi STU và mỗi xe, bảo vệ bằng unique constraint. Confirmed có hạn 10 phút; trạng thái kết thúc không mở lại, giữ lịch sử/version.\\\hline
+ReservationPolicy & Kiểm tra BR-RES-01: sinh viên không có lượt giữ hiệu lực; BR-RES-04:
+xe Available, xe/Hub Active, pin $\geq$ 30\%.
+Chỉ xét dữ liệu hợp lệ do service cung cấp; không đọc DB hay sửa dữ liệu.
+BR-RES-02 được kiểm tra và bảo vệ tại service, TRIP và DB.\\\hline
+Reservation\allowbreak Service & Điều phối đặt, hủy, tra cứu, hoàn tất bàn giao và hết hạn lượt đặt;
+kiểm tra quyền qua AccessService đối với yêu cầu sinh viên,
+phối hợp TRIP và AuditService. Command ghi dùng transaction
+Serializable, kiểm tra lại quyền (nếu có phiên), trạng thái, version và ràng buộc. Thay đổi, receipt và audit được lưu nhất quán; hai command fulfill\allowbreak Reservation và
+expireReservation không nhận phiên sinh viên.\\\hline
+Vehicle\allowbreak Reservation\allowbreak Status & Gồm Pending, Confirmed, Fulfilled,
+Cancelled, Expired, Rejected.
+Cho phép Pending chuyển sang Confirmed,
+Cancelled hoặc Rejected; Confirmed chuyển
+sang Fulfilled, Cancelled hoặc Expired.
+Bốn trạng thái sau cùng là trạng thái kết thúc; chỉ
+Pending/Confirmed chiếm hạn mức giữ xe.\\\hline
+RejectReason & Gồm Student\allowbreak Has\allowbreak Active\allowbreak Reservation,
+Vehicle\allowbreak Not\allowbreak Available, ServiceInactive,
+LowBattery. Chỉ lưu khi một yêu cầu bị từ chối do quy tắc
+nghiệp vụ và được ghi nhận ở trạng thái Rejected; lỗi kỹ
+thuật rollback không tạo Rejected.\\\hline
+\end{longtable}
+
+\textbf{Dữ liệu vào/ra.} ReservationInput xác định xe muốn đặt và Hub nhận xe. ReservationView trả reservationId, xe, Hub, trạng thái, các thời điểm liên quan, version và thời gian còn lại tính từ expiresAt; thời gian còn lại không lưu trong entity. ChangeContext, ChangeReceipt và SessionToken theo hợp đồng dữ liệu dùng chung. Các kiểu ReservationId, AccountId, VehicleId, HubId và RequestId dùng UUID; thời gian UTC/ISO-8601, version không âm và tăng sau thay đổi commit.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+Các phương thức công khai ký hiệu +. Phương thức của Vehicle\allowbreak Reservation thay đổi thực thể trong bộ nhớ; Reservation\allowbreak Service phối hợp quyền, dữ liệu xe, lưu trữ và audit. fulfill\allowbreak Reservation là hợp đồng nội bộ được TRIP gọi trong transaction bàn giao; expireReservation do tác vụ nền hoặc luồng kiểm tra hết hạn gọi, không yêu cầu phiên Sinh viên. RES gọi hai phương thức giữ/giải phóng xe của TRIP tại Bảng~\ref{tab:p3-trip-res-contract}. RES kiểm tra version lượt đặt; TRIP đọc và kiểm tra version xe trong cùng transaction, không dùng version lượt đặt thay version xe. Nếu command đang xử lý lượt quá hạn, RES thực hiện nhánh hết hạn trong transaction hiện hành, không gọi lồng một transaction độc lập.
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ReservationService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ createReservation(session: SessionToken, input: ReservationInput, change: ChangeContext): ReservationView} & UC-RES-01: kiểm tra BR-RES-01/02/04, xử lý lượt quá hạn trong transaction hiện hành. Tạo Confirmed, expiresAt sau 10 phút; gọi TripService.reserveVehicleInTx cùng tx. Trả ReservationView sau commit; xung đột trả 409, nguồn không tin cậy trả 503.\\\hline
+\Sig{+ cancelReservation(session: SessionToken, reservationId: ReservationId, change: ChangeContext): ReservationView} & Chủ lượt Pending/Confirmed còn hạn được hủy; chuyển Cancelled và gọi TripService.releaseVehicleInTx cùng tx. Confirmed vừa hết hạn xử lý Expired; Cancelled/Expired trả trạng thái cũ, Fulfilled trả 409. Chỉ mở xe khi đủ điều kiện.\\\hline
+\Sig{+ get\allowbreak Active\allowbreak Reservation(session: SessionToken): ReservationView [0..1]} & Trả tối đa một Pending/Confirmed còn hiệu lực của STU; không có trả rỗng. Confirmed đã quá hạn chờ scheduler không được coi còn hiệu lực.\\\hline
+\Sig{+ getChangeResult(session: SessionToken, requestId: RequestId): ChangeReceipt} & Đọc receipt theo requestId và quyền hiện hành; không có/ngoài phạm vi trả 404. Không thực hiện lại thao tác.\\\hline
+\Sig{+ fulfill\allowbreak Reservation(tx: Transaction, reservationId: ReservationId, studentId: AccountId, vehicleId: VehicleId, hubId: HubId, at: DateTime): void} & TRIP đã xác minh quyền/bàn giao; RES đối chiếu chủ, xe, Hub, Confirmed và $at<expiresAt$. Chuyển Fulfilled, ghi endedAt; cùng tx với xe InUse/Trip.InProgress. Sai điều kiện rollback toàn bộ.\\\hline
+\Sig{+ expireReservation(id: ReservationId, now: DateTime): void} & Scheduler mỗi 30 giây; nếu còn Confirmed và $now\geq expiresAt$, chuyển Expired và gọi releaseVehicleInTx cùng tx. Lượt chưa đến hạn/đã kết thúc không đổi; giữ xe lỗi ngoài cấp phát.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ReservationPolicy}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ checkStudentLimit(existing: Vehicle\allowbreak Reservation [0..1]): void} & BR-RES-01: có Pending/Confirmed hiệu lực thì báo StudentHasActiveReservation; không có thì hợp lệ. Chỉ kiểm tra input, không truy cập DB.\\\hline
+\Sig{+ checkVehicle(vehicleStatus: VehicleStatus, vehicleService: ServiceStatus, hubService: ServiceStatus, batteryPercent: Integer): void} & BR-RES-04: xe Available, xe/Hub Active, pin từ 30\%; sai lần lượt báo VehicleNotAvailable, ServiceInactive hoặc LowBattery. Service xử lý dữ liệu thiếu/không tin cậy và bảo vệ cạnh tranh.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức VehicleReservation}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ confirm(now: DateTime): void} & Pending sang Confirmed; gán confirmedAt=now, expiresAt=now+10 phút. Service giữ xe và lưu cùng transaction.\\\hline
+\Sig{+ reject(reason: RejectReason, now: DateTime): void} & Pending sang Rejected; lưu reason/endedAt. Chỉ ghi từ chối nghiệp vụ, không dùng thay lỗi kỹ thuật đã rollback.\\\hline
+\Sig{+ cancel(now: DateTime): void} & Pending/Confirmed sang Cancelled, lưu endedAt; service kiểm tra chủ và gỡ giữ xe.\\\hline
+\Sig{+ expire(now: DateTime): void} & Confirmed và $now\geq expiresAt$ mới chuyển Expired, ghi endedAt; service giải phóng xe an toàn.\\\hline
+\Sig{+ fulfill(now: DateTime): void} & Confirmed còn hạn, đã bàn giao hợp lệ mới chuyển Fulfilled và ghi endedAt; service phối hợp xe InUse/Trip trong cùng tx.\\\hline
 \end{longtable}

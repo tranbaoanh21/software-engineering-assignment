@@ -1,0 +1,78 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+skinparam defaultFontSize 16
+skinparam ArrowFontSize 15
+skinparam SequenceLifeLineBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+hide footbox
+
+actor "OPR" as OPR
+participant "OPS\nOperationsService" as OPS
+participant "TRIP\nTripService" as TRIP
+participant "HUB\nHubService" as HUB
+
+note over OPR,HUB
+  Kế hoạch đã Approved. OPR thao tác trong UC-OPS-03.
+end note
+OPR -> OPS : recordRedistributionProgress(..., bắt đầu)
+activate OPS
+group Kiểm tra và bắt đầu trong cùng giao dịch
+  OPS -> TRIP : readHubFleetInTx(tx, nguồn)
+  activate TRIP
+  TRIP --> OPS : Xe nguồn và ràng buộc
+  deactivate TRIP
+  OPS -> HUB : readHubStateInTx(tx, đích)
+  activate HUB
+  HUB --> OPS : Trạng thái và sức chứa Hub đích
+  deactivate HUB
+  break Xe bị giữ hoặc Hub đích hết chỗ
+    OPS --> OPR : Giữ Approved, báo lý do
+  end
+  OPS -> HUB : holdArrivalCapacityInTx(tx, planId, đích, xe)
+  activate HUB
+  HUB --> OPS : Đã giữ sức chứa
+  deactivate HUB
+  OPS -> TRIP : bindVehicleTransferInTx(tx, planId, xe, nguồn)
+  activate TRIP
+  TRIP --> OPS : Xe đã bị chặn cấp phát
+  deactivate TRIP
+  OPS -> OPS : Ghi InProgress
+end
+OPS --> OPR : Plan.InProgress
+deactivate OPS
+
+OPR -> OPS : recordRedistributionProgress(..., xác nhận rời nguồn)
+activate OPS
+OPS -> TRIP : confirmVehicleDepartureInTx(tx, planId, evidence)
+activate TRIP
+TRIP --> OPS : Xóa currentHubId sau khi xe rời nguồn
+deactivate TRIP
+OPS -> HUB : requestStatusRefresh(nguồn) sau commit
+activate HUB
+HUB --> OPS : Đã tiếp nhận yêu cầu
+deactivate HUB
+OPS --> OPR : Đã ghi nhận xe rời nguồn
+deactivate OPS
+
+loop Với từng xe đã bàn giao tại Hub thực tế
+  OPR -> OPS : recordRedistributionProgress(..., xác nhận đến)
+  activate OPS
+  group Cập nhật phương tiện, sức chứa và kế hoạch cùng giao dịch
+    OPS -> TRIP : confirmVehicleArrivalInTx(tx, planId, evidence)
+    activate TRIP
+    TRIP --> OPS : Vị trí mới và gỡ ràng buộc điều chuyển
+    deactivate TRIP
+    OPS -> HUB : settleArrivalCapacityInTx(tx, planId, evidence)
+    activate HUB
+    HUB --> OPS : Đã đối chiếu sức chứa
+    deactivate HUB
+    OPS -> OPS : Ghi tiến độ, chuyển Completed khi đủ xe tại đích
+  end
+  OPS -> HUB : requestStatusRefresh(hubId) sau commit
+  activate HUB
+  HUB --> OPS : Đã tiếp nhận yêu cầu
+  deactivate HUB
+  OPS --> OPR : Tiến độ theo từng xe đã xác nhận
+  deactivate OPS
+end
+@enduml

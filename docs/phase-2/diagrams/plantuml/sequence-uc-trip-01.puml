@@ -11,6 +11,9 @@ skinparam sequence {
   ParticipantBackgroundColor white
   ParticipantBorderColor black
   LifeLineBorderColor black
+  LifeLineBackgroundColor white
+  ActivationBorderColor black
+  ActivationBackgroundColor white
   GroupBackgroundColor white
   GroupBodyBackgroundColor white
   GroupBorderColor black
@@ -33,9 +36,13 @@ participant "IoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateDataGatewa
 
 == Bước 1: Mở lượt đặt, kiểm tra quyền ==
 Student -> TripUI : openPickup()
+activate TripUI
 TripUI -> TripService : openPickup()
+activate TripService
 TripService -> AccessService : authorize()
+activate AccessService
 AccessService --> TripService : accessResult
+deactivate AccessService
 break Phiên / quyền không hợp lệ - EF-04
   TripService --> TripUI : accessDenied()
   TripUI --> Student : Đăng nhập lại / từ chối truy cập
@@ -45,17 +52,24 @@ note over TripService, SEMHDataStore
   Không tự gửi lại yêu cầu sau đăng nhập.
 end note
 TripService -> SEMHDataStore : getVehicleReservation()
+activate SEMHDataStore
 SEMHDataStore --> TripService : reservation
+deactivate SEMHDataStore
 TripService --> TripUI : pickupDetails()
+deactivate TripService
 
 == Bước 2-3: Xác định xe ==
 TripUI --> Student : Hiển thị xe; yêu cầu quét / nhập mã
+deactivate TripUI
 alt Quét mã được
   Student -> TripUI : scanVehicleCode()
 else Nhập mã xe thủ công - AF-01
   Student -> TripUI : enterVehicleCode()
 end
+' Hai cách nhập hội tụ về cùng một lượt xử lý của TripUI.
+activate TripUI
 TripUI -> TripService : confirmPickup()
+activate TripService
 ref over TripService, AccessService
   Kiểm tra quyền như bước 1
   Thất bại: EF-04; dừng yêu cầu
@@ -63,12 +77,16 @@ end ref
 
 == Bước 4: Kiểm tra lượt đặt và xe ==
 TripService -> SEMHDataStore : getPickupContext()
+activate SEMHDataStore
 SEMHDataStore --> TripService : reservation, vehicle, existingTrip
+deactivate SEMHDataStore
 break Đã có Trip - chống tạo trùng
   TripService --> TripUI : existingTripDetails()
   TripUI --> Student : Hiển thị Trip hiện có
 end
 TripService -> TripService : validatePickup()
+activate TripService
+deactivate TripService
 break Lượt đặt hết hạn - AF-02
   TripService --> TripUI : reservationExpired()
   TripUI --> Student : Báo Expired; tra cứu xe khác
@@ -84,7 +102,9 @@ end
 
 == Bước 5: Xác nhận bàn giao ==
 TripService -> StateDataGateway : awaitHandoverConfirmation()
+activate StateDataGateway
 StateDataGateway --> TripService : handoverEvidence / timeout
+deactivate StateDataGateway
 break Xe lỗi trước bàn giao - AF-04
   ref over TripService, SEMHDataStore
     SUB-OPS: Xử lý sự cố, ngừng cấp phát xe
@@ -99,8 +119,11 @@ end
 
 == Bước 6-7: Tạo Trip, lưu thông tin đầu chuyến ==
 TripService -> TripService : buildStartSnapshot()
+activate TripService
+deactivate TripService
 critical Kiểm tra lại và cập nhật nguyên tử
   TripService -> SEMHDataStore : startTripAtomically()
+  activate SEMHDataStore
   note right of SEMHDataStore
     Kiểm tra hiệu lực; chống trùng Trip.
     VehicleReservation -> Fulfilled
@@ -110,6 +133,7 @@ critical Kiểm tra lại và cập nhật nguyên tử
     Commit / rollback toàn bộ.
   end note
   SEMHDataStore --> TripService : pickupResult
+  deactivate SEMHDataStore
 end
 break Cập nhật thất bại - EF-02
   TripService --> TripUI : pickupNotCompleted()
@@ -117,20 +141,32 @@ break Cập nhật thất bại - EF-02
 end
 
 == Bước 8: Hiển thị chuyến đi ==
-alt Nhận được phản hồi
-  TripService --> TripUI : tripStarted()
+' Server đã xử lý xong dù phản hồi có thể không đến giao diện.
+TripService --> TripUI : tripStarted()
+deactivate TripService
+opt Nhận được phản hồi
   TripUI --> Student : Báo bắt đầu; hiển thị Trip.InProgress
-else Mất phản hồi - EF-03
+end
+' Kết thúc lượt cũ khi nhận phản hồi hoặc hết thời gian chờ.
+' Đặt ngoài opt để mọi nhánh đều đóng thanh trước khi mở yêu cầu mới.
+deactivate TripUI
+opt Mất phản hồi; Sinh viên yêu cầu xem lại - EF-03
   Student -> TripUI : reopenPickupStatus()
+  activate TripUI
   TripUI -> TripService : getTripByReservation()
+  activate TripService
   ref over TripService, AccessService
     Kiểm tra quyền như bước 1
     Thất bại: EF-04; dừng yêu cầu
   end ref
   TripService -> SEMHDataStore : findTripByReservation()
+  activate SEMHDataStore
   SEMHDataStore --> TripService : existingTrip / notFound
+  deactivate SEMHDataStore
   TripService --> TripUI : currentPickupState
+  deactivate TripService
   TripUI --> Student : Hiển thị Trip; chưa có thì xác nhận lại
+  deactivate TripUI
   note over TripUI, SEMHDataStore
     Chỉ đọc lại; không tự gửi confirmPickup.
     Tối đa một Trip / VehicleReservation.

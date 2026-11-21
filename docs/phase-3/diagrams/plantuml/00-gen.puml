@@ -1,0 +1,50 @@
+@startuml
+!include design-style.puml
+top to bottom direction
+class AccessService <<applicationService>> {
+ + login(input: LoginInput): SessionView
+ + logout(session: SessionToken): void
+ + verifyAccess(session: SessionToken,\n  permission: Permission,\n  target: TargetRef): AccessDecision
+}
+class AdministrationService <<applicationService>> {
+ + getAccounts(session: SessionToken,\n  filter: AccountFilter): List<AccountView>
+ + createAccount(session: SessionToken,\n  input: AccountInput,\n  change: ChangeContext): AccountView
+ + updateAccount(session: SessionToken,\n  id: AccountId,\n  patch: AccountPatch,\n  change: ChangeContext): AccountView
+ + setAccountStatus(session: SessionToken,\n  id: AccountId,\n  status: AccountStatus,\n  change: ChangeContext): AccountView
+ + getAccessAssignments(session: SessionToken,\n  accountId: AccountId): AccessAssignmentView
+ + updateAccessAssignments(session: SessionToken,\n  input: AssignmentChange,\n  change: ChangeContext): AccessAssignmentView
+ + getRegistry(session: SessionToken,\n  filter: ResourceFilter): List<ResourceSummary>
+ + createResourceDraft(session: SessionToken,\n  input: ResourceDraftInput,\n  change: ChangeContext): ResourceRef
+ + getChangeResult(session: SessionToken,\n  requestId: RequestId): ChangeReceipt
+}
+class Account <<entity>> {
+ - accountId: AccountId
+ - username: String
+ - displayName: String
+ - passwordHash: String
+ - status: AccountStatus
+ - version: Integer
+}
+class Session <<technical>> {
+ - sessionId: Identifier
+ - tokenHash: String
+ - lastActiveAt: DateTime
+ - revokedAt: DateTime [0..1]
+ - version: Integer
+}
+class AccessAssignment <<entity>> {
+ - assignmentId: Identifier
+ - role: Role
+ - hubIds: List<HubId>
+ - version: Integer
+}
+interface SEMHDataStore <<storeContract>>
+class AuditService <<sharedService>>
+AdministrationService ..> AccessService : kiểm tra quyền
+AccessService ..> SEMHDataStore
+AdministrationService ..> SEMHDataStore
+AdministrationService ..> AuditService
+AccessService ..> Account
+Account "1" -- "0..*" Session
+Account "1" -- "0..*" AccessAssignment
+@enduml

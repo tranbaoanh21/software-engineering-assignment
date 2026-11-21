@@ -1,40 +1,105 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-TRIP -- Quản lý chuyến đi}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Xác nhận bàn giao và trả xe dựa trên bằng chứng hợp lệ từ thiết bị. SharedVehicle được định nghĩa chuẩn tại phạm vi này; các phân hệ khác tham chiếu cùng lớp. Trip.Completed không mặc nhiên khiến xe Available.
+SUB-TRIP quản lý chuyến đi từ khi Sinh viên nhận phương tiện đã đặt đến khi trả xe an toàn tại Hub. Vehicle, SharedVehicle và Trip lưu dữ liệu phương tiện/chuyến đi; TripService điều phối bàn giao và trả xe dựa trên bằng chứng trạng thái hợp lệ. Trip.Completed không tự làm xe Available; trạng thái phục vụ và điều kiện an toàn vẫn được kiểm tra.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/03-sub-trip.pdf}{Class diagram -- SUB-TRIP}{fig:p3-class-03-sub-trip}
+\DesignFigure[0.80\textheight]{../diagrams/class/03-sub-trip.pdf}
+{Class diagram -- SUB-TRIP}{fig:p3-class-03-sub-trip}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
-
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-TRIP}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả lớp}
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp của SUB-TRIP}\\\hline
+\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-TRIP-01} & Nhận phương tiện đã đặt & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-TRIP-02} & Trả phương tiện và kết thúc chuyến đi & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+Vehicle & Entity trừu tượng, cung cấp vehicleId cho SharedVehicle kế thừa. ID duy nhất, bất biến; không tạo đối tượng trực tiếp từ lớp này.\\\hline
+SharedVehicle & Entity quản lý status, serviceStatus, batteryPercent, currentHubId tùy chọn và version. Pin thuộc 0--100; tối đa một Hub hiện tại, không đồng thời phục vụ nhiều Trip đang diễn ra. Các thao tác nhận xe, áp dụng kết quả trả và đưa xe lỗi ra khỏi phục vụ được lưu qua owner TRIP.\\\hline
+Trip & Mỗi Trip thuộc đúng một lượt đặt, STU và xe; mỗi lượt tối đa một Trip. Dữ liệu đầu chuyến bất biến; Completed cần dữ liệu cuối hợp lệ, thời lượng không âm và khớp thời điểm.\\\hline
+TripService & Application service xử lý nhận/trả xe, tra cứu Trip, giữ/giải phóng xe cho RES và hợp đồng quản lý SharedVehicle cho GEN/OPS. Kiểm tra phiên/quyền qua AccessService, phối hợp ReservationService và HubService. Sử dụng bằng chứng bàn giao/trả xe đã được StateDataAdapter tiếp nhận và lưu. Trip, lượt đặt, xe và audit được cập nhật nhất quán theo thao tác.\\\hline
+TripView & DTO trả tripId, vehicleId, startHubId/endHubId, startedAt/endedAt, startBatteryPercent/endBatteryPercent, durationSeconds và status. Phản ánh dữ liệu đã lưu, không thực hiện cập nhật; dữ liệu cuối chuyến có thể chưa có khi InProgress.\\\hline
+TripEndData & DTO gồm endHubId, endedAt, endBatteryPercent, endVehicleStatus và durationSeconds; mọi trường bắt buộc. Pin thuộc 0--100, thời lượng không âm; đối chiếu với bằng chứng trả xe và thời điểm bắt đầu trước khi áp dụng đồng nhất cho Trip/SharedVehicle.\\\hline
+VehicleReservation & Tham chiếu từ RES; mỗi Trip gắn đúng một lượt đặt, mỗi lượt đặt phát sinh tối đa một Trip.\\\hline
+MobilityHub & Tham chiếu từ HUB; Trip có đúng một Hub xuất phát và tối đa một Hub đích, SharedVehicle có tối đa một Hub hiện tại.\\\hline
+Account & Tham chiếu từ GEN; mỗi Trip thuộc đúng một tài khoản Sinh viên, tài khoản có thể liên kết nhiều Trip.\\\hline
+\end{longtable}
+
+\ReserveSpace{7\baselineskip}
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các kiểu liệt kê của SUB-TRIP}\\\hline
+\textbf{Kiểu} & \textbf{Giá trị và ý nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Kiểu} & \textbf{Giá trị và ý nghĩa (tiếp)}\\\hline\endhead
+TripStatus & InProgress: đang diễn ra; Completed: đã hoàn tất; Interrupted: bị gián đoạn.\\\hline
+VehicleStatus & Available: sẵn sàng; Reserved: đã đặt; InUse: đang sử dụng; Charging: đang sạc; OutOfService: ngoài phục vụ.\\\hline
+ServiceStatus & Draft: bản nháp; Active: đang phục vụ; Inactive: ngừng phục vụ. Tách biệt với trạng thái vận hành của xe.\\\hline
+\end{longtable}
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+Các phương thức công khai ký hiệu \texttt{+}; phương thức InTx chỉ được module nội bộ gọi, không phải endpoint cho client. Phương thức entity thay đổi đối tượng; TripService điều phối lưu trữ và giao dịch theo cơ chế chung. Identifier, HubId và AccountId dùng UUID; Void là kiểu không trả giá trị. ChangeContext chứa requestId, reason, expectedVersion theo hợp đồng chung.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức của TripService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ confirmPickup(session: SessionToken, reservationId: Identifier, vehicleId: Identifier, change: ChangeContext): TripView} &
+UC-TRIP-01: đúng chủ, xe/Hub, Confirmed còn hạn và có bằng chứng bàn giao. Cùng tx gọi RES.fulfillReservation, markInUse và tạo Trip.InProgress với dữ liệu đầu chuyến. Unique reservationId ngăn Trip trùng; gọi lại chỉ trả Trip khớp quyền/thông tin.\\\hline
+\Sig{+ confirmReturn(session: SessionToken, tripId: Identifier, hubId: HubId, change: ChangeContext): TripView} &
+UC-TRIP-02: đúng chủ, Trip.InProgress/xe InUse; Hub nhận được xe và có bằng chứng trả an toàn. Lập TripEndData, gọi complete/applyReturnResult cùng tx. Giữ dữ liệu đầu, không mặc định xe Available; gọi lại không ghi đè kết quả cuối.\\\hline
+\Sig{+ getTripByReservation(session: SessionToken, reservationId: Identifier): TripView [0..1]} &
+Đọc tối đa một Trip theo lượt đặt trong quyền; lượt hợp lệ chưa có Trip trả rỗng. Không tạo Trip hoặc thay đổi dữ liệu.\\\hline
+\end{longtable}
+
+\ReserveSpace{7\baselineskip}
+\paragraph{Hợp đồng giữ xe với SUB-RES}
+RES xác minh chủ sở hữu, khóa/kiểm tra lượt đặt và cung cấp đúng reservationId/vehicleId trong transaction Serializable hiện hành. TRIP giữ trạng thái xe; không tạo bản sao VehicleReservation. Hai phương thức dưới không tự mở transaction, commit hoặc tạo receipt riêng; audit thay đổi xe dùng cùng requestId và chủ thể của command RES.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Hợp đồng RES--TRIP}\label{tab:p3-trip-res-contract}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ reserve\allowbreak Vehicle\allowbreak InTx(tx: Transaction, reservationId: UUID, vehicleId: UUID, hubId: UUID): Void} &
+RES gọi cùng tx khi tạo Confirmed: xe đúng Hub, Active/Available, pin từ 30\%, trạng thái tin cậy, không bị ràng buộc. Chuyển Reserved; cùng lượt gọi lại không giữ trùng, lượt khác/xung đột bị từ chối.\\\hline
+\Sig{+ release\allowbreak Vehicle\allowbreak InTx(tx: Transaction, reservationId: UUID, vehicleId: UUID): Void} &
+RES đã đối chiếu/khóa đúng lượt và xe; chỉ gỡ ràng buộc của lượt đó, không giải phóng xe InUse/lượt khác. Pending chưa giữ hoặc đã gỡ thì không đổi. Chỉ Reserved về Available khi xe/Hub Active, an toàn và hết ràng buộc; giữ OutOfService/thiếu xác minh.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Hợp đồng quản lý xe dùng chung}
+TripService cung cấp ResourceOwnerPort cho loại SHARED\_VEHICLE theo Bảng~\ref{tab:p3-resource-owner-port}. GEN/OPS chỉ gọi qua hợp đồng này; version cập nhật là version SharedVehicle.
+
+\begingroup
+\renewcommand{\theHtable}{owner.trip}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\hline
+\textbf{Phương thức} & \textbf{Điều kiện của SUB-TRIP}\\\hline
+\endfirsthead
+\hline\textbf{Phương thức} & \textbf{Điều kiện của SUB-TRIP (tiếp)}\\\hline\endhead
+getResource, createDraft & Đọc định danh/trạng thái/version; tạo xe Draft dưới Hub đã có, ID duy nhất. Chưa có trạng thái xác nhận thì không đặt Available.\\\hline
+updateMetadata & Chỉ sửa trường cho phép; giữ ID, loại, Hub và lịch sử. Thông số ảnh hưởng cấp phát chỉ đổi khi hết lượt giữ, Trip, phân bổ sạc và ràng buộc điều phối.\\\hline
+checkConstraints, changeServiceStatus & Kích hoạt cần Hub Active, trạng thái xác nhận và không có lỗi cản trở. Ngừng phục vụ cần hết ràng buộc RES/TRIP/CHG/OPS; không tự hủy nghiệp vụ hoặc đổi trạng thái vật lý.\\\hline
+reportFault, applyVerifiedRecovery & Báo lỗi dùng markOutOfService và giữ dữ liệu chuyến đi. Khôi phục cần kết quả kỹ thuật đã xác minh và bằng chứng xe ở Hub, không đang sử dụng hoặc bị ràng buộc; không tự đặt ServiceStatus.Active.\\\hline
+\end{longtable}
+\addtocounter{table}{-1}
+\endgroup
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức miền của Trip và SharedVehicle}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+Trip\par\Sig{+ complete(end: TripEndData): Void} &
+InProgress, dữ liệu cuối đầy đủ; pin 0--100\%, endedAt không trước startedAt, durationSeconds không âm và khớp thời điểm. Gán dữ liệu cuối, chuyển Completed, giữ đầu chuyến; lưu cùng cập nhật xe.\\\hline
+SharedVehicle\par\Sig{+ markInUse(): Void} &
+Reserved, đủ điều kiện và đã bàn giao; chuyển InUse, xóa currentHubId. Lưu cùng lượt Fulfilled và Trip mới.\\\hline
+SharedVehicle\par\Sig{+ applyReturnResult(end: TripEndData): Void} &
+Xe InUse, trả an toàn; gán Hub/pin/trạng thái từ TripEndData hợp lệ. Available chỉ khi đủ điều kiện; lưu cùng Trip.complete.\\\hline
+SharedVehicle\par\Sig{+ markOutOfService(): Void} &
+Có căn cứ sự cố/kỹ thuật thì chuyển OutOfService; đã lỗi thì giữ nguyên. Không đổi pin/Hub, không tự hoàn tất Trip hay xác nhận trả.\\\hline
 \end{longtable}

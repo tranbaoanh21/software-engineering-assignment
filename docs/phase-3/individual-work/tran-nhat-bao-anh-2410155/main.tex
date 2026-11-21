@@ -1,0 +1,23 @@
+\documentclass[12pt,a4paper]{article}
+\newcommand{\IndividualName}{Trần Nhật Bảo Anh}
+\newcommand{\IndividualId}{2410155}
+\newcommand{\IndividualAssignment}{SUB-SIM -- What-if Simulation và khuyến nghị; thiết kế lớp, mô tả phương thức và test case liên quan.}
+\newcommand{\IndividualSharedWork}{Tổng hợp kiến trúc, mô hình lớp và hợp đồng dùng chung; GEN -- Quản trị và truy cập (nội dung chung của nhóm).}
+\input{../shared/report-setup}
+% TestCases: TC-GEN-01,TC-GEN-02,TC-GEN-03,TC-SIM-01,TC-SIM-02,TC-COM-01,TC-COM-02,TC-COM-03,TC-COM-04,TC-COM-05,TC-COM-06,TC-COM-07,TC-COM-08,TC-COM-09
+
+\begin{document}
+\MakeIndividualFrontMatter
+\PhaseThreeInput{sections/01-design-baseline}
+\clearpage
+\section{Thiết kế lớp và phương thức}
+\PhaseThreeInput{sections/03-common-class-design}
+\PhaseThreeInput{sections/class-design/00-gen}
+\PhaseThreeInput{sections/class-design/07-sub-sim}
+\clearpage
+\section{Hợp đồng tích hợp dùng chung}
+\input{individual-contracts}
+\clearpage
+\section{Test Case (Bonus)}
+\input{individual-test-cases}
+\end{document}

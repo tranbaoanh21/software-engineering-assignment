@@ -39,9 +39,9 @@ Ghi tên kèm mã, ví dụ `Sinh viên (ACT-STU)`. `ACT-ADM` là vai trò riên
 | Mã hệ thống / actor | Tên hiển thị | Tên ngắn dùng trong mã sơ đồ |
 | --- | --- | --- |
 | EXT-STATE / ACT-DAT | IoT & State Data Gateway | StateDataGateway |
-| EXT-MAP / ACT-MAP | Map & Geolocation Service | MapService |
+| EXT-MAP | Nhà cung cấp nền bản đồ | MapTileProvider |
 
-`EXT-STATE` và `ACT-DAT` chỉ cùng một bên: mã hệ thống ngoài và mã actor tương ứng. Không vẽ thành hai thành phần khác nhau; tương tự với `EXT-MAP` và `ACT-MAP`.
+`EXT-STATE` và `ACT-DAT` chỉ cùng một bên: mã hệ thống ngoài và mã actor tương ứng. `EXT-MAP` là phụ thuộc kỹ thuật cung cấp nền bản đồ, không có mã actor nghiệp vụ. Leaflet là thư viện bên trong giao diện SEMH; `HubService` xử lý vùng tìm kiếm và khoảng cách từ tọa độ Hub do SEMH quản lý.
 
 ## 3. Đối tượng nghiệp vụ
 
@@ -89,7 +89,8 @@ Tên dùng chung:
 
 - `AccessService`: xử lý xác thực và kiểm tra quyền truy cập theo phân quyền hiện hành; Admin không mặc nhiên có mọi quyền.
 - `SEMHDataStore`: nơi lưu và truy xuất dữ liệu của SEMH.
-- `StateDataGateway`, `MapService`: tên ngắn của hai hệ thống ngoài ở mục 2, không phải service nội bộ.
+- `StateDataGateway`: nguồn dữ liệu trạng thái ngoài, tương ứng `ACT-DAT` / `EXT-STATE`.
+- `MapTileProvider`: nhà cung cấp nền bản đồ ngoài (`EXT-MAP`), phục vụ Leaflet trong giao diện; không thực hiện tra cứu tài nguyên hoặc tính khoảng cách thay SEMH.
 
 Các tên này dùng để đồng bộ mô hình, không bắt buộc tạo một ứng dụng riêng cho mỗi service.
 

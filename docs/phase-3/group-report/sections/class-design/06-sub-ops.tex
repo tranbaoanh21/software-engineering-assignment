@@ -1,43 +1,265 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-OPS -- Giám sát và điều phối vận hành}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Phân biệt quyền Operator và kỹ thuật theo công việc/phạm vi. NIFR-OPS-01/02 có xử lý nội bộ. Thêm/sửa thông tin không ghi đè telemetry hoặc thay thế điều chuyển; bật/tắt phục vụ dùng ServiceStatus và kiểm tra ràng buộc còn hiệu lực.
+SUB-OPS xử lý UC-OPS-01--05 và sở hữu Incident, RedistributionPlan. OperationsService điều phối nghiệp vụ; tài nguyên của HUB, TRIP, PARK và CHG được tham chiếu bằng định danh, thay đổi qua hợp đồng của module sở hữu. MNT xác nhận kết quả kỹ thuật; OPR điều phối, đóng sự cố và quyết định phục vụ theo điều kiện hiện hành.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/06-sub-ops.pdf}{Class diagram -- SUB-OPS}{fig:p3-class-06-sub-ops}
+\DesignFigure[0.70\textheight]{../diagrams/class/06-sub-ops-overview.png}
+{SUB-OPS -- Tổng quan lớp và các hợp đồng tích hợp}{fig:p3-class-06-sub-ops}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
+\clearpage
+\DesignFigure[0.85\textheight]{../diagrams/class/06-sub-ops-domain.png}
+{SUB-OPS -- Chi tiết mô hình miền}{fig:p3-class-06-sub-ops-domain}
 
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-OPS}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\clearpage
+\DesignFigure[0.85\textheight]{../diagrams/class/06-sub-ops-services.png}
+{SUB-OPS -- Dịch vụ ứng dụng và hợp đồng tích hợp}{fig:p3-class-06-sub-ops-services}
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả lớp}
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp nghiệp vụ SUB-OPS}\\\hline
+\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-OPS-01} & Giám sát mạng lưới Mobility Hub & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-OPS-02} & Xử lý sự cố vận hành & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-OPS-03} & Điều phối phương tiện giữa các Hub & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-OPS-04} & Thêm và cập nhật thông tin tài nguyên & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-OPS-05} & Kích hoạt hoặc ngừng phục vụ tài nguyên & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+Operations\allowbreak Service & Điều phối giám sát, sự cố, điều chuyển xe, quản lý thông tin và trạng thái phục vụ. Kiểm tra quyền, dữ liệu, phiên bản; phối hợp giao dịch/audit và thay đổi tài nguyên qua owner.\\\hline
+Incident & incidentId, resourceRef, sourceEventId tùy chọn, title, description, severity, status, technicianId, các mốc thời gian, technicalResult và version. Vòng đời Open $\rightarrow$ Acknowledged $\rightarrow$ InProgress $\rightarrow$ Resolved $\rightarrow$ Closed. Chỉ Resolved khi kết quả kỹ thuật đạt; OPR xác nhận đóng sự cố.\\\hline
+Redistribution\allowbreak Plan & planId, Hub nguồn/đích, vehicleIds, recommendationId tùy chọn, scheduledAt, status, người lập/phê duyệt, tiến độ, lý do hủy và version. Draft $\rightarrow$ Approved $\rightarrow$ InProgress $\rightarrow$ Completed; cho phép Cancelled trước hoàn tất. Phê duyệt cần khả thi, tiến độ đối chiếu thực tế.\\\hline
 \end{longtable}
+
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Kiểu dữ liệu hỗ trợ SUB-OPS}\\\hline
+\textbf{Kiểu} & \textbf{Vai trò và ràng buộc}\\\hline
+\endfirsthead
+\hline\textbf{Kiểu} & \textbf{Vai trò và ràng buộc (tiếp)}\\\hline\endhead
+ResourceRef & Value Object gồm resourceType, resourceId, hubId; xác định tài nguyên và module sở hữu.\\\hline
+TechnicalResult & rootCause, actionTaken, verification, serviceable, verifiedBy và verifiedAt. Kết quả đạt không tự kích hoạt ServiceStatus.\\\hline
+PlanProgress & note, actualVehicleIds, completed và recordedAt. Ghi nhận tiến độ thực tế; không tự đổi vị trí hoặc trạng thái vật lý của xe.\\\hline
+PlanPatch & destinationHubId, vehicleIds, scheduledAt tùy chọn; chỉ áp dụng khi kế hoạch còn Draft.\\\hline
+ChangeContext & requestId, reason, expectedVersion; theo hợp đồng chung để chống lặp, truy vết và kiểm tra cạnh tranh.\\\hline
+IncidentStatus, IncidentSeverity & Trạng thái: Open, Acknowledged, InProgress, Resolved, Closed. Mức độ: Low, Medium, High, Critical.\\\hline
+PlanStatus & Draft, Approved, InProgress, Completed, Cancelled.\\\hline
+ServiceStatus & Draft, Active, Inactive; độc lập với trạng thái vận hành/cảm biến.\\\hline
+ResourceType & HUB, SHARED\_VEHICLE, PRIVATE\_VEHICLE, PARKING\_SPACE, CHARGING\_POINT.\\\hline
+DTO truy vấn & OverviewFilter, NetworkOverview, HubSnapshot, AlertSummary, IncidentView, PlanView, ResourceSummary, ResourceFilter, ConstraintResult.\\\hline
+DTO đầu vào & IncidentInput, PlanInput, ResourceDraftInput, ResourcePatch. SessionToken, Permission, AccessDecision, AtomicCommand, ChangeReceipt và AuditEntry theo hợp đồng chung.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các hợp đồng tích hợp của SUB-OPS}\\\hline
+\textbf{Lớp / interface} & \textbf{Trách nhiệm và ràng buộc}\\\hline
+\endfirsthead
+\hline\textbf{Lớp / interface} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+AccessService & Kiểm tra phiên, quyền và phạm vi Hub; command kiểm tra lại quyền trước commit theo hợp đồng GEN.\\\hline
+Operations\allowbreak QueryPort & Đọc snapshot Hub và cảnh báo mất cân bằng; không thay đổi dữ liệu nghiệp vụ.\\\hline
+ResourceOwner\allowbreak Port & Đọc tài nguyên, tạo Draft, sửa metadata, đổi ServiceStatus và áp dụng kết quả khắc phục qua owner. Không ghi đè telemetry hoặc bỏ qua ràng buộc sử dụng.\\\hline
+Operations\allowbreak Repository & Đọc/lưu Incident và RedistributionPlan; kiểm tra expectedVersion khi cập nhật.\\\hline
+TransactionPort & Command nguyên tử, lưu receipt/audit; tra cứu kết quả bằng requestId.\\\hline
+AuditService & Ghi người thực hiện, hành động, đối tượng, thời điểm, thay đổi và requestId trong giao dịch của caller.\\\hline
+\end{longtable}
+
+\textbf{Ràng buộc chung.} Command kiểm tra quyền, trạng thái và phiên bản trong giao dịch; lỗi rollback toàn bộ thay đổi. Ngừng phục vụ không tự hủy lượt đặt, chuyến đi hoặc phiên sạc. Khôi phục cần xác minh kỹ thuật; điều chuyển ghi nhận quyết định và tiến độ thực tế. Mỗi thay đổi thành công có audit và receipt theo requestId.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+Phương thức miền thay đổi thực thể trong bộ nhớ; OperationsService phối hợp kiểm tra quyền, lưu dữ liệu và audit. Query chỉ đọc trong phạm vi được phép. UUID, DateTime và ChangeContext theo hợp đồng chung; \texttt{+} là public, \texttt{-} là private.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức miền của Incident}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ acknowledge(level: IncidentSeverity, at: DateTime): void} &
+Cần Open và mức độ hợp lệ; chuyển Acknowledged, lưu severity/acknowledgedAt. Sai trạng thái hoặc mức độ bị từ chối.\\\hline
+\Sig{+ assign(technicianId: UUID, dueAt: DateTime): void} &
+Giao hoặc giao lại sự cố đã tiếp nhận, chưa kết thúc; lưu technicianId/dueAt. Từ chối nhân viên hoặc điều kiện không hợp lệ; quyền giao việc kiểm tra tại service.\\\hline
+\Sig{+ startWork(technicianId: UUID): void} &
+Cần Acknowledged và đúng MNT được giao; chuyển InProgress. Chưa phân công hoặc sai người bị từ chối.\\\hline
+\Sig{+ recordTechnicalResult(result: TechnicalResult): void} &
+Cần InProgress, kết quả đầy đủ và người xác minh hợp lệ; lưu technicalResult. Kết quả chưa đạt giữ InProgress.\\\hline
+\Sig{+ resolve(at: DateTime): void} &
+Cần InProgress và technicalResult.serviceable=true; chuyển Resolved, lưu resolvedAt. Chưa xác minh đạt thì giữ trạng thái.\\\hline
+\Sig{+ close(at: DateTime): void} &
+Cần Resolved và OPR xác nhận kết quả; chuyển Closed, lưu closedAt. Không đóng sự cố chưa giải quyết.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức miền của RedistributionPlan}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ revise(patch: PlanPatch): void} &
+Chỉ khi Draft; cập nhật Hub đích, xe hoặc thời gian được cung cấp sau kiểm tra dữ liệu. Đánh giá lại khả thi trước phê duyệt.\\\hline
+\Sig{+ approve(operatorId: UUID, at: DateTime): void} &
+Cần Draft, người phê duyệt có quyền và phương án khả thi; chuyển Approved, lưu approvedBy/approvedAt. Không tự đổi vị trí xe.\\\hline
+\Sig{+ start(at: DateTime): void} &
+Cần Approved và xác nhận bắt đầu điều chuyển thực tế; chuyển InProgress, lưu startedAt. Không tự thực hiện vận chuyển vật lý.\\\hline
+\Sig{+ updateProgress(progress: PlanProgress): void} &
+Cần InProgress, tiến độ hợp lệ và xe thực tế đã đối chiếu; lưu lastProgress, không tự cập nhật vị trí xe.\\\hline
+\Sig{+ complete(progress: PlanProgress, at: DateTime): void} &
+Cần InProgress, progress.completed=true, xe và Hub thực tế đã đối chiếu; chuyển Completed, lưu lastProgress/completedAt. Thiếu điều kiện bị từ chối.\\\hline
+\Sig{+ cancel(reason: String): void} &
+Nhận Draft, Approved hoặc InProgress với lý do không rỗng; chuyển Cancelled, lưu cancellationReason. Không hủy Completed hoặc tự hoàn tác vận chuyển.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{OperationsService -- Giám sát và xử lý sự cố}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ getNetworkOverview(session: SessionToken, filter: OverviewFilter): NetworkOverview} &
+Đọc snapshot/cảnh báo qua OperationsQueryPort trong scope, trả tổng quan; lỗi nguồn không được coi không có cảnh báo.\\\hline
+\Sig{+ getIncident(session: SessionToken, id: UUID): IncidentView} &
+Đọc Incident trong quyền của tài nguyên liên quan; không có/ngoài phạm vi trả lỗi.\\\hline
+\Sig{+ reportIncident(session: SessionToken, input: IncidentInput, ctx: ChangeContext): IncidentView} &
+Kiểm tra dữ liệu/sự cố trùng đang mở; trùng thì liên kết, nếu mới tạo Open và gọi owner.reportFault cùng tx.\\\hline
+\Sig{+ acknowledgeIncident(session: SessionToken, id: UUID, severity: IncidentSeverity, ctx: ChangeContext): IncidentView} &
+Open và severity hợp lệ mới acknowledge; trả IncidentView đã lưu.\\\hline
+\Sig{+ assignIncident(session: SessionToken, id: UUID, technicianId: UUID, dueAt: DateTime, ctx: ChangeContext): IncidentView} &
+OPR giao MNT hợp lệ, dueAt hợp lệ; gọi assign, lưu phân công.\\\hline
+\Sig{+ startIncidentWork(session: SessionToken, id: UUID, ctx: ChangeContext): IncidentView} &
+Đúng MNT đã giao mới startWork sang InProgress.\\\hline
+\Sig{+ submitTechnicalResult(session: SessionToken, id: UUID, result: TechnicalResult, ctx: ChangeContext): IncidentView} &
+Xác minh MNT/kết quả; chưa đạt giữ InProgress và tài nguyên ngoài phục vụ. Đạt thì owner.applyVerifiedRecovery và resolve cùng tx; owner vẫn kiểm bằng chứng/ràng buộc, giữ ServiceStatus.\\\hline
+\Sig{+ closeIncident(session: SessionToken, id: UUID, ctx: ChangeContext): IncidentView} &
+OPR xác nhận sự cố Resolved/kết quả đạt rồi close; không đóng khi chưa đủ điều kiện.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{OperationsService -- Điều chuyển xe}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ prepareRedistribution(session: SessionToken, recommendation: Recommendation): RedistributionDraftInput} &
+TransferVehicles từ SIM và quyền điều phối đúng Hub: trả input cho UC-OPS-03. Chưa tạo/duyệt plan hoặc đổi xe; thao tác sau kiểm lại dữ liệu hiện hành.\\\hline
+\Sig{+ createRedistributionPlan(session: SessionToken, input: PlanInput, ctx: ChangeContext): PlanView} &
+Kiểm tra Hub/xe/input; tạo Draft, liên kết recommendationId nếu từ SIM. Không tự phê duyệt/di chuyển xe.\\\hline
+\Sig{+ updateRedistributionPlan(session: SessionToken, id: UUID, patch: PlanPatch, ctx: ChangeContext): PlanView} &
+Chỉ sửa Draft đúng version, dữ liệu hợp lệ; revise và đánh giá lại khả thi.\\\hline
+\Sig{+ approveRedistributionPlan(session: SessionToken, id: UUID, ctx: ChangeContext): PlanView} &
+Xe đúng Hub nguồn, khả dụng/không bị giữ; Hub đích đủ chỗ mới approve sang Approved. Không đạt giữ Draft.\\\hline
+\Sig{+ recordRedistribution\allowbreak Progress(session: SessionToken, id: UUID, progress: PlanProgress, ctx: ChangeContext): PlanView} &
+Đối chiếu quyền, vòng đời/tiến độ và thực tế; gọi start/updateProgress/complete. Không suy xe đã chuyển từ trạng thái plan.\\\hline
+\Sig{+ cancelRedistributionPlan(session: SessionToken, id: UUID, ctx: ChangeContext): PlanView} &
+Chỉ trạng thái cho phép và có reason mới Cancelled; từ chối Completed, không hoàn tác vận chuyển vật lý.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{OperationsService -- Tài nguyên và trạng thái phục vụ}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ getManagedResources(session: SessionToken, scope: UUID): List<ResourceSummary>} &
+Đọc tài nguyên qua owner theo scope Hub, trả trường được phép xem.\\\hline
+\Sig{+ createResource(session: SessionToken, input: ResourceDraftInput, ctx: ChangeContext): ResourceSummary} &
+Gọi owner.createDraft(tx, input, ctx) cho thiết bị dưới Hub đã có; trùng/sai input bị từ chối, không tự Active/Available.\\\hline
+\Sig{+ updateResource(session: SessionToken, ref: ResourceRef, patch: ResourcePatch, ctx: ChangeContext): ResourceSummary} &
+Gọi owner.updateMetadata(tx, ref, patch, ctx) với trường/version hợp lệ; không ghi đè telemetry.\\\hline
+\Sig{+ getResourceServiceState(session: SessionToken, ref: ResourceRef): ResourceSummary} &
+Đọc ServiceStatus, trạng thái vận hành/bindings từ owner; không ghi.\\\hline
+\Sig{+ setResourceServiceStatus(session: SessionToken, ref: ResourceRef, target: ServiceStatus, ctx: ChangeContext): ResourceSummary} &
+OPR kiểm điều kiện qua owner.checkConstraints trong tx rồi changeServiceStatus; bật cần đủ điều kiện, tắt cần hết bindings. Không hủy nghiệp vụ hoặc đổi OutOfService thành Available.\\\hline
+\Sig{+ getChangeResult(session: SessionToken, requestId: UUID): ChangeReceipt} &
+Đọc receipt theo quyền/ID; chưa có trả lỗi/trạng thái chưa xác định, không chạy lại command.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức private của OperationsService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{- requirePermission(session: SessionToken, permission: Permission, hubId: UUID): void} &
+Gọi GEN.verifyAccess với TargetRef ánh xạ từ Hub; không thay kiểm tra lại quyền trong tx.\\\hline
+\Sig{- validatePlanFeasibility(input: PlanInput): ConstraintResult} &
+Trả đánh giá khả thi Hub/xe/trạng thái/bindings; lúc phê duyệt phải đọc lại trong tx.\\\hline
+\Sig{- validateServiceStatus\allowbreak Change(ref: ResourceRef, target: ServiceStatus): ConstraintResult} &
+Trả điều kiện đổi ServiceStatus theo loại, Hub, Incident/bindings; thiếu dữ liệu tin cậy thì từ chối.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Phương thức các hợp đồng tích hợp}
+Quyền và audit sử dụng định nghĩa chuẩn tại GEN và phần tiếp nhận trạng thái/audit; tham số Hub trong sơ đồ OPS được chuyển thành TargetRef khi gọi AccessService.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Hợp đồng truy cập và đọc dữ liệu vận hành}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+AccessService\par\Sig{+ verifyAccess(session: SessionToken, permission: Permission, target: TargetRef): AccessDecision} &
+Dùng hợp đồng GEN, kiểm phiên/quyền/scope theo TargetRef; trả AccessDecision.\\\hline
+OperationsQueryPort\par\Sig{+ listHubSnapshots(hubIds: List<UUID>): List<HubSnapshot>} &
+Đọc snapshot các Hub; không có trả rỗng, lỗi nguồn phải trả lỗi.\\\hline
+OperationsQueryPort\par\Sig{+ findImbalanceAlerts(hubIds: List<UUID>): List<AlertSummary>} &
+Đọc cảnh báo mất cân bằng/quá tải; không tự tạo plan.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ResourceOwnerPort}\label{tab:p3-resource-owner-port}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ getResource(ref: ResourceRef): ResourceSummary} &
+Đọc metadata/trạng thái/version theo ResourceRef; caller lọc quyền trước khi trả.\\\hline
+\Sig{+ checkConstraints(tx: Transaction, ref: ResourceRef, target: ServiceStatus): ConstraintResult} &
+Đọc Hub, Incident và bindings RES/TRIP/PARK/CHG/OPS trong tx; trả điều kiện/nguyên nhân, không ghi. Query trước đó không thay kiểm tra này.\\\hline
+\Sig{+ createDraft(tx: Transaction, input: ResourceDraftInput, change: ChangeContext): ResourceSummary} &
+Caller xác minh ADM/OPR đúng loại/scope; owner kiểm ID/Hub/cấu hình rồi tạo Draft trong tx. Chưa xác minh vật lý không gán Available.\\\hline
+\Sig{+ updateMetadata(tx: Transaction, ref: ResourceRef, patch: ResourcePatch, change: ChangeContext): ResourceSummary} &
+OPR đúng scope; expectedVersion thuộc tài nguyên đích. Chỉ sửa trường cho phép; giữ ID/loại/Hub/lịch sử/telemetry. Thông số ảnh hưởng cấp phát cần hết bindings.\\\hline
+\Sig{+ changeServiceStatus(tx: Transaction, ref: ResourceRef, target: ServiceStatus, change: ChangeContext): ResourceSummary} &
+OPR đúng scope/version; kiểm điều kiện trong tx, Hub xét cả con. Cùng trạng thái trả hiện hành; không tự hủy nghiệp vụ hoặc đổi vật lý.\\\hline
+\Sig{+ reportFault(tx: Transaction, ref: ResourceRef, incidentId: UUID, change: ChangeContext): ResourceSummary} &
+OPS xác minh người báo và Incident đúng ref; owner loại tài nguyên lỗi khỏi cấp phát, giữ chiếm dụng. Không tạo lại Incident/giả lập IoT.\\\hline
+\Sig{+ applyVerifiedRecovery(tx: Transaction, ref: ResourceRef, incidentId: UUID, result: TechnicalResult, change: ChangeContext): ResourceSummary} &
+OPS xác minh MNT/công việc/kết quả đạt; owner kiểm lại version, bằng chứng an toàn/bindings. Khôi phục cùng Incident, giữ ServiceStatus.\\\hline
+\end{longtable}
+
+Các phương thức có tx là lời gọi nội bộ trong transaction Serializable của application service; không nhận trực tiếp yêu cầu từ client và không tự mở transaction/commit. Caller xác minh lại quyền trong tx, truyền ChangeContext và ghi receipt một lần; audit của các owner cùng requestId/chủ thể. expectedVersion của change chỉ tài nguyên đích, tách biệt version Incident/Plan do OPS kiểm tra. Khi ctx của OPS mang version Incident/Plan, caller lập ChangeContext cho owner từ version tài nguyên vừa đọc trong tx, giữ requestId/reason; không truyền nhầm version. Owner tự đọc/kiểm tra version các tài nguyên liên quan; thiếu dữ liệu hoặc xung đột làm rollback toàn command.
+
+\ReserveSpace{8\baselineskip}
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Ánh xạ ResourceOwnerPort tới module sở hữu}\\\hline
+\textbf{Loại tài nguyên} & \textbf{Owner và API công khai}\\\hline
+\endfirsthead
+\hline\textbf{Loại tài nguyên} & \textbf{Owner và API công khai (tiếp)}\\\hline\endhead
+HUB & HubService: tạo Hub Draft cho GEN; đọc, đổi ServiceStatus và xử lý lỗi/khôi phục Hub. UC-OPS-04 chỉ thêm/sửa thiết bị dưới Hub đã có, không tạo hoặc sửa danh mục Hub.\\\hline
+SHARED\_VEHICLE & TripService: đọc, tạo Draft, sửa metadata, đổi ServiceStatus và xử lý lỗi/khôi phục SharedVehicle. Giữ/giải phóng xe của RES dùng hợp đồng riêng tại Bảng~\ref{tab:p3-trip-res-contract}.\\\hline
+PARKING\_SPACE & ParkingService: quản lý ParkingSpace; kiểm tra cả lượt giữ và xe đang chiếm chỗ. Không can thiệp quyền sở hữu PrivateVehicle.\\\hline
+CHARGING\_POINT & ChargingPointService: ánh xạ tới các phương thức InTx tại Bảng~\ref{tab:p3-charging-point-owner}; giữ nguyên quy tắc lịch, phiên sạc và công suất.\\\hline
+\end{longtable}
+
+PRIVATE\_VEHICLE xác định tham chiếu xe do PARK sở hữu; không thuộc danh mục thiết bị Draft/Active/Inactive mà GEN/OPS tạo hoặc kích hoạt. ResourceType xác định owner, không tự cấp quyền thao tác; loại hoặc thao tác không được hỗ trợ bị từ chối.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức OperationsRepository}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ findIncident(id: UUID): Incident} &
+Đọc Incident/version theo ID; không có hoặc nguồn lỗi trả lỗi.\\\hline
+\Sig{+ listOpenIncidents(hubIds: List<UUID>): List<Incident>} &
+Đọc sự cố chưa kết thúc theo Hub để theo dõi/chống trùng.\\\hline
+\Sig{+ saveIncident(entity: Incident, expectedVersion: Integer): void} &
+Lưu Incident khi version khớp, tăng version; xung đột không ghi đè.\\\hline
+\Sig{+ findPlan(id: UUID): RedistributionPlan} &
+Đọc Plan/trạng thái/version; không có hoặc nguồn lỗi trả lỗi.\\\hline
+\Sig{+ savePlan(entity: RedistributionPlan, expectedVersion: Integer): void} &
+Lưu Plan khi version/transition hợp lệ, tăng version; không đổi xe/Hub.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Hợp đồng giao dịch và audit của SUB-OPS}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+TransactionPort\par\Sig{+ execute(requestId: UUID, operation: AtomicCommand): ChangeReceipt} &
+Thực hiện command/receipt/audit nguyên tử; chống lặp theo requestId và nội dung, trả receipt sau commit.\\\hline
+TransactionPort\par\Sig{+ findReceipt(requestId: UUID): ChangeReceipt} &
+Đọc receipt đã commit; caller kiểm quyền xem, không tự thực hiện lại command.\\\hline
+AuditService\par\Sig{+ recordChange(entry: AuditEntry): void} &
+Dùng tx hiện hành gọi AuditService.append; trường audit theo hợp đồng chung, lỗi rollback command.\\\hline
+\end{longtable}
+
+\textbf{Xử lý lỗi và cạnh tranh.} Xung đột version, điều kiện không đạt hoặc lỗi lưu giữ trạng thái hợp lệ trước đó và trả lỗi theo hợp đồng chung. Mất phản hồi sau command thì tra requestId trước khi thử lại. Thao tác nhiều module kiểm tra ràng buộc và ghi trong cùng giao dịch; query không che lỗi nguồn bằng dữ liệu rỗng.

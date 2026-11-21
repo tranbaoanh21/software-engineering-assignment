@@ -1,7 +1,7 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\HCMUTAssetPath}{../../../assets}
-\input{../../../assets/latex-template/hcmut-report.sty}
+\newcommand{\HCMUTAssetPath}{../../assets}
+\input{../../assets/latex-template/hcmut-report.sty}
 \input{cover-page}
 \input{../../phase-1/shared/use-case-table}
 
@@ -9,11 +9,16 @@
 \newcommand{\PhaseOneDiagramPath}{../../phase-1/diagrams/plantuml/output}
 % Sơ đồ tổng quát cập nhật Admin riêng cho Submission 2.
 \newcommand{\PhaseTwoSystemDiagramPath}{../diagrams/system}
+\newcommand{\PhaseTwoUseCaseDiagramPath}{../diagrams/use-case}
 \newcommand{\UseCaseDiagram}[4]{%
   \par\medskip
   \noindent\begin{minipage}{\textwidth}
     \centering
-    \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseOneDiagramPath/#1}
+    \IfFileExists{\PhaseTwoUseCaseDiagramPath/#1}{%
+      \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseTwoUseCaseDiagramPath/#1}%
+    }{%
+      \includegraphics[width=0.96\textwidth,height=0.52\textheight,keepaspectratio]{\PhaseOneDiagramPath/#1}%
+    }%
     \captionof{figure}{Sơ đồ Use Case #2 -- #3}
     \label{#4}
   \end{minipage}
@@ -31,6 +36,7 @@
 % Thu gọn khoảng cách bảng, không đổi font hoặc kích thước diagram.
 \setlength{\LTpre}{0.4em}
 \setlength{\LTpost}{0.4em}
+\AtBeginEnvironment{longtable}{\small\renewcommand{\arraystretch}{1.1}}
 
 \fancyhead[L]{%
   \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}

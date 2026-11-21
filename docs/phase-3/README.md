@@ -1,58 +1,59 @@
-# Phase 3 - System Design
+# Phase 3 — System Design
 
-Báo cáo Phase 3 là tài liệu thiết kế riêng, chưa ghép lại Phase 1–2. Đầu vào là báo cáo Phase 2 đã chốt: **23 use case, bảy phân hệ, GEN dùng chung và bốn vai trò người dùng**.
+Thiết kế kế thừa 23 UC, bảy phân hệ, GEN và bốn vai trò người dùng từ Submission 2.
 
-- [Khung báo cáo PDF](group-report/output/pdf/phase-3-group-report-outline.pdf)
-- [Nguồn chính](group-report/main.tex)
-- [Kiến thức nền Phase 3](design-guide/output/pdf/phase-3-design-guide.pdf)
-- [Nguồn tài liệu học và cách compile](design-guide/README.md)
+- [Báo cáo Phase 3 riêng — 72 trang](group-report/output/pdf/phase-3-group-report-outline.pdf)
+- [Submission 3 tích hợp Phase 1–3 — 236 trang](group-report/output/pdf/submission-3-integrated-report.pdf) · [Bản LMS — 18,34 MB](group-report/output/pdf/submission-3-integrated-report-lms.pdf)
+- [Nguồn LaTeX Phase 3](group-report/main.tex)
+- [Quy ước thiết kế](design-conventions.md)
+- [Hai biên bản họp Phase 3](../meeting-minutes/phase-3/README.md)
+- [Tài liệu học Phase 3](design-guide/README.md) · [Ôn thiết kế SEMH trong sáu lượt](design-guide/output/pdf/phase-3-study-guide.pdf)
+- [Bàn giao và lệnh biên dịch](../ban-giao.md)
 
-## Bố cục báo cáo
+## Nội dung hiện tại
 
-1. Cơ sở và quyết định kiến trúc.
-2. Deployment View: môi trường, sơ đồ, node/artifact, kết nối, cấu hình và xử lý gián đoạn.
-3. Development/Implementation View: module, phụ thuộc, interface, xử lý nền và cơ chế dùng chung.
-4. Thiết kế lớp và phương thức: sơ đồ tổng thể; GEN và bảy phân hệ. Mỗi phạm vi có class diagram, mô tả lớp, đặc tả phương thức và các UC được hỗ trợ.
-5. Test Case (bonus): chiến lược, đặc tả, từng phạm vi nghiệp vụ, NFR và kết quả khi thực thi.
+1. **Kiến trúc hệ thống:** phương án công nghệ, Deployment View, Development/Implementation View, dữ liệu Hub và cơ chế xử lý dùng chung.
+2. **Thiết kế lớp và phương thức:** mô hình lớp tổng thể, GEN, tích hợp/audit và đủ bảy phân hệ. Nội dung giữ 192 dòng signature trong các bảng phương thức, gồm cả phương thức được nhắc lại giữa các phần.
+3. **Test Case (bonus):** 23 ca luồng chính và 9 ca rủi ro/tích hợp; kiểm tra tranh chấp cơ bản bằng hai tài khoản demo. Các kiểm chứng NFR quy mô lớn nằm trong kế hoạch riêng.
 
-Đã đồng bộ UC-GEN-01/02/03, UC-OPS-04/05; không thêm trạng thái hủy cho SimulationRun. Không dùng các mã SCR tự đặt khác với danh mục màn hình Phase 2.
+Kiến trúc dùng modular monolith + layered architecture; React/TypeScript/Vite, NestJS, PostgreSQL/Prisma và Docker Compose/Nginx. Dữ liệu IoT giả lập đi qua backend vào DB; Leaflet hiển thị bản đồ và tài nguyên từ API. Không có payment, Azure hoặc message broker trong phương án hiện tại.
 
-## Nội dung chung đã điền
+Các bảng test ghi điều kiện, thao tác và kết quả mong đợi; chưa có kết quả thực thi ứng dụng.
 
-Các bảng chung nằm ngay trong báo cáo: 18 đối tượng nghiệp vụ, 14 tập trạng thái, tên UI/service, quy ước UML, kiểu dữ liệu/đơn vị, OperationContext, OperationResult/OperationError, StateEvent/AuditEntry, owner logic của lớp, xử lý nền và cơ chế cạnh tranh/quyền/audit. Các ngưỡng NFR và kịch bản kiểm tra dùng đúng baseline Phase 2 hiện hành.
+Trong bản tích hợp, thiết kế lớp/phương thức nằm ngay sau các UC và state chart của GEN hoặc phân hệ tương ứng. Mô hình lớp và hợp đồng dùng chung đặt trước GEN; kiến trúc và test case đặt cuối. Bản Phase 3 riêng vẫn giữ bố cục chỉ gồm phần thiết kế.
 
-Nguồn dùng chung nằm trong `group-report/sections/common/`; các file này được input trực tiếp vào Phần I và IV, không cần chép lại trong từng phân hệ. Các kiểu kỹ thuật mới là quy ước thiết kế Phase 3, không phải use case hoặc trạng thái nghiệp vụ mới.
+## Nguồn và hình
 
-Công nghệ, runtime, provider map, lưu trữ vật lý, topology và các sơ đồ/phương thức chi tiết còn chờ nhóm lựa chọn và phân công. Tên package/module là quy ước logic, không khóa kiến trúc deploy hoặc stack.
+| Nội dung | Đường dẫn |
+| --- | --- |
+| Kiến trúc | `group-report/sections/` |
+| Test case | [group-report/sections/05-test-cases.tex](group-report/sections/05-test-cases.tex) |
+| GEN và bảy phân hệ | `group-report/sections/class-design/` |
+| Kiểu dữ liệu, thuật ngữ và owner dùng chung | `group-report/sections/common/`, `design-conventions.md` |
+| Nguồn sơ đồ PlantUML | `diagrams/plantuml/` |
+| Nguồn sơ đồ TikZ | `diagrams/tikz/` |
+| Class Diagram dùng trong báo cáo | `diagrams/class/` |
+| Hai view kiến trúc | `architecture/` |
+| Bài gốc thành viên tại máy tổng hợp | `../local/phase-3-submissions/` |
 
-## Cách điền và chuẩn bị phân việc
-
-- Phân công Submission 3 sẽ được nhóm trưởng chốt sau. Bảng thành viên trong PDF ghi phạm vi kế thừa Submission 2, không coi đó là quyết định phân việc Phase 3 mới.
-- Phần kiến trúc và class diagram tổng thể cần thống nhất chung. GEN cùng các hợp đồng dữ liệu dùng chung được tổng hợp tại một nơi.
-- Các file của bảy phân hệ giữ thứ tự và mã cũ để thuận tiện giao việc.
-- Mỗi phạm vi có một file trong `group-report/sections/class-design/`.
-- Chỉnh trực tiếp các trường trong bảng; lặp môi trường `ClassDescription` cho từng lớp, `MethodDescription` cho từng phương thức. Không có giới hạn năm trường cố định như macro UC cũ.
-- Mọi operation được khai báo trên class diagram đều phải có mô tả, gồm interface, tác vụ nền và helper được vẽ. Không giới hạn ở entry point của UC.
-- Class dùng chung định nghĩa tại một owner, các phân hệ khác tham chiếu. SharedVehicle giữ tại phần TRIP; định nghĩa thêm phải được nhóm thống nhất.
-- Test case là bonus. Kết quả thực tế và Pass/Fail chỉ điền khi đã chạy.
-
-Các hướng dẫn điền nằm trong comment LaTeX. PDF có nội dung chung đã soạn và placeholder ngắn cho phần còn chờ thực hiện; không vẽ khung chữ nhật thay hình, không lặp lại UC specification của Phase 1.
-
-## Vị trí sơ đồ
-
-- `architecture/deployment-view.pdf`
-- `architecture/implementation-view.pdf`
-- `diagrams/class/system-class-overview.pdf`
-- `diagrams/class/00-gen.pdf` và `01-sub-hub.pdf` tới `07-sub-sim.pdf`
-
-Đây là các đường dẫn dự kiến được gọi bởi nguồn LaTeX, chưa phải sơ đồ đã hoàn thành. Chưa có file hình thì PDF hiển thị placeholder ngắn. Với PlantUML, giữ source và xuất SVG/PDF vector theo quy chuẩn chung.
+Hình tích hợp đã nằm trong `docs/`; biên dịch không phụ thuộc thư mục `local/`. Giữ bản gốc thành viên khi chỉnh nội dung tổng hợp. [Bảy báo cáo cá nhân Phase 3](individual-work/README.md) đã có đủ nguồn và PDF theo phân hệ; bản Bảo Anh có thêm GEN và tổng hợp nội dung chung.
 
 ## Biên dịch
+
+Chạy từ thư mục gốc dự án:
 
 ```bash
 cd docs/phase-3/group-report
 latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error \
-  -jobname=phase-3-group-report-outline -outdir=output/pdf main.tex
+  -jobname=phase-3-group-report-outline -outdir=/tmp/semh-build-phase-3 main.tex
+cp /tmp/semh-build-phase-3/phase-3-group-report-outline.pdf output/pdf/
 ```
 
-PDF chuẩn nằm trong `output/pdf/`. Khi đã hoàn tất, các phần thiết kế có thể ghép vào báo cáo tổng hợp, không phải viết lại định nghĩa lớp/phương thức theo từng UC.
+Chỉ render sơ đồ khi đã thay nguồn và cần cập nhật hình:
+
+```bash
+# Chạy tại thư mục gốc dự án; thay đường dẫn JAR theo máy.
+node docs/phase-3/diagrams/plantuml/render-design.mjs /path/to/plantuml.jar
+```
+
+Sau khi sửa Phase 3, biên dịch lại cả bản riêng lẫn bản tích hợp theo [hướng dẫn bàn giao](../ban-giao.md).

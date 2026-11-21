@@ -1,0 +1,120 @@
+@startuml
+' SUB-TRIP (Phase 3): UC-TRIP-01/02, FR-TRIP-01/02, BR-TRIP-01/02.
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classArrowColor black
+skinparam packageBackgroundColor white
+skinparam packageBorderColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+skinparam classAttributeIconSize 0
+hide circle
+
+package "SUB-TRIP" {
+  abstract class Vehicle <<entity>> {
+    - vehicleId: Identifier
+  }
+  class SharedVehicle <<entity>> {
+    - status: VehicleStatus
+    - serviceStatus: ServiceStatus
+    - batteryPercent: Integer
+    - currentHubId: HubId [0..1]
+    - version: Integer
+    + markInUse(): Void
+    + applyReturnResult(end: TripEndData): Void
+    + markOutOfService(): Void
+  }
+  class Trip <<entity>> {
+    - tripId: Identifier
+    - reservationId: Identifier
+    - accountId: AccountId
+    - vehicleId: Identifier
+    - startHubId: HubId
+    - endHubId: HubId [0..1]
+    - startedAt: DateTime
+    - endedAt: DateTime [0..1]
+    - startBatteryPercent: Integer
+    - endBatteryPercent: Integer [0..1]
+    - startVehicleStatus: VehicleStatus
+    - endVehicleStatus: VehicleStatus [0..1]
+    - durationSeconds: Integer [0..1]
+    - status: TripStatus
+    + complete(end: TripEndData): Void
+  }
+  class TripService <<applicationService>> {
+    + confirmPickup(session: SessionToken, reservationId: Identifier, vehicleId: Identifier, change: ChangeContext): TripView
+    + confirmReturn(session: SessionToken, tripId: Identifier, hubId: HubId, change: ChangeContext): TripView
+    + getTripByReservation(session: SessionToken, reservationId: Identifier): TripView [0..1]
+  }
+  class TripView <<DTO>> {
+    + tripId: Identifier
+    + vehicleId: Identifier
+    + startHubId: HubId
+    + endHubId: HubId [0..1]
+    + startedAt: DateTime
+    + endedAt: DateTime [0..1]
+    + startBatteryPercent: Integer
+    + endBatteryPercent: Integer [0..1]
+    + durationSeconds: Integer [0..1]
+    + status: TripStatus
+  }
+  class TripEndData <<DTO>> {
+    + endHubId: HubId
+    + endedAt: DateTime
+    + endBatteryPercent: Integer
+    + endVehicleStatus: VehicleStatus
+    + durationSeconds: Integer
+  }
+  enum TripStatus {
+    InProgress
+    Completed
+    Interrupted
+  }
+  enum VehicleStatus {
+    Available
+    Reserved
+    InUse
+    Charging
+    OutOfService
+  }
+  enum ServiceStatus {
+    Draft
+    Active
+    Inactive
+  }
+}
+
+package "Tham chiếu từ owner khác" {
+  class VehicleReservation <<RES>>
+  class MobilityHub <<HUB>>
+  class Account <<GEN>>
+}
+
+Vehicle <|-- SharedVehicle
+SharedVehicle "1" <-- "0..*" Trip : xe sử dụng
+VehicleReservation "1" <-- "0..1" Trip : nguồn đặt
+Account "1" <-- "0..*" Trip : sinh viên
+MobilityHub "1" <-- "0..*" Trip : Hub xuất phát
+MobilityHub "0..1" <-- "0..*" Trip : Hub đích
+MobilityHub "0..1" <-- "0..*" SharedVehicle : Hub hiện tại
+Trip ..> TripStatus
+SharedVehicle ..> VehicleStatus
+SharedVehicle ..> ServiceStatus
+TripService ..> Trip : tạo / hoàn tất
+TripService ..> SharedVehicle : cập nhật trạng thái
+TripService ..> TripView
+Trip ..> TripEndData
+SharedVehicle ..> TripEndData
+
+note right of TripService
+  Qua hợp đồng công khai: AccessService (GEN),
+  ReservationService (RES), HubService (HUB).
+  StateDataAdapter tiếp nhận bằng chứng bàn giao / trả xe.
+  Ghi Trip, lượt đặt, xe và audit nhất quán.
+end note
+
+@enduml

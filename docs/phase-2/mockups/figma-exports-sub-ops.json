@@ -5,7 +5,7 @@
   "reportSection": "SUB-OPS",
   "assets": [
     {
-      "file": "uc-ops-01.png",
+      "file": "common/ui-operator-overview.png",
       "nodeId": "34:326",
       "screen": "09 Tổng quan mạng lưới · Ocean Mobility",
       "format": "png"
@@ -26,7 +26,7 @@
   "figmaChanges": [
     "UC-OPS-03: unselected reserved vehicle 10, marked it unavailable for selection, and corrected the selected count from four to three to match the impact preview. Existing layout and other screens were preserved."
   ],
-  "diagramSourceFolder": "local/phase-2-submissions/Minh Anh - SUB OPS",
+  "diagramSourceFolder": "docs/local/phase-2-submissions/Minh Anh - SUB OPS",
   "importedDiagrams": [
     {
       "source": "activity.png",

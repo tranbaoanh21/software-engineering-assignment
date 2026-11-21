@@ -1,0 +1,15 @@
+\begingroup
+\setlength{\parskip}{3pt}
+\noindent\textbf{Truy cập.} \texttt{AccessService} kiểm tài khoản, phiên, quyền và phạm vi. Cookie chứa token ngẫu nhiên, DB lưu hash token. Cookie dùng HttpOnly, SameSite=Lax và Secure khi dùng HTTPS. Command kiểm Origin và CSRF token. Phiên hết hạn sau 30 phút không có hoạt động hợp lệ của người dùng.
+
+\noindent\textbf{Giao dịch.} Các command tranh tài nguyên, ngừng phục vụ hoặc bảo toàn Admin cuối dùng Serializable, kiểm lại quyền, trạng thái, version và ràng buộc. Ràng buộc duy nhất ngăn trùng ID và lượt giữ còn hiệu lực. Còn xung đột sau tối đa hai lần thử lại toàn giao dịch thì trả Conflict.
+
+\noindent\textbf{Gửi lại và audit.} Thay đổi, audit và receipt được commit cùng nhau. Cùng chủ thể, thao tác, \texttt{requestId} và nội dung thì trả receipt đã lưu. Tái dùng ID với nội dung khác bị từ chối. Audit loại mật khẩu, token và lưu lịch sử chỉ đọc.
+
+\noindent\textbf{IoT.} \texttt{StateDataAdapter} nhận HTTP, kiểm nguồn của tài nguyên, đơn vị và sequence rồi gọi owner. SourceId/eventId chống lặp. Telemetry hợp lệ, mới hơn được ghi và ServiceStatus được giữ nguyên. Mở/khóa mô phỏng gắn \texttt{commandId}. Bàn giao hoặc trả xe cần bằng chứng hợp lệ.
+
+\noindent\textbf{Xử lý nền.} RES/PARK quét hạn mỗi 30 giây và kiểm \texttt{expiresAt} khi xử lý lệnh. CHG tính lịch theo sự kiện hoặc mỗi 5 phút. OPS xử lý theo sự kiện và quét bù mỗi 2 phút. HUB đồng bộ trong 60 giây sau khi nguồn khôi phục.
+
+\noindent\textbf{Mô phỏng.} SIM gắn snapshot read-only Repeatable Read với run. Worker tính trên bản sao. Run dở dang sau khi khởi động lại chuyển Failed. NIFR-SIM-01 phân tích run Completed. OPS xác nhận và kiểm lại quyền, tài nguyên trước khi áp dụng.
+
+\endgroup

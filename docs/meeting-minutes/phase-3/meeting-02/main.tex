@@ -1,0 +1,93 @@
+\documentclass[10pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../assets}
+\input{../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{2em}
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+\pagenumbering{arabic}
+\section{THÔNG TIN BUỔI HỌP}
+\begin{center}
+\begin{tabularx}{\textwidth}{|>{\bfseries}L{43mm}|Y|}
+\hline
+Lần họp & Buổi 02 -- Phase 3\\\hline
+Ngày họp & 07/11/2026\\\hline
+Nhóm / Lớp & K24 Warriors / L02\\\hline
+Chủ đề & Rà soát, refine thiết kế và hoàn thiện bộ tài liệu Submission 3\\\hline
+Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\\hline
+Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\\hline
+\end{tabularx}
+\end{center}
+\section{THÀNH PHẦN NHÓM}
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+\section{MỤC TIÊU BUỔI HỌP}
+Rà soát và refine thiết kế Phase 3 trước khi chốt Submission 3. Nội dung tập trung vào sự thống nhất giữa kiến trúc, Class Diagram, mô tả phương thức, test case và các luồng nghiệp vụ đã hoàn thành ở Phase 1--2.
+
+\section{NỘI DUNG THẢO LUẬN}
+\subsection{Rà kiến trúc và mô hình lớp dùng chung}
+Đối chiếu Deployment View, Implementation View và mô hình lớp tổng thể để bảo đảm cùng mô tả một backend modular monolith, các module nghiệp vụ và cơ sở dữ liệu dùng chung. Phân biệt lớp miền nghiệp vụ, application service, interface và adapter; tránh mô tả chúng như những hệ thống triển khai độc lập khi phương án không yêu cầu.
+
+Rà lại tên lớp, chủ sở hữu dữ liệu, bội số quan hệ và hướng phụ thuộc. Một đối tượng nghiệp vụ dùng chung phải giữ cùng ý nghĩa ở các phân hệ; lớp xuất hiện lại trên nhiều hình không đồng nghĩa có nhiều bản dữ liệu độc lập.
+
+\subsection{Refine hợp đồng giữa các phân hệ}
+Đối chiếu các phương thức gọi chéo về tên, đầu vào, đầu ra, điều kiện thực hiện và kết quả từ chối. Ưu tiên các điểm phối hợp RES--TRIP, TRIP--PARK, CHG--tài nguyên và OPS--các phân hệ sử dụng tài nguyên. Module sở hữu dữ liệu chịu trách nhiệm kiểm tra điều kiện cập nhật và bảo vệ tính nhất quán.
+
+Phân biệt việc phê duyệt kế hoạch điều chuyển với việc nhân viên kỹ thuật đã chuyển xe và xác nhận kết quả. Trạng thái xe chỉ được cập nhật theo điều kiện nghiệp vụ tương ứng. Với SIM, dữ liệu chạy thử nằm trong snapshot/bản làm việc; kết quả chỉ hỗ trợ đánh giá phương án, còn thao tác trên mạng lưới thực phải qua luồng OPS.
+
+\subsection{Đối chiếu thiết kế với Phase 2}
+Mỗi thành viên kiểm tra Class Diagram và mô tả phương thức theo sequence, activity, state chart thuộc phân hệ của mình. Những bước kiểm tra quyền, điều kiện dùng tài nguyên, ghi nhận kết quả và xử lý thất bại cần có thành phần chịu trách nhiệm rõ ràng trong thiết kế.
+
+Giữ đủ chức năng của bốn vai trò STU, OPR, MNT, ADM và 23 use case. Không đổi mã hoặc mở rộng nghiệp vụ trong lúc rút gọn câu chữ. Khi có điểm khác nhau giữa hình thành viên và mô tả tổng hợp, cần đối chiếu với người phụ trách trước khi sửa nguồn hình.
+
+\subsection{Thu gọn phạm vi test case}
+Test case gồm luồng chính của 23 use case và chín ca rủi ro/tích hợp cần thiết. Mỗi ca ghi tiền điều kiện, dữ liệu, thao tác và kết quả mong đợi; ưu tiên kết quả quan sát được qua API hoặc trạng thái dữ liệu.
+
+Kiểm tra cạnh tranh cơ bản bằng hai tài khoản demo cùng yêu cầu một tài nguyên để xác nhận không cấp trùng. Không đưa bài thử 50 sinh viên đồng thời vào bộ kiểm thử chức năng cần thực hiện ngay; kiểm chứng tải và NFR quy mô lớn được tách khỏi các ca nghiệp vụ. Không ghi kết quả đạt khi mới thiết kế test case.
+
+\subsection{Hoàn thiện bố cục và bộ hồ sơ}
+Trong bản tích hợp, Class Diagram và mô tả lớp/phương thức đặt cùng GEN hoặc phân hệ tương ứng để người đọc theo dõi liên tục từ use case đến thiết kế. Phần kiến trúc và test case đặt riêng ở cuối; mô hình lớp và hợp đồng dùng chung trình bày một lần trước các phân hệ.
+
+Rút phần diễn giải lặp, giữ điều kiện nghiệp vụ, hợp đồng, phương thức và kết quả mong đợi. Kiểm tra mục lục, danh sách hình/bảng, tham chiếu, kích thước hình, lỗi tràn dòng và thông tin L02 -- K24 Warriors. Báo cáo cá nhân lấy nội dung tương ứng từ nguồn nhóm; Bảo Anh có SUB-SIM và phần GEN/nội dung chung.
+
+\section{CÔNG VIỆC HOÀN THIỆN}
+\begin{longtable}{|L{35mm}|L{66mm}|L{45mm}|}
+\hline
+\rowcolor{gray!15}\textbf{Thành viên} & \textbf{Phần xác nhận, chỉnh sửa} & \textbf{Mốc hoàn thành}\\\hline
+\endfirsthead
+\hline\textbf{Thành viên} & \textbf{Phần xác nhận, chỉnh sửa} & \textbf{Mốc hoàn thành}\\\hline\endhead
+Nguyễn Quốc Trung & SUB-HUB; thông tin Hub, trạng thái và phương thức cung cấp dữ liệu cho các module. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Phan Võ Bảo Trâm & SUB-RES; điều kiện đặt/hủy/hết hạn và hợp đồng sử dụng lượt đặt từ TRIP. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Lê Nguyễn Tường Vi & SUB-TRIP; bắt đầu/kết thúc chuyến, SharedVehicle và phối hợp RES/PARK. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Nguyễn Ngọc Hân & SUB-PARK; cấp chỗ, hết hạn, trạng thái lỗi và xác nhận trả xe liên quan. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Trần Thị Hương Giang & SUB-CHG; lịch/phiên sạc, trạng thái cổng và dữ liệu phương tiện liên quan. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Nguyễn Thị Minh Anh & SUB-OPS; sự cố, điều phối, quản lý tài nguyên và quyền vận hành/kỹ thuật. & Gửi bản chốt sau rà soát 07/11.\\\hline
+Trần Nhật Bảo Anh & SUB-SIM, GEN, kiến trúc/hợp đồng chung; tổng hợp test case và xuất bộ báo cáo. & Tổng hợp, kiểm tra PDF ngày 08/11.\\\hline
+\end{longtable}
+
+Mỗi thành viên gửi lại đúng phiên bản nguồn và hình đã xác nhận, đồng thời kiểm tra phần tương ứng trong bản tổng hợp. Nhóm trưởng cập nhật báo cáo cá nhân từ nguồn nhóm sau khi nội dung chung đã thống nhất.
+
+\section{KẾT QUẢ THỐNG NHẤT}
+\begin{enumerate}
+\item Giữ modular monolith kết hợp layered architecture và phạm vi đã chốt từ Phase 2.
+\item Hoàn thiện hợp đồng liên phân hệ trước khi chốt hình và bảng phương thức; không để hai module hiểu khác nhau về cùng một thao tác.
+\item Giữ test case trong phạm vi chức năng và rủi ro tích hợp cần thiết, phân biệt thiết kế kiểm thử với kết quả thực thi.
+\item Bản tích hợp sắp xếp thiết kế lớp ngay trong từng phân hệ; dùng cùng nguồn nội dung để xuất báo cáo cá nhân.
+\item Chốt bộ tài liệu gồm báo cáo nhóm, bảy báo cáo cá nhân, nguồn thiết kế và hai biên bản họp Phase 3.
+\end{enumerate}
+
+\section{VẤN ĐỀ CẦN THEO DÕI}
+Tránh gửi nhầm hình cũ, sửa một bảng phương thức nhưng quên nơi gọi tương ứng, hoặc cập nhật bản cá nhân khác nguồn nhóm. Thay đổi sau rà soát cần xác định các phần liên quan, cập nhật tại nguồn và xuất lại đúng những bản bị ảnh hưởng.
+
+\section{KẾT LUẬN}
+Hoàn thiện các chỉnh sửa theo phân công và kiểm tra lại bản PDF tổng hợp trước khi bàn giao Submission 3. Bộ thiết kế đã thống nhất được sử dụng làm cơ sở phân chia module và hiện thực ở giai đoạn tiếp theo.
+
+\end{document}

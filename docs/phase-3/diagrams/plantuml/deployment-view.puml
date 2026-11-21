@@ -1,0 +1,34 @@
+@startuml
+!include design-style.puml
+top to bottom direction
+node "Máy người dùng" <<device>> as Client {
+  node "Browser" <<executionEnvironment>> as Browser {
+    artifact "Website React\n+ Leaflet" as UI
+  }
+}
+node "Máy chạy demo / server" <<device>> as Host {
+  node "Docker Engine" <<executionEnvironment>> {
+    node "web: Nginx" <<container>> as Web {
+      artifact "React build + proxy config"
+    }
+    node "api: Node.js" <<container>> as API {
+      artifact "NestJS modular monolith\n+ scheduler / simulation worker"
+    }
+    node "db: PostgreSQL" <<container>> as DB {
+      artifact "SEMH schema + data\n(SEMHDataStore)"
+    }
+    artifact "DB volume" as Volume
+  }
+}
+node "Tiến trình ngoài SEMH" as Source {
+  artifact "Node.js IoT simulator\nStateDataGateway\n(ACT-DAT / EXT-STATE)" as Simulator
+}
+node "MapTileProvider\n(EXT-MAP)" <<externalSystem>> as Map
+Browser -- Web : HTTP localhost\nHTTPS 443 trên server
+Web -- API : HTTP :3000\n/api
+API -- DB : PostgreSQL :5432\nmạng nội bộ
+DB -- Volume : persistent storage
+Simulator -- Web : HTTP(S)\nPOST /api/state-events
+API -- Simulator : HTTP :4000\nlệnh mô phỏng thiết bị
+Browser -- Map : HTTPS 443\ntile nền
+@enduml

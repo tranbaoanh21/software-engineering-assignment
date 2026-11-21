@@ -6,7 +6,7 @@
 | 02 | 07/10/2026, 21h30 | Thống nhất mẫu UI và bắt đầu thiết kế chi tiết trên Figma | [Đọc biên bản](meeting-02/output/pdf/meeting-minutes-02.pdf) |
 | 03 | 24/10/2026, 20h30 | Rà soát, chốt báo cáo nhóm, báo cáo cá nhân và bộ tài liệu Submission 2 | [Đọc biên bản](meeting-03/output/pdf/meeting-minutes-03.pdf) |
 
-Mỗi buổi có `main.tex` chứa nội dung và `cover-page.tex` chứa thông tin bìa. Ba biên bản dùng template chung trong `assets/latex-template/`.
+Mỗi buổi có `main.tex` chứa nội dung và `cover-page.tex` chứa thông tin bìa. Ba biên bản dùng template chung trong `docs/assets/latex-template/`.
 
 Biên dịch từ thư mục của buổi tương ứng:
 

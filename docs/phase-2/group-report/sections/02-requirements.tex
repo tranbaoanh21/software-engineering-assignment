@@ -7,7 +7,7 @@ Mỗi yêu cầu chỉ mô tả một trách nhiệm có thể quan sát hoặc 
 
 Nội dung phải dùng đúng actor, thuật ngữ và trạng thái đã thống nhất ở Phần I, đặc biệt là các bảng thuật ngữ nghiệp vụ, trạng thái tài nguyên và trạng thái quy trình dùng chung. Các ngưỡng thời gian, dung lượng và mức pin trong business rule là quyết định nghiệp vụ của nhóm cho phạm vi bài tập; chúng không hàm ý một thiết bị hay công nghệ triển khai cụ thể.
 
-Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR}, \texttt{ACT-MNT} và \texttt{ACT-ADM} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}); \texttt{ACT-MAP} là vai trò của \textit{Map \& Geolocation Service} (\texttt{EXT-MAP}). Hệ thống chỉ tiếp nhận dữ liệu trạng thái hoặc kết quả địa lý từ các hệ thống ngoài; cách cảm biến, khóa xe, cổng sạc hoặc nền tảng bản đồ hoạt động nằm ngoài system boundary.
+Trong phần này, \texttt{ACT-STU}, \texttt{ACT-OPR}, \texttt{ACT-MNT} và \texttt{ACT-ADM} là các actor con người. \texttt{ACT-DAT} là vai trò của \textit{IoT \& State Data Gateway} (\texttt{EXT-STATE}). \texttt{EXT-MAP} chỉ cung cấp nền bản đồ cho Leaflet trong giao diện, không là actor nghiệp vụ. SEMH quản lý tọa độ Hub, xác định vùng tìm kiếm và tính khoảng cách; hoạt động vật lý của cảm biến, khóa xe, cổng sạc và việc xây dựng nền bản đồ nằm ngoài system boundary.
 
 \subsection{Xác thực và phân quyền dùng chung}
 \label{sec:common-access}
@@ -26,7 +26,7 @@ Hệ thống phải cho phép người dùng kết thúc phiên hiện tại. Ph
 \medskip
 \noindent\textbf{FR-GEN-03 -- Kiểm tra quyền truy cập.}\par
 \nopagebreak[4]
-Trước mỗi yêu cầu được bảo vệ, hệ thống phải kiểm tra hiệu lực tài khoản, phiên, quyền hiện hành và phạm vi đối tượng được yêu cầu. Yêu cầu không được phép phải bị từ chối trước khi đọc dữ liệu riêng hoặc ghi thay đổi, kể cả khi gửi trực tiếp mà không qua giao diện.
+Mọi yêu cầu được bảo vệ, kể cả gọi trực tiếp API, phải được kiểm tra tài khoản, phiên, quyền hiện hành và phạm vi đối tượng. Không đủ quyền thì từ chối trước khi đọc dữ liệu riêng hoặc ghi.
 
 \medskip
 \noindent\textbf{FR-GEN-04 -- Cấp tài khoản.}\par
@@ -36,7 +36,7 @@ Hệ thống phải cho phép \texttt{ACT-ADM} tạo tài khoản với định 
 \medskip
 \noindent\textbf{FR-GEN-05 -- Cập nhật thông tin tài khoản.}\par
 \nopagebreak[4]
-Hệ thống phải cho phép \texttt{ACT-ADM} cập nhật thông tin định danh của tài khoản mà không làm thay đổi chủ sở hữu các lượt đặt, chuyến đi hoặc bản ghi lịch sử; thay đổi vai trò phải thực hiện theo \texttt{FR-GEN-07}.
+Hệ thống phải cho phép \texttt{ACT-ADM} cập nhật thông tin định danh của tài khoản mà không đổi chủ sở hữu các lượt đặt, chuyến đi hoặc bản ghi lịch sử; thay đổi vai trò phải thực hiện theo \texttt{FR-GEN-07}.
 
 \medskip
 \noindent\textbf{FR-GEN-06 -- Khóa hoặc mở lại tài khoản.}\par
@@ -263,7 +263,7 @@ Hệ thống phải cho phép \texttt{ACT-STU} tra cứu danh sách Mobility Hub
 \medskip
 \noindent\textbf{FR-HUB-02 -- Xem trạng thái tài nguyên tại Hub.}\par
 \nopagebreak[4]
-Hệ thống phải cung cấp trạng thái gần hiện tại của xe dùng chung, chỗ đỗ và cổng sạc tại Hub được chọn, bao gồm các thông tin cần thiết để \texttt{ACT-STU} đánh giá tài nguyên có thể phục vụ hay không.
+Hệ thống phải cung cấp trạng thái gần hiện tại của xe dùng chung, chỗ đỗ và cổng sạc tại Hub được chọn, gồm thông tin cần thiết để \texttt{ACT-STU} đánh giá tài nguyên có thể phục vụ hay không.
 
 \textit{Actor/trigger: \texttt{ACT-STU} chọn một Hub.}\par
 \textit{Nguồn: \texttt{SN-STU-01}, \texttt{US-HUB-02}. UC: \texttt{UC-HUB-02}. BR: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
@@ -347,7 +347,7 @@ Hệ thống phải cho phép \texttt{ACT-STU} hoặc \texttt{ACT-OPR} tạo \te
 \medskip
 \noindent\textbf{FR-CHG-02 -- Theo dõi lịch và phiên sạc.}\par
 \nopagebreak[4]
-Hệ thống phải cung cấp trạng thái của \texttt{ChargingRequest} và \texttt{ChargingSession}, bao gồm cổng sạc được phân bổ, mức pin gần hiện tại và thời gian hoàn tất dự kiến khi dữ liệu này sẵn có.
+Hệ thống phải cung cấp trạng thái của \texttt{ChargingRequest} và \texttt{ChargingSession}, gồm cổng sạc được phân bổ, mức pin gần hiện tại và thời gian hoàn tất dự kiến khi dữ liệu này sẵn có.
 
 \textit{Actor/trigger: \texttt{ACT-STU} theo dõi yêu cầu của mình hoặc \texttt{ACT-OPR} theo dõi hoạt động sạc.}\par
 \textit{Nguồn: \texttt{SN-STU-05}, \texttt{US-CHG-01}. UC: \texttt{UC-CHG-02}. BR: \texttt{BR-CHG-02}.}
@@ -485,7 +485,7 @@ NIFR nêu trigger thời gian/sự kiện, điều kiện, xử lý tự động
 \medskip
 \noindent\textbf{NIFR-SIM-01 -- Tạo khuyến nghị sau mô phỏng.}\par
 \nopagebreak[4]
-\textit{Trigger:} một \texttt{SimulationRun} chuyển sang \texttt{Completed}. \textit{Điều kiện:} kết quả đủ dữ liệu để đánh giá khả năng phục vụ của các Hub. \textit{Xử lý:} phân tích Hub thiếu xe, gần đầy hoặc thiếu năng lực sạc và tạo danh sách \texttt{Recommendation}. \textit{Kết quả:} khuyến nghị được gắn với lần chạy và không làm thay đổi dữ liệu vận hành.
+\textit{Trigger:} một \texttt{SimulationRun} chuyển sang \texttt{Completed}. \textit{Điều kiện:} kết quả đủ dữ liệu để đánh giá khả năng phục vụ của các Hub. \textit{Xử lý:} phân tích Hub thiếu xe, gần đầy hoặc thiếu năng lực sạc và tạo danh sách \texttt{Recommendation}. \textit{Kết quả:} khuyến nghị được gắn với lần chạy và không đổi dữ liệu vận hành.
 
 \textit{Hỗ trợ: \texttt{FR-SIM-02}. UC: \texttt{UC-SIM-02}. BR: \texttt{BR-SIM-01}.}
 

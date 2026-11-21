@@ -20,9 +20,12 @@ assignment-reference.pdf
 
 # Local originals, superseded exports, and private study material.
 /local/
+/docs/local/
+/.claude/settings.local.json
 /phase-1-study-guide.md
 /docs/phase-2/individual-work/*prompts*.txt
 
 # Keep the canonical report exports under output/pdf/.
 /docs/phase-2/group-report/main.pdf
 /docs/phase-3/group-report/main.pdf
+/docs/final-report/main.pdf

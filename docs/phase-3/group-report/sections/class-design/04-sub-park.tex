@@ -1,41 +1,124 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Giữ chỗ nhất quán với cảm biến check-in/out và tác vụ NIFR-PARK-01. Chỗ hết hạn nhưng đang lỗi phải giữ OutOfService; xử lý tín hiệu trùng hoặc tới muộn không tạo lần check-in/out thứ hai.
+SUB-PARK quản lý PrivateVehicle, ParkingSpace và ParkingReservation; hỗ trợ giữ chỗ, check-in, check-out, hủy và xử lý hết hạn. Giải phóng giữ chỗ chỉ mở lại chỗ khi trạng thái thực tế an toàn, không ghi đè OutOfService thành Available.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/04-sub-park.pdf}{Class diagram -- SUB-PARK}{fig:p3-class-04-sub-park}
+\DesignFigure[0.80\textheight]{../diagrams/class/04-sub-park.pdf}
+{Class diagram -- SUB-PARK}{fig:p3-class-04-sub-park}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả lớp}
 
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-PARK}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp của SUB-PARK}\\\hline
+\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-PARK-01} & Đặt chỗ đỗ cho xe cá nhân & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-PARK-02} & Check-in phương tiện cá nhân & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-PARK-03} & Check-out phương tiện cá nhân & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+PrivateVehicle & Xe cá nhân thuộc một chủ tại một thời điểm; ID duy nhất, giữ liên kết lịch sử/version. Không có lượt đặt hiệu lực xung đột.\\\hline
+ParkingSpace & Thuộc đúng một Hub; ServiceStatus độc lập trạng thái sử dụng. Chỉ cấp phát khi Active/Available và an toàn, không có lượt giữ xung đột; IoT không tự đổi ServiceStatus.\\\hline
+Parking\allowbreak Reservation & Entity liên kết đúng một Sinh viên, phương tiện cá nhân hợp lệ và chỗ đỗ. Lưu reservationId, studentId, privateVehicleId, spaceId, status, confirmedAt/expiresAt, checkInAt/checkOutAt tùy chọn và version. Confirmed giữ tối đa 20 phút. Check-in chuyển đồng thời CheckedIn/Occupied; check-out hoàn tất cùng xử lý chỗ. CheckedIn không bị tiến trình hết hạn chuyển Expired.\\\hline
+ParkingService & Application service điều phối tra cứu, đặt, xem lượt đặt, check-in/out, hủy và hết hạn. Kiểm tra quyền qua AccessService, lưu qua ParkingRepository, đọc bằng chứng qua Parking\allowbreak State\allowbreak Reader. Kiểm tra điều kiện và giữ nhất quán Reservation/Space; cùng requestId/nội dung không tạo tác động trùng, ID trùng nội dung khác bị từ chối. Không trực tiếp gọi SQL hoặc nguồn IoT ngoài.\\\hline
+ParkingRepository & Interface lưu trữ của PARK, hiện thực trên PostgreSQL/Prisma. Query chỉ đọc; command kiểm tra lại trạng thái/version/ràng buộc trong giao dịch, không tạo giữ chỗ xung đột hoặc commit một phần. Lưu thay đổi, audit/receipt nhất quán; hủy/hết hạn bảo toàn trạng thái sự cố.\\\hline
+Parking\allowbreak State\allowbreak Reader & Interface đọc bằng chứng trạng thái đã tiếp nhận/xác minh cho đúng ParkingSpace và nguồn. Dữ liệu thiếu, cũ hoặc không tin cậy không được coi là xác nhận xe vào/rời chỗ. Không nhận sự kiện IoT trực tiếp hoặc tự chuyển trạng thái Parking\allowbreak Reservation.\\\hline
 \end{longtable}
+
+\ReserveSpace{7\baselineskip}
+
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Thành phần dùng chung và tham chiếu của SUB-PARK}\\\hline
+\textbf{Thành phần} & \textbf{Owner và vai trò}\\\hline
+\endfirsthead
+\hline\textbf{Thành phần} & \textbf{Owner và vai trò (tiếp)}\\\hline\endhead
+Account & GEN: Xác định chủ sở hữu PrivateVehicle và chủ thể thực hiện Parking\allowbreak Reservation. SUB-PARK sử dụng quan hệ với Account để kiểm tra quyền sở hữu nhưng không trực tiếp quản lý thông tin tài khoản, mật khẩu hoặc phân quyền.\\\hline
+MobilityHub & SUB-HUB: Xác định Hub chứa ParkingSpace và cung cấp thông tin cần thiết khi kiểm tra điều kiện đặt chỗ. Các thuộc tính và quy tắc quản lý Hub được định nghĩa tại SUB-HUB.\\\hline
+AccessService & GEN: Cung cấp phương thức verifyAccess() để kiểm tra phiên đăng nhập, quyền truy cập và phạm vi tài nguyên trước khi thực hiện các nghiệp vụ được bảo vệ.\\\hline
+AuditService & Dùng chung SEMH: Cung cấp cơ chế ghi nhận các thay đổi nghiệp vụ. Các bản ghi audit phải được commit nhất quán với thao tác cập nhật tương ứng, không làm mất hoặc thay đổi dữ liệu lịch sử.\\\hline
+SEMHDataStore & Dùng chung SEMH: Định nghĩa hợp đồng lưu trữ tổng quát của hệ thống, làm cơ sở cho các lớp hiện thực truy xuất và cập nhật dữ liệu thông qua PostgreSQL/Prisma.\\\hline
+StateDataAdapter & Tích hợp dùng chung SEMH: Tiếp nhận và kiểm tra sự kiện trạng thái từ StateDataGateway, bảo đảm dữ liệu nguồn ngoài được xác minh trước khi sử dụng trong nghiệp vụ check-in và check-out.\\\hline
+ServiceStatus & Dùng chung SEMH: Biểu diễn trạng thái cho phép phục vụ của tài nguyên với các giá trị Draft, Active và Inactive. Được ParkingSpace sử dụng độc lập với Parking\allowbreak Space\allowbreak Status nhằm kiểm soát điều kiện cấp phát.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Trạng thái và ràng buộc giữ chỗ}
+ParkingSpaceStatus gồm Available, Reserved, Occupied, OutOfService; ServiceStatus gồm Draft, Active, Inactive. ParkingReservationStatus gồm Pending, Confirmed, CheckedIn, Completed, Cancelled, Expired, Rejected. UC-PARK-01 tạo Confirmed khi giữ chỗ thành công; Pending/Rejected là trạng thái chuẩn, chưa bổ sung quy trình phê duyệt.
+
+Khi hủy hoặc hết hạn, chỉ đưa chỗ về Available nếu trống, đủ dữ liệu tin cậy, không có lỗi hoặc ràng buộc khác; chưa xác minh thì giữ trạng thái an toàn. Chỗ và Hub phải Active mới được cấp phát lại. Check-in cần đúng lượt Confirmed còn hạn và bằng chứng hiện diện; check-out cần bằng chứng xe đã rời. Trạng thái cảm biến không thay quyền phục vụ.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+ParkingService kiểm tra phiên, quyền và ownership; ParkingRepository kiểm tra cạnh tranh tại thời điểm ghi. Command dùng ChangeContext gồm requestId, reason và expectedVersion theo hợp đồng chung; quyền được kiểm tra lại trong giao dịch. Thay đổi Reservation/Space, audit và receipt commit nguyên tử. Các phương thức công khai ký hiệu \texttt{+}; expireConfirmedReservations do scheduler nội bộ kích hoạt.
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ParkingService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ get\allowbreak Parking\allowbreak Availability(session: SessionToken, hubId: UUID): Parking\allowbreak Availability\allowbreak View} & Trả khả dụng/điều kiện giữ ParkingSpace tại Hub qua repository; chỉ đọc trong quyền.\\\hline
+\Sig{+ create\allowbreak Parking\allowbreak Reservation(session: SessionToken, input: Parking\allowbreak Reservation\allowbreak Input, change: ChangeContext): Parking\allowbreak Reservation\allowbreak View} & Đúng chủ xe cá nhân, Hub/chỗ đủ điều kiện; gọi reserveAtomically tạo Confirmed/Reserved, hạn tối đa 20 phút. Cạnh tranh có thể thử chỗ khác; gửi lại không tạo lượt trùng.\\\hline
+\Sig{+ get\allowbreak Parking\allowbreak Reservation(session: SessionToken, reservationId: UUID): Parking\allowbreak Reservation\allowbreak View} & Đọc lượt đặt trong quyền qua findReservation; trả trạng thái, xe/chỗ và thời hạn, không ghi dữ liệu.\\\hline
+\Sig{+ check\allowbreak In\allowbreak Private\allowbreak Vehicle(session: SessionToken, reservationId: UUID, change: ChangeContext): Parking\allowbreak Reservation\allowbreak View} & Confirmed còn hạn, đúng chủ/xe/chỗ và có bằng chứng hiện diện từ ParkingStateReader; gọi checkInAtomically chuyển CheckedIn/Occupied, ghi checkInAt. Thiếu bằng chứng/hết hạn thì từ chối.\\\hline
+\Sig{+ check\allowbreak Out\allowbreak Private\allowbreak Vehicle(session: SessionToken, reservationId: UUID, change: ChangeContext): Parking\allowbreak Reservation\allowbreak View} & CheckedIn và có bằng chứng xe rời chỗ; gọi checkOutAtomically để Completed/ghi checkOutAt. Chỗ chỉ Available khi an toàn, có sự cố giữ OutOfService.\\\hline
+\Sig{+ cancel\allowbreak Parking\allowbreak Reservation(session: SessionToken, reservationId: UUID, change: ChangeContext): Parking\allowbreak Reservation\allowbreak View} & Chủ lượt Confirmed chưa check-in/hết hạn được hủy; gọi cancelAtomically. Giải phóng an toàn, không ghi đè OutOfService.\\\hline
+\Sig{+ expire\allowbreak Confirmed\allowbreak Reservations(now: DateTime): Integer} & Scheduler gọi expireDue cho Confirmed đến hạn, chưa check-in; trả số lượt thực sự đổi sang Expired, không xử lý trùng.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Hợp đồng quản lý chỗ đỗ}
+ParkingService cung cấp ResourceOwnerPort cho PARKING\_SPACE theo Bảng~\ref{tab:p3-resource-owner-port}. Command dùng transaction của GEN/OPS, kiểm tra version ParkingSpace và ràng buộc ParkingReservation; không mở giao dịch độc lập trong ParkingRepository.
+
+\begingroup
+\renewcommand{\theHtable}{owner.park}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\hline
+\textbf{Phương thức} & \textbf{Điều kiện của SUB-PARK}\\\hline
+\endfirsthead
+\hline\textbf{Phương thức} & \textbf{Điều kiện của SUB-PARK (tiếp)}\\\hline\endhead
+getResource, createDraft & Đọc chỗ/trạng thái/version; tạo ParkingSpace Draft với ID duy nhất dưới Hub đã có. Chưa có bằng chứng trống/an toàn thì không gán Available.\\\hline
+updateMetadata & Chỉ sửa tên, mô tả và thông số cho phép; giữ ID, Hub, lịch sử, trạng thái cảm biến. Thông số ảnh hưởng cấp phát chỉ sửa khi hết ràng buộc.\\\hline
+checkConstraints, changeServiceStatus & Kích hoạt cần Hub Active, trạng thái xác nhận và không có lỗi cản trở; ngừng phục vụ cần không có lượt giữ hiệu lực hoặc xe đang đỗ. Kiểm tra nguyên tử với đặt/check-in, không tự hủy hoặc check-out.\\\hline
+reportFault, applyVerifiedRecovery & Báo lỗi đặt OutOfService, giữ lượt đặt/hiện diện thực tế. Khôi phục chỉ khi MNT xác nhận đạt, chỗ trống/an toàn và hết ràng buộc; giữ nguyên ServiceStatus.\\\hline
+\end{longtable}
+\addtocounter{table}{-1}
+\endgroup
+
+\ReserveSpace{8\baselineskip}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ParkingRepository}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ findAvailability(hubId: UUID): Parking\allowbreak Availability\allowbreak View} & Đọc trạng thái phục vụ/sử dụng và ràng buộc chỗ tại Hub; kết quả không bảo đảm chỗ còn trống lúc đặt.\\\hline
+\Sig{+ findReservation(reservationId: UUID): Parking\allowbreak Reservation} & Đọc ParkingReservation theo ID; không có trả lỗi, không ghi nghiệp vụ.\\\hline
+\Sig{+ reserveAtomically(input: Parking\allowbreak Reservation\allowbreak Input, change: ChangeContext): Parking\allowbreak Reservation} & Kiểm tra lại Available, quyền phục vụ và xung đột trong Serializable; tạo Confirmed/Reserved, expiresAt và audit/receipt nguyên tử.\\\hline
+\Sig{+ checkInAtomically(reservationId: UUID, evidence: Parking\allowbreak State\allowbreak Evidence, change: ChangeContext): Parking\allowbreak Reservation} & Kiểm tra Confirmed còn hạn, version và bằng chứng hiện diện; cập nhật CheckedIn/Occupied/checkInAt nguyên tử.\\\hline
+\Sig{+ check\allowbreak Out\allowbreak Atomically(reservationId: UUID, evidence: Parking\allowbreak State\allowbreak Evidence, change: ChangeContext): Parking\allowbreak Reservation} & CheckedIn, chỗ Occupied và xác nhận xe rời; ghi Completed/checkOutAt cùng trạng thái chỗ theo tình trạng an toàn.\\\hline
+\Sig{+ cancelAtomically(reservationId: UUID, change: ChangeContext): Parking\allowbreak Reservation} & Chỉ Confirmed chưa check-in còn hợp lệ; chuyển Cancelled và gỡ giữ. Giữ trạng thái sự cố, phân xử với check-in/hết hạn trong tx.\\\hline
+\Sig{+ expireDue(now: DateTime): Integer} & Quét Confirmed có expiresAt không sau now; kiểm tra lại rồi Expired/gỡ giữ an toàn. Không đổi CheckedIn; trả số lượt thực sự cập nhật.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức Parking\allowbreak State\allowbreak Reader}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ getLatestEvidence(spaceId: UUID): Parking\allowbreak State\allowbreak Evidence} & Đọc bằng chứng đúng chỗ/nguồn, đủ mới và tin cậy đã lưu; thiếu dữ liệu không được coi xe đã vào/rời. Không tự đổi lượt đặt.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Phương thức dùng chung}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Kiểm tra quyền sử dụng trong SUB-PARK}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+AccessService\par\Sig{+ verifyAccess(session: SessionToken, permission: Permission, target: TargetRef): AccessDecision} &
+Dùng hợp đồng GEN; STU chỉ thao tác xe/lượt đặt của mình, command kiểm tra lại quyền trước commit.\\\hline
+\end{longtable}
+AuditService ghi audit bằng append trong transaction của caller. StateDataAdapter tiếp nhận sự kiện từ StateDataGateway bằng ingest. Hai phương thức này theo đặc tả dùng chung; ParkingStateReader đọc bằng chứng đã xác minh từ dữ liệu được lưu.

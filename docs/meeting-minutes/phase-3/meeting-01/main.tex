@@ -1,0 +1,88 @@
+\documentclass[10pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../../assets}
+\input{../../../assets/latex-template/hcmut-report.sty}
+\input{cover-page}
+\setlength{\emergencystretch}{2em}
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+\pagenumbering{arabic}
+\section{THÔNG TIN BUỔI HỌP}
+\begin{center}
+\begin{tabularx}{\textwidth}{|>{\bfseries}L{43mm}|Y|}
+\hline
+Lần họp & Buổi 01 -- Phase 3\\\hline
+Ngày họp & 01/11/2026\\\hline
+Nhóm / Lớp & K24 Warriors / L02\\\hline
+Chủ đề & Chuẩn bị Phase 3, thống nhất thiết kế và phân công công việc\\\hline
+Giảng viên hướng dẫn & Cô Trần Thị Ngọc Trâm\\\hline
+Người chủ trì & Trần Nhật Bảo Anh -- Nhóm trưởng\\\hline
+\end{tabularx}
+\end{center}
+\section{THÀNH PHẦN NHÓM}
+\begin{HCMUTMemberTable}
+  \MemberRow{1}{Nguyễn Quốc Trung}{2413707}{Thành viên}
+  \MemberRow{2}{Phan Võ Bảo Trâm}{2413576}{Thành viên}
+  \MemberRow{3}{Lê Nguyễn Tường Vi}{2413937}{Thành viên}
+  \MemberRow{4}{Nguyễn Ngọc Hân}{2410951}{Thành viên}
+  \MemberRow{5}{Trần Thị Hương Giang}{2410845}{Thành viên}
+  \MemberRow{6}{Nguyễn Thị Minh Anh}{2410126}{Thành viên}
+  \MemberRow{7}{Trần Nhật Bảo Anh}{2410155}{Nhóm trưởng}
+\end{HCMUTMemberTable}
+\section{MỤC TIÊU BUỔI HỌP}
+Thống nhất những nội dung cần thực hiện trong Submission 3, ôn lại kiến thức thiết kế hệ thống và phân chia công việc. Thiết kế tiếp tục từ yêu cầu, use case và biểu đồ hành vi của Phase 1--2, giữ phạm vi 23 use case, bảy phân hệ và phần quản trị dùng chung GEN.
+
+\section{NỘI DUNG THẢO LUẬN}
+\subsection{Làm rõ đầu ra của Phase 3}
+Phase 3 tập trung vào kiến trúc, Deployment View, Development/Implementation View, thiết kế lớp và phương thức; bổ sung test case trong phạm vi các luồng đã phân tích. Mỗi thành viên đọc lại sequence, activity và state chart thuộc phân hệ của mình trước khi xác định lớp và trách nhiệm xử lý.
+
+Class Diagram được vẽ ở mức thiết kế, thể hiện lớp, thuộc tính, phương thức và quan hệ cần thiết để hiện thực. Không chỉ liệt kê các thực thể miền nghiệp vụ; cần làm rõ service, interface hoặc repository khi chúng tham gia giải quyết use case. Tên thao tác và dữ liệu truyền giữa các lớp phải khớp với luồng đã mô tả ở Phase 2.
+
+\subsection{Thống nhất kiến trúc và cách phối hợp module}
+Sử dụng modular monolith kết hợp layered architecture: một backend chia thành GEN và bảy module HUB, RES, TRIP, PARK, CHG, OPS, SIM. Mỗi module tách phần tiếp nhận yêu cầu, application service, nghiệp vụ và lưu trữ/tích hợp. Các module phối hợp qua hợp đồng công khai; phần xử lý nghiệp vụ không truy cập trực tiếp bảng dữ liệu của module khác.
+
+Phương án công nghệ gồm React/TypeScript/Vite cho website, NestJS cho backend, PostgreSQL/Prisma cho lưu trữ và Docker Compose/Nginx cho triển khai. Deployment View thể hiện nơi chạy các thành phần và kết nối; Implementation View thể hiện cấu trúc module và chiều phụ thuộc. Hai hình phải mô tả cùng một phương án hệ thống.
+
+\subsection{Thống nhất dữ liệu bản đồ và IoT giả lập}
+Leaflet hiển thị vị trí Hub trên nền bản đồ ĐHQG-HCM; nguồn bản đồ được ký hiệu EXT-MAP, không đưa trở lại danh sách actor use case. Dữ liệu Hub gồm mã, tên, địa điểm, tọa độ và tài nguyên liên quan. Phạm vi địa điểm bao gồm ga Metro ĐHQG, KTX A/B, Bách Khoa và các điểm trường, cơ sở trong khu vực ĐHQG-HCM.
+
+Nguồn IoT giả lập gửi sự kiện trạng thái vào backend qua StateDataAdapter để kiểm tra và cập nhật SEMHDataStore. Website đọc dữ liệu từ API và có cơ chế làm mới. Phân biệt dữ liệu khởi tạo với các sự kiện thay đổi trạng thái; simulator không tự ghi thẳng vào cơ sở dữ liệu. Không bổ sung payment gateway vào phạm vi hiện tại.
+
+\subsection{Chốt quy ước thiết kế dùng chung}
+Giữ nguyên mã use case và tên các đối tượng đã thống nhất. Trước khi dùng phương thức của phân hệ khác, cần xác định module sở hữu, tên phương thức, đầu vào, đầu ra, điều kiện gọi và trường hợp từ chối. Cùng một thao tác được nhắc ở nhiều phân hệ phải có cùng hợp đồng.
+
+Phân biệt quyền STU, OPR, MNT và ADM trong thiết kế lớp và API. Các thay đổi trạng thái tài nguyên, kết thúc chuyến đi, kết thúc phiên sạc và xác nhận điều chuyển phải tuân theo vòng đời tương ứng. SUB-SIM sử dụng snapshot và bản làm việc riêng; chạy mô phỏng không trực tiếp thay đổi tài nguyên thật.
+
+\section{PHÂN CÔNG VÀ MỐC BÀN GIAO}
+\begin{longtable}{|L{35mm}|L{66mm}|L{45mm}|}
+\hline
+\rowcolor{gray!15}\textbf{Thành viên} & \textbf{Nội dung phụ trách} & \textbf{Mốc bàn giao}\\\hline
+\endfirsthead
+\hline\textbf{Thành viên} & \textbf{Nội dung phụ trách} & \textbf{Mốc bàn giao}\\\hline\endhead
+Nguyễn Quốc Trung & SUB-HUB: lớp, phương thức tra cứu Hub và hợp đồng cung cấp thông tin tài nguyên. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Phan Võ Bảo Trâm & SUB-RES: lớp, phương thức đặt xe và các điều kiện giữ, hủy, hết hạn lượt đặt. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Lê Nguyễn Tường Vi & SUB-TRIP: lớp, phương thức chuyến đi và phối hợp vòng đời SharedVehicle. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Nguyễn Ngọc Hân & SUB-PARK: lớp, phương thức đặt chỗ đỗ và phối hợp trạng thái chỗ đỗ. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Trần Thị Hương Giang & SUB-CHG: lớp, phương thức lịch/phiên sạc và hợp đồng trạng thái cổng sạc. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Nguyễn Thị Minh Anh & SUB-OPS: lớp, phương thức vận hành, sự cố, điều phối và quản lý tài nguyên. & Bản đầu 05/11; rà chéo 06/11.\\\hline
+Trần Nhật Bảo Anh & SUB-SIM; tổng hợp GEN, kiến trúc, thiết kế dùng chung và báo cáo nhóm. & Tổng hợp 06/11; rà chung 07/11.\\\hline
+\end{longtable}
+
+Mỗi thành viên gửi Class Diagram, nguồn chỉnh sửa, mô tả lớp/phương thức và test case liên quan. Những phương thức liên phân hệ cần trao đổi với người sở hữu trước khi bàn giao; không tự đặt hai tên khác nhau cho cùng một thao tác.
+
+\section{KẾT QUẢ THỐNG NHẤT}
+\begin{enumerate}
+\item Giữ phạm vi nghiệp vụ Phase 1--2; làm rõ cách hiện thực bằng kiến trúc và thiết kế lớp.
+\item Dùng chung quy ước tên, kiểu dữ liệu, quyền truy cập và hợp đồng giữa các module.
+\item Mỗi thành viên hoàn thiện thiết kế phân hệ được giao; nội dung kiến trúc và GEN được tổng hợp dùng chung.
+\item Test case tập trung luồng chính, từ chối hợp lệ, lỗi kỹ thuật và các điểm phối hợp có rủi ro; dùng quy mô tài khoản demo phù hợp.
+\item Rà chung vào ngày 07/11 để xử lý các điểm chưa khớp trước khi chốt bản tổng hợp.
+\end{enumerate}
+
+\section{VẤN ĐỀ CẦN THEO DÕI}
+Các điểm dễ lệch gồm tên lớp/phương thức giữa hai module, kiểu định danh và trạng thái, trách nhiệm cập nhật tài nguyên và điều kiện thực hiện giao dịch. Thành viên phát hiện điểm chưa thống nhất trao đổi với phân hệ liên quan và báo nhóm trưởng cập nhật quy ước chung.
+
+\section{KẾT LUẬN}
+Tiếp tục hoàn thiện thiết kế theo phân công, bàn giao đủ nguồn và bản xuất để tổng hợp. Buổi rà soát tiếp theo tập trung tính nhất quán giữa các phân hệ và sự liên tục với Phase 2.
+
+\end{document}

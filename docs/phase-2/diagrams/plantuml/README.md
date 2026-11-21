@@ -2,7 +2,7 @@
 
 Dùng [thuật ngữ chung](../../uml-conventions.md) và [phong cách PlantUML của nhóm](../../../phase-1/diagrams/plantuml/README.md): nền trắng, viền đen, không bóng đổ. Không bọc điều kiện bằng `[[...]]` vì đó là cú pháp hyperlink.
 
-Các tên thư mục bài gốc dưới đây được lưu tại `local/phase-2-submissions/` trên máy tổng hợp, không nằm trong Git. Toàn bộ hình và mã nguồn cần để biên dịch báo cáo đã được tích hợp vào thư mục Phase 2; không cần bài gốc để build lại.
+Các tên thư mục bài gốc dưới đây được lưu tại `docs/local/phase-2-submissions/` trên máy tổng hợp, không nằm trong Git. Toàn bộ hình và mã nguồn cần để biên dịch báo cáo đã được tích hợp vào thư mục Phase 2; không cần bài gốc để build lại.
 
 ## Sơ đồ tổng quát có Admin
 
@@ -42,6 +42,8 @@ Khối `ref` kiểm tra truy cập đại diện cho tương tác với `AccessS
 - `sequence-uc-trip-01/02.puml`, `activity-uc-trip-01/02.puml`, `state-trip.puml`, `state-shared-vehicle.puml`: tích hợp từ sáu mã nguồn trong `Tường Vi - SUB Trip/`, chuẩn hóa xuống dòng và bỏ nhãn “Bonus” khỏi tiêu đề hai state diagram; giữ nguyên nội dung nghiệp vụ và các tệp nguồn của thành viên.
 
 Hai state diagram SUB-TRIP giữ ghi chú của tác giả về các chuyển trạng thái chưa được baseline quy định (`Trip.Interrupted`, sạc xe dùng chung và xe chờ sạc). Không tự suy diễn pin thấp thành `Charging` hoặc mất kết nối thành `Interrupted`.
+
+Ngày 29/10/2026, hai sequence SUB-TRIP được cập nhật theo bản thành viên bổ sung activation bar. UC-TRIP-01 cũng tách phần hiển thị phản hồi và phần đọc lại sau khi mất phản hồi; không tự gửi lại lệnh nhận xe. Mã gốc mới được giữ tại `docs/local/phase-2-submissions/Tường Vi - SUB Trip/activation-bars-2026-10-29/`. Đường dẫn hình trong báo cáo nhóm và báo cáo cá nhân giữ nguyên.
 
 Biên dịch bảy hình của SUB-RES/SUB-TRIP:
 

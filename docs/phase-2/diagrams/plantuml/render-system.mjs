@@ -7,14 +7,19 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const jar = process.argv[2];
 if (!jar) throw new Error('Truyền đường dẫn plantuml.jar làm tham số.');
-const out = resolve(here, '../system');
-mkdirSync(out, { recursive: true });
 function run(cmd, args) {
   const result = spawnSync(cmd, args, { cwd: here, stdio: 'inherit' });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(cmd + ': exit ' + result.status);
 }
-for (const name of ['system-context', 'system-use-case']) {
+for (const [name, folder] of [
+  ['system-context', 'system'],
+  ['system-use-case', 'system'],
+  ['uc-hub-01', 'use-case'],
+  ['uc-hub-03', 'use-case'],
+]) {
+  const out = resolve(here, '..', folder);
+  mkdirSync(out, { recursive: true });
   run(process.env.UML_JAVA_BIN || 'java', [
     '-Djava.awt.headless=true', '-jar', jar, '-charset', 'UTF-8',
     '-tsvg', '-o', out, name + '.puml',

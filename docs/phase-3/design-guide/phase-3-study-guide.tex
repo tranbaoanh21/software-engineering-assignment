@@ -1,0 +1,705 @@
+\documentclass[12pt,a4paper]{article}
+\newcommand{\HCMUTAssetPath}{../../assets}
+\input{\HCMUTAssetPath/latex-template/hcmut-report.sty}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{fancyvrb}
+\newcommand{\Needspace}[1]{%
+  \par\begingroup\dimen0=\pagegoal\advance\dimen0 by -\pagetotal
+  \ifdim\dimen0<#1\relax\newpage\fi\endgroup}
+\setlength{\emergencystretch}{3em}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.4em}
+\AtBeginEnvironment{longtable}{\small\renewcommand{\arraystretch}{1.15}}
+\renewcommand{\ReportType}{TÀI LIỆU ÔN TẬP}
+\renewcommand{\ReportTitle}{CÔNG NGHỆ PHẦN MỀM}
+\renewcommand{\ReportSubjectLabel}{}
+\renewcommand{\ProjectTitle}{HIỂU PHASE 3 TỪ ĐẦU}
+\renewcommand{\ProjectSubtitle}{KIẾN TRÚC, THIẾT KẾ DÙNG CHUNG VÀ SUB-SIM}
+\renewcommand{\CoverReportTypeStyle}{\Large\bfseries}
+\renewcommand{\CoverReportTitleStyle}{\Large\bfseries}
+\renewcommand{\CoverProjectTitleStyle}{\Large\bfseries}
+\renewcommand{\CoverProjectSubtitleStyle}{\normalsize\bfseries}
+\renewcommand{\LecturerName}{Cô Trần Thị Ngọc Trâm}
+\renewcommand{\ClassCode}{L02}
+\renewcommand{\GroupName}{K24 Warriors}
+\renewcommand{\Semester}{Học kỳ 261}
+\renewcommand{\AcademicYear}{2026 -- 2027}
+\renewcommand{\PlaceAndDate}{TP. Hồ Chí Minh, tháng 11/2026}
+\renewcommand{\FooterTitle}{Ôn tập Phase 3 -- Smart E-Mobility Hub}
+\renewcommand{\contentsname}{Mục lục}
+\setcounter{tocdepth}{2}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\fancyhead[L]{%
+  \begin{tabular}{@{}c@{\hspace{2mm}}l@{}}
+    \includegraphics[width=8mm,height=8mm]{\HCMUTAssetPath/hcmut (1).png} &
+    \begin{tabular}{@{}l@{}}
+      \footnotesize\ttfamily Trường Đại Học Bách Khoa -- ĐHQG TP.HCM\\[-1pt]
+      \footnotesize\ttfamily Khoa Khoa học và kỹ thuật máy tính
+    \end{tabular}
+  \end{tabular}}
+\hypersetup{pdftitle={Hiểu Phase 3 từ đầu -- Sáu lượt học},pdfauthor={K24 Warriors},pdfsubject={Kiến trúc hệ thống, lớp dùng chung, GEN và SUB-SIM}}
+\newcommand{\Lesson}[1]{\par\bigskip\Needspace{0.52\textheight}\section{#1}}
+\newcommand{\Point}[1]{\par\medskip\Needspace{4\baselineskip}\noindent\textbf{#1}\par\nobreak\smallskip}
+\newcommand{\Term}[1]{\textbf{#1}}
+\newcommand{\StudyFigure}[4][0.69\textheight]{%
+  \begin{figure}[H]\centering
+    \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}
+    \caption{#3}\label{#4}
+  \end{figure}}
+\DefineVerbatimEnvironment{Flow}{Verbatim}{fontsize=\small,frame=single,framesep=2.5mm,commandchars=\\\{\}}
+\newenvironment{PairTable}[2]{%
+  \begin{longtable}{|L{39mm}|L{106mm}|}\hline
+  \textbf{#1} & \textbf{#2}\\\hline\endfirsthead
+  \hline\textbf{#1} & \textbf{#2 (tiếp)}\\\hline\endhead
+}{\end{longtable}}
+\begin{document}
+\pagenumbering{gobble}
+\MakeHCMUTCover
+\pagenumbering{arabic}
+\begingroup\setstretch{1.0}\small\tableofcontents\endgroup
+\clearpage
+\section*{Bản đồ sáu lượt học}
+\addcontentsline{toc}{section}{Bản đồ sáu lượt học}
+Phase 1 xác định hệ thống cần làm gì. Phase 2 làm rõ tương tác và hành vi. Phase 3 quyết định phần mềm được tổ chức, chia trách nhiệm và hiện thực như thế nào. Đầu ra bắt buộc của Submission 3 gồm Deployment View, Development/Implementation View, Class Diagram và mô tả mọi phương thức có trên hình; test case là phần bonus.
+
+\begin{PairTable}{Lượt học}{Điều cần hiểu}
+1. Kiến trúc và công nghệ & Phân biệt ứng dụng, module, layer; hiểu công dụng từng công nghệ.\\\hline
+2. Deployment và dữ liệu & Đọc nơi chạy, kết nối, bản đồ, dữ liệu Hub và luồng IoT.\\\hline
+3. Implementation View & Phân biệt controller, application service, domain, interface, repository và adapter; đọc từng mũi tên.\\\hline
+4. Cơ chế dùng chung & Hiểu quyền, transaction, version, gửi lại, audit, sự kiện và tác vụ nền.\\\hline
+5. Lớp chung và GEN & Đọc ký hiệu UML, quan hệ, owner; phân biệt hình tổng thể với hình phân hệ, hiểu quản trị và tích hợp.\\\hline
+6. SUB-SIM và kiểm thử & Theo một lần chạy từ kịch bản đến kết quả, khuyến nghị, bàn giao OPS; hiểu các phương thức và test cần thiết.\\\hline
+\end{PairTable}
+
+Đọc theo thứ tự trên. Mỗi thuật ngữ được đặt vào công việc cụ thể trước khi đi vào chữ ký phương thức. Các hình lấy từ bộ thiết kế của nhóm, kèm lời giải thích trong từng lượt. Những ví dụ có số liệu trong phần học là ví dụ minh họa, không phải kết quả đo hoặc kết quả đã chạy hệ thống.
+
+\Point{Phần nào phải hiểu để trình bày?}
+Mỗi thành viên cần nắm kiến trúc, mô hình lớp tổng thể, quy tắc dùng chung và phân hệ mình phụ trách; hiểu cả những hợp đồng mà phân hệ mình cung cấp hoặc sử dụng. Phần ôn tập này có thêm GEN và tích hợp/audit vì chúng thuộc nội dung tổng hợp dùng chung. Thiết kế đang mô tả cách dự kiến hiện thực; diagram và test case không tự chứng minh ứng dụng đã chạy đúng.
+
+\Lesson{Lượt 1 -- Kiến trúc và công nghệ}
+\subsection{Nhìn toàn bộ sản phẩm trước khi nhìn class}
+SEMH có website cho người dùng, backend xử lý nghiệp vụ, database lưu dữ liệu và chương trình giả lập IoT gửi trạng thái. Nguồn bản đồ cung cấp nền để website hiển thị địa điểm Hub. Các thành phần này cùng phục vụ một hệ thống nhưng có nhiệm vụ khác nhau.
+
+\begin{PairTable}{Thành phần}{Trách nhiệm}
+Website & Hiển thị thông tin, nhận thao tác và gửi request; phản ánh kết quả backend trả về.\\\hline
+Backend & Kiểm tra quyền, quy tắc và ràng buộc; điều phối đọc/ghi, tác vụ nền và mô phỏng.\\\hline
+Database & Lưu tài khoản, danh mục, lượt đặt, trạng thái, chuyến đi, lịch sạc, mô phỏng và lịch sử.\\\hline
+IoT simulator & Đóng vai nguồn thiết bị bên ngoài, phát sự kiện trạng thái và phản hồi lệnh thiết bị giả lập.\\\hline
+Nguồn bản đồ & Cung cấp tile nền; không quyết định xe còn pin hay chỗ đỗ còn trống.\\\hline
+\end{PairTable}
+
+Website có thể hiển thị một xe còn 60\% pin, nhưng backend mới quyết định xe có được đặt hay không. Xe còn pin vẫn có thể đang dùng, bị giữ, chưa được kích hoạt hoặc đang có sự cố. Không lấy việc nút bấm đang bật trên UI làm bằng chứng nghiệp vụ hợp lệ.
+
+\subsection{Monolith, module và layer là ba khái niệm khác nhau}
+\Point{Monolith: triển khai chung một ứng dụng}
+Các chức năng backend được build và triển khai chung thành một ứng dụng. RES gọi TRIP có thể là lời gọi phương thức trong cùng chương trình; không cần dựng hai server rồi gọi HTTP. Monolith không có nghĩa chỉ có một class hoặc một hàm lớn.
+
+\Point{Modular: chia theo phạm vi nghiệp vụ}
+Nhóm chia backend thành GEN và bảy module HUB, RES, TRIP, PARK, CHG, OPS, SIM. Mỗi module có trách nhiệm, dữ liệu sở hữu và chức năng công khai. Việc chia thư mục chỉ hỗ trợ tổ chức; ranh giới còn nằm ở quyền cập nhật dữ liệu và các hợp đồng được phép sử dụng.
+
+Một module có thể chứa nhiều controller, service, entity, repository và adapter. Vì vậy, diễn đạt đúng là \textbf{bảy module nghiệp vụ}, không phải chỉ có bảy service trong toàn bộ backend.
+
+\Point{Layered: chia theo loại trách nhiệm xử lý}
+\begin{PairTable}{Tầng}{Công việc chính}
+Presentation & Nhận request, kiểm tra định dạng, áp dụng guard và trả response.\\\hline
+Application & Điều phối một nghiệp vụ: quyền, dữ liệu, rule, lời gọi cộng tác và giao dịch.\\\hline
+Domain & Biểu diễn đối tượng, hành vi, quy tắc và điều kiện luôn phải bảo toàn.\\\hline
+Infrastructure & Hiện thực lưu trữ, nguồn ngoài và các cơ chế thực thi hỗ trợ.\\\hline
+\end{PairTable}
+
+Module trả lời ``nghiệp vụ nào?''; layer trả lời ``loại công việc nào?''. Một module có thể có đủ các tầng. Entity thuộc Domain, không phải một tầng riêng tên ``domain entity''. Interface và adapter là cách tổ chức hợp đồng và hiện thực; không phải cứ dùng monolith hay layered là mọi class đều bắt buộc có interface.
+
+\begin{longtable}{|L{26mm}|L{36mm}|L{36mm}|L{39mm}|}\hline
+\textbf{Module} & \textbf{Application} & \textbf{Domain} & \textbf{Infrastructure}\\\hline\endfirsthead
+\hline\textbf{Module} & \textbf{Application} & \textbf{Domain} & \textbf{Infrastructure}\\\hline\endhead
+RES & Điều phối đặt/hủy & Lượt đặt, rule giữ xe & Hiện thực lưu lượt đặt\\\hline
+TRIP & Điều phối nhận/trả & Xe, chuyến đi, transition & Hiện thực lưu xe/chuyến\\\hline
+SIM & Điều phối lần chạy & Engine, run, tham số & Kho mô phỏng, snapshot adapter\\\hline
+\end{longtable}
+
+Các ô trên vẫn ở trong cùng ứng dụng backend. Layer là ranh giới trách nhiệm code; không mặc nhiên tương ứng container hoặc máy riêng.
+
+\subsection{Vì sao nhóm chọn cách tổ chức này?}
+Module giúp chia việc theo nghiệp vụ và hạn chế sửa lan. Layer giúp phân biệt điều phối với quy tắc và công nghệ. Triển khai chung giảm số dịch vụ độc lập phải kết nối, cấu hình và vận hành. Một DB chung còn cho phép thiết kế giao dịch bao trùm thao tác liên module.
+
+Giới hạn cần nói đúng: module không tự tạo cô lập lỗi ở cấp process. Lỗi làm sập ứng dụng vẫn có thể ảnh hưởng cả backend; DB chung vẫn là tài nguyên dùng chung. Việc tách module chỉ hữu ích khi code thật tuân theo owner và hợp đồng.
+
+\subsection{Công dụng từng công nghệ}
+\begin{PairTable}{Công nghệ}{Cách hiểu}
+React & Thư viện xây giao diện website, quản lý việc hiển thị theo dữ liệu.\\\hline
+TypeScript & Ngôn ngữ có hệ kiểu dùng cho frontend/backend; kiểu không thay việc kiểm tra input ở runtime.\\\hline
+Vite & Công cụ phát triển và build frontend; không phải nơi lưu dữ liệu nghiệp vụ.\\\hline
+Leaflet & Thư viện hiển thị bản đồ, marker và lớp thông tin trong trình duyệt.\\\hline
+Node.js & Môi trường chạy chương trình JavaScript phía server hoặc simulator.\\\hline
+NestJS & Framework tổ chức backend theo module, controller và provider/service.\\\hline
+PostgreSQL & Hệ quản trị DB quan hệ, lưu dữ liệu bền vững và hỗ trợ transaction/constraint.\\\hline
+Prisma & Công cụ truy cập dữ liệu và migration; không phải DB thay PostgreSQL.\\\hline
+Nginx & Phục vụ website đã build, chuyển tiếp API; trên server kết thúc HTTPS theo phương án nhóm.\\\hline
+Docker Compose & Khai báo và chạy phối hợp container web, api, db cùng mạng/volume.\\\hline
+Jest, Supertest & Hỗ trợ test logic và HTTP API khi có bản cài đặt.\\\hline
+\end{PairTable}
+
+\Point{Tự giải thích}
+``Backend triển khai chung một ứng dụng, chia module theo nghiệp vụ và chia tầng theo trách nhiệm. NestJS tổ chức code, Node.js chạy code; PostgreSQL lưu dữ liệu và Prisma giúp code truy cập DB.'' Nếu giải thích được câu này mà không nhầm module với server hoặc service, có thể sang Deployment View.
+
+\Lesson{Lượt 2 -- Deployment, bản đồ và dữ liệu đầu vào}
+\subsection{Deployment View trả lời câu hỏi gì?}
+Hình này thể hiện phần mềm \textbf{chạy ở đâu}, artifact nào nằm trong môi trường nào và các nơi chạy kết nối ra sao. Đây là phương án triển khai, không phải bản đồ thứ tự gọi hàm.
+
+\begin{PairTable}{Ký hiệu / thuật ngữ}{Ý nghĩa khi đọc hình}
+Node & Nơi có khả năng thực thi hoặc lưu trữ; có thể là thiết bị hoặc môi trường thực thi.\\\hline
+Device & Thiết bị tính toán, như máy người dùng hoặc server.\\\hline
+Execution environment & Môi trường chạy phần mềm, như browser, Docker Engine hoặc runtime.\\\hline
+Artifact & Sản phẩm phần mềm được triển khai: bản build, ứng dụng, cấu hình, schema.\\\hline
+Communication path & Kết nối giữa các nơi chạy; nhãn cho biết giao thức/cổng.\\\hline
+Volume & Vùng lưu dữ liệu bền vững cho DB, tách với vòng đời container.\\\hline
+\end{PairTable}
+
+\StudyFigure{../architecture/deployment-view.pdf}{Deployment View hiện tại của SEMH}{fig:study-deployment}
+
+\subsection{Đọc hình từ máy người dùng tới DB}
+\begin{enumerate}
+\item Browser tải bản build website từ Nginx; React và Leaflet chạy trong browser.
+\item Khi cần nghiệp vụ, browser gửi request API tới Nginx. Nginx chuyển đường dẫn \texttt{/api} tới backend cổng 3000.
+\item Backend xác minh quyền, thực hiện rule và đọc/ghi PostgreSQL qua kết nối nội bộ cổng 5432.
+\item DB dùng volume để dữ liệu không mất chỉ vì thay container. Browser không kết nối trực tiếp DB.
+\Needspace{4\baselineskip}
+\item IoT simulator là tiến trình ngoài ranh giới backend, gửi sự kiện qua \texttt{/api/\allowbreak state-events}; backend có thể gửi lệnh thiết bị giả lập tới cổng 4000 của simulator.
+\end{enumerate}
+
+Nginx là đầu mối nhận truy cập, không phải nơi tính lịch sạc hay chạy mô phỏng. Cổng 3000/5432 trong hình là kết nối thiết kế nội bộ; không cần công khai DB ra Internet.
+
+\subsection{Local và server khác nhau ở đâu?}
+Ở local, browser và các container có thể cùng nằm trên một máy. Simulator cũng có thể chạy trên máy đó nhưng vẫn là chương trình riêng. Ở server, browser ở máy người dùng, còn web/api/db chạy trên server. Thiết kế hiện chọn một backend instance và một PostgreSQL instance.
+
+Local dùng HTTP tại localhost; trên server, browser kết nối HTTPS tới Nginx và Nginx chuyển tiếp API trong mạng nội bộ. Cách chia nghiệp vụ vẫn giữ nguyên. Module không biến thành server riêng khi chuyển từ local sang server.
+
+\subsection{Leaflet, bản đồ nền và marker Hub}
+\Term{Leaflet} là code phía frontend để hiển thị bản đồ. \Term{MapTileProvider/EXT-MAP} cung cấp các mảnh ảnh nền bản đồ. \Term{Hub} và trạng thái tài nguyên là dữ liệu của SEMH, được lấy qua API rồi vẽ lên nền đó.
+
+Tọa độ Hub giúp đặt marker đúng vị trí; pin và khả dụng phải đến từ dữ liệu hệ thống. Tile không biết tài khoản nào đặt xe hoặc cổng nào đang hỏng. Tile có thể được tải nhiều lần khi kéo/zoom; số lần tải không phải tiêu chí quyết định một nguồn có phải actor use case hay không. Phương án nhóm giữ EXT-MAP là tích hợp bản đồ, không dùng ACT-MAP trong mô hình actor.
+
+Nếu tile lỗi nhưng API còn hoạt động, website vẫn hiển thị danh sách Hub. Nếu API lỗi, bản đồ nền còn hiện cũng không chứng minh trạng thái Hub đang đúng và mới.
+
+\subsection{Danh mục Hub và dữ liệu cần có}
+Phạm vi bản đồ gồm ga Metro Đại học Quốc gia, KTX A/B, Bách Khoa cơ sở Dĩ An; các cơ sở KHXH\&NV, Khoa học Tự nhiên, Công nghệ Thông tin, Quốc tế, Kinh tế -- Luật; Thư viện Trung tâm, Nhà điều hành và khu vực lân cận như Đại học Thể dục Thể thao TP.HCM.
+
+Mỗi Hub có ID, tên địa điểm, tọa độ, sức chứa và tài nguyên gắn đúng Hub. Dữ liệu hiển thị cần có xe/pin, chỗ đỗ, cổng sạc, số lượng khả dụng và thời điểm cập nhật. Thông số có đơn vị: pin \%, công suất kW, năng lượng kWh, khoảng cách mét; tọa độ latitude/longitude theo WGS84.
+
+\subsection{Seed khác luồng sự kiện IoT}
+\Term{Seed} tạo dữ liệu ban đầu: Hub, tọa độ, xe, chỗ đỗ, cổng sạc và tài khoản demo. Nếu chỉ seed rồi đọc mãi một bộ dữ liệu, hệ thống chưa thể hiện luồng trạng thái thay đổi liên tục.
+
+\Term{Simulator} tiếp tục phát sự kiện. Ví dụ xe đang ở Hub A thay pin từ 65\% xuống 64\%, hoặc cổng nhận bằng chứng bắt đầu sạc. Không cần thiết bị vật lý thật để mô phỏng nguồn ngoài, nhưng vẫn phải có chương trình gửi và lớp nội bộ tiếp nhận.
+
+\begin{Flow}
+IoT simulator -> HTTP -> StateDataAdapter
+                           |
+                           v
+                 Hợp đồng của owner tài nguyên
+                           |
+                           v
+                      PostgreSQL
+                           |
+                           v
+                     API -> Website
+\end{Flow}
+
+StateDataAdapter xác minh nguồn, payload, đơn vị, thứ tự và chống lặp rồi gọi owner trong cùng giao dịch cập nhật. Nó không phải interface ảo; đó là code thực hiện xử lý. Nguồn StateDataGateway ở ngoài, adapter ở trong, DB là nơi lưu kết quả được chấp nhận.
+
+Website dự kiến refetch khi mở trang, sau thao tác thành công và mỗi 10 giây khi trang hiển thị. Đây là polling, không đồng nghĩa đã có WebSocket. Khi nguồn gián đoạn, giữ dữ liệu hợp lệ cuối kèm mốc cập nhật, không mặc định mọi tài nguyên đều Available.
+
+\Point{Tự giải thích}
+``Browser tải website và tile, nhưng đọc trạng thái Hub từ API. Simulator gửi sự kiện vào backend, backend xác minh và cập nhật DB. Một máy có thể chạy nhiều thành phần; một module không tương ứng một container.''
+
+\Lesson{Lượt 3 -- Đọc Development/Implementation View}
+\subsection{Hình cấu trúc code, không phải lưu đồ tuần tự}
+Deployment View nhìn nơi chạy. Implementation View nhìn \textbf{những phần code và chiều phụ thuộc}. Không cố đi một đường từ đầu đến cuối qua tất cả các ô. Mũi tên ở phần code thường có nghĩa ``sử dụng/phụ thuộc'', không phải lúc nào cũng là chiều truyền sự kiện ngoài thực tế.
+
+\StudyFigure{../architecture/implementation-view.pdf}{Development/Implementation View hiện tại của SEMH}{fig:study-implementation}
+
+Khung lớn là một backend NestJS. Presentation, Application, Domain và Infrastructure cùng nằm trong khung đó. React website, PostgreSQL và StateDataGateway nằm ngoài khung backend; chúng không phải các layer bên trong.
+
+\subsection{Controller, validation và guard}
+Controller nhận request, lấy input rồi chuyển tới application service, sau đó ánh xạ kết quả thành response. Validation kiểm tra dữ liệu đầu vào như trường bắt buộc, kiểu và miền giá trị. Guard hỗ trợ chặn truy cập không được phép.
+
+Kiểm tra ``pin có nằm trong 0--100 không?'' là validation dữ liệu. Kiểm tra ``xe có đủ điều kiện cho đặt trong tình trạng hiện tại không?'' là rule nghiệp vụ. Controller không nên ôm toàn bộ rule; kiểm tra quyền ở cửa vào cũng không thay việc kiểm tra lại quyền/ràng buộc khi thực hiện command.
+
+\subsection{Application service, domain và entity}
+Application service điều phối một công việc: xác định chủ thể, lấy dữ liệu, gọi rule/đối tượng, tổ chức transaction, phối hợp module và trả kết quả. Domain biểu diễn kiến thức nghiệp vụ; entity và policy là những thành phần bên trong domain.
+
+\begin{PairTable}{Khái niệm}{Điều cần phân biệt}
+Class & Định nghĩa một loại đối tượng với thuộc tính và hành vi. Không phải class nào cũng có bảng DB.\\\hline
+Object & Một đối tượng cụ thể thuộc class tại lúc chạy chương trình.\\\hline
+Entity & Đối tượng nghiệp vụ được nhận diện bằng ID và có vòng đời; dữ liệu đổi nhưng vẫn là cùng đối tượng.\\\hline
+Value object & Nhóm giá trị được hiểu theo nội dung, thường bất biến; không dựa vào ID riêng như entity.\\\hline
+Policy & Quy tắc/cách quyết định được đóng gói để tái sử dụng và kiểm thử.\\\hline
+Invariant & Điều kiện phải được bảo toàn để dữ liệu nghiệp vụ còn hợp lệ.\\\hline
+Domain service & Hành vi nghiệp vụ không phù hợp đặt vào một entity riêng lẻ.\\\hline
+DTO / View & Dữ liệu trao đổi qua ranh giới; không mặc nhiên là entity hoặc bản ghi DB nguyên trạng.\\\hline
+\end{PairTable}
+
+Ví dụ một lượt đặt có thể tự chuyển Confirmed sang Cancelled khi điều kiện trạng thái đúng. Nhưng thao tác đó trong bộ nhớ chưa đồng nghĩa DB đã lưu. Application service còn phải phối hợp gỡ giữ xe, lưu dữ liệu và audit. Entity giữ hành vi hợp lệ; service tổ chức toàn công việc.
+
+\subsection{Interface, repository và adapter}
+Interface là hợp đồng: có thao tác nào, input/output gì. Adapter là code hiện thực hoặc chuyển đổi giao tiếp với công nghệ/nguồn khác. Repository là cách cung cấp thao tác đọc/lưu đối tượng; có thể được định nghĩa thành interface, rồi có lớp Prisma hiện thực nó.
+
+\begin{Flow}
+Application service sử dụng Repository interface
+                              ^
+                              | được hiện thực bởi
+                       Prisma repository adapter
+                              |
+                              v
+                         PostgreSQL
+\end{Flow}
+
+Khi chạy, application gọi object adapter thông qua hợp đồng đã thống nhất. Interface không tự chạy, không phải server và không có một bước xử lý độc lập ở giữa. Dependency injection cung cấp object cộng tác cho class cần dùng; nhờ đó service không phải tự tạo mọi dependency bằng tay. Với TypeScript, interface bị xóa khi biên dịch nên hiện thực DI cần cấu hình token/provider phù hợp.
+
+Không bắt buộc tạo interface cho mọi class. Module có thể cung cấp public service/method làm hợp đồng nội bộ. Chữ public trong UML không tự biến phương thức thành endpoint Internet.
+
+\subsection{Đọc từng mũi tên trong hình}
+\begin{PairTable}{Mũi tên}{Cách đọc}
+React tới Presentation & Website gửi HTTP(S)/REST tới backend.\\\hline
+Presentation tới Application & Controller chuyển yêu cầu cho service điều phối.\\\hline
+Application tới Domain & Service dùng hành vi entity/policy và các kiểu nghiệp vụ.\\\hline
+Application tới interface & Service phụ thuộc các thao tác của hợp đồng lưu trữ/nguồn.\\\hline
+Infrastructure tới interface, nét đứt/tam giác & Các adapter cung cấp phần hiện thực hợp đồng. Đây là realization, không phải trình tự truyền dữ liệu.\\\hline
+Infrastructure tới Domain & Code adapter sử dụng các kiểu/đối tượng miền. Domain không cần biết Prisma hoặc HTTP.\\\hline
+Infrastructure tới DB & Hiện thực lưu trữ giao tiếp PostgreSQL bằng Prisma/SQL.\\\hline
+Infrastructure tới nguồn ngoài & Có giao tiếp sự kiện/lệnh qua HTTP. Hình phụ thuộc không nói sự kiện chỉ chạy một chiều ra ngoài.\\\hline
+\end{PairTable}
+
+Ô Infrastructure gom Prisma adapters, StateDataAdapter, audit, scheduler và worker. Không phải tất cả thành phần trong ô đều là adapter: scheduler kích hoạt theo lịch, worker thực hiện việc nền. Hình đang tổng hợp thành phần hỗ trợ, không mô tả mọi lời gọi runtime giữa chúng.
+
+\subsection{Theo một request để ghép các khái niệm}
+Một yêu cầu đặt xe được controller tiếp nhận; application service kiểm tra quyền và dữ liệu. Policy kiểm tra rule. RES gọi hợp đồng của TRIP để giữ xe. Adapter lưu lượt đặt, trạng thái xe và lịch sử trong transaction chung. Sau commit, service trả DTO và controller trả response cho website.
+
+Không có yêu cầu ``mọi request phải lần lượt chạy qua từng ô''. Một query đơn giản có thể chỉ cần đọc dữ liệu theo quyền; một command phức tạp phải qua nhiều rule và owner. Bản thiết kế chọn ranh giới phụ thuộc để nghiệp vụ không bị gắn trực tiếp với HTTP hoặc Prisma.
+
+\Point{Tự giải thích}
+``Presentation nhận, Application điều phối, Domain giữ nghiệp vụ đúng, interface mô tả hợp đồng, adapter thực hiện giao tiếp cụ thể. Tất cả phần code nội bộ vẫn ở trong một backend.''
+
+\Lesson{Lượt 4 -- Những cơ chế dùng chung}
+\subsection{Query và command}
+\Term{Query} phục vụ đọc dữ liệu: xem danh sách, chi tiết hoặc kết quả. \Term{Command} yêu cầu thay đổi nghiệp vụ: tạo lượt đặt, khóa tài khoản, đổi trạng thái phục vụ hoặc bắt đầu một lần mô phỏng.
+
+Query không nên âm thầm sửa trạng thái nghiệp vụ chỉ vì người dùng mở màn hình. Một query có thể làm mới mốc hoạt động của phiên hợp lệ theo cơ chế kỹ thuật, nhưng điều đó khác tạo/hủy lượt đặt. Command cần được kiểm tra và ghi nhất quán trước khi trả thành công.
+
+\subsection{Đăng nhập, phiên và phân quyền}
+\Term{Authentication} xác định ai đang truy cập. \Term{Authorization} xác định chủ thể đó được làm gì với đối tượng cụ thể. Đăng nhập đúng không có nghĩa được xem mọi dữ liệu hoặc gọi mọi command.
+
+Phương án nhóm dùng session phía server. Browser giữ token ngẫu nhiên trong cookie; DB lưu hash token và dữ liệu phiên. Backend kiểm tra token, tài khoản, thời hạn, quyền hiện hành và scope. Không lấy role do form gửi lên làm căn cứ quyền.
+
+\begin{PairTable}{Vai trò}{Phạm vi cần hiểu}
+STU & Dùng dịch vụ và thao tác theo ownership: xe cá nhân, lượt đặt, chuyến đi của mình.\\\hline
+OPR & Quản lý vận hành và tài nguyên trong phạm vi Hub được giao.\\\hline
+MNT & Thực hiện công việc kỹ thuật được giao, giới hạn thêm theo Hub.\\\hline
+ADM & Quản trị tài khoản, quyền và danh mục; không mặc nhiên nhận quyền OPR/MNT.\\\hline
+\end{PairTable}
+
+Ví dụ OPR có quyền tại Hub A chưa chắc được sửa tài nguyên Hub B. Backend phải đọc đối tượng thật để xác định Hub, không chỉ tin hubId từ client.
+
+Phiên hết hiệu lực sau 30 phút không hoạt động hợp lệ, khi logout hoặc bị thu hồi. Khóa tài khoản thu hồi các phiên; mở khóa không hồi sinh phiên cũ. Việc IoT gửi dữ liệu và tác vụ nền chạy không kéo dài session của người dùng.
+
+Cookie HttpOnly hạn chế JavaScript đọc token; Secure dùng khi HTTPS; SameSite và kiểm tra Origin/CSRF token hỗ trợ chống việc website khác lợi dụng cookie để gửi command. Không cần học chi tiết triển khai bảo mật để trình bày, nhưng cần hiểu backend giữ quyền quyết định và không lộ passwordHash/tokenHash qua DTO.
+
+\subsection{Transaction: nhiều thay đổi cùng thành công hoặc cùng rollback}
+Giữ xe và tạo lượt đặt là hai thay đổi liên quan. Nếu chỉ giữ xe mà không có lượt đặt, xe bị kẹt; nếu chỉ có lượt đặt mà xe chưa giữ, người khác có thể được cấp cùng xe.
+
+Transaction gom các thay đổi thành một đơn vị nguyên tử. \Term{Commit} ghi nhận thành công; \Term{rollback} bỏ những thay đổi của transaction thất bại. Trong thiết kế nhóm, thay đổi nghiệp vụ, audit và receipt phải nhất quán.
+
+\begin{Flow}
+Bắt đầu transaction
+  Kiểm tra lại quyền, trạng thái và ràng buộc
+  Giữ xe qua owner TRIP
+  Lưu lượt đặt qua RES
+  Lưu audit và receipt
+Commit nếu mọi bước hợp lệ; lỗi thì rollback
+\end{Flow}
+
+\Term{Serializable} nhằm bảo đảm kết quả các transaction commit phù hợp với một thứ tự thực hiện tuần tự hợp lệ, dù chúng chạy đồng thời. Nó không bảo đảm mọi request đều được chấp nhận: có thể phát hiện serialization conflict và cần thử lại toàn transaction.
+
+Nhóm chọn thử lại tối đa hai lần khi serialization conflict, còn xung đột thì trả Conflict. Unique constraint hỗ trợ bảo vệ những điều kiện có thể biểu diễn ở DB. Chỉ kiểm tra bằng một câu if trước khi ghi hoặc chỉ khóa bằng mutex trong process là chưa đủ thay bảo đảm tại DB.
+
+\subsection{Version: chống ghi đè từ dữ liệu cũ}
+Một bản ghi có version=7. Hai người cùng đọc. Người thứ nhất cập nhật và DB lên version=8. Người thứ hai vẫn gửi expectedVersion=7 thì không được âm thầm ghi đè thay đổi mới.
+
+Version dùng cho đối tượng được cập nhật. Version Incident, version lượt đặt và version xe là các giá trị khác nhau, không được dùng lẫn. Khi một command tác động nhiều owner, caller/owner phải đọc và kiểm tra đúng version trong transaction.
+
+\subsection{RequestId, idempotency và receipt}
+Idempotency giúp gửi lại cùng yêu cầu không gây tác động nghiệp vụ trùng. Ví dụ backend đã tạo lượt đặt nhưng mạng đứt trước khi response tới browser. Mất phản hồi không chứng minh command chưa commit.
+
+\begin{PairTable}{Tình huống}{Cách xử lý theo thiết kế}
+Cùng requestId, cùng chủ thể/loại thao tác/nội dung & Trả kết quả đã commit theo quyền hiện hành; không tạo tác động mới.\\\hline
+Cùng requestId nhưng khác nội dung & Từ chối xung đột; không tự xem như yêu cầu mới.\\\hline
+Không nhận được phản hồi & Tra kết quả bằng requestId hoặc gửi lại đúng ID/nội dung.\\\hline
+Chưa tìm thấy receipt & Chưa có kết quả được xác nhận để trả; không được kết luận chắc chắn mọi thao tác trước đó chưa từng xảy ra chỉ từ lỗi mạng.\\\hline
+\end{PairTable}
+
+Receipt là kết quả đã ghi nhận của command, phục vụ tra cứu/gửi lại. Nó khác audit: audit ghi lịch sử thay đổi; receipt giúp nhận diện và trả kết quả của một yêu cầu.
+
+\begin{PairTable}{Cơ chế}{Vấn đề chính được giải quyết}
+Transaction & Nhiều thay đổi phải nguyên tử và nhất quán.\\\hline
+Version & Tránh ghi đè bằng phiên bản dữ liệu cũ.\\\hline
+RequestId & Tránh tác động trùng khi cùng yêu cầu được gửi lại.\\\hline
+Audit & Giữ dấu vết ai/nguồn nào thay đổi gì và lúc nào.\\\hline
+\end{PairTable}
+
+\subsection{Audit: lịch sử thay đổi có trách nhiệm}
+AuditEntry gồm actor/source, thời điểm, hành động, loại/ID đối tượng, before/after, outcome và requestId nếu có. Không đưa mật khẩu, token hoặc khóa nguồn vào lịch sử. Audit phải commit cùng nghiệp vụ; không được báo command thành công nhưng mất lịch sử bắt buộc do lỗi lưu audit.
+
+AuditService là thành phần nội bộ. Nó không phải actor bên ngoài chỉ vì được nhiều module sử dụng. Phương thức append nhận transaction của caller; quyền DB ứng dụng không cho sửa/xóa audit qua các thao tác nghiệp vụ thông thường.
+
+\subsection{Bản tin IoT trùng, cũ và sai}
+StateEvent có sourceId, eventId, resourceType, resourceId, sequence, observedAt và payload có đơn vị. Server gán receivedAt. observedAt là lúc nguồn quan sát; receivedAt là lúc backend nhận, hai mốc không đồng nghĩa.
+
+Ví dụ sự kiện sequence=101 đã được áp dụng, rồi bản 100 đến muộn. Nếu dùng bản mới nhận nhất để ghi đè, hệ thống có thể quay về dữ liệu cũ. Theo thiết kế, mỗi tài nguyên gắn nguồn có sequence tăng; sourceId/eventId chống lặp, bản cũ không ghi đè dữ liệu đã chấp nhận mới hơn.
+
+\begin{PairTable}{Kết quả ingest}{Ý nghĩa}
+Applied & Bản tin hợp lệ được áp dụng.\\\hline
+Duplicate & Bản tin đã xử lý; không áp dụng lần nữa.\\\hline
+IgnoredStale & Bản tin cũ, không dùng để ghi đè trạng thái mới.\\\hline
+Lỗi nguồn/payload & Từ chối với lỗi phù hợp; không biến dữ liệu sai thành trạng thái hợp lệ.\\\hline
+\end{PairTable}
+
+\subsection{Trạng thái phục vụ khác trạng thái vật lý}
+\Term{ServiceStatus} có Draft, Active, Inactive: tài nguyên được cho phép phục vụ hay chưa. \Term{Trạng thái vận hành/vật lý} biểu diễn Available, Reserved, InUse, Charging hoặc OutOfService tùy loại.
+
+Một xe có thể không đang được sử dụng nhưng đang Inactive; không được cấp phát chỉ vì nhìn thấy nó trống. Bật phục vụ cũng không có nghĩa xe hỏng đã được sửa. IoT không tự thay Inactive thành Active. Kết thúc Trip không tự bảo đảm xe Available; phải kiểm pin, an toàn, hiện diện và ràng buộc.
+
+\subsection{Scheduler, worker và các mốc thời gian}
+Scheduler quyết định lúc nào kích hoạt việc nền. Worker thực hiện công việc. Hai vai trò có thể được tổ chức trong cùng backend; không mặc nhiên cần broker hay server riêng.
+
+\begin{PairTable}{Tác vụ}{Quy tắc đã chọn}
+RES/PARK & Quét hết hạn mỗi 30 giây; command vẫn đối chiếu expiresAt ngay lúc thực hiện.\\\hline
+CHG & Tính lại lịch theo sự kiện hoặc mỗi 5 phút; giữ phiên đã bắt đầu.\\\hline
+OPS & Xử lý theo sự kiện và quét bù mỗi 2 phút.\\\hline
+HUB & Đồng bộ lại trong 60 giây sau khi nguồn khôi phục.\\\hline
+SIM & Tính trong worker thread; run Running của process cũ chuyển Failed khi khởi động lại.\\\hline
+\end{PairTable}
+
+Nếu lượt đặt hết hạn lúc 10:10 mà scheduler tới 10:10:20 mới quét, người dùng vẫn không được nhận xe lúc 10:10:05. Điều kiện thời hạn được bảo vệ khi command chạy, không phụ thuộc hoàn toàn vào độ trễ scheduler.
+
+\subsection{Snapshot nhất quán và lỗi HTTP}
+Snapshot mô phỏng đọc qua owner trong read-only Repeatable Read để các lần đọc trong transaction dùng một góc nhìn nhất quán. Sau khi chốt, bản snapshot được lưu bất biến. Transaction đọc này không khóa mạng lưới vận hành suốt thời gian mô phỏng.
+
+HTTP error là cách trả kết quả lỗi cho client: 400 dữ liệu đầu vào; 401 xác thực/phiên; 403 quyền; 404 không có trong phạm vi; 409 xung đột; 503 nguồn không sẵn sàng; 500 lỗi nội bộ. Lỗi DB không được biến thành danh sách rỗng rồi nói ``không có tài nguyên''. Mã cụ thể phải theo hợp đồng, không chỉ dựa vào text thông báo.
+
+\Point{Tự giải thích}
+Vì sao khóa tài khoản không tự hủy chuyến đang diễn ra? Vì quyền truy cập và vòng đời nghiệp vụ là hai trách nhiệm khác nhau; nghiệp vụ đang chạy cần luồng xử lý riêng. Vì sao đóng UI không đồng nghĩa hủy worker? Vì vòng đời một request/màn hình không phải vòng đời toàn công việc nền.
+
+\Lesson{Lượt 5 -- Mô hình lớp tổng thể, GEN và tích hợp}
+\subsection{Hình lớp tổng thể và hình phân hệ khác mức chi tiết}
+Mô hình lớp dùng chung trong báo cáo cho thấy các lớp nghiệp vụ chính của toàn SEMH và quan hệ giữa chúng. Nó không có nghĩa tất cả các lớp đều thuộc một module chung, hoặc tất cả module đều được sửa chúng.
+
+Hình phân hệ phóng to phần thiết kế thuộc trách nhiệm của phân hệ: thêm thuộc tính, phương thức, service, contract, adapter và DTO cần thiết. Một lớp xuất hiện trên nhiều hình vẫn có thể chỉ là cùng một định nghĩa được tham chiếu; không tạo nhiều bản SharedVehicle hay Account độc lập chỉ vì nhiều người vẽ lại nó.
+
+\StudyFigure[0.62\textheight]{../diagrams/class/system-class-overview.pdf}{Mô hình lớp tổng thể đang dùng trong báo cáo}{fig:study-overview}
+
+\subsection{Đọc quan hệ trong hình}
+Account liên kết lượt đặt xe và lượt đặt chỗ; mỗi lượt thuộc một chủ, một tài khoản có thể có nhiều lượt trong lịch sử. VehicleReservation gắn SharedVehicle và có thể phát sinh tối đa một Trip; có lượt đặt bị hủy/hết hạn nên không phải lượt nào cũng có Trip.
+
+ParkingReservation gắn xe cá nhân và chỗ đỗ. MobilityHub liên kết tài nguyên tại địa điểm. ChargingRequest tham chiếu Vehicle; ChargingSession mô tả lần thực hiện thực tế và gắn cổng sạc. Association có nhiều phần tử trong lịch sử không đồng nghĩa cho phép nhiều phân bổ đồng thời: rule vẫn giới hạn cạnh tranh.
+
+Ở nhánh mô phỏng, một SimulationScenario có thể có nhiều SimulationRun. Một run có thể sinh nhiều Recommendation. RedistributionPlan có thể liên kết nguồn khuyến nghị, hoặc được lập chủ động từ OPS. Incident xác định tài nguyên qua resourceType/resourceId nên không cần nối một đường riêng tới mọi loại tài nguyên.
+
+SharedVehicle/PrivateVehicle được biểu diễn như các loại Vehicle trong hình tổng thể. Khi xe dùng chung đang đi, thiết kế chi tiết cho phép currentHubId trống; không suy từ quan hệ Hub trên hình tổng thể rằng xe lúc nào cũng có mặt tại một Hub. Cần đọc hình tổng thể cùng quy tắc chi tiết.
+
+\subsection{Ký hiệu UML và cách đọc multiplicity}
+\begin{PairTable}{Ký hiệu}{Ý nghĩa}
+Class ba vùng & Tên, thuộc tính, phương thức. Một số hình tổng thể chỉ hiện tên.\\\hline
+\texttt{+ / - / \#} & Public / private / protected. Public không tự có nghĩa endpoint HTTP.\\\hline
+\texttt{name: Type} & Tên thuộc tính và kiểu dữ liệu.\\\hline
+\texttt{method(input): Output} & Tên phương thức, tham số và kiểu trả về; void là không trả giá trị kết quả.\\\hline
+\texttt{1 / 0..1 / 0..* / 1..*} & Đúng một / tùy chọn một / không hoặc nhiều / ít nhất một.\\\hline
+Association & Đường liền biểu diễn quan hệ giữa đối tượng; không tự là lời gọi hàm.\\\hline
+Dependency & Nét đứt có mũi tên: thành phần sử dụng/phụ thuộc thành phần khác.\\\hline
+Generalization & Đường liền, tam giác rỗng hướng về lớp cha: quan hệ kế thừa.\\\hline
+Realization & Nét đứt, tam giác rỗng hướng về interface: hiện thực hợp đồng.\\\hline
+Aggregation & Hình thoi rỗng ở phía toàn thể; quan hệ toàn thể--bộ phận dạng shared.\\\hline
+Composition & Hình thoi đen ở phía toàn thể; quyền sở hữu mạnh, bộ phận không thuộc nhiều composite đồng thời.\\\hline
+\end{PairTable}
+
+Với Account ``1'' nối Trip ``0..*'': một Account có thể liên kết nhiều Trip, mỗi Trip thuộc đúng một Account. Đọc số ở đầu Trip bằng câu ``với một Account, có bao nhiêu Trip?''. Các số nói giới hạn quan hệ, chưa kể đầy đủ thời điểm, điều kiện hay chuyển trạng thái.
+
+Không dùng composition chỉ vì Hub ``quản lý'' xe; xe có thể chuyển Hub. Ký hiệu UML cũng không tự sinh cascade delete hoặc constraint DB. Người thiết kế phải hiện thực ràng buộc phù hợp.
+
+\Needspace{8\baselineskip}
+\subsection{Owner: ai chịu trách nhiệm một lớp?}
+\begin{PairTable}{Owner}{Lớp chính và trách nhiệm}
+GEN & Account, AccessAssignment, Session; danh tính, phiên và quyền.\\\hline
+HUB & MobilityHub; danh mục/vị trí và thông tin Hub.\\\hline
+RES & VehicleReservation; vòng đời lượt giữ xe.\\\hline
+TRIP & Vehicle, SharedVehicle, Trip; xe dùng chung và chuyến đi.\\\hline
+PARK & PrivateVehicle, ParkingSpace, ParkingReservation.\\\hline
+CHG & ChargingRequest, ChargingSession, ChargingPoint.\\\hline
+OPS & Incident, RedistributionPlan; phối hợp thay đổi tài nguyên qua owner.\\\hline
+SIM & Scenario, Run, Snapshot, Result, Recommendation và logic mô phỏng.\\\hline
+\end{PairTable}
+
+``Dùng chung DB'' không có nghĩa module nào cũng được sửa mọi bảng. Owner chịu trách nhiệm kiểm tra ràng buộc và cập nhật entity của mình; module khác gọi hợp đồng. Kiểu chung như ChangeContext là khái niệm khác với các entity toàn hệ thống xuất hiện trên hình tổng thể.
+
+\subsection{Kiểu dữ liệu dùng chung}
+\begin{PairTable}{Kiểu}{Nội dung và mục đích}
+SessionToken / SessionView & Token xác định phiên; view trả thông tin tài khoản/quyền và hạn phiên an toàn.\\\hline
+Permission / TargetRef & Hành động muốn làm và đối tượng đích; backend đọc đối tượng thật để kiểm scope.\\\hline
+AccessDecision & Danh tính/phạm vi được chấp nhận sau kiểm tra, hoặc lỗi truy cập.\\\hline
+ChangeContext & requestId, reason, expectedVersion khi cập nhật; actor lấy từ session.\\\hline
+ChangeReceipt & Kết quả command đã commit: thao tác, targetId, version và kết quả được phép xem.\\\hline
+StateEvent / IngestResult & Bản tin nguồn và kết quả Applied/Duplicate/IgnoredStale hoặc lỗi.\\\hline
+AuditEntry & Dấu vết actor/source, hành động, đối tượng, thời gian và thay đổi.\\\hline
+\end{PairTable}
+
+ID dùng UUID; thời gian UTC/ISO-8601; pin 0--100\%, khoảng cách mét, công suất kW, năng lượng kWh. kW là tốc độ truyền năng lượng, kWh là lượng năng lượng; không đổi lẫn hai đơn vị trong công thức hoặc payload. Các ví dụ ID ngắn trong phần học chỉ là nhãn minh họa.
+
+\subsection{GEN: tài khoản, quyền, phiên và danh mục ban đầu}
+\StudyFigure{../diagrams/class/00-gen.pdf}{Các lớp quản trị và truy cập dùng chung}{fig:study-gen}
+
+Account lưu danh tính, username, passwordHash, trạng thái Active/Locked và version. AccessAssignment gắn account với role/phạm vi. Session lưu dữ liệu phiên, tokenHash, lastActiveAt và revokedAt. Một tài khoản có thể có nhiều bản ghi phân quyền/phiên; bản ghi đó không phải tài khoản mới.
+
+\Term{AccessService} xử lý truy cập; \Term{AdministrationService} xử lý quản trị. Tách hai trách nhiệm để việc người dùng đăng nhập không bị nhầm với quyền quản lý tất cả tài khoản.
+
+\begin{PairTable}{Phương thức / nhóm}{Cần giải thích được}
+login & Chuẩn hóa username, kiểm mật khẩu hash Argon2id và Account.Active; thành công tạo session/cookie. Sai trả lỗi chung, có giới hạn lần thử ở HTTP adapter.\\\hline
+logout & Thu hồi phiên và xóa cookie; không tự hủy nghiệp vụ đang chạy.\\\hline
+verifyAccess & Kiểm phiên, tài khoản, thời hạn, quyền hiện hành và scope đối tượng; command kiểm lại trong transaction.\\\hline
+getAccounts / getAccessAssignments & Đọc thông tin an toàn và quyền/phạm vi; không trả passwordHash/tokenHash.\\\hline
+getRegistry / getChangeResult & Đọc danh mục qua owner hoặc kết quả command đã commit.\\\hline
+createAccount / updateAccount & Tạo/sửa đúng trường, username duy nhất; tạo mới chưa tự cấp role.\\\hline
+setAccountStatus & Khóa/mở theo version; bảo toàn ít nhất một ADM Active có quyền quản trị.\\\hline
+updateAccess\allowbreak Assignments & Thay quyền nguyên tử; áp dụng ở yêu cầu tiếp theo, không tự hủy nghiệp vụ.\\\hline
+createResourceDraft & ADM gọi owner tạo danh mục Draft; không tự kích hoạt hoặc giả lập trạng thái vật lý.\\\hline
+\end{PairTable}
+
+Hash mật khẩu là giá trị dùng kiểm chứng, không phải mật khẩu mã hóa để giải ngược. Tài khoản demo vẫn được kiểm tra đăng nhập phía backend và lưu hash theo thiết kế; không để frontend tự chọn role rồi coi là đã xác thực.
+
+GEN tạo danh mục ban đầu; OPS quản lý phục vụ theo thời gian vận hành. Tạo Draft chỉ là có hồ sơ tài nguyên. Active phải qua kiểm tra điều kiện, còn Available cần trạng thái vận hành phù hợp. Tài khoản Active cũng khác tài nguyên Active: chúng dùng các kiểu trạng thái khác nhau.
+
+\subsection{Tiếp nhận trạng thái và audit}
+\StudyFigure{../diagrams/class/shared-services.pdf}{StateDataAdapter và AuditService}{fig:study-shared}
+
+StateDataAdapter.ingest nhận sự kiện ngoài, xác minh rồi gọi owner. AuditService.append nhận transaction caller để ghi lịch sử cùng thay đổi. StateDataGateway là nguồn ngoài; StateDataAdapter và AuditService là code nội bộ, không phải actor con người.
+
+ResourceOwnerPort là hợp đồng để GEN/OPS đọc, tạo Draft, sửa metadata, kiểm ràng buộc, đổi ServiceStatus và xử lý lỗi/khôi phục. Nó được ánh xạ tới owner đúng loại tài nguyên. Không dùng một phép UPDATE chung bỏ qua các quy tắc riêng của xe, chỗ đỗ và cổng sạc.
+
+Đối với RES--TRIP, reserveVehicleInTx và releaseVehicleInTx là hợp đồng giữ/giải phóng xe. InTx dùng transaction caller, không tự commit. RES quản lượt đặt, TRIP quản trạng thái xe; hai phần phải thành công hoặc rollback cùng nhau.
+
+\subsection{Đọc bảng mô tả phương thức}
+Chữ ký trả lời tên, input và output. Mô tả trả lời điều kiện, hành vi, dữ liệu thay đổi và lỗi. Khi thấy \texttt{+ method(input: Type): Result}, hãy hỏi thêm: ai được gọi, trạng thái nào hợp lệ, có ghi DB không, ai commit và khi không đủ điều kiện thì giữ dữ liệu thế nào?
+
+Entity chỉ thay đối tượng trong bộ nhớ. Service điều phối lưu trữ. Repository/adapter hiện thực việc đọc/ghi. Query không tự cấp phát; một kết quả preview cũng chưa bảo đảm tài nguyên còn hợp lệ khi xác nhận command.
+
+\Point{Tự giải thích}
+Nếu lớp Account xuất hiện ở hình PARK, đó là tham chiếu tới GEN, không phải PARK có bảng mật khẩu riêng. Nếu cùng SharedVehicle xuất hiện ở hình tổng thể và hình TRIP, đó là hai mức nhìn của một lớp. Nếu interface xuất hiện trên hình, phải xác định class nào hiện thực nó khi chạy.
+
+\Lesson{Lượt 6 -- SUB-SIM từ kịch bản tới khuyến nghị}
+\subsection{SIM giải quyết câu hỏi gì?}
+SUB-SIM giúp Operator thử tình huống giả định: nếu nhu cầu tăng, một số tài nguyên tạm ngưng hoặc năng lực Hub thay đổi, mạng lưới có thể thiếu gì và phương án nào đáng xem xét? Mô hình tính trên dữ liệu đã chốt để kết quả có thể so sánh, giải thích và chạy lại.
+
+\Term{IoT simulator} giả lập thiết bị ngoài, làm dữ liệu vận hành thay đổi. \Term{SimulationEngine} của SUB-SIM tính what-if trên bản sao, không đổi tài nguyên thật. Hai phần có chữ ``mô phỏng'' nhưng trách nhiệm và quyền truy cập hoàn toàn khác nhau.
+
+UC-SIM-01 tập trung cấu hình và thực hiện mô phỏng. UC-SIM-02 tập trung đọc, so sánh, phân tích kết quả và xem khuyến nghị. Chuyển khuyến nghị điều chuyển sang OPS chỉ mở quy trình thật để người có quyền xem lại; chưa phải áp dụng.
+
+\subsection{Phân biệt các lớp dữ liệu trước}
+\begin{PairTable}{Lớp}{Câu hỏi nó trả lời}
+SimulationScenario & Đang muốn thử tình huống gì? Lưu tên, mục tiêu, phạm vi, tham số và version.\\\hline
+ScenarioParameters & Thử trong bao lâu, nhu cầu bao nhiêu và thay đổi giả định nào? Đây là value object.\\\hline
+SimulationRun & Đây là lần chạy nào, đang tới đâu, dùng input/phiên bản nào và đã sẵn sàng phân tích chưa?\\\hline
+SimulationSnapshot & Dữ liệu cơ sở nào được đóng băng cho lần chạy?\\\hline
+SimulationResult & Baseline và kịch bản cho ra những chỉ số, chênh lệch và warning nào?\\\hline
+Recommendation & Kết quả gợi ý hành động gì, tại Hub nào, bằng chứng và tác động dự kiến ra sao?\\\hline
+\end{PairTable}
+
+Một scenario có thể chạy nhiều lần. Sửa scenario không được sửa ngầm input của run cũ. Vì vậy run giữ scenarioVersion, parametersCopy, profileCopy và modelVersion. Cần biết lại một kết quả thì đọc bản đã chốt của run, không đọc cấu hình scenario mới nhất rồi gán cho kết quả cũ.
+
+\StudyFigure{../diagrams/class/07-sub-sim.pdf}{Các lớp dữ liệu và vòng đời lần chạy của SIM}{fig:study-sim-data}
+
+Đọc quan hệ: một scenario có 0..* run; một run gắn một snapshot riêng; một run có tối đa một kết quả hoàn chỉnh và có thể có nhiều khuyến nghị. Snapshot không trỏ tới object đang sống trong kho vận hành. Việc lưu một scenario nháp chưa tạo run/snapshot; trạng thái Draft trên SimulationRun phục vụ vòng đời khởi tạo của run trước khi start.
+
+\subsection{Tham số là input điều khiển tình huống}
+\begin{PairTable}{Tham số}{Miền giá trị và ý nghĩa}
+hubIds & Tập Hub không rỗng, toàn bộ trong scope; override và sự kiện nhu cầu phải thuộc phạm vi này.\\\hline
+durationMinutes & Số nguyên 1--240; thời gian trong mô hình, không phải số phút máy phải chạy ngoài đời.\\\hline
+demandMultiplier & Số thực 0--3. Giá trị 1 giữ nhu cầu cơ sở, 1,3 tăng 30\%, 0 không sinh nhu cầu mới.\\\hline
+demandProfileId & Chọn bộ dữ liệu nhu cầu có phiên bản; khi chạy giữ profileCopy bất biến.\\\hline
+resourceOverrides & Thay sức chứa xe/chỗ đỗ/cổng sạc, hạn mức kW hoặc tạm ngưng tài nguyên trong working copy.\\\hline
+baseSelection & Latest đọc dữ liệu đã chấp nhận hiện tại; SavedSnapshot sao chép mốc đã lưu sang snapshot mới.\\\hline
+\end{PairTable}
+
+Demand profile chứa các yêu cầu theo thời gian: chuyến đi có Hub nguồn/đích, phút khởi hành, thời lượng và pin tiêu hao; đỗ xe có thời lượng; nhu cầu sạc có xe và hạn mong muốn. Profile không phải danh sách pin cảm biến và cũng không thể suy ra chỉ từ số xe đang có.
+
+Snapshot chứa danh mục/tọa độ, sức chứa, ServiceStatus/trạng thái vận hành, pin/thông số sạc, lượt giữ, chuyến đi, lịch và ràng buộc điều chuyển tại mốc cơ sở. baseTime là mốc dữ liệu cơ sở; capturedAt là lúc snapshot được chụp/sao chép. Với mốc đã lưu, hai thời điểm có thể khác nhau.
+
+Không nhận ``thiếu pin'' thành pin 0 hoặc ``thiếu trạng thái'' thành Available. Thiếu dữ liệu bắt buộc thì từ chối chạy; tài nguyên không đủ điều kiện cấp phát bị loại khỏi nguồn khả dụng và có warning theo thiết kế.
+
+\subsection{Snapshot, baseline và working copy}
+\begin{enumerate}
+\item Snapshot là dữ liệu gốc đã chốt, giữ bất biến cho run.
+\item Baseline working copy sao từ snapshot, giữ năng lực ban đầu, demandMultiplier=1, không override.
+\item Scenario working copy cũng sao từ snapshot, áp dụng tham số và override đã xác nhận.
+\item Cả hai chạy với cùng profileCopy, modelVersion và quy tắc thứ tự sự kiện.
+\item Kết quả lưu tách baselineMetrics và scenarioMetrics để tính chênh lệch.
+\end{enumerate}
+
+Nếu cho baseline đọc DB lúc 8:00 rồi kịch bản đọc DB lúc 8:10, khác biệt có thể do dữ liệu nền đổi chứ không phải tham số. Đó là lý do hai nhánh phải cùng cơ sở. IoT tiếp tục cập nhật vận hành trong lúc run chạy nhưng không ghi ngầm vào snapshot/working copy đã chốt.
+
+Một lần chạy 60 phút có các bước mô hình theo phút. Máy có thể tính nhanh hơn nhiều; không cần chờ ngoài đời 60 phút. Không có cam kết thời gian thực thi cụ thể chỉ từ việc chọn durationMinutes.
+
+\subsection{Các lớp xử lý phối hợp thế nào?}
+\StudyFigure{../diagrams/class/07-sub-sim-services.pdf}{SimulationService, engine, analyzer và hợp đồng tích hợp}{fig:study-sim-services}
+
+\Term{SimulationService} là người điều phối. Nó kiểm quyền, lưu nháp/run/snapshot, giao việc, ghi kết quả và trả view. \Term{SimulationEngine} thực hiện tính toán trên input thuần. \Term{RecommendationAnalyzer} phân tích kết quả hoàn chỉnh. \Term{SnapshotProvider} là hợp đồng lấy snapshot; \Term{StoreSnapshotProvider} hiện thực đọc qua owner trong transaction nhất quán.
+
+Service dùng AccessService và AuditService. Nó dùng hợp đồng lưu trữ cho run/kết quả, nhưng engine không trực tiếp truy cập DB hoặc nguồn IoT. Engine báo tiến độ qua callback; service quyết định lưu tiến độ. Đây là cách tách tính toán nghiệp vụ với công nghệ lưu trữ.
+
+\subsection{Theo một lần chạy từ đầu đến cuối}
+Ví dụ minh họa: Operator muốn thử nhu cầu tăng 50\% trong 60 phút trên ba Hub KTX B, Metro ĐHQG và Bách Khoa. Đây là input minh họa, chưa phải kết quả đã thực thi.
+
+\begin{enumerate}
+\item Mở trình cấu hình: service trả các Hub, mốc và miền tham số được phép.
+\item Có thể lưu nháp khi thông tin chạy chưa đầy đủ. Chưa có snapshot hoặc run.
+\item Xác nhận chạy: backend kiểm lại input, quyền trên toàn bộ Hub, requestId và version scenario nếu sửa.
+\item Capture snapshot nhất quán; chốt parametersCopy, profileCopy và modelVersion.
+\item Lưu scenario/snapshot/run Running nguyên tử; commit xong mới giao worker, trả 202 và runId.
+\item Worker gọi engine, engine tạo hai working copy và tính theo từng phút. UI hỏi tiến độ bằng runId.
+\item Có kết quả đầy đủ, khớp run/snapshot và phạm vi mới lưu kết quả cùng transition Completed; progress=100.
+\item Tác vụ phân tích sinh khuyến nghị và lưu toàn bộ cùng analysisReady=true. Không có khuyến nghị hợp lệ vẫn có thể ready=true với danh sách rỗng.
+\item Operator đọc so sánh, warning và evidence, rồi quyết định có mở OPS từ khuyến nghị điều chuyển hay không.
+\end{enumerate}
+
+Rời trang hoặc đăng xuất không tự hủy worker. Quyền phải được kiểm tra mới khi người dùng đọc lại kết quả; nếu mất một phần phạm vi Hub thì không trả dữ liệu ngoài quyền. Tác vụ nền không cần tiếp tục cầm cookie của người khởi tạo để thực hiện công việc đã được chấp nhận.
+
+\subsection{Engine thực hiện phép tính gì?}
+Tại mỗi phút, engine xử lý hoàn tất chuyến/đỗ/sạc và hết hạn trước, sau đó tiếp nhận yêu cầu mới theo thời điểm và ID. Quy tắc này tránh kết quả thay đổi chỉ vì thứ tự xử lý không xác định.
+
+Sau $n$ yêu cầu cơ sở của một loại tại một Hub, số yêu cầu kịch bản tích lũy là $\lfloor n\times m\rfloor$, với $m$ là demandMultiplier. Ví dụ sau 6 yêu cầu cơ sở, hệ số 1,5 cho 9 yêu cầu kịch bản, không phải thêm 9 vào 6. Các bản nhân có ID riêng, giữ thông số tương ứng; input không dùng ngẫu nhiên trong mô hình hiện tại.
+
+Xe được cấp phải đủ rule và không bị giữ/điều chuyển; hòa chọn VehicleId tăng dần. Xe rời Hub giảm số xe hiện diện; tới nơi hợp lệ mới tăng tại đích. Đích đầy thì xe chờ trả, không được xóa xe khỏi mô hình. Chỗ đỗ xe cá nhân được tính riêng với sức chứa xe dùng chung.
+
+Sạc tái sử dụng policy miền CHG trên bản sao: ưu tiên, FIFO, tương thích, thời lượng và giới hạn công suất. Không gọi service vận hành để thay lịch sạc thật trong lúc engine chạy. Phiên đang có được giữ; thời điểm giải phóng chưa biết vẫn ràng buộc tài nguyên và phát warning.
+
+Nếu override làm sức chứa thấp hơn mức đang chiếm, engine ghi nhận quá tải và chặn cấp phát mới. Nó không xóa xe hoặc chấm dứt phiên để ép dữ liệu vừa sức chứa. Engine phải bảo toàn số xe và không cấp trùng tài nguyên.
+
+\subsection{Chỉ số, chênh lệch và khuyến nghị}
+Kết quả theo Hub/phút có xe Available/hiện diện, chỗ đỗ chiếm/trống, hàng đợi sạc, công suất, số yêu cầu nhận/từ chối và xe chờ trả. Tỷ lệ phục vụ bằng số yêu cầu được nhận chia tổng yêu cầu; khi không có yêu cầu, hiển thị không áp dụng thay vì chia cho 0.
+
+Chênh lệch trong AnalysisView là \textbf{kịch bản trừ baseline}. Chỉ số khác nhau có chiều tốt/xấu khác nhau: hàng đợi tăng thường bất lợi; tỷ lệ phục vụ tăng thường có lợi. Không diễn giải mọi số dương thành cải thiện.
+
+Analyzer xét thiếu xe Available dưới 15\% sức chứa xe dùng chung, hiện diện trên 90\%, thiếu chỗ đỗ và nhu cầu sạc chưa được phục vụ. Có ba nhóm hành động: TransferVehicles, AddParkingCapacity và ReviewChargingCapacity.
+
+Đề xuất chuyển xe cần nguồn còn dư sau mức giữ tối thiểu, xe đủ điều kiện, đích đủ sức chứa sau khi tính xe đang đến. Ưu tiên theo mức thiếu, khoảng cách và HubId; mỗi xe chỉ thuộc một đề xuất trong phương án. Không có nguồn khả thi thì giữ cảnh báo thiếu, không tạo đề xuất giả để danh sách luôn có phần tử.
+
+Evidence ghi Hub, khoảng phút và các chỉ số làm căn cứ. expectedImpact ghi tác động dự kiến có cơ sở tính toán; không được nói chắc tỷ lệ phục vụ đã cải thiện khi chưa chạy lại phương án. Đây là mô hình rule-based xác định, không mặc nhiên là AI hoặc dự báo được kiểm chứng với thế giới thật.
+
+\subsection{Đọc các phương thức của SimulationService}
+\begin{PairTable}{Phương thức public}{Mục đích và ranh giới}
+prepareScenario & Trả dữ liệu để mở trình cấu hình. Sao chép scenario chỉ lấy cấu hình trong quyền, không mang theo run/kết quả.\\\hline
+saveScenarioDraft & Lưu nháp hoặc sửa đúng version; chưa tạo snapshot/run.\\\hline
+validateScenario & Kiểm cấu hình và trả lỗi theo trường, không lưu; khi chạy vẫn kiểm lại.\\\hline
+startSimulation & Chốt snapshot/input và tạo run Running sau kiểm quyền/idempotency; sau commit giao worker.\\\hline
+getRunProgress & Đọc trạng thái/tiến độ trong scope, không điều khiển bằng việc UI còn mở.\\\hline
+getAnalysis & Đọc kết quả run Completed, so sánh và trạng thái phân tích; ready=false không đồng nghĩa không có đề xuất.\\\hline
+getRecommendation & Đọc đề xuất thuộc đúng run đã hoàn tất/ready và toàn bộ Hub trong quyền.\\\hline
+getScenarioContext & Đọc cấu hình và nguồn snapshot đã chốt của run; không lấy scenario mới nhất thay thế.\\\hline
+prepareRedistribution & Chỉ nhận TransferVehicles, chuyển tới OPS để kiểm quyền điều phối và lập input điền trước; chưa tạo Plan.\\\hline
+\end{PairTable}
+
+Ba phương thức nền không phải endpoint người dùng tùy ý gọi: executeSimulation chạy engine và ghi kết quả; generateRecommendations phân tích run Completed; recoverInterruptedRuns xử lý run dở khi backend khởi động lại. Ký hiệu \texttt{\#} là protected trong mô hình lớp, không đồng nghĩa ``background'' trong mọi chương trình; vai trò nền ở đây do thiết kế mô tả.
+
+\begin{PairTable}{Lớp / phương thức}{Cần nhớ}
+SnapshotProvider.\allowbreak capture & Lấy snapshot trong quyền, đúng mốc; thiếu dữ liệu bắt buộc báo SNAPSHOT\_UNAVAILABLE.\\\hline
+SimulationEngine.\allowbreak simulate & Tính hai nhánh và trả kết quả; callback tiến độ 0--99; không dùng DB/nguồn ngoài.\\\hline
+Recommendation\allowbreak Analyzer.\allowbreak analyze & Phân tích liên kết/kết quả đúng run, tạo đề xuất có evidence; thiếu dữ liệu là lỗi, không giả danh sách rỗng.\\\hline
+SimulationRun.\allowbreak start & Draft hợp lệ sang Running, progress=0.\\\hline
+SimulationRun.\allowbreak updateProgress & Chỉ Running; số nguyên 0--99, không giảm.\\\hline
+SimulationRun.\allowbreak complete & Chỉ Running với kết quả đầy đủ mới Completed, progress=100 và analysisReady=false.\\\hline
+SimulationRun.\allowbreak fail & Chỉ Running mới Failed, giữ tiến độ cuối, không công bố kết quả dở; không đổi run đã kết thúc.\\\hline
+\end{PairTable}
+
+\subsection{Vòng đời, lỗi và khởi động lại}
+\begin{Flow}
+SimulationRun: Draft -> Running -> Completed
+                            |
+                            +----> Failed
+
+Completed + analysisReady=false: đã tính xong, phân tích chưa sẵn sàng
+Completed + analysisReady=true : đã có kết quả phân tích, kể cả rỗng
+\end{Flow}
+
+Failed/Completed không quay về Running và không có Cancelled trong enum run. Muốn chạy lại thì tạo lần chạy mới. Lỗi snapshot trước khi tạo run không được tạo một run Running thiếu input. Lỗi tính toán hoặc lưu kết quả được ghi Failed khi DB đáp ứng; nếu mất phản hồi sau commit phải đọc lại trước khi đánh dấu thất bại.
+
+Lỗi phân tích sau khi đã Completed không đổi thành Failed: giữ Completed, analysisError và ready=false, thử phân tích lại mỗi 30 giây và sau khởi động. Các run Running của process cũ được chuyển Failed với PROCESS\_RESTART; run Completed chưa ready được giao lại phân tích. Backend hiện chọn một instance, không tự suy ra cơ chế điều phối nhiều server từ quy tắc này.
+
+\subsection{Từ SIM sang kế hoạch thật trong OPS}
+\begin{enumerate}
+\item SIM có Recommendation thuộc run Completed và analysisReady=true.
+\item Operator chọn đề xuất TransferVehicles; service kiểm quyền mô phỏng và OPS kiểm quyền điều phối.
+\item Trả RedistributionDraftInput để điền trước quy trình OPS, giữ sourceRecommendationId.
+\item Operator xem lại, tạo kế hoạch Draft. OPS đọc dữ liệu hiện hành vì snapshot có thể đã cũ.
+\item Khi phương án còn khả thi và đúng quyền mới Approved; phê duyệt chưa phải xe đã di chuyển.
+\item Bắt đầu, cập nhật tiến độ và hoàn tất dựa trên thực tế/bằng chứng, qua owner tài nguyên; không suy vị trí xe chỉ từ trạng thái kế hoạch.
+\end{enumerate}
+
+Điểm phải thảo luận khi hiện thực: thời điểm plan bắt đầu ràng buộc xe, bằng chứng ở Hub nguồn/đích và lời gọi owner để cập nhật trạng thái/vị trí. Các nội dung này không được thay bằng ``nhấn approve thì xe tự ở Hub mới''. Khuyến nghị tăng chỗ đỗ hoặc rà năng lực sạc không đi qua prepareRedistribution như đề xuất chuyển xe.
+
+\subsection{Test case: hiểu cách kiểm tra thay vì chỉ đọc ID}
+Unit test kiểm rule/tính toán riêng. Integration test kiểm phối hợp service, owner, DB và transaction. End-to-end test kiểm từ UI tới kết quả nghiệp vụ. Fixture là dữ liệu/điều kiện chuẩn bị cho từng ca.
+
+\begin{PairTable}{Ca trong báo cáo}{Điều cần chứng minh}
+TC-SIM-01 & Nháp chưa có run; khi chạy chốt input/modelVersion; tiến độ hợp lệ, chỉ hoàn tất khi đủ kết quả.\\\hline
+TC-SIM-02 & So đúng baseline/kịch bản, có evidence; mở OPS chỉ chuyển input, chưa tạo/duyệt plan hay đổi xe.\\\hline
+TC-COM-08 & Chặn input/scope sai; IoT hoặc sửa scenario không đổi run đã chốt; cùng input cho cùng chỉ số; xử lý multiplier=0.\\\hline
+TC-COM-01 & Phiên/quyền hiện hành, không đọc dữ liệu ngoài scope; ADM không tự có quyền vận hành.\\\hline
+TC-COM-09 & RequestId chống lặp, version cũ bị từ chối và lỗi rollback đúng; áp dụng cơ chế chung cho command.\\\hline
+TC-GEN-01--03 & Quản lý tài khoản, phân quyền và danh mục Draft đúng trách nhiệm/owner.\\\hline
+\end{PairTable}
+
+Bộ chức năng toàn hệ thống có 23 ca theo UC và 9 ca rủi ro/tích hợp. Các bảng đang ghi kết quả mong đợi, không có kết quả thực thi ứng dụng. Hai tài khoản demo gửi yêu cầu song song đủ để tạo bài test cạnh tranh cơ bản; chưa chứng minh chịu được tải 50 yêu cầu.
+
+Các ngưỡng NFR vẫn nằm trong kế hoạch: 50 yêu cầu đồng thời bằng script, ít nhất 20 Hub/500 xe; p95 tra cứu không quá 2 giây, đặt xe không quá 3 giây, lỗi hệ thống dưới 1\%. Kiểm dễ dùng có 10 người mới, ít nhất 9 hoàn thành, trung vị không quá 60 giây và tối đa năm thao tác chọn. Coverage rule cốt lõi mục tiêu tối thiểu 80\%. Những ngưỡng này là mục tiêu cần kiểm chứng, chưa phải thành tích đã đạt.
+
+\subsection{Câu hỏi để tự tập trả lời}
+\begin{enumerate}
+\item \textbf{Vì sao có scenario và run riêng?} Scenario là cấu hình có thể sửa/chạy nhiều lần; run giữ một lần thực thi với input đã chốt.
+\item \textbf{Snapshot có phải DB mới không?} Là dữ liệu cơ sở bất biến cho run, không bắt buộc một DB server khác. Nó có thể được lưu trong DB hiện tại nhưng không được ghi đè tài nguyên vận hành.
+\item \textbf{Vì sao phải có demand profile?} Trạng thái xe hiện tại chưa mô tả nhu cầu sẽ xuất hiện theo thời gian.
+\item \textbf{Hệ số 1,5 tăng gì?} Tăng nhu cầu mới theo profile, không tự nhân số xe hoặc mức pin.
+\item \textbf{Vì sao hai working copy?} Để so tình huống cơ sở với tình huống đã thay tham số trên cùng dữ liệu nền.
+\item \textbf{Đóng trang thì run dừng không?} Không. Worker chạy độc lập vòng đời UI; đọc lại phải kiểm quyền.
+\item \textbf{Completed nghĩa là đề xuất đã xong?} Chưa chắc. Phải đọc thêm analysisReady.
+\item \textbf{Có đề xuất thì tạo kế hoạch thật ngay không?} Không. Chỉ chuyển input sang OPS; người có quyền xem lại và kiểm dữ liệu hiện hành.
+\item \textbf{Mô hình có tự học không?} Thiết kế hiện dùng rule và input xác định; không có yêu cầu máy học trong engine này.
+\item \textbf{Class Diagram chứng minh đã code đúng chưa?} Chưa. Nó là thiết kế; cần hiện thực và kiểm thử để có bằng chứng hành vi.
+\end{enumerate}
+
+\Point{Tập nói phần chung trong khoảng một phút}
+``SEMH dùng một backend modular monolith, chia GEN và bảy module nghiệp vụ. Mỗi module tách tiếp nhận request, điều phối, domain và lưu trữ/tích hợp. Browser gọi API; simulator gửi sự kiện được xác minh rồi lưu DB; Leaflet hiển thị Hub từ dữ liệu API. Quyền và phạm vi được kiểm ở backend. Command cạnh tranh được bảo vệ bằng transaction, version, idempotency và audit. Mô hình lớp tổng thể cho thấy liên hệ; hình phân hệ làm rõ phần mỗi owner chịu trách nhiệm.''
+
+\Point{Tập nói phần SIM trong khoảng một phút}
+``Operator tạo kịch bản what-if từ snapshot của mạng lưới. Khi chạy, hệ thống chốt tham số, bộ nhu cầu và modelVersion, rồi tính baseline và kịch bản trên hai working copy. Engine giữ rule cấp phát, bảo toàn tài nguyên và trả chuỗi chỉ số. Analyzer tạo khuyến nghị có bằng chứng; phân tích có thể hoàn tất sau bước tính. Muốn điều chuyển thật, Operator mở OPS với input điền trước; OPS kiểm lại dữ liệu và quyền rồi mới lập, phê duyệt và theo dõi kế hoạch. SIM không trực tiếp đổi tài nguyên vận hành.''
+
+\subsection{Những điểm báo cáo hiện tại còn cần thống nhất}
+Phần sạc còn ghi rõ các nhánh chưa chốt: hủy Pending/Scheduled, điều kiện Rejected, phiên mới sau Interrupted/Failed và trạng thái cổng khi còn lịch tương lai. Không tự coi những nhánh đó đã có thiết kế kín chỉ vì enum có tên trạng thái.
+
+Quy ước chung còn có Recommended cho RedistributionPlan, còn phần OPS dùng Draft, Approved, InProgress, Completed, Cancelled và ghi chưa có transition Recommended. Khi trình bày, phân biệt Recommendation của SIM với trạng thái Plan của OPS; thống nhất thuật ngữ trước khi code. Các điểm chưa chốt là giới hạn hiện tại của thiết kế, không phải cơ chế mới được tài liệu học này bổ sung.
+
+\subsection{Mở báo cáo ở đâu để đối chiếu?}
+Số dưới là số trang in của bản Phase 3 riêng 72 trang, không phải số trang của bản tích hợp 236 trang. Trong bản riêng, số trang PDF thường lớn hơn số in một trang vì có bìa.
+
+\begin{PairTable}{Nội dung}{Trang in / nguồn đối chiếu}
+Kiến trúc và công nghệ & Trang 6.\\\hline
+Deployment, Hub và input & Trang 7--8.\\\hline
+Implementation, cơ chế chung & Trang 9--10.\\\hline
+Mô hình lớp, owner và kiểu chung & Trang 11--13.\\\hline
+GEN; tiếp nhận trạng thái/audit & Trang 14--18.\\\hline
+SUB-SIM & Trang 59--65.\\\hline
+Test case và kế hoạch NFR & Trang 66--71.\\\hline
+Nguồn nội dung & Các section trong \texttt{docs/phase-3/group-report/}; quy ước trong \texttt{docs/phase-3/design-conventions.md}.\\\hline
+Nguồn hình & \texttt{docs/phase-3/architecture/} và \texttt{docs/phase-3/diagrams/class/}.\\\hline
+\end{PairTable}
+
+\noindent\textbf{Tài liệu đọc kèm:} Báo cáo Phase 3 riêng và bản Submission 3 tích hợp ở root; đề gốc \texttt{BTL\_SoftwareEngineering\_HK261\_v1.pdf}, phần Project Submission Detail. Khi kiểm tra một chữ ký, trạng thái hoặc ngưỡng, ưu tiên mở đúng mục nguồn thay vì suy ra từ tên gọi.
+
+\end{document}

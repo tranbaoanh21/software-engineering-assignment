@@ -1,0 +1,42 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+top to bottom direction
+skinparam componentStyle uml2
+skinparam nodesep 18
+skinparam ranksep 20
+
+package "SUB-CHG · Phụ thuộc giữa các tầng" {
+  package "Tiếp nhận và tính lịch" {
+    rectangle "Presentation\nChargingController" as Controller
+    rectangle "Application\nChargingService" as Service
+    rectangle "Domain\nChargingSchedulingPolicy\nChargingRequest · ChargingSession · ChargingPoint" as Domain
+    rectangle "Infrastructure\nChargingScheduler" as Scheduler
+    Controller .right.> Service : chuyển yêu cầu HTTP
+    Service .right.> Domain : tính ưu tiên, thời lượng, slot
+    Scheduler .up.> Service : sự kiện hoặc mỗi 5 phút
+  }
+
+  package "Lưu lịch và trạng thái cổng" {
+    rectangle "Application\nChargingService\nChargingPointService" as Writes
+    rectangle "Application\n«interface» IChargingStore" as Store
+    rectangle "Infrastructure\nPrismaChargingStore\nTruy cập PostgreSQL qua Prisma" as Adapter
+    Writes .right.> Store : lưu lịch / trạng thái
+    Adapter .left.|> Store : hiện thực
+  }
+
+  package "Đọc dữ liệu lập lịch" {
+    rectangle "Application\nChargingService" as Scheduling
+    rectangle "Application\n«interface» ChargingContextPort" as Context
+    rectangle "Infrastructure\nOwnerChargingContextAdapter" as OwnerAdapter
+    rectangle "Hợp đồng đọc owner\nSUB-HUB · SUB-TRIP · SUB-PARK" as Owners
+    Scheduling .right.> Context : cần dữ liệu
+    OwnerAdapter .left.|> Context
+    OwnerAdapter .right.> Owners : Hub, xe, pin
+  }
+
+  Scheduler -[hidden]down-> Writes
+  Domain -[hidden]down-> Adapter
+  Writes -[hidden]down-> Scheduling
+  Adapter -[hidden]down-> Owners
+}
+@enduml

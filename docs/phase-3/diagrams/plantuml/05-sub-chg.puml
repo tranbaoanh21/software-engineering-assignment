@@ -1,0 +1,232 @@
+@startuml SUB-CHG_Class_Diagram_Merged
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+' ===== Chỉ dùng màu đen trắng =====
+skinparam monochrome true
+skinparam backgroundColor white
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam class {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  AttributeFontColor black
+  StereotypeFontColor black
+}
+skinparam interface {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  StereotypeFontColor black
+}
+skinparam package {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam stereotypeCBackgroundColor white
+skinparam stereotypeIBackgroundColor white
+
+package "8.1.1. Application, policy và các hợp đồng cộng tác" {
+
+class ChargingController {
+  +getRegistrationInfo(vehicleId: UUID, hubId: UUID) : RegistrationInfoView
+  +preview(input: ChargingRequestInput) : RequestPreviewView
+  +create(input: ChargingRequestInput, change: ChangeContext) : ChargingRequestView
+  +getOverview(filter: ChargingFilter) : ChargingOverviewView
+  +getDetail(requestId: UUID) : ChargingDetailView
+  +getAdjustmentContext(requestIds: List<UUID>) : AdjustmentContextView
+  +adjust(input: ScheduleAdjustmentInput, change: ChangeContext) : ScheduleAdjustmentResult
+}
+
+class ChargingService {
+  +getRegistrationInfo(session: SessionToken, vehicleId: UUID, hubId: UUID) : RegistrationInfoView
+  +previewRequest(session: SessionToken, input: ChargingRequestInput) : RequestPreviewView
+  +createChargingRequest(session: SessionToken, input: ChargingRequestInput, change: ChangeContext) : ChargingRequestView
+  +getOverview(session: SessionToken, filter: ChargingFilter) : ChargingOverviewView
+  +getDetail(session: SessionToken, requestId: UUID) : ChargingDetailView
+  +getAdjustmentContext(session: SessionToken, requestIds: List<UUID>) : AdjustmentContextView
+  +adjustSchedule(session: SessionToken, input: ScheduleAdjustmentInput, change: ChangeContext) : ScheduleAdjustmentResult
+  +recalculateHubSchedule(hubId: UUID, trigger: ScheduleTrigger) : ScheduleRecomputeResult
+  +handlePointFault(event: AcceptedPointFaultEvent) : ChargingStateUpdateResult
+  +applyChargingStateEvent(event: AcceptedChargingEvent) : ChargingStateUpdateResult
+  -ensureReadySession(tx: Transaction, request: ChargingRequest) : ChargingSession
+}
+
+class ChargingSchedulingPolicy {
+  +calculatePriority(battery: Integer?, nextUseTime: DateTime?, now: DateTime) : PriorityLevel
+  +effectiveDeadline(deadline: DateTime?, nextUseTime: DateTime?) : DateTime?
+  +estimateDuration(spec: ChargingVehicleSpec, pointPowerKW: Decimal) : Integer
+  +findFeasibleSlot(spec: ChargingVehicleSpec, candidates: List<ChargingPoint>, context: HubChargingContext, occupied: List<ChargingOccupancy>, finishBy: DateTime?, now: DateTime) : SlotSearchResult
+}
+
+interface IChargingStore {
+  +withSerializable(work: TransactionWork) : TransactionResult
+  +loadSchedulingSnapshot(tx: Transaction, hubId: UUID) : ChargingSnapshot
+  +findScopedOverview(scope: AccessScope, filter: ChargingFilter) : ChargingOverviewView
+  +findScopedDetail(scope: AccessScope, requestId: UUID) : ChargingDetailView?
+  +saveScheduleInTx(tx: Transaction, plan: ChargingPlan) : void
+  +saveStateInTx(tx: Transaction, update: ChargingStateUpdate) : void
+}
+
+class PrismaChargingStore <<adapter>>
+
+class SEMHDataStore <<storeContract, shared>>
+
+class ChargingPointService <<CHG public contract cho GEN và OPS>> {
+  +createDraftPointInTx(tx: Transaction, input: PointDraftInput, change: ChangeContext) : ResourceRef
+  +updatePointInfoInTx(tx: Transaction, pointId: UUID, patch: PointInfoPatch, change: ChangeContext) : PointInfoView
+  +changeServiceStatusInTx(tx: Transaction, pointId: UUID, target: ServiceStatus, change: ChangeContext) : PointServiceResult
+  +restorePointAfterMaintenanceInTx(tx: Transaction, confirmation: MaintenanceConfirmation) : PointRestoreResult
+  +reportPointFaultInTx(tx: Transaction, report: AuthorizedPointFaultReport, change: ChangeContext) : ChargingStateUpdateResult
+  +describePointConstraints(session: SessionToken, pointId: UUID) : PointConstraintView
+}
+
+interface ChargingContextPort {
+  +loadInTx(tx: Transaction, vehicleId: UUID, hubId: UUID) : ChargingContext
+}
+
+class OwnerChargingContextAdapter <<adapter>>
+class AccessService <<GEN>>
+class AuditService <<shared>>
+interface CommandReceiptPort <<shared interface>>
+class OperationsService <<SUB-OPS public contract>>
+class AdministrationService <<GEN>>
+class TripService <<SUB-TRIP public contract>>
+class ParkingService <<SUB-PARK public contract>>
+class HubService <<SUB-HUB public contract>>
+class StateDataAdapter <<integration>>
+class ChargingScheduler <<infrastructure>>
+
+}
+
+package "8.1.2. Các lớp miền và quan hệ" {
+
+class ChargingRequest {
+  -requestId: UUID
+  -vehicleId: UUID
+  -hubId: UUID
+  -requestedByAccountId: UUID
+  -batteryAtRequest: Integer?
+  -batteryObservedAt: DateTime?
+  -receivedAt: DateTime
+  -deadline: DateTime?
+  -nextUseTime: DateTime?
+  -priority: PriorityLevel
+  -status: ChargingRequestStatus
+  -allocation: ChargingScheduleSlot?
+  -unallocatedReason: String?
+  -version: Integer
+  +assignSlot(slot: ChargingScheduleSlot) : void
+  +markCharging() : void
+  +markCompleted() : void
+}
+
+class ChargingSession {
+  -sessionId: UUID
+  -requestId: UUID
+  -pointId: UUID
+  -vehicleId: UUID
+  -status: ChargingSessionStatus
+  -startedAt: DateTime?
+  -endedAt: DateTime?
+  -energyDeliveredKWh: Decimal
+  -initialBatteryLevel: Integer?
+  -finalBatteryLevel: Integer?
+  -statusReason: String?
+  -affectedByFault: Boolean
+  -version: Integer
+  {static} +createReady(request: ChargingRequest) : ChargingSession
+  +reviseReadyAllocation(slot: ChargingScheduleSlot) : void
+  +start(evidence: AcceptedChargingEvent) : void
+  +pause(evidence: AcceptedChargingEvent) : void
+  +resume(evidence: AcceptedChargingEvent) : void
+  +complete(evidence: AcceptedChargingEvent) : void
+  +interrupt(evidence: AcceptedChargingEvent) : void
+  +fail(evidence: AcceptedChargingEvent) : void
+}
+
+class ChargingPoint {
+  -pointId: UUID
+  -hubId: UUID
+  -pointCode: String
+  -displayName: String
+  -description: String?
+  -connectorType: ConnectorType
+  -maxPowerKW: Decimal
+  -status: ChargingPointStatus?
+  -serviceStatus: ServiceStatus
+  -version: Integer
+  +isEligible(context: HubChargingContext, spec: ChargingVehicleSpec) : Boolean
+  +markReserved() : void
+  +releaseAllocation(bindings: PointBindingSummary) : void
+  +markCharging(evidence: AcceptedChargingEvent) : void
+  +markAvailable(evidence: PointReleaseEvidence) : void
+  +markOutOfService(evidence: AcceptedPointFaultEvent) : void
+  +restoreAfterMaintenance(confirmation: MaintenanceConfirmation, bindings: PointBindingSummary) : void
+}
+
+class ChargingScheduleSlot <<valueObject>> {
+  +pointId: UUID
+  +startTime: DateTime
+  +endTime: DateTime
+  +allocatedPowerKW: Decimal
+  +estimatedDurationMinutes: Integer
+  +validity: AllocationValidity
+}
+
+class ChargingVehicleSpec <<input snapshot>> {
+  +connectorType: ConnectorType?
+  +batteryCapacityKWh: Decimal?
+  +vehicleMaxPowerKW: Decimal?
+  +acceptedBatteryLevel: Integer?
+  +batteryObservedAt: DateTime?
+  +batteryReliable: Boolean
+}
+
+class ChargingOccupancy <<calculation input>> {
+  +pointId: UUID
+  +startTime: DateTime
+  +endTime: DateTime?
+  +reservedPowerKW: Decimal
+}
+
+}
+
+' ===== Quan hệ của 8.1.1 =====
+ChargingController --> ChargingService
+ChargingService --> ChargingSchedulingPolicy
+ChargingService --> IChargingStore
+PrismaChargingStore ..|> IChargingStore
+PrismaChargingStore --> SEMHDataStore : dùng chung hạ tầng và transaction
+ChargingPointService --> IChargingStore
+ChargingPointService --> ChargingSchedulingPolicy
+ChargingPointService --> AuditService
+AdministrationService --> ChargingPointService : khai báo cổng Draft (UC-GEN-03)
+OperationsService --> ChargingPointService : thêm/sửa/bật-tắt/phục hồi cổng (UC-OPS-02, 04, 05)
+ChargingService --> ChargingContextPort
+OwnerChargingContextAdapter ..|> ChargingContextPort
+OwnerChargingContextAdapter --> TripService
+OwnerChargingContextAdapter --> ParkingService
+OwnerChargingContextAdapter --> HubService
+ChargingService --> AccessService
+ChargingService --> AuditService
+ChargingService --> CommandReceiptPort
+ChargingService --> OperationsService : phối hợp sự cố qua hợp đồng
+StateDataAdapter --> ChargingService : sự kiện đã kiểm tra
+ChargingScheduler --> ChargingService : sự kiện hoặc mỗi 5 phút
+
+' ===== Quan hệ của 8.1.2 =====
+ChargingRequest "0..*" --> "0..1" ChargingPoint : cổng phân bổ hiện hành
+ChargingRequest "1" *-- "0..1" ChargingScheduleSlot : phân bổ hiện hành
+ChargingSession "0..*" --> "1" ChargingRequest : thuộc yêu cầu
+ChargingSession "0..*" --> "1" ChargingPoint : thực hiện tại
+ChargingSchedulingPolicy ..> ChargingVehicleSpec
+ChargingSchedulingPolicy ..> ChargingOccupancy
+ChargingSchedulingPolicy ..> ChargingScheduleSlot
+
+@enduml

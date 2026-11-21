@@ -1,41 +1,128 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Tra cứu công khai; dữ liệu mới, cũ hoặc chưa có trạng thái hợp lệ được phân biệt. Thiết kế đồng bộ theo NIFR-HUB-01 có owner nội bộ rõ ràng, nguồn ngoài không đồng nhất với nơi lưu trạng thái.
+SUB-HUB sở hữu MobilityHub và cung cấp tra cứu công khai trong UC-HUB-01--03. HubService phối hợp đọc trạng thái từ owner tài nguyên, tính khoảng cách, đánh giá khả dụng và đề xuất Hub thay thế. Trạng thái hợp lệ cuối, độ mới và tình trạng thiếu dữ liệu được thể hiện trong kết quả.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/01-sub-hub.pdf}{Class diagram -- SUB-HUB}{fig:p3-class-01-sub-hub}
+\DesignFigure[0.80\textheight]{../diagrams/class/01-sub-hub.jpg}
+{Class diagram -- SUB-HUB}{fig:p3-class-01-sub-hub}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
+\ReserveSpace{14\baselineskip}
+\subsubsection{Mô tả lớp}
 
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-HUB}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp và kiểu dữ liệu SUB-HUB}\\\hline
+\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-HUB-01} & Tra cứu Hub phù hợp & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-HUB-02} & Xem trạng thái tài nguyên tại Hub & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-HUB-03} & Xem Hub thay thế & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+MobilityHub & Entity do SUB-HUB sở hữu; biểu diễn một địa điểm trong mạng lưới. Thuộc tính: hubId, name, latitude, longitude, capacity, serviceStatus, hubStatus, version.  hubId duy nhất, bất biến; WGS84 hợp lệ; capacity không âm. ServiceStatus (Draft/Active/Inactive) độc lập HubStatus (Normal/NearCapacity/Full/OutOfService). Không tự mở phục vụ theo IoT.\\\hline
+HubService & Dịch vụ của SUB-HUB, điều phối UC-HUB-01,02,03: kiểm tra tiêu chí, tải Hub, đọc dữ liệu owner, tính khoảng cách, đánh giá khả dụng, trả kết quả công khai; điều phối cập nhật HubStatus.  Tra cứu chỉ đọc; không tạo lượt đặt, không ghi trạng thái tài nguyên của TRIP/PARK/CHG; phải phản ánh trạng thái dữ liệu cũ/chưa biết.\\\hline
+Hub\allowbreak Availability\allowbreak Policy & Đóng gói quy tắc tổng hợp số tài nguyên có thể phục vụ, lọc theo nhu cầu và xác định HubStatus.  Xe ở Hub phải xác nhận vị trí, không tính InUse; cấp phát chỉ khi tài nguyên Hub Active, Available; xe đặt phải đủ pin $\geq$30\%.\\\hline
+Hub\allowbreak Distance\allowbreak Calculator & Tính khoảng cách địa lý từ tọa độ và kiểm tra bán kính; phục vụ lọc/sắp xếp các Hub.  Tọa độ WGS84 hợp lệ; khoảng cách theo mét, không âm.\\\hline
+HubStore & Đọc/ghi trạng thái Hub, việc truy cập dữ liệu các entity do module khác sở hữu phải thông qua public contract của module tương ứng.  Cập nhật HubStatus cần kiểm tra expectedVersion\\\hline
+Resource\allowbreak Status\allowbreak Reader & Đọc tổng hợp ResourceSnapshot tại Hub qua các public contract của TRIP, RES, PARK, CHG, OPS theo nhu cầu, không ghi thay đổi vào entity của module khác.  Chỉ đọc dữ liệu được chấp nhận\\\hline
+GeoPoint & Tọa độ latitude và longitude dùng trong các bộ lọc và kết quả.  Latitude thuộc [-90,90], longitude thuộc [-180,180].\\\hline
+HubSearchFilter & Input tìm kiếm: location, need (tùy chọn), radiusMeters.  Kiểm tra vị trí hợp lệ, bán kính dương/hữu hạn và loại nhu cầu hợp lệ\\\hline
+Alternative\allowbreak Hub\allowbreak Filter & Input tìm Hub thay thế: referenceHubId (Hub đang tham chiếu/được chọn), location, need, radiusMeters.  Hub tham chiếu phải tồn tại; không trả lại chính Hub đang thay thế.\\\hline
+HubSummaryView & Kết quả tóm tắt: hubId, name, location, distanceMeters, hubStatus, availability, updatedAt, freshness.  Dữ liệu công khai; các số đếm không âm; độ mới và thời gian cập nhật không được bỏ qua khi hiển thị trạng thái gần hiện tại.\\\hline
+HubDetailView & Kết quả chi tiết gồm HubSummaryView, capacity, ResourceSnapshot và danh sách cảnh báo (nếu có).\\\hline
+Hub\allowbreak Alternative\allowbreak View & Dữ liệu một Hub đề xuất kèm HubSummaryView và lý do lựa chọn.  Chỉ đề xuất ứng viên đáp ứng nhu cầu theo dữ liệu đủ tin cậy.\\\hline
+Resource\allowbreak Availability & Số availableVehicles, available\allowbreak Parking\allowbreak Spaces, available\allowbreak Charging\allowbreak Points; chỉ số presentVehicles, occupied\allowbreak Parking\allowbreak Spaces, busy\allowbreak Charging\allowbreak Points.  Số đếm không âm; tính từ snapshot đã được chấp nhận và chính sách thống nhất\\\hline
+ResourceSnapshot & Dữ liệu tổng hợp tại Hub: hubId, vehicles, parkingSpaces, chargingPoints, updatedAt, freshness.  Phải có dữ liệu thời gian cập nhật.\\\hline
+ResourceStateView & Đọc trạng thái của tài nguyên dùng chung: resourceId, resourceType, serviceStatus, physicalStatus, batteryLevel, locationConfirmed, has\allowbreak Active\allowbreak Constraint, observedAt, freshness.  Thuộc tính không áp dụng có thể null; physicalStatus phải được diễn giải theo từng loại tài nguyên.\\\hline
+\end{longtable}
+
+HubId và Identifier dùng UUID; tọa độ WGS84, khoảng cách và radiusMeters tính bằng mét. DataFreshness gồm Fresh, Stale, Unknown; dữ liệu thiếu hoặc cũ phải thể hiện qua freshness và updatedAt, không được mặc định tài nguyên khả dụng. ResourceType trong bộ lọc nhu cầu chỉ nhận loại tài nguyên được hỗ trợ: xe dùng chung, chỗ đỗ hoặc cổng sạc; physicalStatus được diễn giải theo đúng loại.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+Các phương thức công khai ký hiệu \texttt{+}. searchHubs, getHubDetail và findAlternativeHubs chỉ đọc; refreshHubStatus là thao tác nội bộ tổng hợp và lưu HubStatus. Thay đổi entity trong bộ nhớ được HubService phối hợp lưu qua HubStore; không ghi trực tiếp dữ liệu thuộc TRIP, RES, PARK, CHG hoặc OPS.
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức HubService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ searchHubs(filter: HubSearchFilter): List<HubSummaryView>} & UC-HUB-01: kiểm tra vị trí, bán kính/nhu cầu; lọc/xếp Hub theo khoảng cách và khả dụng. Trả summary kèm freshness/updatedAt; không có kết quả trả rỗng.\\\hline
+\Sig{+ getHubDetail(hubId: HubId): HubDetailView} & UC-HUB-02: đọc chi tiết Hub/tài nguyên; ID không có trả 404. Thiếu telemetry là Unknown; nguồn gián đoạn giữ trạng thái hợp lệ cuối, đánh dấu Stale.\\\hline
+\Sig{+ find\allowbreak Alternative\allowbreak Hubs(filter: Alternative\allowbreak Hub\allowbreak Filter): List<Hub\allowbreak Alternative\allowbreak View>} & UC-HUB-03: trả Hub lân cận đáp ứng cùng snapshot/lý do; loại Hub tham chiếu. Không có ứng viên trả rỗng; Hub tham chiếu không tồn tại trả 404.\\\hline
+\Sig{+ refreshHubStatus(hubId: HubId): void} & Tác vụ nội bộ tổng hợp snapshot đã chấp nhận, tính và lưu HubStatus khi thay đổi; kiểm tra version. Query tra cứu không kích hoạt ghi.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Hợp đồng quản lý Hub}
+HubService cung cấp ResourceOwnerPort cho HUB theo Bảng~\ref{tab:p3-resource-owner-port}. Các command dùng transaction của GEN/OPS và kiểm tra version MobilityHub; không ghi thay dữ liệu tài nguyên con.
+
+\begingroup
+\renewcommand{\theHtable}{owner.hub}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\hline
+\textbf{Phương thức} & \textbf{Điều kiện của SUB-HUB}\\\hline
+\endfirsthead
+\hline\textbf{Phương thức} & \textbf{Điều kiện của SUB-HUB (tiếp)}\\\hline\endhead
+getResource, createDraft & Đọc Hub/trạng thái/version; GEN tạo Hub Draft với ID duy nhất, tọa độ WGS84 và sức chứa hợp lệ. Không tự xác nhận Hub Normal hoặc kích hoạt.\\\hline
+updateMetadata & UC-OPS-04 không cho sửa danh mục Hub; từ chối thao tác ngoài phạm vi này, không suy rộng quyền sửa thiết bị thành quyền sửa Hub.\\\hline
+checkConstraints, changeServiceStatus & OPR đúng Hub; kích hoạt cần danh mục và trạng thái hợp lệ, không có lỗi cản trở. Ngừng phục vụ kiểm tra cả lượt giữ, sử dụng, sạc và điều phối của tài nguyên con trong tx; không tự hủy chúng.\\\hline
+reportFault, applyVerifiedRecovery & Ghi nhận Hub OutOfService khi có sự cố hợp lệ. Khôi phục cần kết quả MNT đã xác minh; tổng hợp HubStatus từ dữ liệu tin cậy và tình trạng hiện hành, giữ ServiceStatus và trạng thái từng thiết bị.\\\hline
+\end{longtable}
+\addtocounter{table}{-1}
+\endgroup
+
+\ReserveSpace{8\baselineskip}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức HubAvailabilityPolicy}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ summarize(hub: MobilityHub, snapshot: ResourceSnapshot): Resource\allowbreak Availability} & Đếm tài nguyên Active/Available, không còn giữ/sử dụng/Incident; xe phải xác nhận tại Hub và pin từ 30\%. Trả số đếm không âm, không sửa dữ liệu.\\\hline
+\Sig{+ matchesNeed(summary: Resource\allowbreak Availability, need: ResourceType): Boolean} & Trả true khi số tài nguyên khả dụng của đúng loại nhu cầu lớn hơn 0.\\\hline
+\Sig{+ evaluateHubStatus(hub: MobilityHub, snapshot: ResourceSnapshot): HubStatus} & Tổng hợp mức sử dụng, sức chứa và tình trạng để trả Normal/NearCapacity/Full/OutOfService.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức HubDistanceCalculator}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ calculateDistance(from: GeoPoint, to: GeoPoint): Double} & Tính khoảng cách giữa hai tọa độ WGS84 theo mét; điểm trùng trả 0, tọa độ sai bị từ chối.\\\hline
+\Sig{+ isWithinRadius(distance: Double, radius: Double): Boolean} & Trả true khi $0\leq distance\leq radius$.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức HubStore}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ findAll(): List<MobilityHub>} & Đọc danh mục MobilityHub; không có bản ghi trả danh sách rỗng.\\\hline
+\Sig{+ findById(hubId: HubId): MobilityHub} & Đọc Hub theo UUID; không tồn tại trả 404.\\\hline
+\Sig{+ saveHubStatus(hubId: HubId, status: HubStatus, expectedVersion: Integer): void} & Lưu HubStatus khi expectedVersion khớp; chỉ tăng version nếu có thay đổi được commit.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ResourceStatusReader}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ getHubSnapshot(hubId: HubId): ResourceSnapshot} & Trả ResourceSnapshot hợp lệ gần nhất của Hub cùng thời điểm và độ mới.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức MobilityHub}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ isActive(): Boolean} & Trả true khi serviceStatus=Active.\\\hline
+\Sig{+ updateHubStatus(status: HubStatus): void} & Đổi HubStatus trong bộ nhớ; HubService lưu qua HubStore, kiểm tra version.\\\hline
 \end{longtable}

@@ -1,0 +1,162 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+top to bottom direction
+skinparam componentStyle uml2
+skinparam nodesep 44
+skinparam ranksep 18
+skinparam ArrowFontSize 13
+
+!procedure $left($id, $title, $service)
+  !$body = $id + "Body"
+  !$port = $id + "Port"
+  component "$title" as $id {
+    component "$service" as $body
+    port " " as $port
+    $body -right- $port
+  }
+!endprocedure
+
+!procedure $right($id, $title, $service)
+  !$body = $id + "Body"
+  !$port = $id + "Port"
+  component "$title" as $id {
+    port " " as $port
+    component "$service" as $body
+    $port -right- $body
+  }
+!endprocedure
+
+!procedure $bridge($id, $title, $service)
+  !$body = $id + "Body"
+  !$in = $id + "In"
+  !$out = $id + "Out"
+  component "$title" as $id {
+    port " " as $in
+    component "$service" as $body
+    port " " as $out
+    $in -right- $body
+    $body -right- $out
+  }
+!endprocedure
+
+package "Hợp đồng của SEMH và kết nối hệ thống ngoài" {
+  package "HTTP và kiểm tra quyền" {
+    component "Website\nReact + Leaflet" as Web
+    component "Nginx" as Proxy
+    $bridge(Api, "Backend NestJS", "REST API\nThao tác cần quyền")
+    $right(GenAuth, "GEN", "AccessService")
+    Web .right.> Proxy : HTTPS
+    Proxy .right.> ApiIn : /api
+    ApiOut -right-(0 GenAuthPort : kiểm tra phiên và quyền
+    Proxy -[hidden]right-> ApiBody
+    ApiBody -[hidden]right-> GenAuthBody
+  }
+
+  package "Đặt và bàn giao xe · Phối hợp trong cùng transaction" {
+    $left(Reserve, "SUB-RES", "ReservationService")
+    $right(Vehicle, "SUB-TRIP", "TripService")
+    ReservePort -right-(0 VehiclePort : reserveVehicleInTx\nreleaseVehicleInTx
+
+    $left(Trip, "SUB-TRIP", "TripService")
+    $right(Booking, "SUB-RES", "ReservationService")
+    TripPort -right-(0 BookingPort : fulfillReservation
+
+    $left(TripHub, "SUB-TRIP", "TripService")
+    $right(HubEndpoint, "SUB-HUB", "HubService")
+    TripHubPort -right-(0 HubEndpointPort : kiểm tra Hub nhận / trả xe
+
+    ReserveBody -[hidden]down-> TripBody
+    VehicleBody -[hidden]down-> BookingBody
+    TripBody -[hidden]down-> TripHubBody
+    BookingBody -[hidden]down-> HubEndpointBody
+  }
+
+  package "Danh mục và trạng thái phục vụ" {
+    $left(ResourceAdmin, "GEN / SUB-OPS", "AdministrationService\nOperationsService")
+    $right(ResourceOwner, "Owner theo loại tài nguyên", "HUB · HubService\nTRIP · TripService\nPARK · ParkingService\nCHG · ChargingPointService")
+    ResourceAdminPort -right-(0 ResourceOwnerPort : ResourceOwnerPort\nDraft · metadata · trạng thái\nsự cố · phục hồi
+  }
+
+  package "Đọc trạng thái và lập lịch sạc" {
+    $left(HubReader, "SUB-HUB", "ResourceStatusReader")
+    $right(StatusOwner, "Owner của trạng thái", "RES · TRIP · PARK · CHG · OPS")
+    HubReaderPort -right-(0 StatusOwnerPort : đọc khả dụng và cảnh báo
+
+    $left(ChargingContext, "SUB-CHG · Application", "ChargingService")
+    $right(ContextAdapter, "SUB-CHG · Infrastructure", "OwnerChargingContextAdapter")
+    ChargingContextPort -right-(0 ContextAdapterPort : ChargingContextPort
+    $left(ContextReader, "SUB-CHG · Infrastructure", "OwnerChargingContextAdapter")
+    $right(ChargingOwners, "Owner của dữ liệu lập lịch", "HUB · TRIP · PARK")
+    ContextReaderPort -right-(0 ChargingOwnersPort : đọc Hub, xe, pin\nvà công suất
+
+    $left(ChargingSave, "SUB-CHG · Application", "ChargingService\nChargingPointService")
+    $right(ChargingStore, "SUB-CHG · Infrastructure", "PrismaChargingStore")
+    ChargingSavePort -right-(0 ChargingStorePort : IChargingStore
+
+    HubReaderBody -[hidden]down-> ChargingContextBody
+    StatusOwnerBody -[hidden]down-> ContextAdapterBody
+    ChargingContextBody -[hidden]down-> ContextReaderBody
+    ContextAdapterBody -[hidden]down-> ChargingOwnersBody
+    ContextReaderBody -[hidden]down-> ChargingSaveBody
+    ChargingOwnersBody -[hidden]down-> ChargingStoreBody
+  }
+
+  package "Snapshot mô phỏng và điều chuyển" {
+    $left(SimCapture, "SUB-SIM · Application", "SimulationService")
+    $right(Snapshot, "SUB-SIM · Infrastructure", "StoreSnapshotProvider")
+    SimCapturePort -right-(0 SnapshotPort : SnapshotProvider
+
+    $left(SnapshotRead, "SUB-SIM · Infrastructure", "StoreSnapshotProvider")
+    $right(SnapshotOwners, "Owner trong phạm vi Hub", "Hợp đồng đọc dữ liệu cơ sở")
+    SnapshotReadPort -right-(0 SnapshotOwnersPort : đọc snapshot\nRepeatable Read
+
+    $left(SimHandoff, "SUB-SIM", "SimulationService")
+    $right(OpsPlan, "SUB-OPS", "OperationsService")
+    SimHandoffPort -right-(0 OpsPlanPort : prepareRedistribution\nđiền trước UC-OPS-03
+
+    SimCaptureBody -[hidden]down-> SnapshotReadBody
+    SnapshotBody -[hidden]down-> SnapshotOwnersBody
+    SnapshotReadBody -[hidden]down-> SimHandoffBody
+    SnapshotOwnersBody -[hidden]down-> OpsPlanBody
+  }
+
+  package "IoT, audit và dữ liệu" {
+    component "StateDataGateway\nACT-DAT / EXT-STATE" as Source <<externalSystem>>
+    $right(StateAdapter, "Backend · Tiếp nhận IoT", "StateDataAdapter")
+    Source .right.> StateAdapterPort : POST /api/state-events
+
+    $left(StateRoute, "Backend · Tiếp nhận IoT", "StateDataAdapter")
+    $right(StateOwner, "Owner tương ứng", "Áp dụng sự kiện hợp lệ")
+    StateRoutePort -right-(0 StateOwnerPort : chuyển StateEvent
+
+    $left(Audit, "Backend · Audit", "AuditService")
+    $right(DataStore, "Backend · Lưu trữ", "PrismaDataStore")
+    AuditPort -right-(0 DataStorePort : SEMHDataStore\nghi audit trong transaction
+
+    component "PrismaDataStore" as Persistence
+    database "PostgreSQL" as DB
+    Persistence .right.> DB : Prisma
+
+    Source -[hidden]down-> StateRouteBody
+    StateAdapterBody -[hidden]down-> StateOwnerBody
+    StateRouteBody -[hidden]down-> AuditBody
+    StateOwnerBody -[hidden]down-> DataStoreBody
+    AuditBody -[hidden]down-> Persistence
+    DataStoreBody -[hidden]down-> DB
+  }
+
+  Web -[hidden]down-> ReserveBody
+  ApiBody -[hidden]down-> VehicleBody
+  GenAuthBody -[hidden]down-> HubReaderBody
+  VehicleBody -[hidden]right-> HubReaderBody
+
+  TripHubBody -[hidden]down-> ResourceAdminBody
+  HubEndpointBody -[hidden]down-> ResourceOwnerBody
+  ResourceAdminBody -[hidden]down-> SimCaptureBody
+  ResourceOwnerBody -[hidden]down-> SnapshotBody
+
+  ChargingSaveBody -[hidden]down-> Source
+  ChargingStoreBody -[hidden]down-> StateAdapterBody
+  SnapshotBody -[hidden]right-> Source
+}
+@enduml

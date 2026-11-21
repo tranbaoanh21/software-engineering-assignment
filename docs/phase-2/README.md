@@ -4,6 +4,8 @@ Submission 2 được soạn tiếp trên nội dung Submission 1, không nộp 
 
 [Đọc báo cáo tích hợp](group-report/output/pdf/phase-2-group-report-outline.pdf). Tên tệp PDF được giữ để không làm hỏng các liên kết đã chia sẻ; nội dung bên trong đã chuyển sang bố cục tích hợp.
 
+Bản Phase 2 riêng hiện có 172 trang. [Bản Submission 3 tích hợp](../phase-3/group-report/output/pdf/submission-3-integrated-report.pdf) có 236 trang, gồm mục lục và danh sách hình/bảng: thiết kế lớp/phương thức nằm trong GEN và từng phân hệ, kiến trúc và test case đặt cuối báo cáo. Nguồn bản này là `group-report/main-integrated.tex`; xem [bàn giao](../ban-giao.md) để biên dịch đúng bản.
+
 - [Thuật ngữ dùng chung](uml-conventions.md): tên phân hệ, actor, đối tượng, thành phần và trạng thái.
 - [Danh sách màn hình website](ui-screen-inventory.md): màn hình, form và các trạng thái cần thiết kế trên Figma.
 - [Bảy báo cáo cá nhân](individual-work/README.md): bản trích theo phân công, dùng trực tiếp nội dung và hình của báo cáo nhóm; GEN nằm trong báo cáo Bảo Anh dưới nhãn nội dung chung.
@@ -117,6 +119,6 @@ Bản PDF chuẩn để kiểm tra và tổng hợp là tệp trong `output/pdf/
 
 ## Lưu trữ bài gốc và tài sản
 
-Bài gốc của sáu thành viên được giữ nguyên trong `local/phase-2-submissions/` tại máy tổng hợp và không đưa vào Git. Báo cáo sử dụng bản đã tích hợp trong `diagrams/` và `mockups/`; các mã PlantUML có thể chỉnh sửa được giữ trong `diagrams/plantuml/`. Bộ logo SEMH nằm ở `assets/branding/` tại root dự án. Tệp tạm LaTeX và ảnh kiểm tra không nằm trong bộ tài liệu nộp.
+Bài gốc của sáu thành viên nằm trong `docs/local/phase-2-submissions/` tại máy tổng hợp. Báo cáo dùng hình trong `diagrams/` và `mockups/`. Nguồn PlantUML nằm ở `diagrams/plantuml/`, bộ logo SEMH ở `docs/assets/branding/`.
 
 Deadline trên LMS: **25/10/2026**. Review dự kiến trên lớp: **Tuần 11**.

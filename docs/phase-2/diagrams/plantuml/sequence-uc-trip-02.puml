@@ -11,6 +11,9 @@ skinparam sequence {
   ParticipantBackgroundColor white
   ParticipantBorderColor black
   LifeLineBorderColor black
+  LifeLineBackgroundColor white
+  ActivationBorderColor black
+  ActivationBackgroundColor white
   GroupBackgroundColor white
   GroupBodyBackgroundColor white
   GroupBorderColor black
@@ -33,9 +36,13 @@ participant "IoT & State Data Gateway\n(EXT-STATE / ACT-DAT)" as StateDataGatewa
 
 == Bước 1: Yêu cầu trả xe ==
 Student -> TripUI : openReturn()
+activate TripUI
 TripUI -> TripService : prepareReturn()
+activate TripService
 TripService -> AccessService : authorize()
+activate AccessService
 AccessService --> TripService : accessResult
+deactivate AccessService
 break Phiên / quyền không hợp lệ - EF-04
   TripService --> TripUI : accessDenied()
   TripUI --> Student : Đăng nhập lại / từ chối truy cập
@@ -47,43 +54,63 @@ end note
 
 == Bước 2: Kiểm tra Trip ==
 TripService -> SEMHDataStore : getReturnContext()
+activate SEMHDataStore
 SEMHDataStore --> TripService : trip, vehicle, hub
+deactivate SEMHDataStore
 TripService -> TripService : validateActiveTrip()
+activate TripService
+deactivate TripService
 break Trip không InProgress / xe không InUse / sai chủ hoặc xe
   TripService --> TripUI : returnRejected()
   TripUI --> Student : Hiển thị trạng thái; không cập nhật
 end
 == Bước 3: Kiểm tra Hub ==
 TripService -> TripService : validateReceivingHub()
+activate TripService
+deactivate TripService
 break Hub không hợp lệ / không nhận xe - EF-01
   TripService --> TripUI : hubCannotReceive()
   TripUI --> Student : Báo lý do; chọn Hub khác
 end
 == Bước 4: Trả xe ==
 TripService --> TripUI : returnInstructions()
+deactivate TripService
 TripUI --> Student : Hướng dẫn trả / khóa / gắn xe
+deactivate TripUI
 break Hủy trước khi trả - AF-03
   Student -> TripUI : cancelReturn()
+  activate TripUI
   TripUI --> Student : Giữ Trip.InProgress; không cập nhật
+  deactivate TripUI
 end
 Student -> Student : Trả / khóa xe
 Student -> TripUI : confirmReturn()
+activate TripUI
 TripUI -> TripService : confirmReturn()
+activate TripService
 ref over TripService, AccessService
   Kiểm tra quyền như bước 1; thất bại: EF-04
 end ref
 == Bước 5: Xác nhận trả an toàn ==
 TripService -> StateDataGateway : awaitSafeReturnConfirmation()
+activate StateDataGateway
 StateDataGateway --> TripService : returnEvidence / timeout
+deactivate StateDataGateway
 TripService -> TripService : validateReturnEvidence()
+activate TripService
+deactivate TripService
 break Chưa xác nhận vị trí / an toàn - EF-02
   TripService --> TripUI : safeReturnNotConfirmed()
   TripUI --> Student : Giữ Trip.InProgress; kiểm tra khóa / vị trí
 end
 TripService -> TripService : safeReturnConfirmed()
+activate TripService
+deactivate TripService
 
 == Bước 6: Dữ liệu cuối chuyến ==
 TripService -> TripService : buildEndSnapshot()
+activate TripService
+deactivate TripService
 note right of TripService
   Hub đích, giờ kết thúc, thời lượng, pin, tình trạng.
   Lưu cùng Trip và xe ở bước 7.
@@ -92,6 +119,8 @@ end note
 == Bước 7: Hoàn tất chuyến đi ==
 alt Xe lỗi / đến hạn kiểm tra - AF-02
   TripService -> TripService : determineNextVehicleState(OutOfService)
+  activate TripService
+  deactivate TripService
 else Xe không lỗi, pin < 30% - AF-01
   ref over TripService, SEMHDataStore
     Xử lý sạc qua SUB-CHG sau khi lưu thành công.
@@ -103,10 +132,13 @@ else Xe không lỗi, pin < 30% - AF-01
   end note
 else Xe đủ pin, đủ điều kiện phục vụ
   TripService -> TripService : determineNextVehicleState(Available)
+  activate TripService
+  deactivate TripService
 end
 
 critical Kiểm tra lại và cập nhật đồng bộ
   TripService -> SEMHDataStore : completeTripAtomically()
+  activate SEMHDataStore
   note right of SEMHDataStore
     Kiểm tra lại chủ Trip, xe, Hub và xác nhận trả an toàn.
     Trip phải InProgress; xe phải InUse.
@@ -117,6 +149,7 @@ critical Kiểm tra lại và cập nhật đồng bộ
     Trạng thái đã thay đổi: EF-03; giữ OutOfService.
   end note
   SEMHDataStore --> TripService : returnResult
+  deactivate SEMHDataStore
 end
 break Cập nhật thất bại - EF-03
   TripService --> TripUI : returnNotCompleted()
@@ -134,7 +167,9 @@ opt Cần sạc / kiểm tra kỹ thuật
 end
 == Bước 8: Kết quả chuyến đi ==
 TripService --> TripUI : tripCompleted()
+deactivate TripService
 TripUI --> Student : Báo hoàn tất; tóm tắt chuyến đi
+deactivate TripUI
 note over Student, TripUI
   Mã Trip, Hub đi / đến, giờ và pin đầu / cuối, thời lượng.
   Trip.Completed không đồng nghĩa SharedVehicle.Available.

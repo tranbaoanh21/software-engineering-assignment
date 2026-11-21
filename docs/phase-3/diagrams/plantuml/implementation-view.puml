@@ -1,0 +1,55 @@
+@startuml
+!include design-style.puml
+top to bottom direction
+skinparam nodesep 20
+skinparam ranksep 24
+skinparam componentStyle uml2
+
+package "SEMH — một ứng dụng backend NestJS" {
+  package "GEN và bảy module nghiệp vụ" {
+    component "RES\nĐặt xe" as RES
+    component "TRIP\nXe dùng chung, chuyến đi" as TRIP
+    component "SIM\nMô phỏng, khuyến nghị" as SIM
+    component "OPS\nSự cố, điều chuyển" as OPS
+    component "GEN\nTài khoản, phiên, quyền" as GEN
+    component "HUB\nHub và tra cứu" as HUB
+    component "PARK\nChỗ đỗ, xe cá nhân" as PARK
+    component "CHG\nYêu cầu, lịch và phiên sạc" as CHG
+
+    RES -[hidden]right-> SIM
+    SIM -[hidden]right-> GEN
+    TRIP -[hidden]right-> OPS
+    HUB -[hidden]right-> PARK
+    PARK -[hidden]right-> CHG
+
+    RES ..> TRIP : giữ / giải phóng xe
+    TRIP ..> RES : hoàn tất lượt đặt
+    SIM ..> OPS : chuẩn bị đề xuất\nđiều chuyển
+
+    rectangle "«interface»\nResourceOwnerPort\nTheo loại tài nguyên" as OwnerPort
+    GEN ..> OwnerPort : tạo Draft
+    OPS ..> OwnerPort : quản lý tài nguyên
+    OwnerPort -[hidden]down-> PARK
+    TRIP ..|> OwnerPort
+    HUB .up.|> OwnerPort
+    PARK .up.|> OwnerPort
+    CHG .up.|> OwnerPort
+
+  }
+
+  package "Ví dụ bốn tầng bên trong CHG" {
+    component "Presentation\nChargingController" as Controller
+    component "Application\nChargingService" as Service
+    component "Domain\nChargingSchedulingPolicy" as Policy
+    rectangle "«interface»\nIChargingStore" as Store
+    component "Infrastructure\nPrismaChargingStore" as Prisma
+
+    Controller -right-> Service
+    Service -right-> Policy
+    Service ..> Store : dùng
+    Prisma .left.|> Store : hiện thực
+    Policy -[hidden]down-> Prisma
+  }
+  PARK -[hidden]down-> Service
+}
+@enduml

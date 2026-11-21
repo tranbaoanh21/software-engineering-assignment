@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage[paperwidth=224mm,paperheight=246mm,margin=2mm]{geometry}
+\usepackage{tikz}
+\usepackage{fontspec}
+\setmainfont{Arial}
+\usetikzlibrary{arrows.meta,calc}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\begin{document}
+\begin{tikzpicture}[x=1mm,y=-1mm,
+  every node/.style={font=\fontsize{12}{13}\selectfont},
+  cls/.style={draw,rounded corners=0.6mm,fill=white,inner xsep=1.6mm,inner ysep=1.5mm,minimum height=9mm},
+  qty/.style={font=\fontsize{10}{11}\selectfont,inner sep=0.3mm},
+  rel/.style={line width=0.45pt},
+  inherit/.style={rel,-{Triangle[open,length=3mm,width=2.8mm]}}
+]
+\path[use as bounding box] (-25,0) rectangle (193,239);
+% Mỗi lớp chỉ xuất hiện một lần. Tọa độ dành riêng cho bố cục hình tổng quan.
+\node[cls] (Vehicle) at (80,8) {\textit{Vehicle}};
+\node[cls] (ChargingRequest) at (155,8) {ChargingRequest};
+\node[cls] (ChargingSession) at (155,33) {ChargingSession};
+\node[cls] (ChargingPoint) at (155,58) {ChargingPoint};
+\node[cls] (PrivateVehicle) at (80,58) {PrivateVehicle};
+\node[cls] (Account) at (60,98) {Account};
+\node[cls] (ParkingReservation) at (115,98) {ParkingReservation};
+\node[cls] (VehicleReservation) at (6,98) {VehicleReservation};
+\node[cls] (Trip) at (34,130) {Trip};
+\node[cls] (AccessAssignment) at (97,132) {AccessAssignment};
+\node[cls] (ParkingSpace) at (155,128) {ParkingSpace};
+\node[cls] (SharedVehicle) at (6,164) {SharedVehicle};
+\node[cls] (MobilityHub) at (155,164) {MobilityHub};
+\node[cls] (SimulationScenario) at (6,198) {SimulationScenario};
+\node[cls] (SimulationRun) at (67,198) {SimulationRun};
+\node[cls] (Recommendation) at (128,198) {Recommendation};
+\node[cls] (RedistributionPlan) at (128,230) {RedistributionPlan};
+\node[cls] (Incident) at (6,230) {Incident};
+
+% Kế thừa: đầu tam giác hướng về Vehicle.
+\draw[inherit] (PrivateVehicle.north) -- (Vehicle.south);
+\draw[inherit] (SharedVehicle.west) -- (-22,164) -- (-22,8) -- (Vehicle.west);
+
+% Tài khoản và các lượt sử dụng.
+\draw[rel] (Account.north) -- node[pos=0.10,left,qty]{1}
+  node[pos=0.90,left,qty]{0..*} node[midway,left=1mm,qty]{chủ xe} (PrivateVehicle.south);
+\draw[rel] (Account.west) -- node[pos=0.08,below,qty]{1}
+  node[pos=0.91,below right,qty]{0..*} node[midway,above=1mm,qty]{sinh viên} (VehicleReservation.east);
+\draw[rel] (Account.east) -- node[pos=0.07,below,qty]{1}
+  node[pos=0.92,below left,qty]{0..*} node[midway,above=1mm,qty]{sinh viên} (ParkingReservation.west);
+\draw[rel] (Account.south) -- (60,119) -- node[pos=0.87,below left,qty]{0..*} (AccessAssignment.west);
+\node[qty,anchor=north east] at ($(Account.south)+(-1,1)$) {1};
+
+% Xe dùng chung, đặt xe và chuyến đi.
+\draw[rel] (SharedVehicle.north) -- node[pos=0.08,left,qty]{1}
+  node[pos=0.94,left,qty]{0..*} (VehicleReservation.south);
+\draw[rel] (SharedVehicle.north east) -- node[pos=0.10,right,qty]{1}
+  node[pos=0.80,right,qty]{0..*} (Trip.south west);
+\draw[rel] (VehicleReservation.south east) -- node[pos=0.13,left,qty]{1}
+  node[pos=0.80,right,qty]{0..1} node[midway,right=1mm,qty]{bàn giao} (Trip.north);
+\draw[rel] (MobilityHub.west) -- node[pos=0.04,below,qty]{1}
+  node[pos=0.96,below right,qty]{0..*} node[midway,above=1mm,qty]{thuộc Hub} (SharedVehicle.east);
+
+% Chỗ đỗ và xe cá nhân.
+\draw[rel] (PrivateVehicle.south east) -- node[pos=0.12,right,qty]{1}
+  node[pos=0.88,right,qty]{0..*} (ParkingReservation.north);
+\draw[rel] (MobilityHub.north) -- node[pos=0.10,right,qty]{1}
+  node[pos=0.90,right,qty]{0..*} (ParkingSpace.south);
+\draw[rel] (ParkingSpace.north) -- node[pos=0.10,right,qty]{1}
+  node[pos=0.90,right,qty]{0..*} (ParkingReservation.east);
+
+% Sạc: mỗi liên kết có một lối riêng, không đi qua các lớp ở giữa.
+\draw[rel] (Vehicle.east) -- node[pos=0.07,below,qty]{1}
+  node[pos=0.93,below left,qty]{0..*} (ChargingRequest.west);
+\draw[rel] (ChargingRequest.south) -- node[pos=0.15,left,qty]{1}
+  node[pos=0.85,left,qty]{0..*} (ChargingSession.north);
+\draw[rel] (ChargingPoint.north) -- node[pos=0.15,right,qty]{1}
+  node[pos=0.85,right,qty]{0..*} (ChargingSession.south);
+\draw[rel] (ChargingPoint.east) -- (186,58) -- (186,8) -- (ChargingRequest.east);
+\node[qty,anchor=south west] at ($(ChargingPoint.east)+(1,-1)$) {0..1};
+\node[qty,anchor=south west] at ($(ChargingRequest.east)+(1,-1)$) {0..*};
+\node[qty,rotate=90] at (190,33) {phân bổ};
+\draw[rel] (MobilityHub.east) -- (178,164) -- (178,62.5) -- (ChargingPoint.south east);
+\node[qty,anchor=north west] at ($(MobilityHub.east)+(1,1)$) {1};
+\node[qty,anchor=north west] at ($(ChargingPoint.south east)+(1,1)$) {0..*};
+
+% Mô phỏng và vận hành thuộc cùng hình tổng quan.
+\draw[rel] (SimulationScenario.east) -- node[pos=0.12,above,qty]{1}
+  node[pos=0.88,above left,qty]{0..*} (SimulationRun.west);
+\draw[rel] (SimulationRun.east) -- node[pos=0.12,above,qty]{1}
+  node[pos=0.88,above left,qty]{0..*} (Recommendation.west);
+\draw[rel] (Recommendation.south) -- node[pos=0.10,left,qty]{0..1}
+  node[pos=0.90,left,qty]{0..*} node[midway,right=1mm,qty]{nguồn đề xuất} (RedistributionPlan.north);
+\node[draw,dashed,fill=white,text width=60mm,align=left,inner sep=2mm,
+  font=\fontsize{8}{10}\selectfont] (ReferenceNote) at (65,230)
+  {Incident: resourceType/resourceId.\\
+   Kế hoạch: xe, Hub nguồn/đích.\\
+   Giữ liên kết lịch sử khi hết hiệu lực.};
+\draw[rel,dashed] (Incident.east) -- (ReferenceNote.west);
+\end{tikzpicture}
+\end{document}

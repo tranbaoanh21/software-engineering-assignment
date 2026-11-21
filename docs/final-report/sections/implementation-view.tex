@@ -1,0 +1,18 @@
+\newcommand{\FinalImplementationFigure}[4]{%
+  \begingroup\setlength{\intextsep}{7pt}%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth,height=#1,keepaspectratio]{diagrams/#2.pdf}
+    \caption{#3}\label{#4}
+  \end{figure}\endgroup%
+}
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{3}}
+\subsubsection{Tổ chức package và chiều phụ thuộc}
+\FinalImplementationFigure{0.73\textheight}{backend-packages}
+  {Package Diagram toàn hệ thống SEMH}{fig:p3-backend-packages}
+
+GEN và bảy phân hệ chạy trong cùng một ứng dụng NestJS. Mũi tên nét đứt trỏ về package được sử dụng. Presentation gọi Application, Application dùng luật và thực thể của Domain. Infrastructure hiện thực hợp đồng Application hoặc gọi service khi chạy tác vụ nền. Mỗi phân hệ truy cập dữ liệu của phân hệ khác qua hợp đồng của owner.
+
+\input{sections/module-handoffs}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}

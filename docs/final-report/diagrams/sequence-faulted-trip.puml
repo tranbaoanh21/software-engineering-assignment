@@ -1,0 +1,78 @@
+@startuml
+!include ../../phase-3/diagrams/plantuml/design-style.puml
+skinparam defaultFontSize 16
+skinparam ArrowFontSize 15
+skinparam SequenceLifeLineBackgroundColor white
+skinparam SequenceLifeLineBorderColor black
+hide footbox
+
+actor "OPR" as OPR
+actor "MNT" as MNT
+participant "StateData\nAdapter" as DATA
+participant "OPS\nOperationsService" as OPS
+participant "TRIP\nTripService" as TRIP
+actor "STU" as STU
+
+alt OPR ghi nhận từ màn hình sự cố
+  OPR -> OPS : reportIncident(...)
+  activate OPS
+else Nguồn IoT đã được xác thực
+  DATA -> OPS : reportVerifiedFaultInTx(tx, fault)
+end
+group Ghi sự cố và trạng thái xe cùng giao dịch
+  alt Sự cố mới
+    OPS -> OPS : Tạo Incident.Open
+    OPS -> TRIP : ResourceOwnerPort.reportFault(tx, ...)
+    activate TRIP
+    TRIP --> OPS : Xe OutOfService, Trip vẫn InProgress
+    deactivate TRIP
+  else Đã có sự cố đang mở
+    OPS -> OPS : Liên kết bằng chứng với sự cố hiện có
+  end
+end
+deactivate OPS
+
+OPR -> OPS : acknowledgeIncident(...) / assignIncident(...)
+activate OPS
+OPS --> OPR : Đã tiếp nhận và giao việc
+deactivate OPS
+MNT -> OPS : startIncidentWork(...)
+activate OPS
+OPS --> MNT : Incident.InProgress
+deactivate OPS
+
+alt Sinh viên trả an toàn ở Hub hợp lệ
+  STU -> TRIP : confirmReturn(...)
+  activate TRIP
+  TRIP --> STU : Trip.Completed, xe vẫn OutOfService
+  deactivate TRIP
+else MNT tiếp nhận xe ngoài Hub
+  note over MNT,OPS : MNT cung cấp bằng chứng bàn giao
+  OPR -> OPS : confirmIncidentHandover(...)
+  activate OPS
+  OPS -> TRIP : closeFaultedTripInTx(tx, incidentId, evidence)
+  activate TRIP
+  TRIP --> OPS : Trip.Interrupted, xe vẫn OutOfService
+  deactivate TRIP
+  OPS --> OPR : Đã ghi nhận bàn giao
+  deactivate OPS
+end
+
+MNT -> OPS : submitTechnicalResult(...)
+activate OPS
+opt Kết quả kỹ thuật đạt
+  OPS -> TRIP : ResourceOwnerPort.applyVerifiedRecovery(tx, ...)
+  activate TRIP
+  TRIP --> OPS : Kết quả kiểm tra an toàn và ràng buộc
+  deactivate TRIP
+end
+OPS --> MNT : Kết quả đã ghi nhận
+deactivate OPS
+
+opt Owner xác nhận đủ điều kiện phục hồi
+  OPR -> OPS : closeIncident(...)
+  activate OPS
+  OPS --> OPR : Incident.Closed
+  deactivate OPS
+end
+@enduml

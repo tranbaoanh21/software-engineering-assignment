@@ -6,7 +6,7 @@ Trong tài liệu này, những class/method mới ở phần gợi ý là \text
 
 \subsection{Nhìn hệ thống bằng hai view kiến trúc}
 \point{Deployment View}
-Xác định nơi chạy website, backend, nơi lưu dữ liệu, nguồn trạng thái giả lập/thực và dịch vụ bản đồ. Worker mô phỏng có thể ở cùng backend hoặc là tiến trình riêng tùy phương án; cần nói rõ, không tự suy ra một server cho mỗi phân hệ.
+Xác định nơi chạy website, backend, kho dữ liệu, nguồn IoT và nguồn nền bản đồ; Leaflet thuộc frontend. Worker mô phỏng có thể chạy cùng backend hoặc riêng; không tự suy ra một server cho mỗi phân hệ.
 
 \point{Development/Implementation View}
 Giữ các ranh giới HUB, RES, TRIP, PARK, CHG, OPS, SIM cùng chức năng dùng chung GEN. Một phương án học dễ theo là backend chia module, dùng interface ở các ranh giới dữ liệu/nguồn ngoài. Đây là phương án để cân nhắc, không phải stack đã chọn.
@@ -40,7 +40,7 @@ ReservationUI, HubUI & Boundary phía giao diện; có thể là trang/component
 ReservationService & Trách nhiệm application cho nghiệp vụ đặt/hủy; tách thêm class chỉ khi có lý do.\\\hline
 SEMHDataStore & Trừu tượng lưu trữ nội bộ trong mô hình trước; nay cần chốt interface, ownership dữ liệu và cách hiện thực. Không có nghĩa chỉ là dữ liệu giả.\\\hline
 StateDataGateway & Tên chuẩn của nguồn trạng thái ngoài, tương ứng ACT-DAT/EXT-STATE. Phía nội bộ có thể cần adapter nhận, kiểm tra và ánh xạ sự kiện.\\\hline
-MapService & Nguồn bản đồ/định vị ngoài theo ACT-MAP/EXT-MAP. Không đổi thành một database nội bộ chỉ để dễ vẽ.\\\hline
+Leaflet & Thư viện giao diện. EXT-MAP cung cấp nền bản đồ, không là actor nghiệp vụ; SEMH quản lý tọa độ và khoảng cách.\\\hline
 \end{tabularx}\end{center}
 
 Nếu tách một lifeline trừu tượng thành nhiều lớp cụ thể, cần ghi cách ánh xạ và kiểm tra lại các thông điệp liên quan. Không đổi tên ở class diagram mà để sequence và mô tả method trỏ tới thành phần đã không còn ý nghĩa.

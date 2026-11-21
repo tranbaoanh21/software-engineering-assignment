@@ -1,41 +1,205 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-CHG -- Quản lý sạc và lịch sạc}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Phân biệt ChargingRequest, ChargingSession và ChargingPoint. Các phương thức tính ưu tiên, kiểm tra tương thích/công suất, điều chỉnh lịch và xử lý cổng lỗi theo NIFR-CHG-01/02 phải có hợp đồng xác định được.
+SUB-CHG quản lý đăng ký, theo dõi và điều chỉnh lịch sạc trong UC-CHG-01--03; tính lại lịch và xử lý cổng lỗi theo NIFR-CHG-01--02. ChargingRequest, ChargingSession và ChargingPoint thuộc CHG; thông số xe, ownership và cấu hình Hub được đọc qua hợp đồng owner.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/05-sub-chg.pdf}{Class diagram -- SUB-CHG}{fig:p3-class-05-sub-chg}
+\DesignFigure[0.80\textheight]{../diagrams/class/05-sub-chg.pdf}
+{Class diagram -- SUB-CHG}{fig:p3-class-05-sub-chg}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả lớp}
 
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-CHG}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\begin{longtable}{|L{37mm}|L{102mm}|}
+\caption{Các lớp và hợp đồng của SUB-CHG}\\\hline
+\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-CHG-01} & Đăng ký nhu cầu sạc & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-CHG-02} & Theo dõi lịch và phiên sạc & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-CHG-03} & Điều chỉnh lịch sạc ưu tiên & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp / kiểu} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+Charging\allowbreak Controller & Tiếp nhận HTTP, kiểm tra schema và SessionToken, chuyển yêu cầu đến service, ánh xạ DTO/lỗi. Không tự tính ưu tiên, lập lịch hoặc đổi trạng thái miền.\\\hline
+ChargingService & Điều phối UC-CHG-01--03 và NIFR-CHG-01--02; kiểm tra quyền, lấy dữ liệu qua owner, lập lịch, cập nhật trạng thái, version, idempotency và audit. Không suy ra bắt đầu/hoàn tất từ thời gian dự kiến.\\\hline
+Charging\allowbreak Scheduling\allowbreak Policy & Chứa thuật toán thuần tính ưu tiên, hạn hoàn tất, thời lượng và slot khả thi theo BR-CHG-01--04. Nhận now và snapshot từ caller; không tự đọc DB hoặc đồng hồ.\\\hline
+ChargingRequest & Nhu cầu sạc của xe tại Hub; receivedAt không đổi khi xếp lại. Trạng thái: Pending, Scheduled, Charging, Completed, Cancelled, Rejected. Pending không có allocation; Scheduled có slot hợp lệ. Không xếp lại yêu cầu đã bắt đầu.\\\hline
+ChargingSession & Theo dõi phiên thực tế với trạng thái Ready, Charging, Paused, Completed, Interrupted hoặc Failed. Ready chưa có thời điểm bắt đầu/kết thúc; chỉ chuyển trạng thái bằng bằng chứng hợp lệ.\\\hline
+ChargingPoint & Trạng thái Available, Reserved, Charging, OutOfService độc lập với ServiceStatus; Draft có thể chưa có trạng thái vật lý được xác nhận. Tối đa một phiên Charging tại một thời điểm. Chỉ giải phóng khi cổng trống, an toàn và hết ràng buộc; Ready mất allocation không tự giữ cổng.\\\hline
+Charging\allowbreak Schedule\allowbreak Slot / ChargingOccupancy & Slot là khoảng [startTime, endTime) với công suất và thời lượng xác định. Occupancy ghi nhận phân bổ/phiên đang chiếm cổng; không coi cổng hoặc công suất đã rảnh nếu chưa biết thời điểm giải phóng.\\\hline
+Charging\allowbreak Vehicle\allowbreak Spec / Hub\allowbreak Charging\allowbreak Context & Snapshot đầu vào lấy từ owner: loại đầu nối, dung lượng/công suất xe, pin và độ tin cậy; trạng thái Hub, hạn mức công suất và version. Đây không phải entity thay thế của SUB-TRIP, SUB-PARK hoặc SUB-HUB.\\\hline
+Charging\allowbreak Point\allowbreak Service & Hợp đồng duy nhất để GEN/OPS tạo Draft, sửa thông tin được phép, đổi ServiceStatus, báo lỗi và phục hồi ChargingPoint. Mọi thao tác ghi phải dùng transaction của caller và kiểm tra ràng buộc/version.\\\hline
+Charging\allowbreak Context\allowbreak Port / Owner\allowbreak Charging\allowbreak Context\allowbreak Adapter & Đọc ownership, thông số xe và cấu hình Hub qua hợp đồng SUB-TRIP, SUB-PARK, SUB-HUB. Không nhân bản entity và không ghi dữ liệu thuộc owner khác.\\\hline
+IChargingStore / Prisma\allowbreak Charging\allowbreak Store / SEMHDataStore & Lưu trữ theo hợp đồng module trên hạ tầng PostgreSQL dùng chung. Tải snapshot nhất quán, lưu lịch/trạng thái trong cùng transaction và kiểm tra version trước commit.\\\hline
+AccessService / AuditService / Command\allowbreak Receipt\allowbreak Port & AccessService xác định scope từ quyền backend. AuditService ghi actor/source, hành động, before/after và lý do. Command\allowbreak Receipt\allowbreak Port lưu receipt chống gửi lặp cùng transaction nghiệp vụ.\\\hline
+StateDataAdapter / ChargingScheduler & StateDataAdapter tiếp nhận sự kiện IoT, kiểm tra nguồn, đơn vị, sequence và chống lặp trước khi chuyển cho CHG. ChargingScheduler kích hoạt tính lại theo sự kiện hoặc quét bù mỗi 5 phút; cơ chế DB chống xử lý trùng.\\\hline
+\end{longtable}
+
+\ReserveSpace{7\baselineskip}
+\paragraph{Ràng buộc lập lịch và trạng thái}
+\begin{itemize}
+\item High nếu pin tin cậy dưới 20\% hoặc nextUseTime trong 60 phút tiếp theo; còn lại Normal. Cùng ưu tiên xếp receivedAt rồi requestId; receivedAt không đổi khi xếp lại.
+\item Mục tiêu pin 100\%, hiệu suất $\eta=0.9$. Với dung lượng $C$ (kWh), pin $b$ (\%), công suất cổng $P_c$ và xe $P_x$ (kW), đặt $P=\min(P_c,P_x)>0$; thời lượng là $d=\lceil60C(1-b/100)/(\eta P)\rceil$ phút. Tính riêng theo từng cổng; thiếu dữ liệu tin cậy không cấp slot.
+\item Hub/cổng Active, tương thích, trạng thái vật lý được xác nhận và không OutOfService. Slot $[s,s+d)$ không chồng lấn; tổng công suất trên từng đoạn không vượt hạn mức Hub. Chọn start sớm nhất, hòa theo pointCode tăng dần.
+\item finishBy là mốc sớm hơn giữa deadline và nextUseTime; cả hai thiếu thì không tự đặt hạn.
+\item Ready chưa Charging; giờ dự kiến, telemetry cũ hoặc mất kết nối UI không tự đổi trạng thái. Paused/Interrupted/Failed không tự giải phóng cổng; cần xác nhận trống/an toàn.
+\item Request, slot, session, point, version, receipt và audit cập nhật trong cùng transaction Serializable. Giữ nguyên phiên đã bắt đầu; không đếm slot và phiên thực tế của cùng yêu cầu hai lần.
+\end{itemize}
+
+\textbf{Các điểm chưa chốt trong thiết kế.} Luồng hủy Pending/Scheduled, quyền hủy và điều kiện Rejected chưa được đặc tả đầy đủ; chưa có cơ chế tạo phiên mới sau Interrupted/Failed. Trạng thái cổng khi đã giải phóng thực tế nhưng còn lịch tương lai cần thống nhất với state chart. Các phương thức dưới chưa bổ sung những luồng này; gửi lại command sau lỗi mạng dùng idempotency.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Mô tả phương thức}
+Command kiểm tra lại quyền/version trong transaction PostgreSQL Serializable. Cùng requestId và nội dung trả kết quả đã commit; cùng ID khác nội dung trả 409. Serialization conflict rollback và thử lại toàn transaction tối đa hai lần. Audit/receipt cùng commit; thông báo hoặc gọi nguồn ngoài sau commit. Dấu \texttt{?} chỉ giá trị tùy chọn; \texttt{+} public, \texttt{-} private; createReady là factory static.
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức Charging\allowbreak Controller}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ get\allowbreak Registration\allowbreak Info(vehicleId: UUID, hubId: UUID): Registration\allowbreak Info\allowbreak View} & Gọi getRegistrationInfo của service với phiên và xe/Hub đã kiểm tra; trả dữ liệu đăng ký.\\\hline
+\Sig{+ preview(input: Charging\allowbreak Request\allowbreak Input): Request\allowbreak Preview\allowbreak View} & Gọi previewRequest; trả dự kiến, chưa tạo request/giữ cổng.\\\hline
+\Sig{+ create(input: Charging\allowbreak Request\allowbreak Input, change: ChangeContext): Charging\allowbreak Request\allowbreak View} & Gọi createChargingRequest với input, phiên và ChangeContext; trả kết quả command.\\\hline
+\Sig{+ getOverview(filter: ChargingFilter): Charging\allowbreak Overview\allowbreak View} & Gọi getOverview với bộ lọc và phiên; trả danh sách trong scope.\\\hline
+\Sig{+ getDetail(requestId: UUID): Charging\allowbreak Detail\allowbreak View} & Gọi getDetail với ID/phiên; trả chi tiết, không sửa trạng thái.\\\hline
+\Sig{+ get\allowbreak Adjustment\allowbreak Context(requestIds: List<UUID>): Adjustment\allowbreak Context\allowbreak View} & Chuyển toàn bộ ID và phiên tới getAdjustmentContext; không bỏ mục ngoài quyền.\\\hline
+\Sig{+ adjust(input: Schedule\allowbreak Adjustment\allowbreak Input, change: ChangeContext): Schedule\allowbreak Adjustment\allowbreak Result} & Gọi adjustSchedule; trả phương án/kết quả hoặc lỗi từ service.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ChargingService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ get\allowbreak Registration\allowbreak Info(session: SessionToken, vehicleId: UUID, hubId: UUID): Registration\allowbreak Info\allowbreak View} & Qua owner kiểm tra quyền với xe/Hub; trả thông số, pin/observedAt, độ mới và dữ liệu còn thiếu.\\\hline
+\Sig{+ previewRequest(session: SessionToken, input: Charging\allowbreak Request\allowbreak Input): Request\allowbreak Preview\allowbreak View} & Tính thử ưu tiên, thời lượng/slot trên snapshot; không ghi. Khi xác nhận phải tính lại.\\\hline
+\Sig{+ create\allowbreak Charging\allowbreak Request(session: SessionToken, input: Charging\allowbreak Request\allowbreak Input, change: ChangeContext): Charging\allowbreak Request\allowbreak View} & UC-CHG-01: pin tin cậy đạt 100\% bị từ chối; thiếu/cũ thông số thì Pending. Tính High/FIFO/slot; có slot tạo Scheduled và một Ready cùng allocation, chưa bắt đầu sạc.\\\hline
+\Sig{+ getOverview(session: SessionToken, filter: ChargingFilter): Charging\allowbreak Overview\allowbreak View} & UC-CHG-02: trả danh sách trong scope, Pending có queuePosition; hiện trạng thái, nguyên nhân/độ mới. Thiếu dữ liệu hoặc chưa biết thời điểm tiếp tục thì không công bố giờ hoàn tất đáng tin cậy.\\\hline
+\Sig{+ getDetail(session: SessionToken, requestId: UUID): Charging\allowbreak Detail\allowbreak View} & Trả request/phiên/lịch sử trong scope, dùng quy tắc dự báo của getOverview; không có trong scope trả 404.\\\hline
+\Sig{+ get\allowbreak Adjustment\allowbreak Context(session: SessionToken, requestIds: List<UUID>): Adjustment\allowbreak Context\allowbreak View} & Trả lịch, yêu cầu có thể đổi, cổng ứng viên/ràng buộc và expectedVersions. Toàn bộ danh sách phải trong quyền; không ghi.\\\hline
+\Sig{+ adjustSchedule(session: SessionToken, input: Schedule\allowbreak Adjustment\allowbreak Input, change: ChangeContext): Schedule\allowbreak Adjustment\allowbreak Result} & UC-CHG-03: OPR đúng scope, có reason; kiểm tra version và BR-CHG-01--04, không ghi đè ưu tiên. Yêu cầu vừa bắt đầu trả phương án còn lại để xác nhận bằng ID/version mới; cổng vừa lỗi trả lựa chọn thay thế, chưa lưu một phần.\\\hline
+\Sig{+ recalculate\allowbreak Hub\allowbreak Schedule(hubId: UUID, trigger: ScheduleTrigger): Schedule\allowbreak Recompute\allowbreak Result} & NIFR-CHG-01: theo sự kiện hoặc mỗi 5 phút, tính lại Pending/Scheduled chưa bắt đầu; giữ phiên đã chạy. Đồng bộ Ready/cổng, thiếu slot giữ Pending kèm lý do.\\\hline
+\Sig{+ handlePointFault(event: Accepted\allowbreak Point\allowbreak Fault\allowbreak Event): Charging\allowbreak State\allowbreak Update\allowbreak Result} & NIFR-CHG-02: event đã xác minh đưa cổng OutOfService; vô hiệu/tính lại slot chưa bắt đầu. Interrupted cần bằng chứng gián đoạn; bàn giao OPS quản lý Incident.\\\hline
+\Sig{+ apply\allowbreak Charging\allowbreak State\allowbreak Event(event: Accepted\allowbreak Charging\allowbreak Event): Charging\allowbreak State\allowbreak Update\allowbreak Result} & Kiểm tra nguồn, eventId/sequence và transition. Bắt đầu cần Scheduled, allocation Valid, Ready và bằng chứng. Pause giữ chiếm dụng; các chuyển khác cần bằng chứng phù hợp. Chỉ giải phóng khi trống/an toàn và hết ràng buộc.\\\hline
+\Sig{- ensure\allowbreak Ready\allowbreak Session(tx: Transaction, request: ChargingRequest): ChargingSession} & Chỉ Scheduled/slot Valid: tìm Ready duy nhất theo requestId, kể cả allocation=null; đổi slot dùng lại Ready. Không tạo phiên kế tiếp sau khi đã bắt đầu/kết thúc; Ready thiếu allocation không được start hoặc giữ cổng.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức Charging\allowbreak Scheduling\allowbreak Policy}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ calculatePriority(battery: Integer?, nextUseTime: DateTime?, now: DateTime): PriorityLevel} & High nếu pin tin cậy dưới 20\% hoặc nextUseTime trong [now, now+60 phút], còn lại Normal; pin không tin cậy dùng null. FIFO theo receivedAt/requestId; không đọc DB/đồng hồ.\\\hline
+\Sig{+ effectiveDeadline(deadline: DateTime?, nextUseTime: DateTime?): DateTime?} & Lấy mốc sớm hơn giữa hai thời điểm; có một dùng một, cả hai thiếu trả null.\\\hline
+\Sig{+ estimateDuration(spec: Charging\allowbreak Vehicle\allowbreak Spec, pointPowerKW: Decimal): Integer} & Tính phút tới 100\% theo BR-CHG-03: hiệu suất 0,9, công suất nhỏ hơn xe/cổng. Cần dung lượng/công suất dương, pin tin cậy trong [0,100); thiếu thì không phân bổ.\\\hline
+\Sig{+ findFeasibleSlot(spec: Charging\allowbreak Vehicle\allowbreak Spec, candidates: List<ChargingPoint>, context: Hub\allowbreak Charging\allowbreak Context, occupied: List<ChargingOccupancy>, finishBy: DateTime?, now: DateTime): SlotSearchResult} & Lọc cổng cùng Hub, Active/tương thích/tin cậy, không OutOfService. Chọn start sớm nhất, hòa pointCode; slot không chồng, công suất không vượt Hub, kịp finishBy nếu có. Chỉ tính, không giữ cổng.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức IChargingStore}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ withSerializable(work: TransactionWork): TransactionResult} & Chạy toàn work trong Serializable; commit nghiệp vụ/audit/receipt cùng nhau, lỗi rollback. Serialization conflict thử lại tối đa hai lần.\\\hline
+\Sig{+ load\allowbreak Scheduling\allowbreak Snapshot(tx: Transaction, hubId: UUID): ChargingSnapshot} & Tải nhất quán lịch/cổng/version, mọi Ready kể cả allocation=null và phiên chưa giải phóng kể cả đã kết thúc. Không đếm slot/phiên cùng request hai lần.\\\hline
+\Sig{+ find\allowbreak Scoped\allowbreak Overview(scope: AccessScope, filter: ChargingFilter): Charging\allowbreak Overview\allowbreak View} & Đọc danh sách theo AccessScope/bộ lọc; không ghi hoặc tính lại lịch.\\\hline
+\Sig{+ findScopedDetail(scope: AccessScope, requestId: UUID): Charging\allowbreak Detail\allowbreak View?} & Đọc chi tiết trong scope; không có trả null để service ánh xạ 404, lỗi nguồn vẫn trả lỗi.\\\hline
+\Sig{+ saveScheduleInTx(tx: Transaction, plan: ChargingPlan): void} & Lưu request/slot/session/point/version của plan cùng audit/receipt trong tx. Không ghi đè phiên đã bắt đầu.\\\hline
+\Sig{+ saveStateInTx(tx: Transaction, update: Charging\allowbreak State\allowbreak Update): void} & Lưu update và version trong tx hiện hành; không commit một phần.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức Charging\allowbreak Point\allowbreak Service}\label{tab:p3-charging-point-owner}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ create\allowbreak Draft\allowbreak Point\allowbreak In\allowbreak Tx(tx: Transaction, input: PointDraftInput, change: ChangeContext): ResourceRef} & GEN/OPS đã kiểm quyền; kiểm tra Hub, pointCode duy nhất, công suất dương/đầu nối hợp lệ. Tạo Draft; chưa xác minh vật lý để null, không Available giả.\\\hline
+\Sig{+ update\allowbreak Point\allowbreak Info\allowbreak In\allowbreak Tx(tx: Transaction, pointId: UUID, patch: PointInfoPatch, change: ChangeContext): PointInfoView} & OPR đúng scope/version; chỉ sửa tên/mô tả/thông số cho phép, giữ ID/loại/Hub/lịch sử và telemetry. Thông số ảnh hưởng cấp phát cần hết phân bổ/chiếm dụng.\\\hline
+\Sig{+ change\allowbreak Service\allowbreak Status\allowbreak In\allowbreak Tx(tx: Transaction, pointId: UUID, target: ServiceStatus, change: ChangeContext): Point\allowbreak Service\allowbreak Result} & OPR đúng scope/version: kích hoạt cần Hub Active, danh mục/trạng thái xác nhận và hết lỗi. Ngừng cần hết allocation kể cả tương lai và chiếm dụng; không tự hủy lịch/đổi vật lý, cùng trạng thái trả NoChange.\\\hline
+\Sig{+ restore\allowbreak Point\allowbreak After\allowbreak Maintenance\allowbreak In\allowbreak Tx(tx: Transaction, confirmation: Maintenance\allowbreak Confirmation): Point\allowbreak Restore\allowbreak Result} & OPS xác minh MNT/công việc đúng cổng; CHG kiểm tra kết quả đạt, version, trống/an toàn và hết bindings/lỗi. Phục hồi cùng tx với Incident.Resolved; giữ ServiceStatus.\\\hline
+\Sig{+ report\allowbreak Point\allowbreak Fault\allowbreak In\allowbreak Tx(tx: Transaction, report: Authorized\allowbreak Point\allowbreak Fault\allowbreak Report, change: ChangeContext): Charging\allowbreak State\allowbreak Update\allowbreak Result} & OPS xác minh người báo/Incident; CHG đặt OutOfService, tính lại slot chưa bắt đầu và giữ chiếm dụng thực tế. Không giả lập IoT/tạo Incident mới.\\\hline
+\Sig{+ describe\allowbreak Point\allowbreak Constraints(session: SessionToken, pointId: UUID): Point\allowbreak Constraint\allowbreak View} & Trả ràng buộc cổng trong scope cho UI; command vẫn đọc lại bindings trong tx.\\\hline
+\end{longtable}
+
+\ReserveSpace{14\baselineskip}
+
+\paragraph{Ánh xạ hợp đồng quản lý cổng sạc}
+ResourceOwnerPort cho CHARGING\_POINT dùng ChargingPointService; các phương thức InTx ở Bảng~\ref{tab:p3-charging-point-owner} giữ nguyên nghiệp vụ và transaction của caller. Adapter ánh xạ input theo loại và chuẩn hóa kết quả thành ResourceSummary; không ghi trực tiếp qua IChargingStore từ GEN/OPS.
+
+\begingroup
+\renewcommand{\theHtable}{owner.chg}
+\begin{longtable}{|L{43mm}|L{96mm}|}
+\hline
+\textbf{Phương thức chung} & \textbf{Đích gọi và ánh xạ}\\\hline
+\endfirsthead
+\hline\textbf{Phương thức chung} & \textbf{Đích gọi và ánh xạ (tiếp)}\\\hline\endhead
+getResource, checkConstraints & CHG đọc trạng thái/version và kiểm tra lịch, phiên, Hub, công suất. checkConstraints dùng tx hiện hành; describePointConstraints chỉ phục vụ UI, không thay kiểm tra trong command.\\\hline
+createDraft & createDraftPointInTx: lấy cấu hình cổng từ ResourceDraftInput thành PointDraftInput; đọc kết quả trong tx để trả ResourceSummary.\\\hline
+updateMetadata & updatePointInfoInTx: ánh xạ ResourcePatch thành PointInfoPatch; truyền đúng version cổng, giữ requestId/reason.\\\hline
+changeServiceStatus & changeServiceStatusInTx: truyền ID cổng, trạng thái đích và ChangeContext; giữ mọi kiểm tra phân bổ/chiếm dụng.\\\hline
+reportFault & reportPointFaultInTx: ánh xạ tài nguyên, Incident và ngữ cảnh đã xác minh thành AuthorizedPointFaultReport.\\\hline
+applyVerifiedRecovery & restorePointAfterMaintenanceInTx: lập MaintenanceConfirmation từ Incident, TechnicalResult và version cổng đã kiểm tra; CHG vẫn tự đối chiếu bằng chứng an toàn.\\\hline
+\end{longtable}
+\addtocounter{table}{-1}
+\endgroup
+
+\ReserveSpace{8\baselineskip}
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức Charging\allowbreak Context\allowbreak Port}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ loadInTx(tx: Transaction, vehicleId: UUID, hubId: UUID): ChargingContext} & Đọc ownership, thông số xe, Hub/version qua owner trong tx. Phân biệt thiếu dữ liệu với lỗi nguồn; input client không chứng minh ownership.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ChargingRequest}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ assignSlot(slot: Charging\allowbreak Schedule\allowbreak Slot): void} & Pending/Scheduled chưa bắt đầu và slot hợp lệ mới nhận allocation; chuyển/giữ Scheduled. Service kiểm tra tương thích, công suất và ràng buộc Hub.\\\hline
+\Sig{+ markCharging(): void} & Có xác nhận bắt đầu và allocation Valid mới chuyển Charging; lưu cùng session/point.\\\hline
+\Sig{+ markCompleted(): void} & Phiên hoàn tất hợp lệ mới chuyển request Completed; không dùng giờ dự kiến làm bằng chứng.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ChargingSession}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\textit{Static factory}\par \Sig{+ createReady(request: ChargingRequest): ChargingSession} & Factory tạo Ready cho Scheduled/slot Valid, chưa có startedAt/endedAt. Chỉ một Ready, không tạo phiên kế tiếp sau khi phiên cũ bắt đầu/kết thúc.\\\hline
+\Sig{+ revise\allowbreak Ready\allowbreak Allocation(slot: Charging\allowbreak Schedule\allowbreak Slot): void} & Chỉ đổi allocation của Ready chưa bắt đầu, nhất quán với slot mới; không đổi phiên đã chạy.\\\hline
+\Sig{+ start(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Ready, allocation Valid và bằng chứng bắt đầu mới chuyển Charging, ghi thời điểm thực tế cùng request/point.\\\hline
+\Sig{+ pause(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Bằng chứng/transition hợp lệ mới chuyển Paused, ghi nguyên nhân và giữ chiếm dụng/công suất; mất kết nối UI không giải phóng.\\\hline
+\Sig{+ resume(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Từ trạng thái cho phép và bằng chứng mới chuyển Charging; không suy từ giờ dự kiến/telemetry cũ.\\\hline
+\Sig{+ complete(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Bằng chứng/transition hợp lệ mới Completed và ghi dữ liệu cuối; cổng cần bằng chứng giải phóng riêng.\\\hline
+\Sig{+ interrupt(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Bằng chứng gián đoạn mới Interrupted/ghi nguyên nhân; giữ chiếm dụng tới khi xác nhận giải phóng, không tự tạo phiên mới.\\\hline
+\Sig{+ fail(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Bằng chứng thất bại mới Failed/ghi nguyên nhân; giữ chiếm dụng thực tế, không tự giải phóng hoặc tạo phiên kế tiếp.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức ChargingPoint}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ isEligible(context: Hub\allowbreak Charging\allowbreak Context, spec: Charging\allowbreak Vehicle\allowbreak Spec): Boolean} & Trả true khi Hub/cổng Active, tương thích, tin cậy và không OutOfService; chưa giữ cổng, còn phải kiểm slot/công suất.\\\hline
+\Sig{+ markReserved(): void} & Đặt Reserved theo phân bổ hợp lệ; không ghi đè OutOfService hoặc chiếm dụng hiện tại.\\\hline
+\Sig{+ releaseAllocation(bindings: Point\allowbreak Binding\allowbreak Summary): void} & Chỉ gỡ khi bindings không còn allocation/phiên và đã trống/an toàn. Ready thiếu allocation không giữ cổng; lịch tương lai xử lý theo điểm chưa chốt.\\\hline
+\Sig{+ markCharging(evidence: Accepted\allowbreak Charging\allowbreak Event): void} & Bằng chứng bắt đầu và transition hợp lệ mới Charging cùng request/session; tối đa một phiên Charging.\\\hline
+\Sig{+ markAvailable(evidence: Point\allowbreak Release\allowbreak Evidence): void} & Cần bằng chứng trống/an toàn và hết bindings mới Available; không tự phục hồi OutOfService bằng giờ dự kiến.\\\hline
+\Sig{+ markOutOfService(evidence: Accepted\allowbreak Point\allowbreak Fault\allowbreak Event): void} & Bằng chứng lỗi hợp lệ đưa OutOfService; giữ chiếm dụng, không tự suy phiên Interrupted/cổng trống.\\\hline
+\Sig{+ restore\allowbreak After\allowbreak Maintenance(confirmation: Maintenance\allowbreak Confirmation, bindings: Point\allowbreak Binding\allowbreak Summary): void} & Xác nhận OPS có thẩm quyền, kết quả đạt và bindings hiện hành cho phép; chỉ phục hồi khi trống/an toàn, hết ràng buộc/lỗi. Giữ ServiceStatus.\\\hline
 \end{longtable}

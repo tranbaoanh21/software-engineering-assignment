@@ -1,0 +1,190 @@
+\newcommand{\NumberedHandoffMethod}[2]{%
+  {\noindent\hangindent=1.45em\hangafter=1%
+   \makebox[1.45em][l]{\footnotesize\textbf{#1.}}\Sig{#2}}%
+}
+
+\clearpage
+\begingroup
+\setlength{\LTpre}{4pt}
+\setlength{\LTpost}{4pt}
+\subsubsection{Hợp đồng và luồng phối hợp giữa các phân hệ}
+\label{sec:final-module-handoffs}
+
+Các module trao đổi trong cùng backend NestJS qua API công khai hoặc port. Mỗi module kiểm tra và cập nhật dữ liệu mình sở hữu.
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{4}}
+\paragraph{API công khai theo phân hệ}
+\label{sec:final-module-api}
+
+Website gửi HTTP vào controller của phân hệ phụ trách. Các method \texttt{InTx} nhận transaction do bên điều phối truyền vào. Ánh xạ port ở Mục~\ref{sec:final-module-ports}.
+
+\begin{longtable}{|L{25mm}|L{120mm}|}
+\caption{Danh mục API công khai theo phân hệ}\label{tab:final-module-api}\\\hline
+\textbf{Phân hệ cung cấp} & \textbf{Phương thức, bên gọi và trách nhiệm}\\\hline
+\endfirsthead
+\hline\textbf{Phân hệ cung cấp} & \textbf{Phương thức, bên gọi và trách nhiệm}\\\hline
+\endhead
+GEN \par Kiểm quyền &
+\Sig{AccessService.verifyAccess(session: SessionToken, permission: Permission, target: TargetRef): AccessDecision}
+Service gọi GEN để kiểm tài khoản, quyền và phạm vi. Lỗi phiên trả 401, thiếu quyền trả 403.\\\hline
+HUB \par Trạng thái Hub &
+\Sig{HubService.readHubStateInTx(tx: Transaction, hubId: HubId): HubStateView}
+RES, TRIP, PARK, CHG, OPS và SIM đọc ID, tọa độ, trạng thái, sức chứa và phần đã giữ, hạn mức công suất và version.\\\hline
+HUB \par Sức chứa điều chuyển &
+\NumberedHandoffMethod{1}{HubService.holdArrivalCapacityInTx(tx: Transaction, planId: UUID, hubId: HubId, vehicleIds: List<UUID>): void}
+\NumberedHandoffMethod{2}{HubService.settleArrivalCapacityInTx(tx: Transaction, planId: UUID, arrival: TransferEvidence): void}
+\NumberedHandoffMethod{3}{HubService.releaseArrivalCapacityInTx(tx: Transaction, planId: UUID, vehicleId: UUID): void}
+OPS gọi HUB để giữ chỗ theo xe, đối chiếu hạn mức Hub tiếp nhận và gỡ phần đã giữ khi xe đến hoặc được hủy.\\\hline
+HUB \par Làm mới tổng hợp &
+\Sig{HubService.requestStatusRefresh(hubId: HubId): void}
+OPS gọi sau commit. HUB tổng hợp lại từ dữ liệu owner bằng \texttt{refreshHubStatus}.\\\hline
+RES \par Tạo và đọc lượt giữ &
+\NumberedHandoffMethod{1}{ReservationService.createReservation(session: SessionToken, input: ReservationInput, change: ChangeContext): ReservationView}
+\NumberedHandoffMethod{2}{ReservationService.readHubHoldsInTx(tx: Transaction, hubId: HubId): List<VehicleHoldView>}
+Controller RES nhận yêu cầu tạo lượt đặt. Bên tổng hợp đọc các lượt giữ còn hiệu lực kèm vehicleId và expiresAt.\\\hline
+RES \par Xác nhận đã nhận xe &
+\Sig{ReservationService.fulfillReservation(tx: Transaction, reservationId: ReservationId, studentId: AccountId, vehicleId: VehicleId, hubId: HubId, at: DateTime): void}
+TRIP gọi sau bàn giao. RES đối chiếu chủ, xe, Hub và hạn giữ trước khi ghi Fulfilled.\\\hline
+TRIP \par Đọc xe tại Hub &
+\Sig{TripService.readHubFleetInTx(tx: Transaction, hubId: HubId): HubFleetView}
+HUB, OPS và SIM đọc xe đã xác nhận vị trí, pin, trạng thái, ràng buộc và chuyến mở theo Hub.\\\hline
+TRIP \par Giữ và gỡ giữ xe &
+\NumberedHandoffMethod{1}{TripService.reserveVehicleInTx(tx: Transaction, reservationId: UUID, vehicleId: UUID, hubId: UUID): void}
+\NumberedHandoffMethod{2}{TripService.releaseVehicleInTx(tx: Transaction, reservationId: UUID, vehicleId: UUID): void}
+RES yêu cầu TRIP giữ hoặc gỡ xe đúng lượt đặt.\\\hline
+TRIP \par Đọc xe và cập nhật sạc &
+\NumberedHandoffMethod{1}{TripService.readSharedVehicleForChargingInTx(tx: Transaction, vehicleId: UUID): ChargingVehicleSpec}
+\NumberedHandoffMethod{2}{TripService.applyFleetChargeStateInTx(tx: Transaction, update: FleetChargeUpdate): ResourceSummary}
+CHG đọc thông số và ràng buộc xe. Khi cập nhật, CHG gửi loại mốc, ID xe, Hub, phiên, bằng chứng, pin và thời điểm.\\\hline
+TRIP \par Kết thúc chuyến &
+\NumberedHandoffMethod{1}{TripService.confirmReturn(session: SessionToken, tripId: Identifier, hubId: HubId, change: ChangeContext): TripView}
+\NumberedHandoffMethod{2}{TripService.closeFaultedTripInTx(tx: Transaction, incidentId: UUID, evidence: FaultHandoverEvidence): TripView}
+Controller TRIP chuyển yêu cầu trả tại Hub. OPS gọi TRIP đóng chuyến lỗi sau khi xác minh bàn giao ngoài Hub.\\\hline
+TRIP \par Điều chuyển xe &
+\NumberedHandoffMethod{1}{TripService.bindVehicleTransferInTx(tx: Transaction, planId: UUID, vehicleId: UUID, sourceHubId: HubId): ResourceSummary}
+\NumberedHandoffMethod{2}{TripService.confirmVehicleDepartureInTx(tx: Transaction, planId: UUID, departure: TransferEvidence): ResourceSummary}
+\NumberedHandoffMethod{3}{TripService.confirmVehicleArrivalInTx(tx: Transaction, planId: UUID, arrival: TransferEvidence): ResourceSummary}
+\NumberedHandoffMethod{4}{TripService.releaseVehicleTransferInTx(tx: Transaction, planId: UUID, vehicleId: UUID): ResourceSummary}
+OPS gọi TRIP để khóa cấp phát, ghi nhận xe rời nguồn hoặc đến Hub, và gỡ ràng buộc khi hủy.\\\hline
+PARK \par Chỗ đỗ và xe cá nhân &
+\NumberedHandoffMethod{1}{ParkingService.readHubParkingInTx(tx: Transaction, hubId: HubId): HubParkingView}
+\NumberedHandoffMethod{2}{ParkingService.readPrivateVehicleForChargingInTx(tx: Transaction, vehicleId: UUID): ChargingVehicleSpec}
+Bên tổng hợp đọc chỗ, lượt giữ và chiếm dụng kèm độ mới. CHG đọc chủ xe, pin, đầu nối, công suất và mốc xác nhận.\\\hline
+CHG \par Trạng thái sạc và yêu cầu mới &
+\NumberedHandoffMethod{1}{ChargingService.readHubChargingInTx(tx: Transaction, hubId: HubId): HubChargingView}
+\NumberedHandoffMethod{2}{ChargingService.createChargingRequest(session: SessionToken, input: ChargingRequestInput, change: ChangeContext): ChargingRequestView}
+Bên tổng hợp đọc cổng, lịch, phiên, công suất và mốc cập nhật. Controller CHG gửi yêu cầu sạc của sinh viên hoặc OPR.\\\hline
+OPS \par Đọc thông tin vận hành &
+\Sig{OperationsService.readHubOperationsInTx(tx: Transaction, hubId: HubId): HubOperationsView}
+Bên tổng hợp đọc sự cố mở, cảnh báo và kế hoạch còn hiệu lực, rồi lọc theo quyền trước khi trả UI.\\\hline
+OPS \par Mở sự cố &
+\NumberedHandoffMethod{1}{OperationsService.reportIncident(session: SessionToken, input: IncidentInput, ctx: ChangeContext): IncidentView}
+\NumberedHandoffMethod{2}{OperationsService.reportVerifiedFaultInTx(tx: Transaction, fault: VerifiedFaultInput): IncidentView}
+OPS nhận báo cáo OPR hoặc lỗi đã xác minh kèm tài nguyên, bằng chứng, nguồn và thời điểm. Sự cố đang mở được dùng để xử lý trùng.\\\hline
+OPS \par Bàn giao xe hỏng &
+\Sig{OperationsService.confirmIncidentHandover(session: SessionToken, incidentId: UUID, evidence: FaultHandoverEvidence, ctx: ChangeContext): IncidentView}
+OPS kiểm quyền, sự cố mở và MNT được giao. Bằng chứng gồm chuyến, xe, người nhận, vị trí, thời điểm và ID.\\\hline
+OPS \par Chuẩn bị kế hoạch &
+\NumberedHandoffMethod{1}{OperationsService.prepareRedistribution(session: SessionToken, recommendation: Recommendation): RedistributionDraftInput}
+\NumberedHandoffMethod{2}{OperationsService.createRedistributionPlan(session: SessionToken, input: PlanInput, ctx: ChangeContext): PlanView}
+\NumberedHandoffMethod{3}{OperationsService.approveRedistributionPlan(session: SessionToken, id: UUID, ctx: ChangeContext): PlanView}
+SIM lấy dữ liệu điền trước. OPR lưu nháp và duyệt sau khi OPS kiểm quyền, xe nguồn và sức chứa đích.\\\hline
+OPS \par Tiến độ và hủy kế hoạch &
+\NumberedHandoffMethod{1}{OperationsService.recordRedistributionProgress(session: SessionToken, id: UUID, progress: PlanProgress, ctx: ChangeContext): PlanView}
+\NumberedHandoffMethod{2}{OperationsService.cancelRedistributionPlan(session: SessionToken, id: UUID, reason: String, ctx: ChangeContext): PlanView}
+OPS điều phối qua TRIP và HUB. Bằng chứng tiến độ gồm xe, Hub nguồn, Hub thực tế, thời điểm và ID.\\\hline
+SIM \par Phân tích và chuyển đề xuất &
+\Sig{SimulationService.prepareRedistribution(session: SessionToken, recId: RecommendationId): RedistributionDraftInput}
+Controller SIM chuyển recId của đề xuất điều chuyển đủ điều kiện từ run đã hoàn tất.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Port, adapter và provider}
+\label{sec:final-module-ports}
+
+NestJS gắn token của port với provider. Provider hiện thực hợp đồng hoặc chuyển lời gọi đến module sở hữu tài nguyên.
+
+\begin{longtable}{|L{31mm}|L{114mm}|}
+\caption{Ánh xạ port, provider và API đích}\label{tab:final-module-ports}\\\hline
+\textbf{Bên sử dụng} & \textbf{Port, method và cách hiện thực}\\\hline
+\endfirsthead
+\hline\textbf{Bên sử dụng} & \textbf{Port, method và cách hiện thực}\\\hline
+\endhead
+HUB \par Tổng hợp trạng thái &
+\Sig{ResourceStatusReader.getHubSnapshot(hubId: HubId): ResourceSnapshot}
+\texttt{OwnerResourceStatusReader} gọi API đọc của TRIP, RES, PARK, CHG và OPS trong Bảng~\ref{tab:final-module-api}. \texttt{HubAvailabilityPolicy} tổng hợp trên một snapshot và đánh dấu Stale hoặc Unknown.\\\hline
+OPS \par Đọc dashboard &
+\NumberedHandoffMethod{1}{OperationsQueryPort.listHubSnapshots(hubIds: List<UUID>): List<HubSnapshot>}
+\NumberedHandoffMethod{2}{OperationsQueryPort.findImbalanceAlerts(hubIds: List<UUID>): List<AlertSummary>}
+\texttt{OwnerOperationsQueryAdapter} lấy cấu hình qua \texttt{readHubStateInTx}, tài nguyên qua \texttt{getHubSnapshot} và cảnh báo qua \texttt{readHubOperationsInTx}.\\\hline
+SIM \par Chụp snapshot &
+\Sig{SnapshotProvider.capture(scope: HubScope, base: BaseSelection): SimulationSnapshot}
+\texttt{StoreSnapshotProvider} gọi API đọc của owner. Latest dùng giao dịch read-only Repeatable Read. SavedSnapshot sao chép mốc trong scope. Thiếu dữ liệu báo \texttt{SNAPSHOT\_UNAVAILABLE}.\\\hline
+CHG \par Đọc điều kiện sạc &
+\Sig{ChargingContextPort.loadInTx(tx: Transaction, vehicleId: UUID, hubId: UUID): ChargingContext}
+\texttt{OwnerChargingContextAdapter} gọi PARK.\allowbreak\texttt{readPrivateVehicleForChargingInTx} hoặc TRIP.\allowbreak\texttt{readSharedVehicleForChargingInTx} theo loại xe, rồi ghép cấu hình từ HUB.\allowbreak\texttt{readHubStateInTx}.\\\hline
+PARK \par Xác nhận xe vào/rời &
+\Sig{ParkingStateReader.getLatestEvidence(spaceId: UUID): ParkingStateEvidence}
+Provider đọc của PARK trả bằng chứng check-in hoặc check-out đúng chỗ, nguồn và độ mới.\\\hline
+GEN và OPS \par Danh mục tài nguyên &
+\NumberedHandoffMethod{1}{ResourceOwnerPort.getResource(ref: ResourceRef): ResourceSummary}
+\NumberedHandoffMethod{2}{ResourceOwnerPort.createDraft(tx: Transaction, input: ResourceDraftInput, change: ChangeContext): ResourceSummary}
+\NumberedHandoffMethod{3}{ResourceOwnerPort.updateMetadata(tx: Transaction, ref: ResourceRef, patch: ResourcePatch, change: ChangeContext): ResourceSummary}
+Provider chọn theo \texttt{ResourceType}. HUB, TRIP, PARK dùng method cùng tên. \texttt{ChargingPointService} dùng \texttt{createDraftPointInTx} và \texttt{updatePointInfoInTx}.\\\hline
+OPS \par Đổi trạng thái &
+\NumberedHandoffMethod{4}{ResourceOwnerPort.checkConstraints(tx: Transaction, ref: ResourceRef, target: ServiceStatus): ConstraintResult}
+\NumberedHandoffMethod{5}{ResourceOwnerPort.changeServiceStatus(tx: Transaction, ref: ResourceRef, target: ServiceStatus, change: ChangeContext): ResourceSummary}
+Dùng provider theo \texttt{ResourceType}. Với cổng sạc, method ghi là \texttt{changeServiceStatusInTx}.\\\hline
+OPS \par Ghi lỗi hoặc phục hồi &
+\NumberedHandoffMethod{1}{ResourceOwnerPort.reportFault(tx: Transaction, ref: ResourceRef, incidentId: UUID, change: ChangeContext): ResourceSummary}
+\NumberedHandoffMethod{2}{ResourceOwnerPort.applyVerifiedRecovery(tx: Transaction, ref: ResourceRef, incidentId: UUID, result: TechnicalResult, change: ChangeContext): ResourceSummary}
+Provider cổng sạc gọi \texttt{reportPointFaultInTx} hoặc \texttt{restorePointAfterMaintenanceInTx}. Owner kiểm điều kiện và version theo Bảng~\ref{tab:p3-resource-owner-port}, đồng thời giữ liên kết sử dụng.\\\hline
+StateDataAdapter \par Chuyển telemetry &
+\Sig{StateEventOwnerPort.applyStateEventInTx(tx: Transaction, event: AcceptedStateEvent): void}
+Provider truyền sự kiện hợp lệ và \texttt{tx} đến HUB.\allowbreak\texttt{applyHubStateEventInTx}, TRIP.\allowbreak\texttt{applyVehicleStateEventInTx}, PARK.\allowbreak\texttt{applyParkingStateEventInTx} hoặc CHG.\allowbreak\texttt{applyChargingStateEventInTx}. Owner lưu trạng thái hoặc bằng chứng. Lỗi đi vào OPS qua \texttt{reportVerifiedFaultInTx}.\\\hline
+\end{longtable}
+
+\ReserveSpace{8\baselineskip}
+\paragraph{Luồng phối hợp giữa các phân hệ}
+\label{sec:final-module-flows}
+
+\begin{longtable}{|L{28mm}|L{117mm}|}
+\caption{Luồng phối hợp và kết quả nghiệp vụ}\\\hline
+\textbf{Kích hoạt} & \textbf{Lời gọi và kết quả}\\\hline
+\endfirsthead
+\hline\textbf{Kích hoạt} & \textbf{Lời gọi và kết quả}\\\hline
+\endhead
+Tra cứu Hub hoặc mở giám sát &
+Website tra Hub qua \texttt{searchHubs}, \texttt{getHubDetail}, \texttt{findAlternativeHubs}. OPS đọc trạng thái và cảnh báo theo phạm vi qua \texttt{OperationsQueryPort}.\\\hline
+Đặt, hủy hoặc hết hạn giữ xe &
+RES kiểm hạn mức rồi gọi TRIP.\allowbreak\texttt{reserveVehicleInTx}. Điều kiện gồm xe/Hub Active, pin từ 30\%, dữ liệu tin cậy và xe khả dụng. Cùng giao dịch ghi Reserved và Confirmed hạn 10 phút. Xe bị giữ hoặc ràng buộc trả xung đột. RES ghi Cancelled hoặc Expired và gọi \texttt{releaseVehicleInTx}. Xe lỗi giữ OutOfService.\\\hline
+Nhận hoặc trả xe &
+TRIP xác minh bàn giao rồi gọi \texttt{fulfillReservation}. RES ghi Fulfilled, TRIP ghi xe InUse và chuyến InProgress cùng giao dịch. Trả xe cần bằng chứng an toàn và Hub còn chỗ sau khi tính phần đã giữ.\\\hline
+Đỗ hoặc đăng ký sạc &
+PARK kiểm chủ xe, Hub và bằng chứng vào/rời. Xe rời thì kết thúc CheckedIn, chỗ lỗi giữ OutOfService. CHG đọc điều kiện sạc qua port. Thiếu dữ liệu tin cậy giữ Pending, lỗi nguồn báo riêng.\\\hline
+Trả xe dùng chung pin thấp &
+Xe trả an toàn, pin dưới 30\% và không lỗi chuyển AwaitingCharge, chặn cấp phát. OPR tạo yêu cầu. CHG gọi \texttt{applyFleetChargeStateInTx} khi có bằng chứng bắt đầu sạc hoặc giải phóng xe. TRIP ghi Charging, sau đó xét Available, AwaitingCharge hoặc OutOfService. Phiên, cổng và xe ghi cùng giao dịch.\\\hline
+Quản lý tài nguyên hoặc nhận lỗi &
+GEN tạo Draft theo yêu cầu ADM, OPS quản lý qua \texttt{ResourceOwnerPort}. IoT adapter, PARK hoặc CHG gọi OPS.\allowbreak\texttt{reportVerifiedFaultInTx}. OPS gắn bằng chứng vào sự cố đang mở hoặc mở mới và báo lỗi cho owner cùng giao dịch. UC-PARK-02/03 dùng hợp đồng này cho \texttt{reportParkingSpaceFault}.\\\hline
+\end{longtable}
+
+\ReserveSpace{6\baselineskip}
+\noindent\textbf{Xe hỏng giữa chuyến.} Hình~\ref{fig:final-faulted-trip} thể hiện hai cách kết thúc chuyến theo bằng chứng bàn giao.
+
+\FinalImplementationFigure{0.66\textheight}{sequence-faulted-trip}
+  {Sequence diagram xử lý xe hỏng giữa chuyến}
+  {fig:final-faulted-trip}
+
+\noindent Thiếu bằng chứng thì giữ InProgress. Gửi lại đúng bằng chứng trả kết quả đã ghi. Xe giữ OutOfService đến khi owner xác minh xe ở Hub an toàn, kết quả kỹ thuật đạt và hết ràng buộc.
+
+\ReserveSpace{6\baselineskip}
+\noindent\textbf{Từ What-if đến điều chuyển thực tế.} SIM mô phỏng trên snapshot rồi gọi \texttt{prepareRedistribution} để OPS điền trước đề xuất. OPR lưu Draft, duyệt và bắt đầu theo Hình~\ref{fig:final-vehicle-redistribution}. HUB quản lý sức chứa xe dùng chung. Đội vận hành nhận xe sau khi lệnh bắt đầu thành công.
+
+\FinalImplementationFigure{0.66\textheight}{sequence-vehicle-redistribution}
+  {Sequence diagram thực hiện điều chuyển xe sau phê duyệt}
+  {fig:final-vehicle-redistribution}
+
+\noindent\textbf{Hủy hoặc gửi lại.} Xe đã đến giữ Hub đã xác nhận. Xe đang chuyển cần xác nhận bàn giao tại Hub thực tế. Xe chưa rời nguồn được gỡ ràng buộc và sức chứa đã giữ. OPS ghi Cancelled sau đối chiếu đầy đủ. Khi cập nhật thất bại sau thao tác thực tế, giữ ràng buộc và gửi lại cùng requestId.
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{3}}
+\endgroup

@@ -2,7 +2,8 @@
 
 Tài liệu học tiếp nối tài liệu Phase 2, giữ template HCMUT, lý thuyết từ đầu, hình giải thích ký hiệu và ví dụ hoàn chỉnh. Không phải bài thiết kế Phase 3 đã điền sẵn cho nhóm.
 
-- [PDF](output/pdf/phase-3-design-guide.pdf)
+- [PDF kiến thức nền](output/pdf/phase-3-design-guide.pdf)
+- [PDF ôn thiết kế SEMH trong sáu lượt](output/pdf/phase-3-study-guide.pdf) và [nguồn LaTeX](phase-3-study-guide.tex).
 - Nguồn chính: `phase-3-design-guide.tex`; nội dung chia trong `sections/`.
 - Hình ký hiệu: TikZ trong LaTeX. Năm hình ví dụ có nguồn PlantUML trong `figures/`, bản SVG/PDF vector trong `figures/output/`.
 
@@ -32,5 +33,13 @@ latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error \
 ```
 
 Cần Java, PlantUML JAR, `rsvg-convert`, XeLaTeX và latexmk. Có thể chỉ định `UML_JAVA_BIN`, `UML_RSVG_BIN`. Muốn compile lại khi chưa sửa sơ đồ, chỉ cần lệnh latexmk vì hình vector đã có sẵn.
+
+Để biên dịch bản ôn sáu lượt, chạy tại thư mục này:
+
+```sh
+latexmk -xelatex -interaction=nonstopmode -halt-on-error -file-line-error \
+  -outdir=/tmp/semh-build-study phase-3-study-guide.tex
+cp /tmp/semh-build-study/phase-3-study-guide.pdf output/pdf/
+```
 
 Ví dụ đăng ký khóa học là thiết kế minh họa ngoài SEMH; các test trong tài liệu chưa được chạy trên ứng dụng. Tài liệu không khẳng định nhóm đã implement hoặc đạt NFR. Nguồn đối chiếu gồm đề bài, đặc tả OMG UML, tài liệu PlantUML và hướng dẫn kiến trúc Microsoft; liên kết nằm ở cuối PDF.

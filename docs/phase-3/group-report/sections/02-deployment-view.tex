@@ -1,33 +1,33 @@
-\section{Deployment View}
-
-\subsection{Mô hình triển khai}
-\ToFill{môi trường mục tiêu, giả định về thiết bị, mạng và nơi thực thi các thành phần}
-\DesignFigure{../architecture/deployment-view.pdf}{Deployment View của Smart E-Mobility Hub}{fig:p3-deployment}
-% Node/device, execution environment, artifact và communication path.
-% Source IoT/map ở ngoài boundary. Không mặc định mỗi phân hệ là một server.
-
-\subsection{Node, môi trường thực thi và artifact}
-\begin{longtable}{|L{30mm}|L{35mm}|L{40mm}|L{32mm}|}
-\caption{Thành phần triển khai}\\\hline
-\textbf{Node / môi trường} & \textbf{Artifact triển khai} & \textbf{Trách nhiệm} & \textbf{Cấu hình chính}\\\hline
+\subsection{Deployment View}
+\providecommand{\DeploymentViewFigurePath}{../architecture/deployment-view.pdf}
+\DesignFigure{\DeploymentViewFigurePath}{Deployment View của SEMH}{fig:p3-deployment}
+\begin{longtable}{|L{29mm}|L{42mm}|L{68mm}|}
+\caption{Node, artifact và kết nối}\\\hline
+\textbf{Nơi chạy} & \textbf{Artifact} & \textbf{Kết nối và dữ liệu}\\\hline
 \endfirsthead
-\hline\textbf{Node / môi trường} & \textbf{Artifact triển khai} & \textbf{Trách nhiệm} & \textbf{Cấu hình chính}\\\hline\endhead
-\ToFill{tên node/runtime} & \ToFill{gói chạy} & \ToFill{trách nhiệm} & \ToFill{runtime, lưu trữ}\\\hline
+\hline\textbf{Nơi chạy} & \textbf{Artifact} & \textbf{Kết nối và dữ liệu}\\\hline\endhead
+Máy người dùng & Website trên browser & HTTP localhost hoặc HTTPS 443 tới Nginx; Leaflet tải tile qua HTTPS và dữ liệu Hub qua API.\\\hline
+Container web & Nginx và bản build React & Phục vụ static; chuyển \texttt{/api} sang backend:3000. Browser không kết nối DB.\\\hline
+Container api & Ứng dụng NestJS & REST nội bộ cổng 3000; kết nối DB cổng 5432. Scheduler trong cùng process.\\\hline
+Container db & PostgreSQL & Volume lưu bền vững; chỉ backend truy cập, không công khai DB ra Internet.\\\hline
+Tiến trình giả lập & IoT simulator Node.js & Gửi tới \texttt{/api/state-events}; nhận lệnh mô phỏng qua HTTP cổng 4000. Khóa nguồn riêng, không dùng phiên sinh viên.\\\hline
+Ngoài SEMH & MapTileProvider & Tile OpenStreetMap qua HTTPS; không cung cấp pin, lượt đặt hoặc trạng thái Hub.\\\hline
 \end{longtable}
 
-\subsection{Kết nối, bảo mật và xử lý gián đoạn}
-\begin{longtable}{|L{30mm}|L{31mm}|L{27mm}|L{49mm}|}
-\caption{Kết nối giữa các thành phần triển khai}\\\hline
-\textbf{Nguồn} & \textbf{Đích} & \textbf{Protocol / port} & \textbf{Kiểm soát truy cập và lỗi}\\\hline
+UI làm mới dữ liệu khi mở trang, sau thao tác thành công và mỗi 10 giây khi trang đang hiển thị. Nếu tile lỗi, vẫn hiển thị danh sách Hub; nếu IoT gián đoạn, giữ trạng thái hợp lệ cuối cùng kèm thời điểm cập nhật.
+
+\subsection{Địa điểm Hub và dữ liệu đầu vào}
+Mạng lưới Hub phục vụ khu đô thị ĐHQG-HCM và khu vực lân cận.
+\begin{longtable}{|L{32mm}|L{107mm}|}
+\caption{Các địa điểm bố trí Hub}\\\hline
+\textbf{Nhóm địa điểm} & \textbf{Địa điểm}\\\hline
 \endfirsthead
-\hline\textbf{Nguồn} & \textbf{Đích} & \textbf{Protocol / port} & \textbf{Kiểm soát truy cập và lỗi}\\\hline\endhead
-\ToFill{thành phần gọi} & \ToFill{thành phần nhận} & \ToFill{giao thức} & \ToFill{TLS, timeout, retry và hành vi khi mất kết nối}\\\hline
+\hline\textbf{Nhóm địa điểm} & \textbf{Địa điểm}\\\hline\endhead
+Giao thông & Ga Metro Đại học Quốc gia.\\\hline
+Ký túc xá & Ký túc xá khu A; Ký túc xá khu B.\\\hline
+Trường đại học & Bách Khoa -- cơ sở Dĩ An; Khoa học Xã hội và Nhân văn -- cơ sở khu ĐHQG; Khoa học Tự nhiên -- cơ sở khu ĐHQG; Công nghệ Thông tin; Quốc tế; Kinh tế -- Luật.\\\hline
+Tiện ích chung & Thư viện Trung tâm; Nhà điều hành ĐHQG-HCM.\\\hline
+Khu vực lân cận & Trường Đại học Thể dục Thể thao TP.HCM.\\\hline
 \end{longtable}
-Browser truy cập chức năng qua ứng dụng; nơi lưu dữ liệu không là điểm truy cập trực tiếp của UI. Nguồn IoT/map nằm ngoài ranh giới SEMH; adapter kiểm tra dữ liệu trước khi đưa vào nghiệp vụ. Cấu hình bí mật tách khỏi dữ liệu hiển thị và mã đưa ra client.
 
-Các kết nối ngoài có timeout và cơ chế khôi phục được xác định theo loại lời gọi. Query có thể đọc lại phù hợp; command không được lặp mù khi chưa biết kết quả. Mất kết nối không làm dữ liệu hợp lệ cuối bị ghi đè. Phương án runtime, TLS, secret và lưu bền vững cụ thể được điền cùng cấu hình triển khai đã chọn.
-
-\subsection{Cấu hình chạy và tái tạo môi trường}
-\ToFill{phụ thuộc, cấu hình, dữ liệu ban đầu và các bước khởi động trên môi trường đã chọn}
-% Local hoặc Docker đều được phép. Không bắt buộc dùng cả hai.
-% Nếu có server/real-time IoT, bổ sung khác biệt thực tế; không mặc định phải dùng Azure.
+Mỗi Hub lưu định danh, tên địa điểm, tọa độ, sức chứa, danh sách xe dùng chung, chỗ đỗ và cổng sạc. Dữ liệu trạng thái gồm vị trí và mức pin từng xe, tình trạng chỗ đỗ/cổng sạc, số tài nguyên khả dụng và thời điểm cập nhật. StateDataAdapter tiếp nhận sự kiện IoT giả lập, cập nhật SEMHDataStore để API cung cấp cho website.

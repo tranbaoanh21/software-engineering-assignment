@@ -20,9 +20,15 @@
       "updatedOn": "2026-10-24"
     }
   ],
-  "diagramSourceFolder": "local/phase-2-submissions/Tường Vi - SUB Trip",
+  "diagramSourceFolder": "docs/local/phase-2-submissions/Tường Vi - SUB Trip",
   "diagramCount": 6,
   "diagramPresentationChanges": "Normalized line endings and removed the Bonus label from the two state-diagram titles. Business semantics and original teammate files are unchanged.",
+  "sequenceUpdate": {
+    "updatedOn": "2026-10-29",
+    "sourceFolder": "docs/local/phase-2-submissions/Tường Vi - SUB Trip/activation-bars-2026-10-29",
+    "files": ["uc-trip-01-sequence.puml", "uc-trip-02-sequence.puml"],
+    "changes": "Replaced both sequence diagrams with teammate revisions adding balanced activation bars. UC-TRIP-01 also separates normal response display from read-only recovery after a lost response. Existing business checks, state transitions and report image paths are retained."
+  },
   "modelingNotes": [
     "The supplied Trip state diagram explicitly leaves transitions into/out of Interrupted unspecified.",
     "The supplied SharedVehicle state diagram explicitly leaves charging transitions and the low-battery waiting state unspecified; integration does not invent new baseline rules."

@@ -1,0 +1,732 @@
+\section{Tổng quan và đặc tả dự án}
+
+\subsection{Giới thiệu đề tài}
+
+Smart E-Mobility Hub (SEMH) là hệ thống hỗ trợ sử dụng và điều phối phương tiện điện trong Khu đô thị ĐHQG-HCM. Mạng lưới gồm các điểm phục vụ (Mobility Hub) tại những địa điểm như ga Metro Đại học Quốc gia, ký túc xá và các trường đại học. Tại mỗi Hub, hệ thống quản lý xe điện dùng chung, chỗ đỗ và cổng sạc, đồng thời cập nhật tình trạng tài nguyên từ dữ liệu cảm biến hoặc dữ liệu giả lập.
+
+Sinh viên có thể tra cứu Hub và mức pin, đặt xe dùng chung, đặt chỗ đỗ hoặc đăng ký sạc cho xe cá nhân. Nhân viên vận hành theo dõi tình trạng toàn mạng lưới, xử lý sự cố và lập kế hoạch điều chuyển. Chức năng What-if Simulation giúp thử các tình huống như nhu cầu tăng đột biến tại một Hub để đánh giá phương án điều phối trước khi áp dụng.
+
+\subsection{Bối cảnh và vấn đề cần giải quyết}
+
+Các trường và ký túc xá quanh ga Metro tạo nhu cầu đi chặng ngắn. Xe, chỗ đỗ và cổng sạc có giới hạn, dùng chung và liên tục đổi trạng thái.
+
+\noindent\textbf{PB-01 -- Thông tin tài nguyên bị phân tán và nhanh lỗi thời.} Người dùng có thể đến Hub đã hết tài nguyên. Vận hành dễ bỏ lỡ tình trạng thiếu hoặc dư.
+
+\medskip
+\noindent\textbf{PB-02 -- Tài nguyên hữu hạn có thể bị cấp phát xung đột.} Yêu cầu đồng thời có thể giữ trùng xe, chỗ hoặc lịch sạc. Lượt hết hạn cần được giải phóng đúng điều kiện.
+
+\medskip
+\noindent\textbf{PB-03 -- Phân bố phương tiện giữa các Hub dễ mất cân bằng.} Nhu cầu theo địa điểm và giờ cao điểm khiến Hub thiếu xe hoặc hết chỗ nhận xe.
+
+\medskip
+\noindent\textbf{PB-04 -- Năng lực sạc không đủ để phục vụ đồng thời mọi nhu cầu.} Cổng và công suất có hạn. Xếp theo thứ tự đến có thể làm xe pin thấp hoặc cần dùng sớm chờ lâu.
+
+\medskip
+\noindent\textbf{PB-05 -- Sự cố vận hành ảnh hưởng đến nhiều quy trình liên quan.} Nếu cập nhật lỗi chậm, xe, cổng hoặc Hub lỗi vẫn có thể được đề xuất hoặc cấp phát.
+
+\medskip
+\noindent\textbf{PB-06 -- Quyết định điều phối khó đánh giá trước khi áp dụng.} Cần thử tác động của điều chuyển, đổi lịch sạc hoặc chuyển nhu cầu sang Hub khác trước khi áp dụng.
+
+\subsection{Stakeholder và nhu cầu}
+
+Stakeholder gồm các bên sử dụng, quản lý hoặc chịu ảnh hưởng của SEMH. Actor là vai trò tương tác trực tiếp với phần mềm.
+
+\begin{table}[H]
+  \centering
+  \caption{Stakeholder của dự án}
+  \label{tab:stakeholders}
+  \small
+  \begin{tabularx}{\textwidth}{|L{20mm}|L{34mm}|Y|L{29mm}|}
+    \hline
+    \rowcolor{gray!15}
+    \textbf{Mã} & \centering\arraybackslash\textbf{Stakeholder} & \centering\arraybackslash\textbf{Vai trò và mối quan tâm} & \centering\arraybackslash\textbf{Actor tương ứng}\\
+    \hline
+    SH-STU & Sinh viên & Cần tìm và sử dụng được xe, chỗ đỗ, cổng sạc, biết khả năng phục vụ và lý do từ chối. & ACT-STU\\
+    \hline
+    SH-OPR & Đơn vị vận hành & Theo dõi mạng lưới, xử lý sự cố, điều chuyển xe và sử dụng hiệu quả tài nguyên sạc. & ACT-OPR\\
+    \hline
+    SH-MGT & Đơn vị quản lý Khu đô thị ĐHQG-HCM & Theo dõi khả năng phục vụ, mức sử dụng, an toàn và khả năng mở rộng. & Không trực tiếp\\
+    \hline
+    SH-ADM & Bộ phận quản trị hệ thống & Quản lý tài khoản, quyền và danh mục ban đầu. Hỗ trợ khẩn cấp về truy cập. & ACT-ADM\\
+    \hline
+    SH-MNT & Nhân viên kỹ thuật & Tiếp nhận sự cố, khắc phục ngoài thực tế và xác nhận kết quả xử lý. & ACT-MNT\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begingroup
+\small
+\begin{longtable}{|L{23mm}|L{27mm}|L{65mm}|L{24mm}|}
+  \caption{Nhu cầu của stakeholder}\label{tab:stakeholder-needs}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi} & \textbf{Phân hệ liên quan}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Need ID} & \textbf{Stakeholder} & \centering\arraybackslash\textbf{Nhu cầu hoặc mong đợi (tiếp theo)} & \textbf{Phân hệ liên quan}\\
+  \hline
+  \endhead
+  SN-STU-01 & SH-STU & Tìm Hub theo nhu cầu và xem xe, mức pin, chỗ đỗ, cổng sạc trước khi đến. & SUB-HUB\\
+  \hline
+  SN-STU-02 & SH-STU & Giữ xe có thời hạn và hủy được khi đổi kế hoạch. & SUB-RES\\
+  \hline
+  SN-STU-03 & SH-STU & Nhận đúng xe và trả xe tại Hub còn khả năng tiếp nhận. & SUB-TRIP\\
+  \hline
+  SN-STU-04 & SH-STU & Đặt và sử dụng chỗ đỗ cho xe cá nhân, tránh giữ trùng. & SUB-PARK\\
+  \hline
+  SN-STU-05 & SH-STU & Đăng ký sạc, xem lịch dự kiến và theo dõi phiên. & SUB-CHG\\
+  \hline
+  SN-OPR-01 & SH-OPR & Xem trạng thái và mức sử dụng toàn mạng lưới. & SUB-HUB, SUB-OPS\\
+  \hline
+  SN-OPR-02 & SH-OPR & Nhận biết Hub gần đầy, thiếu tài nguyên hoặc gặp sự cố. & SUB-OPS\\
+  \hline
+  SN-OPR-03 & SH-OPR & Ghi nhận, theo dõi và phối hợp xử lý sự cố. & SUB-OPS\\
+  \hline
+  SN-OPR-04 & SH-OPR & Lập và theo dõi điều chuyển xe giữa các Hub. & SUB-OPS\\
+  \hline
+  SN-OPR-05 & SH-OPR & Điều chỉnh ưu tiên theo mức pin và thời điểm cần xe. & SUB-CHG\\
+  \hline
+  SN-OPR-06 & SH-OPR & So sánh kịch bản vận hành và đánh giá khuyến nghị trước khi áp dụng. & SUB-SIM\\
+  \hline
+  SN-ADM-01 & SH-ADM & Quản lý tài khoản, vai trò và phạm vi truy cập. & GEN\\
+  \hline
+  SN-ADM-02 & SH-ADM & Khai báo danh mục và xử lý khẩn cấp về truy cập, bảo toàn trạng thái vận hành. & GEN\\
+  \hline
+  SN-OPR-07 & SH-OPR & Thêm, sửa và kiểm soát phục vụ thiết bị tại Hub được giao, bảo toàn dữ liệu cảm biến. & SUB-OPS\\
+  \hline
+  SN-MNT-01 & SH-MNT & Nhận đầy đủ thông tin sự cố và xác nhận kết quả xử lý. & SUB-OPS\\
+  \hline
+  SN-MGT-01 & SH-MGT & Đánh giá hiệu quả sử dụng tài nguyên trên giải pháp nhất quán, có thể mở rộng. & Toàn hệ thống\\
+  \hline
+\end{longtable}
+\endgroup
+
+\subsection{User Stories}
+
+\begingroup
+\small
+\begin{longtable}{|L{22mm}|L{72mm}|L{23mm}|L{20mm}|}
+  \caption{User Stories của dự án}\label{tab:user-stories}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung} & \textbf{Need ID} & \textbf{Phân hệ}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{User Story ID} & \centering\arraybackslash\textbf{Nội dung (tiếp theo)} & \textbf{Need ID} & \textbf{Phân hệ}\\
+  \hline
+  \endhead
+  US-HUB-01 & Tôi muốn tìm Hub theo vị trí và nhu cầu để tránh đến nơi đã hết tài nguyên. & SN-STU-01 & SUB-HUB\\
+  \hline
+  US-HUB-02 & Tôi muốn xem tình trạng tài nguyên và Hub thay thế để chủ động đổi kế hoạch. & SN-STU-01 & SUB-HUB\\
+  \hline
+  US-RES-01 & Tôi muốn đặt xe khả dụng để giữ xe trong thời hạn xác định. & SN-STU-02 & SUB-RES\\
+  \hline
+  US-RES-02 & Tôi muốn hủy lượt đặt để người khác có thể dùng xe. & SN-STU-02 & SUB-RES\\
+  \hline
+  US-TRIP-01 & Tôi muốn nhận đúng xe đã đặt để bắt đầu chuyến đi. & SN-STU-03 & SUB-TRIP\\
+  \hline
+  US-TRIP-02 & Tôi muốn nhận xác nhận trả xe để biết chuyến đi đã kết thúc. & SN-STU-03 & SUB-TRIP\\
+  \hline
+  US-PARK-01 & Tôi muốn giữ chỗ đỗ trước để biết Hub có thể tiếp nhận xe. & SN-STU-04 & SUB-PARK\\
+  \hline
+  US-PARK-02 & Tôi muốn check-in và check-out theo lượt đặt để cập nhật đúng chỗ đỗ. & SN-STU-04 & SUB-PARK\\
+  \hline
+  US-CHG-01 & Tôi muốn đăng ký và theo dõi lịch để biết khi nào xe được sạc. & SN-STU-05 & SUB-CHG\\
+  \hline
+  US-CHG-02 & Tôi muốn ưu tiên nhu cầu sạc cấp thiết trong công suất cho phép. & SN-OPR-05 & SUB-CHG\\
+  \hline
+  US-OPS-01 & Tôi muốn xem tình trạng và cảnh báo để can thiệp kịp thời. & SN-OPR-01 & SUB-OPS\\
+  \hline
+  US-OPS-02 & Tôi muốn theo dõi sự cố để ngừng cấp phát tài nguyên lỗi. & SN-OPR-03 & SUB-OPS\\
+  \hline
+  US-OPS-03 & Tôi muốn lập kế hoạch chuyển xe để cân bằng các Hub. & SN-OPR-04 & SUB-OPS\\
+  \hline
+  US-SIM-01 & Tôi muốn chạy What-if trên snapshot để thử tác động mà dữ liệu thật vẫn giữ nguyên. & SN-OPR-06 & SUB-SIM\\
+  \hline
+  US-SIM-02 & Tôi muốn so sánh kết quả và khuyến nghị để chọn phương án điều phối. & SN-OPR-06 & SUB-SIM\\
+  \hline
+  US-OPS-04 & Tôi muốn thêm hoặc sửa thiết bị tại Hub được giao để danh mục đúng thực tế. & SN-OPR-07 & SUB-OPS\\
+  \hline
+  US-OPS-05 & Tôi muốn bật hoặc ngừng phục vụ có kiểm tra để tránh cấp phát nhầm hay gián đoạn. & SN-OPR-07 & SUB-OPS\\
+  \hline
+  US-GEN-01 & Tôi muốn quản lý tài khoản và quyền để người dùng chỉ truy cập đúng phạm vi. & SN-ADM-01 & GEN\\
+  \hline
+  US-GEN-02 & Tôi muốn khai báo danh mục để thống nhất định danh trước khi vận hành. & SN-ADM-02 & GEN\\
+  \hline
+  US-GEN-03 & Tôi muốn khóa tài khoản rủi ro và thu hồi phiên để bảo vệ truy cập mà vẫn duy trì nghiệp vụ đang chạy. & SN-ADM-02 & GEN\\
+  \hline
+\end{longtable}
+\endgroup
+
+\subsection{Mục tiêu dự án}
+
+\noindent\textbf{OBJ-01 -- Tạo góc nhìn thống nhất về mạng lưới.} Cung cấp trạng thái gần hiện tại của Hub, xe, chỗ đỗ và cổng sạc cho tra cứu và giám sát.
+
+\medskip
+\noindent\textbf{OBJ-02 -- Hỗ trợ trọn vẹn các hành trình sử dụng chính.} Hỗ trợ tìm, đặt, nhận và trả xe dùng chung, cùng đỗ và sạc xe cá nhân.
+
+\medskip
+\noindent\textbf{OBJ-03 -- Phân bổ tài nguyên nhất quán.} Ngăn cấp phát xung đột. Giải phóng tài nguyên đúng điều kiện khi hủy, hết hạn hoặc thất bại.
+
+\medskip
+\noindent\textbf{OBJ-04 -- Nâng cao khả năng điều phối vận hành.} Phát hiện quá tải, quản lý sự cố và lập kế hoạch điều chuyển dựa trên trạng thái mạng lưới.
+
+\medskip
+\noindent\textbf{OBJ-05 -- Hỗ trợ đánh giá quyết định bằng mô phỏng.} Đánh giá khả năng phục vụ và sinh khuyến nghị What-if trên bản sao dữ liệu.
+
+\medskip
+\noindent\textbf{OBJ-06 -- Tạo nền tảng nhất quán cho các phase tiếp theo.} Giữ nhất quán thuật ngữ, trạng thái, phạm vi và quy tắc giữa phân tích, thiết kế và kiểm thử.
+
+\subsection{Phạm vi dự án}
+
+\subsubsection*{Trong phạm vi}
+
+\begin{itemize}
+  \setlength{\itemsep}{0pt}
+  \item \textbf{SCP-IN-01:} Quản lý trạng thái Hub và tài nguyên, tra cứu và đề xuất Hub thay thế.
+  \item \textbf{SCP-IN-02:} Đặt, xác nhận, hủy và xử lý hết hạn lượt đặt xe dùng chung.
+  \item \textbf{SCP-IN-03:} Nhận và trả xe, ghi nhận bắt đầu và kết thúc chuyến đi.
+  \item \textbf{SCP-IN-04:} Đặt chỗ, check-in và check-out xe cá nhân.
+  \item \textbf{SCP-IN-05:} Đăng ký, lập lịch, điều chỉnh ưu tiên và theo dõi sạc.
+  \item \textbf{SCP-IN-06:} Giám sát, cảnh báo, xử lý sự cố, lập kế hoạch điều chuyển, quản lý thông tin và quyền phục vụ của thiết bị.
+  \item \textbf{SCP-IN-07:} Cấu hình, chạy, phân tích What-if và đề xuất điều phối.
+  \item \textbf{SCP-IN-08:} Cập nhật trạng thái từ IoT hoặc dữ liệu giả lập.
+  \item \textbf{SCP-IN-09:} Đăng nhập bằng tài khoản được cấp, đăng xuất, kiểm quyền theo vai trò và phạm vi.
+  \item \textbf{SCP-IN-10:} GEN quản lý tài khoản, quyền, danh mục ban đầu và hỗ trợ khẩn cấp về truy cập.
+\end{itemize}
+
+\subsubsection*{Ngoài phạm vi}
+
+\begin{itemize}
+  \setlength{\itemsep}{0pt}
+  \item \textbf{SCP-OUT-01:} Thiết kế, lắp đặt, chế tạo hoặc bảo trì phần cứng.
+  \item \textbf{SCP-OUT-02:} Điều khiển trực tiếp khóa, động cơ, dòng điện hoặc cơ cấu tại Hub.
+  \item \textbf{SCP-OUT-03:} Di chuyển, cắm sạc, sửa xe hoặc giải phóng chỗ đỗ ngoài thực tế.
+  \item \textbf{SCP-OUT-04:} Bản đồ 3D, dẫn đường chi tiết và dự báo giao thông đô thị.
+  \item \textbf{SCP-OUT-05:} Thanh toán, định giá và tích hợp thật với Metro, ngân hàng, SSO hoặc quản lý sinh viên.
+  \item \textbf{SCP-OUT-06:} AI dự báo phức tạp. What-if dùng quy tắc và dữ liệu phù hợp phạm vi môn học.
+  \item \textbf{SCP-OUT-07:} Vận hành thật toàn khu đô thị và cam kết tiêu chuẩn thương mại.
+  \item \textbf{SCP-OUT-08:} Tự đăng ký, tự khôi phục mật khẩu và OTP.
+\end{itemize}
+
+\subsection{System Boundary}
+
+SEMH lưu danh mục và trạng thái nghiệp vụ, kiểm tra điều kiện cấp phát và sinh cảnh báo, kết quả What-if. Con người nhận, trả, vận chuyển, cắm sạc và sửa xe ngoài thực tế. Operator quyết định có áp dụng khuyến nghị.
+
+\texttt{EXT-STATE}/\texttt{ACT-DAT} cung cấp sự kiện cảm biến hoặc giả lập. \texttt{EXT-MAP} cung cấp nền bản đồ cho Leaflet trong giao diện. SEMH lưu tọa độ Hub, tra cứu theo vùng và tính khoảng cách.
+
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \includegraphics[width=\linewidth,height=0.42\textheight,keepaspectratio]{\PhaseTwoSystemDiagramPath/system-context.pdf}
+  \captionof{figure}{Sơ đồ ngữ cảnh và ranh giới Smart E-Mobility Hub System}
+  \label{fig:context-diagram}
+\end{minipage}\par\medskip
+
+\noindent\begin{minipage}{\linewidth}
+\subsection{Phân rã hệ thống thành bảy phân hệ nghiệp vụ}
+
+Sơ đồ tóm tắt trách nhiệm nghiệp vụ. GEN cung cấp xác thực và quản trị dùng chung. Cách triển khai các phân hệ nằm ở Phần IV.
+
+  \centering
+  \includegraphics[width=0.66\textwidth]{\PhaseOneDiagramPath/subsystem-map.pdf}
+  \captionof{figure}{Bản đồ bảy phân hệ và các phụ thuộc nghiệp vụ chính}
+  \label{fig:subsystem-map}
+\end{minipage}\par\medskip
+
+\subsection{Assumptions và Constraints}
+
+\subsubsection*{Assumptions}
+
+\noindent\textbf{ASM-GEN-01 -- Có nguồn dữ liệu trạng thái đầu vào.} Nguồn trạng thái cung cấp sự kiện cảm biến thật hoặc giả lập. Khi nguồn gián đoạn, dùng trạng thái hợp lệ cuối hoặc báo thiếu dữ liệu.
+
+\medskip
+\noindent\textbf{ASM-GEN-02 -- Mỗi Hub và tài nguyên có định danh duy nhất.} Hub, xe, chỗ đỗ và cổng sạc có mã duy nhất trong mạng lưới, dùng xuyên suốt các luồng.
+
+\medskip
+\noindent\textbf{ASM-GEN-03 -- Tài khoản được quản trị tập trung.} Hệ thống khởi tạo Admin đầu tiên lúc thiết lập. Admin cấp tài khoản và quyền. Tài khoản demo có thể tạo trước theo cùng quy tắc.
+
+\medskip
+\noindent\textbf{ASM-GEN-04 -- Mốc thời gian có thể so sánh nhất quán.} Mốc thời gian đủ đồng bộ để so sánh hạn đặt, thứ tự bản tin và thời điểm thực hiện.
+
+\medskip
+\noindent\textbf{ASM-CHG-01 -- Có dữ liệu phục vụ xếp lịch sạc.} Dữ liệu demo có dung lượng pin, công suất xe/cổng, loại đầu nối và hạn mức Hub. Xử lý pin, thời điểm sử dụng và dữ liệu thiếu theo \texttt{BR-CHG-01} và \texttt{BR-CHG-03}.
+
+\medskip
+\noindent\textbf{ASM-SIM-01 -- Mô phỏng sử dụng ảnh chụp trạng thái.} Mỗi lần chạy dùng bản sao trạng thái tại mốc cơ sở. Xem \texttt{BR-SIM-01}.
+
+\subsubsection*{Constraints}
+
+\noindent\textbf{CON-GEN-01 -- Trọng tâm là phần mềm, không phải phần cứng.} Phạm vi phần mềm và phần cứng theo mục System Boundary.
+
+\medskip
+\noindent\textbf{CON-GEN-02 -- Dữ liệu triển khai có thể là dữ liệu giả lập.} SEMH dùng dữ liệu IoT giả lập và lưu trạng thái trong SEMHDataStore. Hành vi demo tuân theo FR và BR.
+
+\medskip
+\noindent\textbf{CON-GEN-03 -- Hệ thống có tài nguyên dùng chung và thay đổi đồng thời.} Nhiều người hoặc sự kiện có thể cùng tác động tài nguyên. Thiết kế phải bảo toàn nhất quán.
+
+\medskip
+\noindent\textbf{CON-GEN-04 -- Phạm vi MVP bị giới hạn bởi học kỳ và nguồn lực nhóm.} Bảy thành viên thực hiện trong một học kỳ, ưu tiên luồng cốt lõi có thể hiện thực và demo.
+
+\medskip
+\noindent\textbf{CON-GEN-05 -- Sản phẩm phải phục vụ truy vết qua nhiều phase.} Giữ ổn định tên actor, mã yêu cầu, quy tắc, use case và trạng thái để đối chiếu giữa các phase.
+
+\subsection{Thuật ngữ và trạng thái dùng chung}
+
+\begingroup
+\small
+\begin{longtable}{|L{44mm}|L{34mm}|L{62mm}|}
+  \caption{Thuật ngữ nghiệp vụ chính}\label{tab:business-terms}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Tên chuẩn} & \centering\arraybackslash\textbf{Tên tiếng Việt} & \centering\arraybackslash\textbf{Ý nghĩa trong dự án}\\
+  \hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Tên chuẩn} & \centering\arraybackslash\textbf{Tên tiếng Việt} & \centering\arraybackslash\textbf{Ý nghĩa trong dự án (tiếp theo)}\\
+  \hline
+  \endhead
+  \texttt{Account} & Tài khoản & Danh tính truy cập hệ thống, có trạng thái Active hoặc Locked.\\
+  \hline
+  \texttt{AccessAssignment} & Phân quyền & Vai trò và phạm vi Hub hiện hành của tài khoản, được AccessService kiểm tra ở yêu cầu được bảo vệ.\\
+  \hline
+  \texttt{MobilityHub} & Mobility Hub & Địa điểm tập hợp phương tiện, chỗ đỗ và cổng sạc trong mạng lưới.\\
+  \hline
+  \texttt{SharedVehicle} & Phương tiện dùng chung & Phương tiện điện thuộc mạng lưới và được sinh viên đặt để sử dụng.\\
+  \hline
+  \texttt{PrivateVehicle} & Phương tiện cá nhân & Phương tiện điện của sinh viên, sử dụng dịch vụ đỗ hoặc sạc tại Hub.\\
+  \hline
+  \texttt{ParkingSpace} & Chỗ đỗ & Một vị trí đỗ cụ thể, có trạng thái và khả năng được giữ trước.\\
+  \hline
+  \texttt{ChargingPoint} & Cổng sạc & Một tài nguyên sạc cụ thể tại Hub.\\
+  \hline
+  \texttt{VehicleReservation} & Lượt đặt phương tiện & Quyền giữ trước một phương tiện dùng chung trong thời hạn xác định.\\
+  \hline
+  \texttt{ParkingReservation} & Lượt đặt chỗ đỗ & Quyền giữ trước một chỗ đỗ cho phương tiện điện cá nhân.\\
+  \hline
+  \texttt{Trip} & Chuyến đi & Khoảng thời gian từ khi sinh viên nhận xe dùng chung đến khi trả xe.\\
+  \hline
+  \texttt{ChargingRequest} & Yêu cầu sạc & Nhu cầu sạc chờ được kiểm tra và xếp lịch.\\
+  \hline
+  \texttt{ChargingSession} & Phiên sạc & Khoảng thời gian một phương tiện thực tế sử dụng cổng sạc.\\
+  \hline
+  \texttt{Incident} & Sự cố & Sự kiện làm tài nguyên hoặc quy trình không hoạt động bình thường.\\
+  \hline
+  \texttt{RedistributionPlan} & Kế hoạch điều chuyển & Kế hoạch chuyển phương tiện giữa các Hub để điều chỉnh phân bố.\\
+  \hline
+  \texttt{SimulationScenario} & Kịch bản mô phỏng & Tập giả định và tham số đầu vào của một bài toán What-if.\\
+  \hline
+  \texttt{SimulationRun} & Lần chạy mô phỏng & Một lần thực thi kịch bản trên ảnh chụp trạng thái xác định.\\
+  \hline
+  \texttt{Recommendation} & Khuyến nghị & Phương án điều phối được tạo từ trạng thái hoặc kết quả mô phỏng.\\
+  \hline
+\end{longtable}
+\endgroup
+
+\begin{table}[H]
+  \centering
+  \caption{Trạng thái chuẩn của tài nguyên và tài khoản}
+  \label{tab:resource-statuses}
+  \small
+  \begin{tabularx}{\textwidth}{|L{47mm}|Y|}
+    \hline
+    \rowcolor{gray!15}
+    \centering\arraybackslash\textbf{Đối tượng} & \centering\arraybackslash\textbf{Tập trạng thái}\\
+    \hline
+    \texttt{VehicleStatus} & \texttt{Available | Reserved | InUse | Charging | OutOfService}\\
+    \hline
+    \texttt{ParkingSpaceStatus} & \texttt{Available | Reserved | Occupied | OutOfService}\\
+    \hline
+    \texttt{ChargingPointStatus} & \texttt{Available | Reserved | Charging | OutOfService}\\
+    \hline
+    \texttt{ServiceStatus} & \texttt{Draft | Active | Inactive}\\
+    \hline
+    \texttt{AccountStatus} & \texttt{Active | Locked}\\
+    \hline
+    \texttt{HubStatus} & \texttt{Normal | NearCapacity | Full | OutOfService}\\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\noindent \texttt{ServiceStatus} là quyền phục vụ, độc lập với trạng thái cảm biến. Điều kiện cấp phát và đổi trạng thái xem \texttt{BR-HUB-02}, \texttt{BR-OPS-03} và \texttt{BR-OPS-05}. Quyền của tài khoản theo \texttt{FR-GEN-03}.
+
+\noindent\begin{minipage}{\linewidth}
+  \centering
+  \captionof{table}{Trạng thái chuẩn của quy trình nghiệp vụ}
+  \label{tab:workflow-statuses}
+  \small
+  \begin{tabularx}{\linewidth}{|L{49mm}|Y|}
+  \hline
+  \rowcolor{gray!15}
+  \centering\arraybackslash\textbf{Đối tượng} & \centering\arraybackslash\textbf{Tập trạng thái}\\
+  \hline
+  \texttt{VehicleReservationStatus} & \texttt{Pending | Confirmed | Fulfilled | Cancelled | Expired | Rejected}\\
+  \hline
+  \texttt{ParkingReservationStatus} & \texttt{Pending | Confirmed | CheckedIn | Completed | Cancelled | Expired | Rejected}\\
+  \hline
+  \texttt{TripStatus} & \texttt{InProgress | Completed | Interrupted}\\
+  \hline
+  \texttt{ChargingRequestStatus} & \texttt{Pending | Scheduled | Charging | Completed | Cancelled | Rejected}\\
+  \hline
+  \texttt{ChargingSessionStatus} & \texttt{Ready | Charging | Paused | Completed | Interrupted | Failed}\\
+  \hline
+  \texttt{IncidentStatus} & \texttt{Open | Acknowledged | InProgress | Resolved | Closed}\\
+  \hline
+  \texttt{RedistributionPlanStatus} & \texttt{Draft | Recommended | Approved | InProgress | Completed | Cancelled}\\
+  \hline
+  \texttt{SimulationRunStatus} & \texttt{Draft | Running | Completed | Failed}\\
+  \hline
+  \end{tabularx}
+\end{minipage}\par\medskip
+
+Chuyển trạng thái theo điều kiện của BR và use case. Trạng thái kết thúc chỉ mở lại khi FR hoặc BR quy định. Xử lý dữ liệu thiếu hoặc cũ theo \texttt{NFR-REL-01}.
+
+\clearpage
+\section{Yêu cầu hệ thống}
+
+\subsection{Quy ước đặc tả yêu cầu}
+
+Các mã \texttt{FR}, \texttt{BR}, \texttt{NIFR}, \texttt{NFR} lần lượt chỉ chức năng tương tác, quy tắc nghiệp vụ, chức năng tự động và yêu cầu chất lượng. \texttt{GEN} chỉ phần dùng chung của bảy phân hệ.
+
+\subsection{Xác thực và phân quyền dùng chung}
+\label{sec:common-access}
+
+Tra cứu qua ba use case SUB-HUB là công khai. Các thao tác được bảo vệ cần phiên hợp lệ và quyền trên đối tượng.
+
+\noindent\textbf{FR-GEN-01 -- Đăng nhập.} Tạo phiên khi người dùng đăng nhập hợp lệ bằng tài khoản được Admin cấp và đang hoạt động. Nếu sai, trả lỗi chung, không tạo phiên hay tiết lộ tài khoản có tồn tại.
+
+\medskip
+\noindent\textbf{FR-GEN-02 -- Đăng xuất.} Đăng xuất thu hồi phiên hiện tại. Lượt đặt, chuyến đi và phiên sạc đang hiệu lực vẫn tiếp tục.
+
+\medskip
+\noindent\textbf{FR-GEN-03 -- Kiểm tra quyền truy cập.} Mọi yêu cầu được bảo vệ, kể cả gọi API trực tiếp, phải kiểm tra tài khoản, phiên, quyền hiện hành và phạm vi đối tượng trước khi đọc dữ liệu riêng hoặc ghi.
+
+\medskip
+\noindent\textbf{FR-GEN-04 -- Cấp tài khoản.} Admin cấp tài khoản có định danh duy nhất. Quyền vận hành phải được cấp riêng. Mật khẩu khởi tạo không lưu rõ, không hiển thị lại và không ghi audit.
+
+\medskip
+\noindent\textbf{FR-GEN-05 -- Cập nhật thông tin tài khoản.} Admin được sửa thông tin định danh, giữ nguyên chủ sở hữu và lịch sử nghiệp vụ. Thay quyền theo \texttt{FR-GEN-07}.
+
+\medskip
+\noindent\textbf{FR-GEN-06 -- Khóa hoặc mở lại tài khoản.} Admin xác nhận và nhập lý do khi khóa hoặc mở tài khoản. Khóa thu hồi các phiên mà vẫn giữ nghiệp vụ đang chạy. Mở lại không phục hồi phiên đã thu hồi.
+
+\medskip
+\noindent\textbf{FR-GEN-07 -- Cấp hoặc thu hồi quyền.} Admin xác nhận và nhập lý do khi đổi vai trò hoặc phạm vi. Yêu cầu được bảo vệ tiếp theo dùng quyền mới, kể cả trên phiên đã mở.
+
+\medskip
+\noindent\textbf{FR-GEN-08 -- Khai báo danh mục tài nguyên ban đầu.} Admin khai báo định danh và Hub ban đầu. Từ chối ID trùng hoặc Hub không tồn tại. Khai báo không xác nhận vị trí, pin, trạng thái vật lý hay quyền phục vụ, không ghi đè vận hành hoặc chuyển xe đang dùng.
+
+\textit{UC: \texttt{UC-GEN-01} (\texttt{FR-GEN-04}--\texttt{FR-GEN-06}), \texttt{UC-GEN-02} (\texttt{FR-GEN-07}) và \texttt{UC-GEN-03} (\texttt{FR-GEN-08}).}
+
+\medskip
+\begin{itemize}
+  \item \textbf{BR-GEN-01 -- Nguồn quyền.} Danh tính từ phiên đã xác thực. Vai trò và phạm vi từ phân quyền hiện hành do Admin quản lý.
+  \item \textbf{BR-GEN-02 -- Vai trò và phạm vi.} Áp dụng Bảng~\ref{tab:role-permissions}. Từ chối mặc định nếu quyền chưa được cấp. MNT chỉ xử lý việc đã giao trong \texttt{UC-OPS-02}.
+  \item \textbf{BR-GEN-03 -- Phiên.} Phiên hết hiệu lực khi đăng xuất hoặc sau 30 phút không có yêu cầu được bảo vệ hợp lệ. IoT và tác vụ nền không kéo dài phiên. Chuyến đi, sạc và mô phỏng đang chạy vẫn tiếp tục khi hết phiên.
+  \item \textbf{BR-GEN-04 -- Quản trị.} Lưu actor, đối tượng, thời điểm, lý do, trước/sau và kết quả theo \texttt{NFR-AUD-01}. Bảo toàn Admin hoạt động cuối cùng. Admin không sửa audit hoặc bỏ qua kiểm tra an toàn. Hỗ trợ khẩn cấp qua khóa tài khoản hoặc thu hồi quyền, có lý do.
+\end{itemize}
+
+Phiên thiếu/hết hạn thì yêu cầu đăng nhập lại. Thiếu quyền thì từ chối trước khi đọc hoặc ghi. Sau đăng nhập lại, người dùng xem trạng thái mới và xác nhận lại thao tác thay đổi.
+
+\textit{Nguồn: \texttt{SCP-IN-09}, \texttt{SCP-IN-10}, \texttt{SN-ADM-01}, \texttt{SN-ADM-02}, \texttt{ASM-GEN-03}. Kiểm chứng theo \texttt{NFR-SEC-01}.}
+
+\subsubsection{Phạm vi quyền của các vai trò}
+
+\begingroup
+\small
+\begin{longtable}{|L{48mm}|L{22mm}|L{22mm}|L{22mm}|L{22mm}|}
+  \caption{Phạm vi quyền theo vai trò}\label{tab:role-permissions}\\
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Nhóm thao tác} & \textbf{Sinh viên} & \textbf{Vận hành} & \textbf{Kỹ thuật} & \textbf{Quản trị}\\\hline
+  \endfirsthead
+  \hline
+  \rowcolor{gray!15}
+  \textbf{Nhóm thao tác} & \textbf{Sinh viên} & \textbf{Vận hành} & \textbf{Kỹ thuật} & \textbf{Quản trị}\\\hline
+  \endhead
+  Tra cứu Hub công khai & Có & Công khai & Công khai & Công khai\\\hline
+  Đặt, nhận, trả xe và đỗ xe & Của mình & Không & Không & Không\\\hline
+  Đăng ký và theo dõi sạc & Của mình & Phạm vi cấp & Không & Không\\\hline
+  Điều chỉnh lịch sạc & Không & Phạm vi cấp & Không & Không\\\hline
+  Giám sát, giao và đóng sự cố & Không & Phạm vi cấp & Không & Không\\\hline
+  Ghi và xác nhận kết quả kỹ thuật & Không & Không & Được giao & Không\\\hline
+  Duyệt điều phối, chạy mô phỏng & Không & Phạm vi cấp & Không & Không\\\hline
+  Cấp, sửa, khóa/mở tài khoản & Không & Không & Không & Có\\\hline
+  Cấp/thu hồi quyền và phạm vi & Không & Không & Không & Có\\\hline
+  Khai báo Hub và danh mục ban đầu & Không & Không & Không & Có\\\hline
+  Thêm, sửa thiết bị tại Hub & Không & Phạm vi cấp & Không & Chỉ khởi tạo\\\hline
+  Bật/tắt phục vụ & Không & Phạm vi cấp & Không & Không\\\hline
+\end{longtable}
+\endgroup
+
+\subsection{Business Rules}
+
+\subsubsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
+
+\noindent\textbf{BR-HUB-01 -- Ghi nhận tài nguyên tại Hub.} Mỗi chỗ đỗ hoặc cổng sạc thuộc một Hub. Xe chỉ tính vào tồn khi đã xác nhận tại Hub đó. Xe \texttt{InUse} không tính là khả dụng.
+
+\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03};\newline
+\texttt{UC-HUB-01}, \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
+
+\medskip
+\noindent\textbf{BR-HUB-02 -- Điều kiện hiển thị tài nguyên khả dụng.} Cấp phát khi tài nguyên \texttt{Available}, tài nguyên và Hub cha đều \texttt{Active}, không còn lượt giữ, phiên sử dụng hoặc sự cố ràng buộc. IoT không tự mở lại \texttt{Inactive} hoặc \texttt{Draft}.
+
+\textit{Áp dụng cho: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03};\newline
+\texttt{UC-HUB-01}, \texttt{UC-HUB-02}, \texttt{UC-HUB-03}.}
+
+\subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+\noindent\textbf{BR-RES-01 -- Giới hạn lượt đặt của Sinh viên.} Mỗi sinh viên có tối đa một lượt đặt \texttt{Pending} hoặc \texttt{Confirmed} tại một thời điểm.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-02 -- Ngăn chặn đặt trùng phương tiện.} Mỗi xe có tối đa một lượt đặt \texttt{Pending} hoặc \texttt{Confirmed}. Kiểm tra và giữ nguyên tử để ngăn xác nhận trùng.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{NFR-CON-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-03 -- Hết hạn lượt đặt.} Lượt \texttt{Confirmed} hết hạn sau 10 phút. Nếu chưa nhận xe, chuyển lượt sang \texttt{Expired} và trả xe về \texttt{Available} khi không còn lỗi hoặc ràng buộc.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{NIFR-RES-01}; \texttt{UC-RES-01}.}
+
+\medskip
+\noindent\textbf{BR-RES-04 -- Điều kiện xe được phép đặt.} Chỉ đặt xe \texttt{Available}, pin ít nhất 30\%, xe và Hub đều \texttt{Active}. Xe chưa đủ điều kiện vẫn có thể được xem trong thông tin vận hành.
+
+\textit{Áp dụng cho: \texttt{FR-RES-01}, \texttt{FR-HUB-02}; \texttt{UC-RES-01}, \texttt{UC-HUB-02}.}
+
+\subsubsection{SUB-TRIP -- Quản lý chuyến đi}
+
+\noindent\textbf{BR-TRIP-01 -- Điều kiện bắt đầu chuyến đi.} Chỉ nhận đúng xe của lượt \texttt{Confirmed} còn hiệu lực và đúng chủ. Xác nhận bàn giao chuyển lượt sang \texttt{Fulfilled}, xe sang \texttt{InUse}, chuyến sang \texttt{InProgress}.
+
+\textit{Áp dụng cho: \texttt{FR-TRIP-01}; \texttt{UC-TRIP-01}.}
+
+\medskip
+\noindent\textbf{BR-TRIP-02 -- Điều kiện hoàn tất chuyến đi.} Chỉ chuyển chuyến sang \texttt{Completed} khi xác nhận xe đã trả an toàn tại Hub hợp lệ. Trạng thái xe sau đó phụ thuộc vào pin và tình trạng vận hành.
+
+\textit{Áp dụng cho: \texttt{FR-TRIP-02}; \texttt{UC-TRIP-02}.}
+
+\subsubsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+\noindent\textbf{BR-PARK-01 -- Giữ chỗ đỗ không xung đột.} Chỉ giữ chỗ \texttt{Available}, với tối đa một lượt \texttt{Pending} hoặc \texttt{Confirmed} mỗi chỗ. Kiểm tra và giữ phải nhất quán khi cạnh tranh.
+
+\textit{Áp dụng cho: \texttt{FR-PARK-01}, \texttt{NFR-CON-01}; \texttt{UC-PARK-01}.}
+
+\medskip
+\noindent\textbf{BR-PARK-02 -- Hết hạn lượt đặt chỗ đỗ.} Lượt \texttt{Confirmed} giữ tối đa 20 phút. Đến hạn, kiểm tra lại chưa check-in rồi chuyển \texttt{Expired} và hủy giữ trong cùng giao dịch. Chỉ đưa chỗ về \texttt{Available} khi xác nhận trống, dữ liệu tin cậy, hết lỗi và ràng buộc. Chỗ lỗi giữ \texttt{OutOfService}, chưa xác minh giữ trạng thái an toàn. Cấp phát lại cần chỗ và Hub \texttt{Active}.
+
+\textit{Áp dụng cho: \texttt{FR-PARK-01}, \texttt{NIFR-PARK-01}; \texttt{UC-PARK-01}.}
+
+\subsubsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+
+\noindent\textbf{BR-CHG-01 -- Ưu tiên sạc.} Ưu tiên cao nếu pin dưới 20\% hoặc cần xe trong 60 phút tới. Còn lại ưu tiên thường. Cùng mức xếp FIFO theo giờ tiếp nhận rồi mã yêu cầu. Thiếu một tiêu chí thì xét tiêu chí còn lại. Thiếu pin thì chờ đủ dữ liệu để lập lịch.
+
+\textit{Áp dụng cho: \texttt{FR-CHG-01}, \texttt{FR-CHG-03}, \texttt{NIFR-CHG-01}; \texttt{UC-CHG-01}, \texttt{UC-CHG-03}.}
+
+\medskip
+\noindent\textbf{BR-CHG-02 -- Giới hạn sử dụng cổng sạc.} Mỗi cổng tối đa một phiên \texttt{Charging} cùng lúc. Cổng \texttt{OutOfService} không nhận yêu cầu mới.
+
+\medskip
+\noindent\textbf{BR-CHG-03 -- Ước tính thời lượng sạc.} Demo ước tính sạc tới 100\% với công suất cố định và hiệu suất $\eta=0.9$. Với dung lượng $C$ (kWh), pin $b$ (\%) và $P=\min(P_{\text{cổng}},P_{\text{xe}})>0$ (kW), thời lượng $d=\lceil60C(1-b/100)/(\eta P)\rceil$ phút. Thiếu pin tin cậy, dung lượng hoặc công suất thì giữ \texttt{Pending}, chưa giữ cổng hay công bố giờ hoàn tất. Pin đạt mục tiêu thì không tạo yêu cầu.
+
+\medskip
+\noindent\textbf{BR-CHG-04 -- Phân bổ cổng và công suất.} Xếp yêu cầu chưa bắt đầu theo \texttt{BR-CHG-01}. Chỉ dùng cổng tương thích, không lỗi, với cổng và Hub \texttt{Active}. Chọn $[s,s+d)$ sớm nhất không trùng lịch cổng, không vượt tổng công suất Hub và kịp mốc sớm hơn giữa hạn mong muốn và giờ cần xe (nếu có). Hòa thì chọn mã cổng tăng dần. Thiếu dữ liệu tương thích hoặc hạn mức, hoặc không có slot, giữ \texttt{Pending} kèm lý do. Giữ phiên đang sạc. Kiểm tra và lưu phân bổ nguyên tử.
+
+\textit{Áp dụng cho: \texttt{FR-CHG-02}, \texttt{FR-CHG-03}, \texttt{NIFR-CHG-02}; \texttt{UC-CHG-02}, \texttt{UC-CHG-03}.}
+
+\subsubsection{SUB-OPS -- Giám sát và điều phối vận hành}
+
+\noindent\textbf{BR-OPS-01 -- Cảnh báo mất cân bằng tại Hub.} Cảnh báo khi xe \texttt{Available} dưới 15\% sức chứa hoặc xe hiện diện vượt 90\%. OPR xem xét trước khi quyết định điều chuyển.
+
+\textit{Áp dụng cho: \texttt{FR-OPS-01}, \texttt{FR-OPS-03}, \texttt{NIFR-OPS-02}; \texttt{UC-OPS-01}, \texttt{UC-OPS-03}.}
+
+\medskip
+\noindent\textbf{BR-OPS-02 -- Đưa tài nguyên ra khỏi phục vụ.} Xe đạt 1.000~km từ lần bảo trì hoặc có lỗi phần cứng chuyển \texttt{OutOfService}. Tài nguyên chỉ trở lại phục vụ khi MNT xác nhận khắc phục đạt yêu cầu.
+
+\textit{Áp dụng cho: \texttt{FR-OPS-02}, \texttt{NIFR-OPS-01}; \texttt{UC-OPS-02}.}
+
+\medskip
+\noindent\textbf{BR-OPS-03 -- Tách danh mục, quyền phục vụ và trạng thái vật lý.} Hub và tài nguyên mới là \texttt{Draft}. Admin khai báo danh mục ban đầu, OPR thêm thiết bị tại Hub được giao. Chỉ OPR kích hoạt \texttt{Draft}/\texttt{Inactive}. IoT chỉ cập nhật vận hành. Thao tác danh mục và kích hoạt không tạo telemetry hay biến \texttt{OutOfService} thành \texttt{Available}.
+
+\medskip
+\noindent\textbf{BR-OPS-04 -- Giới hạn cập nhật thông tin.} Khi sửa danh mục, giữ ID, loại, Hub sở hữu, telemetry, chủ lượt đặt và lịch sử. OPR chỉ sửa trường được phép, đặc biệt thông số cấp phát cần hết ràng buộc. Di chuyển thực tế qua \texttt{UC-OPS-03}.
+
+\medskip
+\noindent\textbf{BR-OPS-05 -- Điều kiện bật hoặc tắt phục vụ.} Bật khi danh mục hợp lệ, Hub cha \texttt{Active} nếu có, đủ dữ liệu theo loại và không còn lỗi chưa xác minh khắc phục. Tắt khi hết ràng buộc giữ xe, chuyến đi, đỗ, phiên hoặc phân bổ sạc, điều chuyển, kể cả trên tài nguyên con của Hub. Kiểm tra ràng buộc và phiên bản, cập nhật và ghi audit trong giao dịch chống xung đột với cấp phát. Thao tác không hủy nghiệp vụ hay điều khiển điện. Xử lý lỗi theo \texttt{UC-OPS-02}.
+
+\subsubsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+\noindent\textbf{BR-SIM-01 -- Cách ly dữ liệu mô phỏng.} Mỗi run tính trên bản sao trạng thái lúc bắt đầu. Kết quả và khuyến nghị giữ nguyên dữ liệu thật. Áp dụng cần OPR lập hoặc phê duyệt qua quy trình tương ứng.
+
+\textit{Áp dụng cho: \texttt{FR-SIM-01}, \texttt{FR-SIM-02}; \texttt{UC-SIM-01}, \texttt{UC-SIM-02}.}
+
+\subsection{Functional Requirements}
+
+\subsubsection{SUB-HUB -- Tra cứu Hub và tài nguyên}
+
+\noindent\textbf{FR-HUB-01 -- Tra cứu Hub phù hợp.} Sinh viên tra cứu Hub theo vị trí hoặc nhu cầu, xem khoảng cách và khả năng phục vụ.
+\textit{Nguồn: \texttt{SN-STU-01}, \texttt{US-HUB-01}. UC: \texttt{UC-HUB-01}. BR: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\medskip
+\noindent\textbf{FR-HUB-02 -- Xem trạng thái tài nguyên tại Hub.} Khi sinh viên chọn Hub, hiển thị trạng thái gần hiện tại của xe, chỗ đỗ và cổng sạc để đánh giá khả năng sử dụng.
+\textit{Nguồn: \texttt{SN-STU-01}, \texttt{US-HUB-02}. UC: \texttt{UC-HUB-02}. BR: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\medskip
+\noindent\textbf{FR-HUB-03 -- Xem Hub thay thế.} Khi cần Hub thay thế hoặc Hub ban đầu không đáp ứng, trả danh sách thay thế kèm lý do và trạng thái tài nguyên liên quan.
+\textit{Nguồn: \texttt{SN-STU-01}, \texttt{US-HUB-02}. UC: \texttt{UC-HUB-03}. BR: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\subsubsection{SUB-RES -- Đặt phương tiện dùng chung}
+
+\noindent\textbf{FR-RES-01 -- Tạo lượt đặt phương tiện.} Khi sinh viên chọn xe đủ điều kiện, xác nhận lượt đặt kèm hạn nhận. Xe mất khả dụng lúc xác nhận thì từ chối và giữ nguyên trạng thái.
+\textit{Nguồn: \texttt{SN-STU-02}, \texttt{US-RES-01}. UC: \texttt{UC-RES-01}. BR: \texttt{BR-RES-01}--\texttt{BR-RES-04}.}
+
+\medskip
+\noindent\textbf{FR-RES-02 -- Hủy lượt đặt phương tiện.} Sinh viên hủy lượt \texttt{Pending}/\texttt{Confirmed} của mình. Chuyển \texttt{Cancelled} và giải phóng xe nếu hết ràng buộc.
+\textit{Nguồn: \texttt{SN-STU-02}, \texttt{US-RES-02}. UC: \texttt{UC-RES-02}. BR: \texttt{BR-RES-01}, \texttt{BR-RES-02}.}
+
+\subsubsection{SUB-TRIP -- Quản lý chuyến đi}
+
+\noindent\textbf{FR-TRIP-01 -- Nhận phương tiện và bắt đầu chuyến đi.} Khi sinh viên nhận xe, kiểm tra đúng người, xe và lượt còn hiệu lực. Sau xác nhận bàn giao từ \texttt{ACT-DAT}, tạo \texttt{Trip} kèm thời điểm, Hub xuất phát và tình trạng xe.
+\textit{Nguồn: \texttt{SN-STU-03}, \texttt{US-TRIP-01}. UC: \texttt{UC-TRIP-01}. BR: \texttt{BR-TRIP-01}.}
+
+\medskip
+\noindent\textbf{FR-TRIP-02 -- Trả phương tiện và kết thúc chuyến đi.} Khi sinh viên trả xe, kiểm tra Hub tiếp nhận và xác nhận vị trí, tình trạng trả từ \texttt{ACT-DAT}. Nếu hợp lệ, hoàn tất \texttt{Trip}, lưu thời điểm và trạng thái xe, trả tóm tắt chuyến đi.
+\textit{Nguồn: \texttt{SN-STU-03}, \texttt{US-TRIP-02}. UC: \texttt{UC-TRIP-02}. BR: \texttt{BR-TRIP-02}.}
+
+\subsubsection{SUB-PARK -- Quản lý chỗ đỗ xe cá nhân}
+
+\noindent\textbf{FR-PARK-01 -- Đặt trước chỗ đỗ.} Khi sinh viên đặt tại Hub còn chỗ, tạo \texttt{ParkingReservation} cho chỗ \texttt{Available} và trả hạn giữ.
+\textit{Nguồn: \texttt{SN-STU-04}, \texttt{US-PARK-01}. UC: \texttt{UC-PARK-01}. BR: \texttt{BR-PARK-01}, \texttt{BR-PARK-02}.}
+
+\medskip
+\noindent\textbf{FR-PARK-02 -- Check-in phương tiện cá nhân.} Khi check-in, xác minh lượt còn hiệu lực và bằng chứng từ \texttt{ACT-DAT} cho thấy xe đến đúng chỗ. Chuyển lượt sang \texttt{CheckedIn}, chỗ sang \texttt{Occupied}.
+\textit{Nguồn: \texttt{SN-STU-04}, \texttt{US-PARK-02}. UC: \texttt{UC-PARK-02}. BR: \texttt{BR-PARK-01}.}
+
+\medskip
+\noindent\textbf{FR-PARK-03 -- Check-out phương tiện cá nhân.} Khi check-out, xác nhận xe đã rời qua \texttt{ACT-DAT}. Chuyển lượt \texttt{Completed}, giải phóng chỗ về \texttt{Available} nếu không có sự cố.
+\textit{Nguồn: \texttt{SN-STU-04}, \texttt{US-PARK-02}. UC: \texttt{UC-PARK-03}. BR: \texttt{BR-PARK-01}.}
+
+\subsubsection{SUB-CHG -- Quản lý sạc và lịch sạc}
+
+\noindent\textbf{FR-CHG-01 -- Đăng ký nhu cầu sạc.} Sinh viên gửi nhu cầu sạc xe cá nhân hoặc OPR gửi nhu cầu vận hành. Trả kết quả tiếp nhận, từ chối hoặc lịch dự kiến khi đủ dữ liệu.
+\textit{Nguồn: \texttt{SN-STU-05}, \texttt{US-CHG-01}. UC: \texttt{UC-CHG-01}. BR: \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.}
+
+\medskip
+\noindent\textbf{FR-CHG-02 -- Theo dõi lịch và phiên sạc.} Sinh viên xem yêu cầu của mình và OPR xem trong phạm vi được cấp. Hiển thị trạng thái yêu cầu/phiên, cổng, pin và giờ hoàn tất dự kiến khi có.
+\textit{Nguồn: \texttt{SN-STU-05}, \texttt{US-CHG-01}. UC: \texttt{UC-CHG-02}. BR: \texttt{BR-CHG-02}.}
+
+\medskip
+\noindent\textbf{FR-CHG-03 -- Điều chỉnh lịch sạc ưu tiên.} OPR điều chỉnh thứ tự hoặc cổng của yêu cầu chưa bắt đầu, có ghi lý do. Lịch mới không gây trùng phiên trên cổng.
+\textit{Nguồn: \texttt{SN-OPR-05}, \texttt{US-CHG-02}. UC: \texttt{UC-CHG-03}. BR: \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.}
+
+\subsubsection{SUB-OPS -- Giám sát và điều phối vận hành}
+
+\noindent\textbf{FR-OPS-01 -- Giám sát mạng lưới Mobility Hub.} OPR xem trạng thái Hub, xe khả dụng, mức sử dụng chỗ đỗ/cổng sạc, sự cố và cảnh báo mất cân bằng.
+\textit{Nguồn: \texttt{SN-OPR-01}, \texttt{SN-OPR-02}, \texttt{US-OPS-01}. UC: \texttt{UC-OPS-01}. BR: \texttt{BR-OPS-01}.}
+
+\medskip
+\noindent\textbf{FR-OPS-02 -- Quản lý sự cố vận hành.} OPR ghi nhận, tiếp nhận, giao xử lý và theo dõi sự cố. MNT cập nhật kết quả khắc phục để xác định khả năng trở lại phục vụ.
+\textit{Nguồn: \texttt{SN-OPR-03}, \texttt{SN-MNT-01}, \texttt{US-OPS-02}. UC: \texttt{UC-OPS-02}. BR: \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{FR-OPS-03 -- Lập và theo dõi kế hoạch điều chuyển.} OPR lập và theo dõi \texttt{RedistributionPlan} gồm Hub nguồn/đích, xe, thời điểm dự kiến và trạng thái. Chỉ chuyển \texttt{Approved} khi OPR phê duyệt.
+\textit{Nguồn: \texttt{SN-OPR-04}, \texttt{US-OPS-03}. UC: \texttt{UC-OPS-03}. BR: \texttt{BR-OPS-01}.}
+
+\medskip
+\noindent\textbf{FR-OPS-04 -- Thêm thiết bị tại Hub.} OPR thêm xe, chỗ đỗ hoặc cổng sạc có ID duy nhất vào Hub hiện có trong phạm vi. Bản ghi ở \texttt{Draft}, chưa cấp phát.
+
+\textit{Nguồn: \texttt{SN-OPR-07}, \texttt{US-OPS-04}, \texttt{US-OPS-05}. UC: \texttt{UC-OPS-04}. BR: \texttt{BR-GEN-02}, \texttt{BR-OPS-03}--\texttt{BR-OPS-05}.}
+
+\medskip
+\noindent\textbf{FR-OPS-05 -- Cập nhật thông tin tài nguyên.} OPR sửa trường được phép tại Hub được giao theo \texttt{BR-OPS-04}, lưu lý do cùng audit.
+
+\textit{Nguồn: \texttt{SN-OPR-07}, \texttt{US-OPS-04}, \texttt{US-OPS-05}. UC: \texttt{UC-OPS-04}. BR: \texttt{BR-GEN-02}, \texttt{BR-OPS-03}--\texttt{BR-OPS-05}.}
+
+\medskip
+\noindent\textbf{FR-OPS-06 -- Kích hoạt phục vụ tài nguyên.} OPR chuyển \texttt{Draft}/\texttt{Inactive} sang \texttt{Active} khi đủ điều kiện \texttt{BR-OPS-05}, giữ nguyên trạng thái vận hành và kết quả kỹ thuật.
+
+\textit{Nguồn: \texttt{SN-OPR-07}, \texttt{US-OPS-04}, \texttt{US-OPS-05}. UC: \texttt{UC-OPS-05}. BR: \texttt{BR-GEN-02}, \texttt{BR-OPS-03}--\texttt{BR-OPS-05}.}
+
+\medskip
+\noindent\textbf{FR-OPS-07 -- Ngừng phục vụ tài nguyên.} OPR xác nhận và nêu lý do để chuyển \texttt{Active} sang \texttt{Inactive} theo \texttt{BR-OPS-05}. Còn ràng buộc thì từ chối, giữ nghiệp vụ đang chạy.
+
+\textit{Nguồn: \texttt{SN-OPR-07}, \texttt{US-OPS-04}, \texttt{US-OPS-05}. UC: \texttt{UC-OPS-05}. BR: \texttt{BR-GEN-02}, \texttt{BR-OPS-03}--\texttt{BR-OPS-05}.}
+
+\subsubsection{SUB-SIM -- What-if Simulation và khuyến nghị}
+
+\noindent\textbf{FR-SIM-01 -- Thiết lập và chạy kịch bản mô phỏng.} OPR cấu hình \texttt{SimulationScenario}, chọn snapshot và xác nhận chạy \texttt{SimulationRun} trên dữ liệu cô lập.
+\textit{Nguồn: \texttt{SN-OPR-06}, \texttt{US-SIM-01}. UC: \texttt{UC-SIM-01}. BR: \texttt{BR-SIM-01}.}
+
+\medskip
+\noindent\textbf{FR-SIM-02 -- Phân tích kết quả và khuyến nghị.} OPR mở run hoàn tất để so sánh chỉ số với baseline và xem khuyến nghị. Mỗi đề xuất nêu hành động, đối tượng chịu tác động và căn cứ từ kết quả.
+\textit{Nguồn: \texttt{SN-OPR-06}, \texttt{US-SIM-02}. UC: \texttt{UC-SIM-02}. BR: \texttt{BR-SIM-01}.}
+
+\subsection{Non-interactive Functional Requirements}
+
+\noindent\textbf{NIFR-HUB-01 -- Cập nhật trạng thái Hub.} Khi \texttt{ACT-DAT} gửi trạng thái mới hoặc tới chu kỳ làm mới, áp dụng dữ liệu hợp lệ mới hơn, tính lại mức sử dụng và \texttt{HubStatus} cho tra cứu và giám sát.
+
+\textit{Hỗ trợ: \texttt{FR-HUB-01}, \texttt{FR-HUB-02}, \texttt{FR-HUB-03}, \texttt{FR-OPS-01}. BR: \texttt{BR-HUB-01}, \texttt{BR-HUB-02}.}
+
+\medskip
+\noindent\textbf{NIFR-RES-01 -- Giải phóng lượt đặt phương tiện hết hạn.} Đến hạn, chuyển lượt còn \texttt{Confirmed} và chưa nhận xe sang \texttt{Expired}. Giải phóng xe nếu đủ điều kiện theo \texttt{BR-RES-03} và thông báo sinh viên.
+
+\textit{Hỗ trợ: \texttt{FR-RES-01}. UC: \texttt{UC-RES-01}. BR: \texttt{BR-RES-03}.}
+
+\medskip
+\noindent\textbf{NIFR-PARK-01 -- Giải phóng chỗ đỗ hết hạn.} Đến hạn, kiểm tra lượt còn \texttt{Confirmed} và chưa check-in. Chuyển \texttt{Expired}, hủy giữ và xác định lại trạng thái trong cùng giao dịch theo \texttt{BR-PARK-02}. Giữ kết quả check-in đã hoàn tất và giữ chỗ an toàn khi chưa đủ dữ liệu.
+
+\textit{Hỗ trợ: \texttt{FR-PARK-01}. UC: \texttt{UC-PARK-01}. BR: \texttt{BR-PARK-02}.}
+
+\medskip
+\noindent\textbf{NIFR-CHG-01 -- Tính lại mức ưu tiên sạc.} Khi hàng đợi, pin, kế hoạch dùng xe, tình trạng cổng hoặc công suất thay đổi, tính lại ưu tiên, thời lượng và lịch chưa bắt đầu. Giữ phiên đang sạc. Lưu nhất quán và hiển thị \texttt{Scheduled} hoặc \texttt{Pending} kèm lý do.
+
+\textit{Hỗ trợ: \texttt{FR-CHG-01}--\texttt{FR-CHG-03}. BR: \texttt{BR-CHG-01}--\texttt{BR-CHG-04}.}
+
+\medskip
+\noindent\textbf{NIFR-CHG-02 -- Xử lý cổng sạc gặp sự cố.} Khi \texttt{ACT-DAT} báo cổng \texttt{Reserved}/\texttt{Charging} không thể phục vụ, chuyển \texttt{OutOfService}, đánh dấu phiên bị ảnh hưởng và xếp lại lịch chưa bắt đầu. Chặn cấp mới và cảnh báo bên liên quan.
+
+\textit{Hỗ trợ: \texttt{FR-CHG-02}, \texttt{FR-OPS-02}. BR: \texttt{BR-CHG-02}, \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{NIFR-OPS-01 -- Phát hiện và mở sự cố.} Khi \texttt{ACT-DAT} gửi lỗi hợp lệ chưa thuộc sự cố đang mở, chuyển tài nguyên \texttt{OutOfService}, tạo \texttt{Incident.Open}, chặn cấp phát và hiển thị cho OPR.
+
+\textit{Hỗ trợ: \texttt{FR-OPS-01}, \texttt{FR-OPS-02}. UC: \texttt{UC-OPS-01}, \texttt{UC-OPS-02}. BR: \texttt{BR-OPS-02}.}
+
+\medskip
+\noindent\textbf{NIFR-OPS-02 -- Tạo cảnh báo nguy cơ quá tải hoặc thiếu xe.} Khi trạng thái Hub chạm điều kiện cảnh báo \texttt{BR-OPS-01}, tạo hoặc cập nhật cảnh báo, tránh trùng. OPR có thể lập kế hoạch khi cần.
+
+\textit{Hỗ trợ: \texttt{FR-OPS-01}, \texttt{FR-OPS-03}. UC: \texttt{UC-OPS-01}, \texttt{UC-OPS-03}. BR: \texttt{BR-OPS-01}.}
+
+\medskip
+\noindent\textbf{NIFR-SIM-01 -- Tạo khuyến nghị sau mô phỏng.} Khi run \texttt{Completed} và đủ dữ liệu, phân tích Hub thiếu xe, gần đầy hoặc thiếu năng lực sạc. Gắn \texttt{Recommendation} với run và giữ nguyên dữ liệu vận hành.
+
+\textit{Hỗ trợ: \texttt{FR-SIM-02}. UC: \texttt{UC-SIM-02}. BR: \texttt{BR-SIM-01}.}
+
+\subsection{Non-functional Requirements}
+
+Các ngưỡng áp dụng trong môi trường demo.
+
+\noindent\textbf{NFR-PERF-01 -- Hiệu năng tra cứu và đặt xe.} Với ít nhất 20 Hub, 500 xe và 50 người dùng ảo đồng thời, p95 tra cứu (\texttt{FR-HUB-01}) $\leq2$ giây, p95 đặt xe (\texttt{FR-RES-01}) $\leq3$ giây và lỗi hệ thống $<1\%$. \textit{Kiểm tra:} chạy tải ít nhất ba lần trong cùng môi trường và ghi chỉ số theo chức năng.
+
+\medskip
+\noindent\textbf{NFR-SEC-01 -- Kiểm soát truy cập theo vai trò.} Backend kiểm mọi yêu cầu được bảo vệ theo \texttt{FR-GEN-03}, gồm quyền trên đối tượng. Khi từ chối, dữ liệu và trạng thái được bảo toàn, không lộ nội dung ngoài quyền. \textit{Kiểm tra:} bốn vai trò, phiên thiếu/đăng xuất/hết hạn, sai mật khẩu, sai chủ hoặc Hub, API gọi ngoài ma trận quyền, khóa/thu hồi khi còn phiên và bảo toàn Admin cuối.
+
+\medskip
+\noindent\textbf{NFR-CON-01 -- Nhất quán khi cấp phát tài nguyên.} Trong 50 yêu cầu đồng thời tranh một xe hoặc chỗ đỗ \texttt{Available}, đúng một yêu cầu được xác nhận. Các yêu cầu khác bị từ chối, không còn lượt giữ trùng. \textit{Kiểm tra:} chạy cạnh tranh RES/PARK, đối chiếu kết quả và dữ liệu. Thử ngừng phục vụ đồng thời với đặt, hai thao tác không được cùng thành công nếu tạo lượt giữ mới còn hiệu lực.
+
+\medskip
+\noindent\textbf{NFR-REL-01 -- An toàn khi nguồn dữ liệu gián đoạn.} Nguồn \texttt{EXT-STATE} gián đoạn hoặc dữ liệu sai thì giữ trạng thái hợp lệ cuối và báo có thể đã cũ. Đồng bộ tra cứu trong 60 giây sau khôi phục. \textit{Kiểm tra:} ngắt nguồn, gửi dữ liệu sai rồi khôi phục, đối chiếu dữ liệu và thời gian.
+
+\medskip
+\noindent\textbf{NFR-USA-01 -- Khả năng hoàn thành luồng đặt xe.} Ít nhất 9/10 sinh viên mới hoàn thành tra Hub, xem xe và đặt xe mà không cần hướng dẫn. Trung vị $\leq60$ giây, luồng chính tối đa 5 thao tác chọn. \textit{Kiểm tra:} giao cùng nhiệm vụ và đo tỷ lệ, thời gian, số thao tác.
+
+\medskip
+\noindent\textbf{NFR-AUD-01 -- Truy vết thay đổi trạng thái quan trọng.} Ghi mọi thay đổi quan trọng về lượt đặt, chuyến đi, đỗ, phiên sạc, sự cố, duyệt điều chuyển, tài khoản, quyền, danh mục và trạng thái phục vụ. Audit có thời điểm, actor/nguồn, đối tượng, hành động, trước/sau và kết quả. \textit{Kiểm tra:} chạy giao dịch đại diện, gồm tạo/khóa/mở tài khoản, cấp quyền và khai báo danh mục. Đối chiếu audit và thử sửa qua chức năng nghiệp vụ.
+
+\medskip
+\noindent\textbf{NFR-MNT-01 -- Khả năng bảo trì logic nghiệp vụ.} Tách business rule khỏi UI và kiểm thử tự động. Module nghiệp vụ cốt lõi đạt ít nhất 80\% statement coverage trong MVP. \textit{Kiểm tra:} rà phụ thuộc, chạy unit test và lưu báo cáo coverage.
+\par

@@ -1,40 +1,140 @@
-\clearpage
+\par\medskip
+\noindent\begin{minipage}{\linewidth}
 \subsection{SUB-SIM -- What-if Simulation và khuyến nghị}
-% Phạm vi dưới đây giữ theo baseline; thay placeholder bằng nội dung thiết kế.
-Phân biệt SimulationScenario và SimulationRun; cố định snapshot cơ sở, tính trong vùng dữ liệu cô lập. NIFR-SIM-01 tạo khuyến nghị; áp dụng vào vận hành đi qua kế hoạch điều chuyển của OPS. Không bổ sung trạng thái Cancelled cho lần chạy.
+SUB-SIM thực hiện UC-SIM-01 và UC-SIM-02: cấu hình kịch bản, chạy trên snapshot cô lập, so sánh kết quả và xem khuyến nghị. \texttt{SimulationService} điều phối quyền, lưu trữ và tác vụ nền; \texttt{SimulationEngine} chỉ tính toán trên bản sao. Đề xuất điều chuyển được bàn giao cho \texttt{OperationsService} để mở UC-OPS-03.
 
 \subsubsection{Class diagram}
-\DesignFigure{../diagrams/class/07-sub-sim.pdf}{Class diagram -- SUB-SIM}{fig:p3-class-07-sub-sim}
+\DesignFigure[0.83\textheight]{../diagrams/class/07-sub-sim.pdf}
+  {Các lớp dữ liệu và vòng đời lần chạy -- SUB-SIM}{fig:p3-class-07-sub-sim}
+\end{minipage}\par
 
-\subsubsection{Mô tả các lớp}
-% Lặp môi trường ClassDescription cho từng lớp. Class dùng chung chỉ định nghĩa tại owner.
-\begin{ClassDescription}{\textit{[Tên lớp]}}
-Vai trò và trách nhiệm & \ToFill{loại lớp, trách nhiệm và module sở hữu}\\\hline
-Thuộc tính & \ToFill{tên, kiểu, visibility và ý nghĩa}\\\hline
-Quan hệ và invariant & \ToFill{quan hệ, multiplicity và ràng buộc}\\\hline
-\end{ClassDescription}
+\clearpage
+\DesignFigure[0.86\textheight]{../diagrams/class/07-sub-sim-services.pdf}
+  {Các lớp xử lý và hợp đồng tích hợp -- SUB-SIM}{fig:p3-class-07-sub-sim-services}
 
-\ReserveSpace{0.60\textheight}
-\subsubsection{Đặc tả các phương thức}
-% Lặp môi trường MethodDescription cho TẤT CẢ operation khai báo trên diagram.
-% Không gom mọi phương thức của lớp vào một dòng hợp đồng chung.
-\begin{MethodDescription}{\textit{[Tên phương thức]}}{\ToFill{TênLớp.phươngThức(thamSố: Kiểu): KiểuTrảVề; visibility}}
-Mục đích và nguồn & \ToFill{trách nhiệm, UC/FR/BR/NIFR liên quan}\\\hline
-Input / output & \ToFill{ý nghĩa, kiểu, đơn vị, phạm vi đầu vào và kết quả}\\\hline
-Tiền điều kiện & \ToFill{phiên, quyền, phạm vi và trạng thái cần thiết}\\\hline
-Xử lý chính & \ToFill{các bước hoặc quy tắc xử lý}\\\hline
-Hậu điều kiện & \ToFill{trạng thái và dữ liệu sau thành công}\\\hline
-Lỗi và từ chối & \ToFill{kết quả không thành công; dữ liệu được giữ hoặc hoàn tác}\\\hline
-Tác động / giao dịch & \ToFill{ghi dữ liệu, audit, lệnh ngoài và ranh giới transaction}\\\hline
-Cạnh tranh / gửi lại & \ToFill{kiểm soát cạnh tranh, idempotency và kết quả chưa xác định}\\\hline
-\end{MethodDescription}
-
-\subsubsection{Các use case được hỗ trợ}
-\begin{longtable}{|L{29mm}|L{67mm}|L{43mm}|}
-\caption{Use case và phương thức -- SUB-SIM}\\\hline
-\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline
+\subsubsection{Mô tả lớp và ràng buộc}
+\begin{longtable}{|L{39mm}|L{100mm}|}
+\caption{Các lớp của SUB-SIM}\\\hline
+\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc}\\\hline
 \endfirsthead
-\hline\textbf{Use case} & \textbf{Tên} & \textbf{Phương thức tham gia}\\\hline\endhead
-\texttt{UC-SIM-01} & Chạy kịch bản What-if Simulation & \ToFill{lớp.phương thức}\\\hline
-\texttt{UC-SIM-02} & Phân tích kết quả và khuyến nghị điều phối & \ToFill{lớp.phương thức}\\\hline
+\hline\textbf{Lớp} & \textbf{Trách nhiệm và ràng buộc (tiếp)}\\\hline\endhead
+SimulationScenario & Lưu tên, mục tiêu, phạm vi Hub, tham số, người tạo và version. Lưu nháp chưa tạo run; sửa kịch bản không làm thay đổi tham số của run đã có.\\\hline
+ScenarioParameters & Value object gồm thời lượng, mức nhu cầu, bộ dữ liệu nhu cầu và các thay đổi giả định. Tham số được sao chép vào run khi xác nhận chạy.\\\hline
+SimulationRun & Liên kết scenario/version, snapshot, bản sao tham số, profileCopy và modelVersion. profileCopy giữ dữ liệu/phiên bản nhu cầu bất biến. Giữ status, progressPercent, analysisReady, analysisError và lỗi thực thi. Chỉ có Draft, Running, Completed, Failed; Completed/Failed không quay lại Running.\\\hline
+SimulationSnapshot & Dữ liệu cơ sở bất biến: snapshotId, baseTime, capturedAt, phạm vi và resourceData. sourceSnapshotId chỉ có khi sao chép mốc đã lưu. Mỗi run sở hữu một snapshot riêng; snapshot không tham chiếu tới object sống trong kho vận hành.\\\hline
+SimulationResult & Kết quả gắn đúng runId và snapshotId; baselineMetrics, scenarioMetrics và warnings. Chuỗi chỉ số có dữ liệu theo Hub/phút và tổng hợp cuối kỳ; chỉ dùng khi run Completed.\\\hline
+Recommendation & Khuyến nghị gắn run, loại hành động, Hub nguồn/đích, số lượng/đơn vị nếu xác định được, evidence và expectedImpact. Loại hành động: TransferVehicles, AddParkingCapacity, ReviewChargingCapacity. Không mang trạng thái phê duyệt của RedistributionPlan.\\\hline
+SimulationService & Application service tiếp nhận yêu cầu, kiểm tra AccessService, tạo/lưu run, điều phối worker và bàn giao đề xuất OPS. Tác vụ nền dùng nguồn thực thi nội bộ, không dùng lại cookie người khởi tạo.\\\hline
+SimulationEngine & Tính baseline và kịch bản bằng mô hình bước thời gian một phút. Nhận dữ liệu thuần, báo tiến độ qua callback; không có repository hoặc quyền ghi vào tài nguyên vận hành.\\\hline
+Recommendation\allowbreak Analyzer & Phân tích kết quả hoàn chỉnh, sinh khuyến nghị có cơ sở. Không gửi lệnh điều chuyển hoặc thay đổi lịch sạc thật.\\\hline
+SnapshotProvider / StoreSnapshotProvider & SnapshotProvider là hợp đồng đọc dữ liệu cơ sở. StoreSnapshotProvider dùng các hợp đồng đọc của owner trong transaction read-only Repeatable Read; trả DTO bất biến đã kiểm tra phạm vi.\\\hline
+\end{longtable}
+
+\subsubsection{Tham số và dữ liệu trao đổi}
+\begin{longtable}{|L{39mm}|L{100mm}|}
+\caption{Tham số chạy mô phỏng}\\\hline
+\textbf{Tham số} & \textbf{Kiểu, đơn vị và ý nghĩa}\\\hline
+\endfirsthead
+\hline\textbf{Tham số} & \textbf{Kiểu, đơn vị và ý nghĩa}\\\hline\endhead
+hubIds & Tập HubId không rỗng, toàn bộ trong phạm vi được cấp; mọi override và sự kiện nhu cầu phải tham chiếu tài nguyên/Hub thuộc tập này.\\\hline
+durationMinutes & Số nguyên 1--240; thời lượng được mô phỏng, không phải thời gian máy tính thực thi.\\\hline
+demandMultiplier & Số thực 0--3; 1 là nhu cầu cơ sở, 1.3 là tăng 30\%, 0 là không phát sinh yêu cầu mới.\\\hline
+demandProfileId & ID bộ dữ liệu nhu cầu được lưu phiên bản: yêu cầu chuyến đi có Hub nguồn/đích, phút xuất phát, thời lượng và pin tiêu hao; sự kiện đỗ có thời lượng; nhu cầu sạc có xe và hạn mong muốn.\\\hline
+resourceOverrides & HubCapacityOverride và danh sách resourceId tạm ngưng. Số chỗ xe dùng chung, chỗ đỗ cá nhân và cổng sạc là số nguyên không âm; hạn mức công suất dùng kW. Cổng bổ sung phải có loại đầu nối/công suất. Giảm sức chứa dưới mức đang chiếm được ghi nhận quá tải, không xóa xe/phiên đang dùng.\\\hline
+baseSelection & Latest hoặc SavedSnapshot(snapshotId). Latest đọc trạng thái đã được SEMH chấp nhận; mốc đã lưu được sao chép sang snapshot mới, giữ baseTime và nguồn gốc.\\\hline
+\end{longtable}
+
+Snapshot chứa danh mục/tọa độ, sức chứa, trạng thái phục vụ/vận hành, pin và thông số sạc, lượt giữ còn hiệu lực, chuyến đi, lịch sạc và ràng buộc điều chuyển tại mốc cơ sở. Thiếu dữ liệu bắt buộc thì từ chối chạy; tài nguyên thiếu điều kiện cấp phát bị loại khỏi nguồn khả dụng và ghi warning. Dữ liệu thiếu không được đổi thành pin 0 hoặc tài nguyên Available.
+
+\textbf{Input.} ScenarioSelection chọn tạo mới hoặc sao chép scenarioId. ScenarioDraftInput cho phép tham số chưa đầy đủ, có scenarioId khi sửa; ScenarioInput yêu cầu đủ tên, mục tiêu và ScenarioParameters hợp lệ. StartSimulationInput gồm ScenarioInput, scenarioId tùy chọn và baseSelection; ChangeContext chứa requestId, reason và expectedVersion khi sửa kịch bản.
+
+\textbf{Output.} ScenarioEditorView trả các giá trị cấu hình, Hub và mốc cơ sở được phép. ScenarioView trả kịch bản/version; ValidationResult trả isValid và fieldErrors. RunView trả runId, status, progressPercent, thời điểm, mã lỗi an toàn và analysisReady. RunContextView trả bản sao tham số, modelVersion và metadata snapshot của chính lần chạy. HubScope là tập Hub đã xác minh quyền; ProgressCallback nhận phần trăm nguyên để service lưu tiến độ.
+
+AnalysisFilter chọn Hub, chỉ số và khoảng phút trong thời lượng run. AnalysisView trả chuỗi baseline/kịch bản, chênh lệch, warnings, analysisReady và danh sách khuyến nghị. RecommendationView trả đầy đủ evidence/expectedImpact. RedistributionDraftInput chỉ chứa đề xuất điền trước và sourceRecommendationId để OPS kiểm tra tiếp.
+
+\subsubsection{Mô hình tính toán và khuyến nghị}
+Mỗi lần chạy dùng hai working copy từ cùng snapshot: \textbf{baseline} giữ năng lực ban đầu, demandMultiplier=1 và không áp dụng override; \textbf{kịch bản} áp dụng tham số đã xác nhận. Cả hai dùng cùng bộ nhu cầu, modelVersion và thứ tự xử lý. Nhu cầu nằm trong bộ dữ liệu đầu vào, không được suy ra chỉ từ số xe đang có tại Hub.
+
+Tại mỗi phút, engine xử lý hoàn tất chuyến/đỗ/sạc và hết hạn giữ trước, sau đó tiếp nhận yêu cầu mới theo thời điểm và ID. Hệ số nhu cầu được áp dụng bằng bộ đếm tích lũy: sau $n$ yêu cầu cơ sở của một loại tại một Hub, có $\lfloor n \times demandMultiplier \rfloor$ yêu cầu kịch bản. Các bản nhân giữ cùng thông số và có ID riêng; bộ dữ liệu không dùng ngẫu nhiên.
+
+Chuyến đi chỉ nhận xe đủ điều kiện BR-RES/BR-TRIP, Active và không bị giữ hoặc điều chuyển; hòa thì chọn VehicleId tăng dần. Xe rời Hub làm giảm số xe hiện diện; đến Hub đích hợp lệ mới tăng lại. Nếu Hub đích đầy, xe chờ trả và vẫn tính đang di chuyển/chờ. Chỗ đỗ cá nhân được tính riêng với chỗ gắn xe dùng chung. Các phiên đang có được giữ; thời điểm hoàn tất chưa biết tiếp tục ràng buộc tài nguyên trong kỳ và phát warning.
+
+Sạc tái sử dụng chính sách miền CHG trên bản sao: ưu tiên, FIFO, tương thích, thời lượng và công suất theo BR-CHG-01--04. Chỗ/cổng bổ sung chỉ tồn tại trong working copy và cần cấu hình hợp lệ. Resource tạm ngưng không nhận cấp phát mới; phiên đang chạy được giữ. Nếu override làm năng lực thấp hơn mức đang sử dụng, ghi quá tải và chặn cấp phát mới. Chỉ số mỗi Hub/phút gồm xe Available/hiện diện, chỗ đỗ chiếm/trống, hàng đợi sạc, công suất, yêu cầu tiếp nhận/từ chối và xe chờ trả. Tỷ lệ phục vụ bằng yêu cầu được nhận chia tổng yêu cầu; không có yêu cầu thì hiển thị không áp dụng.
+
+Analyzer xét thiếu xe Available dưới 15\% sức chứa xe dùng chung, hiện diện trên 90\%, thiếu chỗ đỗ hoặc nhu cầu sạc chưa được phục vụ. Đề xuất chuyển xe ghép Hub thiếu với Hub còn xe vượt mức giữ tối thiểu; chỉ lấy xe có thể cấp phát, không bị ràng buộc. Số lượng bị chặn bởi nguồn dư và sức chứa đích sau khi tính xe đang đến; thứ tự ưu tiên theo mức thiếu, khoảng cách và HubId. Mỗi xe chỉ thuộc một đề xuất trong cùng phương án.
+
+Nếu không có nguồn chuyển khả thi, kết quả vẫn giữ cảnh báo thiếu. Thiếu chỗ đỗ sinh đề xuất tăng số chỗ theo mức thiếu lớn nhất; thiếu năng lực sạc sinh đề xuất rà soát cổng/công suất kèm hàng đợi và hạn bị lỡ. Evidence ghi Hub, khoảng phút và chỉ số; expectedImpact ghi lượng thiếu dự kiến giảm theo phép tính, không mặc định tỷ lệ phục vụ được cải thiện khi chưa chạy lại phương án.
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Phương thức nhận yêu cầu}
+Các phương thức công khai thuộc SimulationService kiểm tra phiên, quyền mô phỏng và \textbf{toàn bộ} phạm vi Hub của scenario/run. Mất một phần phạm vi làm yêu cầu bị từ chối, không trả snapshot hoặc kết quả ngoài quyền. Query chỉ đọc; command áp dụng requestId, version và audit theo cơ chế chung.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức công khai của SimulationService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ prepareScenario(session: SessionToken, selection: ScenarioSelection): ScenarioEditorView} &
+Trả Hub/miền tham số/mốc được phép; sao chép chỉ lấy tên, mục tiêu/tham số của scenario nguồn trong quyền, bỏ ID/run/kết quả. Không ghi hoặc tạo run.\\\hline
+\Sig{+ saveScenarioDraft(session: SessionToken, input: ScenarioDraftInput, change: ChangeContext): ScenarioView} &
+Lưu/tăng version nháp hợp lệ, cho phép thiếu tham số chạy; chưa tạo snapshot/run. Sai input trả 400, version cũ trả 409.\\\hline
+\Sig{+ validateScenario(session: SessionToken, input: ScenarioInput): ValidationResult} &
+Kiểm tra tên, mục tiêu, scope, thời lượng/hệ số, profile/override; trả lỗi theo trường, không lưu. Khi xác nhận chạy phải kiểm lại.\\\hline
+\Sig{+ startSimulation(session: SessionToken, input: StartSimulationInput, change: ChangeContext): RunView} &
+Kiểm input/quyền/requestId, capture snapshot, chốt tham số/profileCopy/modelVersion. Lưu scenario/snapshot và run Running nguyên tử, sau commit mới giao worker; trả 202/runId. Snapshot lỗi không tạo run; worker không nhận được việc ghi Failed khi DB đáp ứng.\\\hline
+\Sig{+ getRunProgress(session: SessionToken, runId: RunId): RunView} &
+Đọc trạng thái/tiến độ trong scope; rời UI/hết phiên không dừng worker. Mở lại kiểm quyền mới.\\\hline
+\Sig{+ getAnalysis(session: SessionToken, runId: RunId, filter: AnalysisFilter): AnalysisView} &
+Chỉ Completed với kết quả khớp run/snapshot; trả chuỗi chỉ số, chênh lệch kịch bản trừ baseline trong scope. ready=false vẫn trả chỉ số và tình trạng phân tích; chỉ kết luận không có đề xuất khi ready=true/rỗng.\\\hline
+\Sig{+ getRecommendation(session: SessionToken, runId: RunId, recId: RecommendationId): RecommendationView} &
+recId phải thuộc run Completed, phân tích sẵn sàng và mọi Hub trong quyền; trả hành động/evidence/expectedImpact, không áp dụng.\\\hline
+\Sig{+ getScenarioContext(session: SessionToken, runId: RunId): RunContextView} &
+Trả tham số/modelVersion, baseTime/capturedAt và nguồn snapshot đã chốt của run; không dùng cấu hình scenario hiện tại.\\\hline
+\Sig{+ prepareRedistribution(session: SessionToken, recId: RecommendationId): RedistributionDraftInput} &
+TransferVehicles của run Completed/ready mới gọi OPS.prepareRedistribution để kiểm quyền điều phối và tạo input. Chưa lưu Plan/đổi xe; sai loại trả 409, OPS lỗi trả 503 và giữ đề xuất.\\\hline
+\end{longtable}
+
+\ReserveSpace{7\baselineskip}
+\subsubsection{Phương thức xử lý nền và miền}
+Worker chỉ truy cập run được giao và kho mô phỏng. Đóng UI, đăng xuất hoặc thu hồi quyền xem không hủy lần chạy; quyền được kiểm tra lại khi người dùng đọc hoặc mở quy trình OPS. Ghi tiến độ dùng version để không ghi đè trạng thái kết thúc.
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức nền của SimulationService}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{\# executeSimulation(runId: RunId): void} &
+Nhận việc Running duy nhất, chạy engine với input bất biến; callback tối đa 99. Kết quả/complete/audit cùng tx; mất phản hồi đọc lại trước fail, không đổi Completed. Lỗi tính/lưu ghi Failed khi DB đáp ứng; sau Completed mới gọi phân tích.\\\hline
+\Sig{\# generateRecommendations(runId: RunId): void} &
+NIFR-SIM-01 chỉ phân tích Completed đủ dữ liệu/chưa ready; lưu toàn bộ đề xuất rồi ready=true nguyên tử, kể cả rỗng. Khóa run/unique key chống trùng; lỗi giữ Completed, ghi analysisError/ready=false, thử lại mỗi 30 giây và sau khởi động.\\\hline
+\Sig{\# recoverInterruptedRuns(): Integer} &
+Trước nhận worker khi khởi động: run Running của process cũ thành Failed với PROCESS\_RESTART/audit; trả số cập nhật. Giữ run kết thúc; Completed chưa ready được giao lại phân tích.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức tại các lớp cộng tác}\\\hline
+\textbf{Owner và signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Owner và signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+SnapshotProvider\par\Sig{+ capture(scope: HubScope, base: BaseSelection): SimulationSnapshot} &
+Đọc qua owner trong read-only Repeatable Read. Latest lấy trạng thái đã chấp nhận; SavedSnapshot sao chép mốc bất biến trong scope sang ID mới, giữ nguồn/baseTime. Thiếu mốc/thông số bắt buộc báo SNAPSHOT\_UNAVAILABLE; service lưu snapshot cùng run.\\\hline
+SimulationEngine\par\Sig{+ simulate(input: SimulationInput, onProgress: ProgressCallback): SimulationResult} &
+Hai working copy từ input bất biến; tính theo phút, callback 0--99 và trả kết quả đúng ID. Kiểm bảo toàn xe/cấp phát; giảm năng lực ghi quá tải, không xóa phiên. Thiếu dữ liệu/invariant hỏng phát lỗi; không dùng DB/nguồn ngoài.\\\hline
+RecommendationAnalyzer\par\Sig{+ analyze(result: SimulationResult, snapshot: SimulationSnapshot): List<Recommendation>} &
+Kiểm liên kết, phạm vi và chuỗi chỉ số, tạo khuyến nghị có evidence/khóa ổn định theo run/type/Hub. Không có phương án trả rỗng; dữ liệu thiếu trả lỗi phân tích.\\\hline
+\end{longtable}
+
+\begin{longtable}{|L{58mm}|L{81mm}|}
+\caption{Phương thức của SimulationRun}\\\hline
+\textbf{Signature} & \textbf{Đặc tả}\\\hline
+\endfirsthead
+\hline\textbf{Signature} & \textbf{Đặc tả (tiếp)}\\\hline\endhead
+\Sig{+ start(): void} &
+Draft với snapshot/tham số hợp lệ mới Running, progress=0 và startedAt theo giờ server; lưu cùng transaction tạo run.\\\hline
+\Sig{+ updateProgress(percent: Integer): void} &
+Chỉ Running; nhận số nguyên 0--99 không giảm, cập nhật tiến độ/version; không đổi trạng thái.\\\hline
+\Sig{+ complete(result: SimulationResult): void} &
+Running và kết quả đủ/khớp ID, thời lượng/scope mới Completed, progress=100, finishedAt/ready=false. Lưu kết quả và transition cùng tx; entity không tự tạo/áp dụng đề xuất.\\\hline
+\Sig{+ fail(code: String): void} &
+Chỉ Running, code an toàn không rỗng mới Failed/finishedAt, giữ tiến độ cuối. Không gắn kết quả dở; không đổi run đã Completed/Failed.\\\hline
 \end{longtable}

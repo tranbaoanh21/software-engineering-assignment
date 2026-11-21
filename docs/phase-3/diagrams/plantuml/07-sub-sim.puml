@@ -1,0 +1,80 @@
+@startuml
+!include design-style.puml
+left to right direction
+class SimulationScenario <<entity>> {
+ - scenarioId: ScenarioId
+ - name: String
+ - objective: String
+ - hubIds: Set<HubId>
+ - parameters: ScenarioParameters
+ - createdBy: AccountId
+ - version: Integer
+}
+class ScenarioParameters <<valueObject>> {
+ - durationMinutes: Integer
+ - demandMultiplier: Decimal
+ - demandProfileId: Identifier
+ - resourceOverrides: List<ResourceOverride>
+}
+class SimulationRun <<entity>> {
+ - runId: RunId
+ - scenarioId: ScenarioId
+ - scenarioVersion: Integer
+ - snapshotId: Identifier
+ - parametersCopy: ScenarioParameters
+ - profileCopy: DemandProfile
+ - modelVersion: String
+ - status: SimulationRunStatus
+ - progressPercent: Integer
+ - startedAt: DateTime [0..1]
+ - finishedAt: DateTime [0..1]
+ - failureCode: String [0..1]
+ - analysisReady: Boolean
+ - analysisError: String [0..1]
+ - version: Integer
+ --
+ + start(): void
+ + updateProgress(percent: Integer): void
+ + complete(result: SimulationResult): void
+ + fail(code: String): void
+}
+class SimulationSnapshot <<immutableRecord>> {
+ - snapshotId: Identifier
+ - baseTime: DateTime
+ - capturedAt: DateTime
+ - sourceSnapshotId: Identifier [0..1]
+ - hubIds: Set<HubId>
+ - resourceData: SnapshotResources
+}
+class SimulationResult <<valueObject>> {
+ - runId: RunId
+ - snapshotId: Identifier
+ - baselineMetrics: MetricSeries
+ - scenarioMetrics: MetricSeries
+ - warnings: List<String>
+}
+class Recommendation <<entity>> {
+ - recommendationId: RecommendationId
+ - runId: RunId
+ - type: RecommendationType
+ - sourceHubId: HubId [0..1]
+ - targetHubId: HubId
+ - quantity: Integer [0..1]
+ - unit: String [0..1]
+ - evidence: RecommendationEvidence
+ - expectedImpact: ExpectedImpact
+}
+enum SimulationRunStatus {
+ Draft
+ Running
+ Completed
+ Failed
+}
+SimulationScenario "1" -- "0..*" SimulationRun
+SimulationScenario ..> ScenarioParameters : cấu hình
+SimulationRun ..> ScenarioParameters : bản sao
+SimulationRun "1" -- "1" SimulationSnapshot
+SimulationRun "1" -- "0..1" SimulationResult
+SimulationRun "1" -- "0..*" Recommendation
+SimulationRun ..> SimulationRunStatus
+@enduml

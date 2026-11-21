@@ -1,5 +1,6 @@
 \clearpage
-\section{Mô hình, đặc tả và thiết kế use case}
+\providecommand{\SystemDesignSectionTitle}{Mô hình, đặc tả và thiết kế use case}
+\section{\SystemDesignSectionTitle}
 \subsection{Mô hình use case toàn hệ thống}
 
 \subsubsection{Actor Catalog}
@@ -19,7 +20,6 @@
     ACT-ADM & Quản trị viên & Quản lý tài khoản, phân quyền, danh mục tài nguyên ban đầu; hỗ trợ khẩn cấp về truy cập, không thay thế vận hành hoặc kỹ thuật. & GEN (dùng chung)\\\hline
     ACT-MNT & Nhân viên kỹ thuật & Tiếp nhận công việc kỹ thuật, cập nhật kết quả khắc phục và xác nhận tài nguyên đủ điều kiện trở lại phục vụ. & OPS\\\hline
     ACT-DAT & IoT \& State Data Gateway & Cung cấp trạng thái xe, mức pin, chỗ đỗ, cổng sạc và sự kiện vận hành từ \texttt{EXT-STATE}. & HUB, TRIP, PARK, CHG, OPS\\\hline
-    ACT-MAP & Map \& Geolocation Service & Chuẩn hóa địa chỉ hoặc tọa độ, tính khoảng cách và xác định các Hub trong vùng tìm kiếm từ \texttt{EXT-MAP}. & HUB\\\hline
   \end{tabularx}
 \end{table}
 

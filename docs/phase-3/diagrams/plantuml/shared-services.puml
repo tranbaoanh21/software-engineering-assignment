@@ -1,0 +1,40 @@
+@startuml
+!include design-style.puml
+top to bottom direction
+class StateDataAdapter <<adapter>> {
+ + ingest(event: StateEvent): IngestResult
+}
+class AuditService <<sharedService>> {
+ + append(tx: Transaction, entry: AuditEntry): void
+}
+interface SEMHDataStore <<storeContract>>
+class PrismaDataStore <<persistenceAdapter>>
+PrismaDataStore ..|> SEMHDataStore
+class "Hợp đồng owner tài nguyên" as Owner <<applicationService>>
+class StateEvent <<DTO>> {
+ + sourceId: Identifier
+ + eventId: Identifier
+ + resourceType: String
+ + resourceId: Identifier
+ + sequence: Integer
+ + observedAt: DateTime
+ + payload: Object
+}
+class AuditEntry <<DTO>> {
+ + actorOrSource: Identifier
+ + occurredAt: DateTime
+ + action: String
+ + resourceType: String
+ + resourceId: Identifier
+ + before: Object [0..1]
+ + after: Object [0..1]
+ + outcome: String
+ + requestId: RequestId [0..1]
+}
+StateDataAdapter ..> StateEvent
+StateDataAdapter ..> Owner : áp dụng trạng thái
+StateDataAdapter ..> SEMHDataStore : transaction / mốc sự kiện
+StateDataAdapter ..> AuditService
+AuditService ..> AuditEntry
+AuditService ..> SEMHDataStore : append trong transaction
+@enduml

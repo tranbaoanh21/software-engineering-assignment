@@ -6,8 +6,9 @@ Xác thực và phân quyền được trình bày thành một mục dùng chun
 
 - Deadline trên LMS: **27/09/2026**
 - Review dự kiến trên lớp: **Tuần 7**
-- Đề bài gốc: [`../../BTL_SoftwareEngineering_HK261_v1.pdf`](../../BTL_SoftwareEngineering_HK261_v1.pdf)
-- Mô tả chung của dự án: [`../../README.md`](../../README.md)
+- [Đề bài gốc (PDF)](../reference/BTL_SoftwareEngineering_HK261_v1.pdf)
+- [Báo cáo nhóm (PDF)](group-report/output/pdf/phase-1-group-report-outline.pdf) · [Bảy bài cá nhân](individual-work/README.md) · [Biên bản họp](../meeting-minutes/phase-1/README.md)
+- [Tổng quan dự án](../project-overview.md) · [Mục lục tài liệu](../README.md)
 - Quy ước tên, mã, trạng thái và traceability: [`project-conventions.md`](project-conventions.md)
 - Nguồn LaTeX của báo cáo group work: [`group-report/main.tex`](group-report/main.tex)
 

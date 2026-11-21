@@ -1,0 +1,42 @@
+@startuml
+!include design-style.puml
+left to right direction
+class SimulationService <<applicationService>> {
+ + prepareScenario(session: SessionToken,\n  selection: ScenarioSelection): ScenarioEditorView
+ + saveScenarioDraft(session: SessionToken,\n  input: ScenarioDraftInput,\n  change: ChangeContext): ScenarioView
+ + validateScenario(session: SessionToken,\n  input: ScenarioInput): ValidationResult
+ + startSimulation(session: SessionToken,\n  input: StartSimulationInput,\n  change: ChangeContext): RunView
+ + getRunProgress(session: SessionToken,\n  runId: RunId): RunView
+ + getAnalysis(session: SessionToken,\n  runId: RunId, filter: AnalysisFilter): AnalysisView
+ + getRecommendation(session: SessionToken,\n  runId: RunId, recId: RecommendationId): RecommendationView
+ + getScenarioContext(session: SessionToken,\n  runId: RunId): RunContextView
+ + prepareRedistribution(session: SessionToken,\n  recId: RecommendationId): RedistributionDraftInput
+ --
+ # executeSimulation(runId: RunId): void
+ # generateRecommendations(runId: RunId): void
+ # recoverInterruptedRuns(): Integer
+}
+class SimulationEngine <<domainService>> {
+ + simulate(input: SimulationInput,\n  onProgress: ProgressCallback): SimulationResult
+}
+class RecommendationAnalyzer <<domainService>> {
+ + analyze(result: SimulationResult,\n  snapshot: SimulationSnapshot): List<Recommendation>
+}
+interface SnapshotProvider {
+ + capture(scope: HubScope,\n  base: BaseSelection): SimulationSnapshot
+}
+class StoreSnapshotProvider <<adapter>>
+interface SEMHDataStore <<storeContract>>
+class AccessService <<GEN>>
+class AuditService <<sharedService>>
+class OperationsService <<OPS>>
+SimulationService ..> SimulationEngine : worker thread
+SimulationService ..> RecommendationAnalyzer : NIFR-SIM-01
+SimulationService ..> SnapshotProvider : snapshot
+StoreSnapshotProvider ..|> SnapshotProvider
+StoreSnapshotProvider ..> SEMHDataStore : read-only
+SimulationService ..> SEMHDataStore : run / kết quả
+SimulationService ..> AccessService : quyền / phạm vi
+SimulationService ..> AuditService : cùng transaction
+SimulationService ..> OperationsService : đề xuất UC-OPS-03
+@enduml

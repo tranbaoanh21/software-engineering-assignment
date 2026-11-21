@@ -1,0 +1,7 @@
+\subsection{Mô hình lớp dùng chung}
+\DesignFigure[0.83\textheight]{../diagrams/class/system-class-overview.pdf}{Mô hình lớp dùng chung của SEMH}{fig:p3-class-overview}
+\PhaseThreeInput{sections/common/01-terminology}
+\PhaseThreeInput{sections/common/03-class-ownership}
+\PhaseThreeInput{sections/common/02-data-contracts}
+\paragraph{Quy tắc đọc bảng phương thức}
+Phương thức có session dùng AccessService kiểm tra quyền/phạm vi hiện hành; command kiểm tra lại trong transaction. Query chỉ đọc DTO an toàn. Command áp dụng requestId, version, audit/receipt và rollback theo Mục~\ref{sec:p3-common-processing}; lỗi theo hợp đồng HTTP dùng chung. Tham số và kiểu trả về nằm ở signature, phần đặc tả chỉ nêu điều kiện/tác động riêng. Entity chỉ đổi đối tượng trong bộ nhớ; service lưu thay đổi. Transition/input không hợp lệ bị từ chối trước khi ghi; InTx dùng transaction caller, không tự commit.
