@@ -1,0 +1,559 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STU
+  OPR
+  MNT
+  ADM
+}
+
+enum AccountStatus {
+  ACTIVE
+  LOCKED
+}
+
+enum ServiceStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RESERVED
+  IN_USE
+  CHARGING
+  OUT_OF_SERVICE
+  AWAITING_CHARGE
+}
+
+model Account {
+  id                  String               @id @default(uuid()) @db.Uuid
+  username            String               @unique
+  displayName         String
+  passwordHash        String
+  status              AccountStatus        @default(ACTIVE)
+  assignments         AccessAssignment[]
+  sessions            Session[]
+  vehicleReservations VehicleReservation[]
+  trips               Trip[]
+  tripHandoffs        TripHandoffCommand[]
+  privateVehicles     PrivateVehicle[]
+  parkingReservations ParkingReservation[]
+  version Int @default(0)
+}
+
+model AccessAssignment {
+  id        String  @id @default(uuid()) @db.Uuid
+  accountId String  @db.Uuid
+  role      Role
+  allHubs   Boolean @default(false)
+  hubIds    String[] @default([]) @db.Uuid
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, role])
+}
+
+model Session {
+  id           String    @id @default(uuid()) @db.Uuid
+  tokenHash    String    @unique
+  accountId    String    @db.Uuid
+  account      Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lastActiveAt DateTime  @default(now())
+  revokedAt    DateTime?
+
+  @@index([accountId, revokedAt])
+}
+
+model MobilityHub {
+  id                  String               @id @default(uuid()) @db.Uuid
+  code                String               @unique
+  name                String
+  latitude            Float
+  longitude           Float
+  serviceStatus       ServiceStatus        @default(DRAFT)
+  vehicles            SharedVehicle[]
+  vehicleReservations VehicleReservation[]
+  vehicleCapacity     Int                  @default(8)
+  departures          Trip[]               @relation("TripDeparture")
+  arrivals            Trip[]               @relation("TripArrival")
+  tripHandoffs        TripHandoffCommand[]
+  parkingSpaces       ParkingSpace[]
+  chargeKw Float @default(2)
+  fault Boolean @default(false)
+  lastObservedAt DateTime?
+  version Int @default(0)
+  description String @default("")
+  chargingPoints ChargingPoint[]
+}
+
+model SharedVehicle {
+  id                String               @id @default(uuid()) @db.Uuid
+  code              String               @unique
+  hubId             String?              @db.Uuid
+  hub               MobilityHub?         @relation(fields: [hubId], references: [id])
+  batteryPercent    Int
+  serviceStatus     ServiceStatus        @default(DRAFT)
+  status            VehicleStatus        @default(OUT_OF_SERVICE)
+  sourceId          String
+  telemetrySequence Int                  @default(0)
+  version Int @default(0)
+  description String @default("")
+  batteryKwh Float? @default(0.72)
+  maxChargeKw Float? @default(0.5)
+  connector String? @default("AC")
+  transferPlanId String? @db.Uuid
+  fault Boolean @default(false)
+  sinceMaintenanceKm Float @default(0)
+  lastObservedAt    DateTime?
+  reservations      VehicleReservation[] @relation("VehicleReservations")
+  reservationHoldId String?              @unique @db.Uuid
+  reservationHold   VehicleReservation?  @relation("ActiveVehicleHold", fields: [reservationHoldId], references: [id], onDelete: Restrict)
+
+  trips        Trip[]
+  tripHandoffs TripHandoffCommand[]
+
+  @@index([hubId])
+}
+
+model StateEventRecord {
+  sourceId   String
+  eventId    String
+  receivedAt DateTime @default(now())
+
+  @@id([sourceId, eventId])
+}
+
+enum VehicleReservationStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  CANCELLED
+  EXPIRED
+  REJECTED
+}
+
+model VehicleReservation {
+  id          String                   @id @default(uuid()) @db.Uuid
+  requestId   String                   @db.Uuid
+  studentId   String                   @db.Uuid
+  student     Account                  @relation(fields: [studentId], references: [id])
+  vehicleId   String                   @db.Uuid
+  vehicle     SharedVehicle            @relation("VehicleReservations", fields: [vehicleId], references: [id])
+  holdVehicle SharedVehicle?           @relation("ActiveVehicleHold")
+  hubId       String                   @db.Uuid
+  hub         MobilityHub              @relation(fields: [hubId], references: [id])
+  status      VehicleReservationStatus
+  confirmedAt DateTime
+  expiresAt   DateTime
+  endedAt     DateTime?
+  version     Int                      @default(0)
+
+  trip Trip?
+
+  @@unique([studentId, requestId])
+  @@index([status, expiresAt])
+  @@index([vehicleId, status])
+}
+
+model AuditEntry {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  targetType String
+  targetId   String   @db.Uuid
+  requestId  String?  @db.Uuid
+  occurredAt DateTime
+  details    Json
+
+  @@index([targetType, targetId, occurredAt])
+}
+
+enum TripStatus {
+  IN_PROGRESS
+  COMPLETED
+  INTERRUPTED
+}
+
+enum TripHandoffKind {
+  PICKUP
+  RETURN
+}
+
+enum TripHandoffStatus {
+  PENDING
+  APPLIED
+  REJECTED
+}
+
+model Trip {
+  id                 String               @id @default(uuid()) @db.Uuid
+  reservationId      String               @unique @db.Uuid
+  reservation        VehicleReservation   @relation(fields: [reservationId], references: [id])
+  studentId          String               @db.Uuid
+  student            Account              @relation(fields: [studentId], references: [id])
+  vehicleId          String               @db.Uuid
+  vehicle            SharedVehicle        @relation(fields: [vehicleId], references: [id])
+  status             TripStatus
+  startHubId         String               @db.Uuid
+  startHub           MobilityHub          @relation("TripDeparture", fields: [startHubId], references: [id])
+  startedAt          DateTime
+  startBattery       Int
+  startVehicleStatus VehicleStatus
+  endHubId           String?              @db.Uuid
+  endHub             MobilityHub?         @relation("TripArrival", fields: [endHubId], references: [id])
+  endedAt            DateTime?
+  endBattery         Int?
+  endVehicleStatus   VehicleStatus?
+  durationSeconds    Int?
+  handoffs           TripHandoffCommand[]
+
+  @@index([studentId, status, startedAt])
+}
+
+model TripHandoffCommand {
+  id        String            @id @default(uuid()) @db.Uuid
+  requestId String            @db.Uuid
+  kind      TripHandoffKind
+  status    TripHandoffStatus @default(PENDING)
+  studentId String            @db.Uuid
+  student   Account           @relation(fields: [studentId], references: [id])
+  subjectId String            @db.Uuid
+  vehicleId String            @db.Uuid
+  vehicle   SharedVehicle     @relation(fields: [vehicleId], references: [id])
+  hubId     String            @db.Uuid
+  hub       MobilityHub       @relation(fields: [hubId], references: [id])
+  createdAt DateTime
+  expiresAt DateTime
+  reason    String?
+  tripId    String?           @db.Uuid
+  trip      Trip?             @relation(fields: [tripId], references: [id])
+
+  @@unique([studentId, requestId])
+  @@index([studentId, kind, subjectId, status])
+  @@index([status, expiresAt])
+}
+
+enum ParkingSpaceStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  OUT_OF_SERVICE
+}
+
+enum ParkingReservationStatus {
+  CONFIRMED
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum ParkingVerificationKind {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum ParkingVerificationStatus {
+  PENDING
+  APPLIED
+  REJECTED
+}
+
+model PrivateVehicle {
+  id           String               @id @default(uuid()) @db.Uuid
+  plate        String               @unique
+  batteryPercent Int?
+  batteryKwh Float? @default(0.8)
+  maxChargeKw Float? @default(0.5)
+  connector String? @default("AC")
+  lastObservedAt DateTime?
+  ownerId      String               @db.Uuid
+  owner        Account              @relation(fields: [ownerId], references: [id])
+  reservations ParkingReservation[]
+
+  @@index([ownerId])
+}
+
+model ParkingSpace {
+  id             String               @id @default(uuid()) @db.Uuid
+  code           String               @unique
+  hubId          String               @db.Uuid
+  hub            MobilityHub          @relation(fields: [hubId], references: [id])
+  serviceStatus  ServiceStatus        @default(DRAFT)
+  status         ParkingSpaceStatus   @default(OUT_OF_SERVICE)
+  sourceId       String
+  occupied       Boolean?
+  fault          Boolean              @default(false)
+  version Int @default(0)
+  description String @default("")
+  lastObservedAt DateTime?
+  reservations   ParkingReservation[]
+
+  @@index([hubId, serviceStatus, status])
+}
+
+model ParkingReservation {
+  id               String                   @id @default(uuid()) @db.Uuid
+  requestId        String                   @db.Uuid
+  studentId        String                   @db.Uuid
+  student          Account                  @relation(fields: [studentId], references: [id])
+  privateVehicleId String                   @db.Uuid
+  privateVehicle   PrivateVehicle           @relation(fields: [privateVehicleId], references: [id])
+  spaceId          String                   @db.Uuid
+  space            ParkingSpace             @relation(fields: [spaceId], references: [id])
+  status           ParkingReservationStatus
+  confirmedAt      DateTime
+  expiresAt        DateTime
+  checkInAt        DateTime?
+  checkOutAt       DateTime?
+  verifications    ParkingVerification[]
+
+  @@unique([studentId, requestId])
+  @@index([studentId, confirmedAt])
+  @@index([status, expiresAt])
+}
+
+model ParkingVerification {
+  id            String                    @id @default(uuid()) @db.Uuid
+  requestId     String                    @db.Uuid
+  reservationId String                    @db.Uuid
+  reservation   ParkingReservation        @relation(fields: [reservationId], references: [id])
+  kind          ParkingVerificationKind
+  status        ParkingVerificationStatus @default(PENDING)
+  createdAt     DateTime
+  expiresAt     DateTime
+  reason        String?
+
+  @@unique([reservationId, requestId])
+  @@index([reservationId, createdAt])
+  @@index([status, expiresAt])
+}
+
+enum ResourceKind {
+  HUB
+  VEHICLE
+  PARKING_SPACE
+  CHARGING_POINT
+}
+
+enum ChargingPointStatus {
+  AVAILABLE
+  CHARGING
+  OCCUPIED
+  OUT_OF_SERVICE
+}
+
+enum ChargingRequestStatus {
+  PENDING
+  SCHEDULED
+  CHARGING
+  COMPLETED
+  INTERRUPTED
+}
+
+enum ChargingSessionStatus {
+  READY
+  CHARGING
+  COMPLETED
+  INTERRUPTED
+}
+
+model ChargingPoint {
+  id            String              @id @default(uuid()) @db.Uuid
+  code          String              @unique
+  hubId         String              @db.Uuid
+  hub           MobilityHub         @relation(fields: [hubId], references: [id])
+  sourceId      String
+  connector     String
+  powerKw       Float
+  description   String              @default("")
+  version       Int                 @default(0)
+  serviceStatus ServiceStatus       @default(DRAFT)
+  status        ChargingPointStatus @default(OUT_OF_SERVICE)
+  fault         Boolean             @default(false)
+  lastObservedAt DateTime?
+  sessions      ChargingSession[]
+
+  @@index([hubId, serviceStatus, status])
+}
+
+model ChargingRequest {
+  id            String                 @id @default(uuid()) @db.Uuid
+  authorId      String                 @db.Uuid
+  requestId     String                 @db.Uuid
+  vehicleKind   String
+  vehicleId     String                 @db.Uuid
+  vehicleCode   String
+  hubId         String                 @db.Uuid
+  status        ChargingRequestStatus  @default(PENDING)
+  desiredBy     DateTime?
+  neededAt      DateTime?
+  createdAt     DateTime               @default(now())
+  reason        String?
+  priority      Int                    @default(0)
+  overrideRank  Int?
+  preferredPointId String?             @db.Uuid
+  version       Int                    @default(0)
+  session       ChargingSession?
+
+  @@unique([authorId, requestId])
+  @@index([hubId, status])
+  @@index([vehicleId, status])
+}
+
+model ChargingSession {
+  id                String                @id @default(uuid()) @db.Uuid
+  requestId         String                @unique @db.Uuid
+  request           ChargingRequest       @relation(fields: [requestId], references: [id])
+  pointId           String                @db.Uuid
+  point             ChargingPoint         @relation(fields: [pointId], references: [id])
+  status            ChargingSessionStatus @default(READY)
+  startAt           DateTime
+  endAt             DateTime
+  powerKw           Float
+  batteryPercent    Int
+  startedAt         DateTime?
+  completedAt       DateTime?
+  releasedAt        DateTime?
+  lastObservedAt    DateTime?
+
+  @@index([pointId, status])
+}
+
+enum IncidentStatus {
+  OPEN
+  ACKNOWLEDGED
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Incident {
+  id             String          @id @default(uuid()) @db.Uuid
+  resourceKind   ResourceKind
+  resourceId     String          @db.Uuid
+  hubId          String?         @db.Uuid
+  tripId         String?         @db.Uuid
+  reporterId     String?         @db.Uuid
+  assigneeId     String?         @db.Uuid
+  title          String
+  description    String
+  status         IncidentStatus  @default(OPEN)
+  resolution     String?
+  severity       String @default("MEDIUM")
+  dueAt          DateTime?
+  handover       Json?
+  safe           Boolean?
+  version        Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([hubId, status])
+  @@index([assigneeId, status])
+}
+
+enum PlanStatus {
+  DRAFT
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TransferStatus {
+  PLANNED
+  DEPARTED
+  ARRIVED
+  CANCELLED
+}
+
+model RedistributionPlan {
+  id            String      @id @default(uuid()) @db.Uuid
+  sourceHubId   String      @db.Uuid
+  targetHubId   String      @db.Uuid
+  authorId      String      @db.Uuid
+  scheduledAt   DateTime
+  reason        String
+  recommendationId String? @db.Uuid
+  status        PlanStatus  @default(DRAFT)
+  version       Int         @default(0)
+  createdAt     DateTime    @default(now())
+  items         TransferItem[]
+
+  @@index([sourceHubId, targetHubId, status])
+}
+
+model TransferItem {
+  planId       String       @db.Uuid
+  plan         RedistributionPlan @relation(fields: [planId], references: [id])
+  vehicleId    String       @db.Uuid
+  status       TransferStatus @default(PLANNED)
+  departedAt   DateTime?
+  arrivedAt    DateTime?
+
+  @@id([planId, vehicleId])
+}
+
+enum SimulationStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model SimulationScenario {
+  id          String   @id @default(uuid()) @db.Uuid
+  authorId    String   @db.Uuid
+  name        String
+  objective   String
+  hubIds      String[] @db.Uuid
+  parameters  Json
+  version     Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  runs        SimulationRun[]
+}
+
+model SimulationRun {
+  id            String           @id @default(uuid()) @db.Uuid
+  authorId      String           @db.Uuid
+  requestId     String           @db.Uuid
+  scenarioId    String           @db.Uuid
+  scenario      SimulationScenario @relation(fields: [scenarioId], references: [id])
+  scenarioVersion Int
+  hubIds        String[]         @db.Uuid
+  inputs        Json
+  snapshot      Json
+  baseTime      DateTime
+  capturedAt    DateTime         @default(now())
+  sourceRunId   String?          @db.Uuid
+  modelVersion  String
+  status        SimulationStatus @default(RUNNING)
+  progress      Int              @default(0)
+  analysisReady Boolean          @default(false)
+  results       Json?
+  error         String?
+
+  @@unique([authorId, requestId])
+  @@index([status])
+}
+
+model ChangeReceipt {
+  actorId      String   @db.Uuid
+  requestId    String   @db.Uuid
+  action       String
+  fingerprint  String
+  response     Json
+  createdAt    DateTime @default(now())
+
+  @@id([actorId, requestId])
+}

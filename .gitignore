@@ -29,3 +29,13 @@ assignment-reference.pdf
 /docs/phase-2/group-report/main.pdf
 /docs/phase-3/group-report/main.pdf
 /docs/final-report/main.pdf
+
+# Application build output and local runtime configuration.
+node_modules/
+dist/
+coverage/
+/apps/api/src/generated/
+.env
+.env.*
+!.env.example
+!.env.production.example

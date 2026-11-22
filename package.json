@@ -1,0 +1,33 @@
+{
+  "name": "semh",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "npm run dev -w @semh/api",
+    "dev:web": "npm run dev -w @semh/web",
+    "dev:simulator": "npm run dev -w @semh/iot-simulator",
+    "db:generate": "npm run db:generate -w @semh/api",
+    "db:migrate": "npm run db:migrate -w @semh/api",
+    "db:seed": "npm run db:seed -w @semh/api",
+    "lint": "eslint .",
+    "typecheck": "npm run build -w @semh/contracts && npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @semh/contracts && npm run build -w @semh/api && npm run build -w @semh/web && npm run build -w @semh/iot-simulator",
+    "test": "npm run test -w @semh/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.0.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.0.0"
+  }
+}

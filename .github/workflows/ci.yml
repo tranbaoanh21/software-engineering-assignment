@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Code and integration checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: semh
+          POSTGRES_PASSWORD: semh-local
+          POSTGRES_DB: semh_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U semh -d semh_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://semh:semh-local@127.0.0.1:5432/semh_test
+      APP_ORIGIN: http://localhost:5173
+      IOT_SOURCE_ID: seeding-simulator
+      IOT_SOURCE_KEY: ci-only-iot-source-key
+      DEMO_STU_PASSWORD: student-ci-only
+      DEMO_OPR_PASSWORD: operator-ci-only
+      DEMO_MNT_PASSWORD: maintenance-ci-only
+      DEMO_ADM_PASSWORD: admin-ci-only
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm test
+      - name: Check local Compose and release scripts
+        run: |
+          docker compose --env-file .env.example config --quiet
+          bash -n infra/ec2/deploy.sh
+          node --check infra/ec2/start-production.mjs
+          APP_IMAGE=semh-app:ci DATABASE_URL="$DATABASE_URL" APP_ORIGIN=https://semh.example \
+            docker compose -f infra/ec2/compose.production.yaml config --quiet

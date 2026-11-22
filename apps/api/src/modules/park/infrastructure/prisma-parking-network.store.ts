@@ -1,0 +1,27 @@
+import { PrivateCharging } from '../application/private-charging.port.js';
+import { Injectable } from '@nestjs/common';
+import type { ChargingVehicle } from '@semh/contracts';
+import type { Transaction } from '../../../shared/database/transaction.js';
+
+@Injectable()
+export class PrismaParkingNetworkStore implements PrivateCharging {
+  listChargingVehicles(tx: Transaction, ownerId: string) {
+    return tx.privateVehicle.findMany({
+      where: { ownerId }, select: { id: true, plate: true }, orderBy: { plate: 'asc' },
+    });
+  }
+
+  async chargingVehicle(tx: Transaction, id: string): Promise<ChargingVehicle | null> {
+    const vehicle = await tx.privateVehicle.findUnique({ where: { id } });
+    if (!vehicle) return null;
+    return {
+      id, code: vehicle.plate, kind: 'PRIVATE', ownerId: vehicle.ownerId, hubId: null, ready: true,
+      batteryPercent: vehicle.lastObservedAt ? vehicle.batteryPercent : null,
+      batteryKwh: vehicle.batteryKwh, maxChargeKw: vehicle.maxChargeKw, connector: vehicle.connector,
+    };
+  }
+
+  async recordBattery(tx: Transaction, id: string, batteryPercent: number, lastObservedAt: Date) {
+    await tx.privateVehicle.update({ where: { id }, data: { batteryPercent, lastObservedAt } });
+  }
+}

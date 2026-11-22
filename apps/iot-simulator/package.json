@@ -1,0 +1,14 @@
+{
+  "name": "@semh/iot-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@semh/contracts": "0.1.0"
+  }
+}

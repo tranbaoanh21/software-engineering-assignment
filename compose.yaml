@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    profiles: [full]
+    image: ${COMPOSE_PROJECT_NAME:-semh}-api:local
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: development
+      APP_ORIGIN: http://localhost:${COMPOSE_WEB_PORT:-4173}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      TRUST_PROXY: "1"
+      IOT_DEMO_ACCELERATED: ${IOT_DEMO_ACCELERATED:-true}
+      DEMO_STU_PASSWORD: ${DEMO_STU_PASSWORD:-}
+      DEMO_OPR_PASSWORD: ${DEMO_OPR_PASSWORD:-}
+      DEMO_MNT_PASSWORD: ${DEMO_MNT_PASSWORD:-}
+      DEMO_ADM_PASSWORD: ${DEMO_ADM_PASSWORD:-}
+      IOT_SOURCE_ID: ${IOT_SOURCE_ID:?Set IOT_SOURCE_ID}
+      IOT_SOURCE_KEY: ${IOT_SOURCE_KEY:?Set IOT_SOURCE_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+  simulator:
+    profiles: [full]
+    image: ${COMPOSE_PROJECT_NAME:-semh}-api:local
+    command: ["npm", "run", "dev", "-w", "@semh/iot-simulator"]
+    environment:
+      API_BASE_URL: http://api:3000
+      SIM_MODE: handoff
+      SIM_DEMO_STREAM: "true"
+      SIM_VEHICLE_ID: ${SIM_VEHICLE_ID:-}
+      IOT_SOURCE_ID: ${IOT_SOURCE_ID:?Set IOT_SOURCE_ID}
+      IOT_SOURCE_KEY: ${IOT_SOURCE_KEY:?Set IOT_SOURCE_KEY}
+    depends_on:
+      api:
+        condition: service_healthy
+  web:
+    profiles: [full]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "127.0.0.1:${COMPOSE_WEB_PORT:-4173}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  pgdata:

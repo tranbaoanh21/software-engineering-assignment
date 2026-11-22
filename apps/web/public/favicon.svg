@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 240" role="img" aria-label="Smart E-mobility Hub electric scooter logo">
+  <defs>
+    <linearGradient id="pinGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#20D5C0"/><stop offset="0.58" stop-color="#0F9E93"/><stop offset="1" stop-color="#0F766E"/></linearGradient>
+    <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1D4C8F"/><stop offset="0.6" stop-color="#1376AF"/><stop offset="1" stop-color="#1FBAC1"/></linearGradient>
+    <linearGradient id="bikeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#102A43"/><stop offset="1" stop-color="#0D527A"/></linearGradient>
+    <linearGradient id="boltGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5EF3C6"/><stop offset="1" stop-color="#00B6B0"/></linearGradient>
+  </defs>
+  <!-- campus location pin -->
+  <path d="M99 13C62 13 33 42 33 78c0 35 29 65 66 101 40-38 68-66 68-101 0-36-30-65-68-65Z" fill="url(#pinGrad)"/>
+  <circle cx="99" cy="78" r="20" fill="white"/>
+  <!-- pathway/ribbon -->
+  <path d="M24 182C44 207 92 223 137 204c34-14 64-12 92 4" fill="none" stroke="url(#roadGrad)" stroke-width="25" stroke-linecap="round"/>
+  <path d="M37 189c30 24 74 28 104 14" fill="none" stroke="#E6FCFA" stroke-width="4" stroke-dasharray="16 14" stroke-linecap="round" opacity="0.95"/>
+  <!-- scooter seat -->
+  <path d="M86 123h39c7 0 10 6 7 11l-3 2H90c-7 0-10-9-4-13Z" fill="#102A43"/>
+  <!-- handlebar and front steering -->
+  <path d="M185 104l17-11h16" fill="none" stroke="#102A43" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M190 107l11 68" fill="none" stroke="#102A43" stroke-width="7" stroke-linecap="round"/>
+  <!-- electric scooter chassis, curving step through -->
+  <path d="M49 164c4-18 22-30 45-30h31c8 0 13 5 13 13v11h20c-1-13 7-27 20-34l10-6c13 4 22 16 24 35l5 20h-20c-4-14-15-23-30-23-17 0-28 9-33 24h-40c-5-14-16-20-28-20-11 0-20 5-25 15H49Z" fill="url(#bikeGrad)" stroke="white" stroke-width="6" stroke-linejoin="round"/>
+  <!-- clean step-through cutout -->
+  <path d="M139 144c-1-5 0-9 4-13l18-14c5-4 10-6 15-6l-7 22c-7 3-13 9-17 18h-13Z" fill="white"/>
+  <!-- wheels -->
+  <circle cx="79" cy="177" r="25" fill="#102A43" stroke="white" stroke-width="6"/>
+  <circle cx="79" cy="177" r="11" fill="#58DDD1"/>
+  <circle cx="199" cy="177" r="25" fill="#102A43" stroke="white" stroke-width="6"/>
+  <circle cx="199" cy="177" r="11" fill="#58DDD1"/>
+  <!-- battery motif -->
+  <rect x="103" y="145" width="29" height="26" rx="7" fill="#0A8B83"/>
+  <path d="M119 147l-11 13h8l-3 9 13-15h-8l1-7Z" fill="#E8FFF5"/>
+  <!-- electric accent spark -->
+  <circle cx="222" cy="105" r="4" fill="#28D7C0"/>
+  </svg>
