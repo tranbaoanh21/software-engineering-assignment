@@ -59,6 +59,15 @@ p { line-height: 1.55; }
 .login-brand-panel { background: #fff; width: min(324px, 100%); padding: 12px; border-radius: 12px; }
 .login-brand-panel .brand-logo { width: 100%; }
 .login-campus { display: block; width: 100%; height: auto; border-radius: 12px; }
+.login-campus-map {
+  width: 100%;
+  aspect-ratio: 574 / 345;
+  min-height: 224px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ddebeb;
+  z-index: 0;
+}
 .login-card {
   width: 100%;
   padding: clamp(22px, 4vw, 32px);

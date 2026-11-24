@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { lazy, Suspense, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router';
 import type { SessionView } from '@semh/contracts';
 import { authApi } from './auth-api';
 import { AuthLayout } from './AuthLayout';
+const LoginCampusMap = lazy(() => import('./LoginCampusMap'));
 
 export function LoginPage({ onLogin }: { onLogin: (session: SessionView) => void }) {
   const { state } = useLocation();
@@ -25,7 +26,9 @@ export function LoginPage({ onLogin }: { onLogin: (session: SessionView) => void
   }
 
   return (
-    <AuthLayout title="Đăng nhập">
+    <AuthLayout title="Đăng nhập" campusVisual={
+      <Suspense fallback={<div className="login-campus-map" />}><LoginCampusMap /></Suspense>
+    }>
       {registeredUsername && <p className="handoff-notice" role="status">Đã tạo tài khoản. Bạn có thể đăng nhập ngay.</p>}
       <form onSubmit={submit}>
         <label htmlFor="username">Tên đăng nhập</label>

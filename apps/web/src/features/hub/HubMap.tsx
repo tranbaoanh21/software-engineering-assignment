@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import type { NetworkHub } from '@semh/contracts';
-import 'leaflet/dist/leaflet.css';
+import { createCampusMap } from './campus-map';
 import './hub-map.css';
 
 export type Need = 'vehicle' | 'parking' | 'charging';
@@ -26,20 +26,12 @@ export function HubMap({ hubs, selected, onSelect, need, searchKey }: {
 
   useEffect(() => {
     if (!container.current) return;
-    const element = container.current;
-    const instance = L.map(element).setView([10.885, 106.796], 13);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(instance);
-    map.current = instance;
+    const campus = createCampusMap(container.current);
+    map.current = campus.map;
     fittedSearch.current = null;
-    const resize = new ResizeObserver(() => instance.invalidateSize({ animate: false }));
-    resize.observe(element);
     const currentMarkers = markers.current;
     return () => {
-      resize.disconnect();
-      instance.remove();
+      campus.destroy();
       currentMarkers.clear();
       map.current = null;
     };
