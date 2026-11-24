@@ -65,6 +65,9 @@ export function ChargingPage() {
     }, 'PATCH');
   }
 
+  const previewTime = preview?.quote.startsAt && preview.quote.endsAt
+    ? displayTime(preview.quote.startsAt) + ' – ' + displayTime(preview.quote.endsAt)
+    : null;
   const { data } = screen;
   const privateVehicle = data?.vehicles.find(vehicle => vehicle.id === privateVehicleId);
   const hubs = new Map(data?.hubs.map(hub => [hub.id, hub.name]));
@@ -99,7 +102,7 @@ export function ChargingPage() {
           <h2>Yêu cầu sạc mới</h2>
           {!operator && data.vehicles.length === 0
             ? <Link className="outline" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>
-            : <form className="work-form work-form-wide" onSubmit={previewRequest} onChange={() => setPreview(null)}>
+            : <form className="work-form charging-request-form" onSubmit={previewRequest} onChange={() => setPreview(null)}>
               <label>Hub<select name="hub" required value={hubId} onChange={event => setHubId(event.target.value)}>
                 <option value="">Chọn Hub</option>
                 {data.hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
@@ -110,8 +113,21 @@ export function ChargingPage() {
                 {operator ? fleet.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.code} · {vehicle.batteryPercent}%</option>)
                   : data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
               </select></label>
-              <label>Cần xe lúc<input name="neededAt" type="datetime-local" /></label>
-              <label>Hạn hoàn tất<input name="desiredBy" type="datetime-local" /></label>
+              <div>
+                <label>Cần xe lúc
+                  <input name="neededAt" type="datetime-local" aria-describedby="charging-needed-help charging-time-help" />
+                </label>
+                <small id="charging-needed-help">Giờ bạn cần dùng xe. Yêu cầu được ưu tiên nếu cần xe trong 60 phút tới.</small>
+              </div>
+              <div>
+                <label>Hạn hoàn tất
+                  <input name="desiredBy" type="datetime-local" aria-describedby="charging-deadline-help charging-time-help" />
+                </label>
+                <small id="charging-deadline-help">Giờ muộn nhất bạn muốn sạc xong.</small>
+              </div>
+              <small className="charging-time-help" id="charging-time-help">
+                Cả hai ô đều tùy chọn. Nếu nhập cả hai, hệ thống xếp lịch theo mốc sớm hơn.
+              </small>
               <button className="outline" disabled={action.pending}>Xem lịch dự kiến</button>
             </form>}
           {!operator && privateVehicle?.batteryPercent === null && <details className="work-notice">
@@ -124,10 +140,11 @@ export function ChargingPage() {
               }} />
           </details>}
           {preview && <div className="work-notice">
-            <p>{preview.quote.startsAt && preview.quote.endsAt
-              ? displayTime(preview.quote.startsAt) + ' – ' + displayTime(preview.quote.endsAt)
-              : preview.quote.reason ?? 'Đang chờ phân bổ.'}</p>
-            <button className="primary" type="button" onClick={() => void submit()} disabled={action.pending}>Đăng ký sạc</button>
+            <h3>{previewTime ? 'Lịch dự kiến' : 'Chưa có lịch phù hợp'}</h3>
+            {(previewTime || preview.quote.reason) && <p>{previewTime ?? preview.quote.reason}</p>}
+            <button className="primary" type="button" onClick={() => void submit()} disabled={action.pending}>
+              {previewTime ? 'Đăng ký sạc' : 'Gửi yêu cầu chờ xếp lịch'}
+            </button>
           </div>}
         </section>}
         <div className={'charging-layout' + (operator ? '' : ' charging-layout-student')}>

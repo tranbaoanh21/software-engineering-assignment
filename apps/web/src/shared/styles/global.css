@@ -175,6 +175,13 @@ p { line-height: 1.55; }
   gap: 12px;
 }
 .reservation-actions { justify-content: flex-start; }
+.reservation-hold-dialog {
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  color: var(--navy);
+  box-shadow: 0 12px 36px #102a4333;
+}
+.reservation-hold-dialog::backdrop { background: #102a4373; }
 .reservation-countdown {
   font-variant-numeric: tabular-nums;
   background: #dff6f3;
@@ -355,6 +362,10 @@ details > summary { cursor: pointer; font-weight: 600; color: #075d69; }
 }
 .charging-layout, .simulation-results { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr); align-items: start; gap: 24px; }
 .charging-layout-student, .simulation-layout { grid-template-columns: minmax(240px, 1fr) minmax(0, 2.2fr); }
+.charging-request-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.charging-request-form small { display: block; color: var(--muted); }
+.charging-request-form label + small { margin-top: 6px; }
+.charging-time-help { grid-column: 1 / -1; }
 .charging-layout table { min-width: 330px; }
 .charging-layout tr[data-selected=true] { background: var(--aqua); }
 .charging-battery { display: grid; gap: 5px; padding: 16px; border-radius: 12px; }
@@ -367,5 +378,5 @@ details > summary { cursor: pointer; font-weight: 600; color: #075d69; }
 .simulation-form .check-field { display: inline-flex; margin-right: 12px; }
 .simulation-results .scroll-table th { white-space: normal; }
 @media (max-width: 760px) {
-  .charging-layout, .simulation-layout, .simulation-results, .simulation-form { grid-template-columns: minmax(0, 1fr); }
+  .charging-layout, .charging-request-form, .simulation-layout, .simulation-results, .simulation-form { grid-template-columns: minmax(0, 1fr); }
 }

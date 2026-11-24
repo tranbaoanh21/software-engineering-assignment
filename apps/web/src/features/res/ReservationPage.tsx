@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import {
   reservationHoldMinutes,
   reservationMinimumBatteryPercent,
@@ -12,6 +12,7 @@ import { PageBanner } from '../../shared/ui/PageBanner';
 import { reservationApi } from './reservation-api';
 
 const bookingPath = '/student/hubs';
+const reservationPath = '/student/reservations';
 const dateFormat = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' });
 
 function readAttempt(key: string) {
@@ -132,6 +133,37 @@ function ReservationReceipt({ reservation, onChange }: {
         </aside>
       </div>
     </article>
+  );
+}
+
+function ReservationHoldDialog({ reservation }: { reservation: ReservationView }) {
+  const navigate = useNavigate();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    return () => dialog.close();
+  }, []);
+
+  return (
+    <dialog className="reservation-card reservation-hold-dialog" ref={dialogRef} aria-labelledby="reservation-hold-title"
+      onCancel={event => {
+        event.preventDefault();
+        navigate(reservationPath, { replace: true });
+      }}>
+      <h2 id="reservation-hold-title">Bạn đang giữ một xe</h2>
+      <dl className="reservation-details">
+        <div><dt>Mã xe</dt><dd>{reservation.vehicle.code}</dd></div>
+        <div><dt>Hub nhận xe</dt><dd>{reservation.hub.name}</dd></div>
+        <div><dt>Hạn nhận xe</dt><dd>{dateFormat.format(new Date(reservation.expiresAt))}</dd></div>
+      </dl>
+      <div className="reservation-actions">
+        <Link className="primary" to={reservationPath} replace>Xem lượt đặt</Link>
+        <Link className="outline" to={bookingPath} replace>Quay lại bản đồ</Link>
+      </div>
+    </dialog>
   );
 }
 
@@ -258,7 +290,13 @@ export function ReservationPage() {
   }
 
   if (loading) return <p role="status">Đang tải thông tin đặt xe…</p>;
-  if (reservation) return <ReservationReceipt key={reservation.id} reservation={reservation} onChange={setReservation} />;
+  if (reservation) {
+    const choseAnotherVehicle = Boolean(hubId && vehicleId && vehicleId !== reservation.vehicle.id);
+    return <>
+      <ReservationReceipt key={reservation.id} reservation={reservation} onChange={setReservation} />
+      {choseAnotherVehicle && reservation.status === 'CONFIRMED' && <ReservationHoldDialog reservation={reservation} />}
+    </>;
+  }
 
   return (
     <section><PageBanner title="Đặt xe" />
