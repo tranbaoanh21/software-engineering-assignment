@@ -82,7 +82,14 @@ jobs:
           package="$(mktemp -d)"
           cp infra/ec2/compose.production.yaml infra/ec2/deploy.sh "$package/"
           payload="$(tar -czf - -C "$package" . | base64 -w0)"
-          command="set -eu; install -d -m 755 /opt/semh; printf %s '$payload' | base64 -d | tar --no-same-owner --no-overwrite-dir -xzf - -C /opt/semh; bash /opt/semh/deploy.sh '$AWS_REGION' '$APP_IMAGE' '$PUBLIC_URL'"
+          command="$(cat <<EOF
+          set -eu
+          stage=\$(mktemp -d)
+          trap 'rm -rf "\$stage"' EXIT
+          printf %s '$payload' | base64 -d | tar --no-same-owner --no-overwrite-dir -xzf - -C "\$stage"
+          bash "\$stage/deploy.sh" '$AWS_REGION' '$APP_IMAGE' '$PUBLIC_URL'
+          EOF
+          )"
           parameters="$(jq -nc --arg command "$command" '{commands: [$command], executionTimeout: ["720"]}')"
           id="$(aws ssm send-command --instance-ids "$EC2_INSTANCE_ID" --document-name AWS-RunShellScript \
             --parameters "$parameters" --query 'Command.CommandId' --output text)"

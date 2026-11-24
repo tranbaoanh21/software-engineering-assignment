@@ -1,6 +1,6 @@
 # Release SEMH lên EC2 và Neon
 
-EC2 chạy service `app` từ image `semh-app`. Nginx phục vụ React qua HTTPS và chuyển `/api/` tới NestJS trên loopback. Tiến trình simulator demo gửi sự kiện cho NestJS qua loopback. NestJS lưu dữ liệu người dùng, phiên đăng nhập và nghiệp vụ trong PostgreSQL trên Neon.
+Nginx chạy dưới `systemd` trên Ubuntu EC2. Nginx nhận HTTP/HTTPS trên cổng 80/443, phục vụ React từ `/var/www/semh/current` và chuyển `/api/` tới NestJS qua `127.0.0.1:8080`. Docker chạy NestJS và IoT simulator từ image `semh-app`. NestJS lưu dữ liệu người dùng, phiên đăng nhập và nghiệp vụ trong PostgreSQL trên Neon.
 
 ## Chuẩn bị Neon
 
@@ -10,7 +10,9 @@ Tạo project và database cho SEMH. Trong **Connect**, lấy hai connection str
 
 - Tạo private ECR repository `semh-app` cùng region với EC2.
 - Chuẩn bị EC2 Linux x86-64 có Docker Engine, Compose plugin cài toàn máy, AWS CLI, SSM Agent, `curl` và `flock`. Gắn IAM instance role có quyền đăng ký SSM và pull `semh-app`.
-- Trỏ domain tới EC2. Cho phép HTTP/HTTPS tới EC2 và kết nối ra endpoint Neon. Đặt chứng chỉ và key tại `/opt/semh/tls/fullchain.pem` và `/opt/semh/tls/privkey.pem`.
+- Trỏ domain tới EC2. Cho phép HTTP/HTTPS tới EC2 và kết nối ra endpoint Neon.
+- Cài Nginx và Certbot trên Ubuntu. Tạo `/var/www/letsencrypt` để Certbot dùng khi xác thực qua webroot. Thay `__SEMH_HOST__` trong [cấu hình Nginx](../nginx/production.conf) bằng domain, lưu vào `/etc/nginx/sites-available/semh` và bật site qua `sites-enabled`. Mẫu cấu hình dùng chứng chỉ tại `/etc/letsencrypt/live/<domain>/`.
+- Chạy `sudo nginx -t` rồi bật `nginx.service` trước lần release đầu. Bật `certbot.timer` và đặt deploy hook chạy `nginx -t` rồi `systemctl reload nginx.service` sau khi gia hạn.
 - Tạo hai IAM OIDC role cho GitHub Actions. Build role đăng nhập ECR, push và đọc digest của `semh-app`. Deploy role gửi lệnh SSM tới EC2 của SEMH và đọc kết quả. Giới hạn build role vào repo và nhánh `main`. Giới hạn deploy role vào environment `production`, với environment này chỉ cho phép `main`.
 
 Tạo `/opt/semh/.env.production` từ [mẫu cấu hình](.env.production.example) và đặt quyền đọc cho người vận hành. Đặt `APP_ORIGIN` bằng origin HTTPS của domain. Dùng cùng `IOT_SOURCE_ID` khi seed thiết bị và khi chạy app, với `IOT_SOURCE_KEY` dành riêng cho môi trường này.
@@ -26,7 +28,7 @@ Tạo `/opt/semh/.env.production` từ [mẫu cấu hình](.env.production.examp
 | `PRODUCT_URL` | Origin HTTPS, không có slash cuối |
 | `RELEASE_ENABLED` | Đặt `true` khi đã cấu hình đủ đầu vào |
 
-Push lên `main` chạy CI. Khi bật release, GitHub Actions build image từ commit đã qua CI, đẩy lên ECR và chuyển digest cho EC2. Script trên EC2 chạy migration trước khi thay app, sau đó kiểm tra `/api/health`, `/login` và `/register` qua HTTPS.
+Push lên `main` chạy CI. Khi bật release, GitHub Actions build image từ commit đã qua CI, đẩy lên ECR và chuyển digest cho EC2. Script trên EC2 lấy bản React từ cùng image, chạy migration, thay container và cập nhật liên kết `/var/www/semh/current`. Bản phát hành được ghi nhận sau khi kiểm tra `/api/health`, `/login` và `/register` qua HTTPS.
 
 ## Khởi tạo dữ liệu demo
 
@@ -46,4 +48,4 @@ Seed tạo sáu Hub, tài nguyên và các tài khoản demo `student`, `operato
 
 Kiểm tra đăng ký → đăng nhập → đặt xe → nhận xe → trả xe bằng URL sản phẩm. Kiểm tra thêm check-in/check-out và sạc với tài khoản demo sau khi seed. Khởi động lại app rồi xác nhận tài khoản và lịch sử vẫn đọc được từ Neon.
 
-`.release.env` chứa digest image đã qua health check. `.release.previous.env` giữ digest trước đó. Trước khi quay lại image cũ, kiểm tra schema Neon còn tương thích. Cập nhật chứng chỉ trong thư mục `tls` rồi reload Nginx để nhận chứng chỉ mới.
+`.release.env` chứa digest của bản đã qua health check. `.release.previous.env` giữ digest trước đó. Nếu bước chuyển bản lỗi, script thử khôi phục container và liên kết React trước đó. Migration Neon đã áp dụng cần tương thích với image khôi phục.

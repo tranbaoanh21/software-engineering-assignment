@@ -9,7 +9,6 @@
 !infra/
 !infra/nginx/
 !infra/nginx/default.conf
-!infra/nginx/production.conf
 !infra/ec2/
 !infra/ec2/start-production.mjs
 infra/ec2/tls/

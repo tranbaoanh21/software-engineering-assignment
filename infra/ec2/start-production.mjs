@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-const children = new Map();
+const children = new Set();
 let stopping = false;
 
 function shutdown(code) {
@@ -8,17 +8,17 @@ function shutdown(code) {
   stopping = true;
   process.exitCode = code;
 
-  for (const [child, { stopSignal }] of children) child.kill(stopSignal);
+  for (const child of children) child.kill('SIGTERM');
 
   const deadline = setTimeout(() => {
-    for (const child of children.keys()) child.kill('SIGKILL');
+    for (const child of children) child.kill('SIGKILL');
   }, 8000);
   deadline.unref();
 }
 
-function start(name, executable, args, options = {}, stopSignal = 'SIGTERM') {
-  const child = spawn(executable, args, { stdio: 'inherit', ...options });
-  children.set(child, { stopSignal });
+function start(name, script, env = process.env) {
+  const child = spawn(process.execPath, [script], { stdio: 'inherit', env });
+  children.add(child);
   child.once('error', error => {
     children.delete(child);
     console.error(name + ' failed to start:', error.message);
@@ -35,14 +35,12 @@ function start(name, executable, args, options = {}, stopSignal = 'SIGTERM') {
 process.on('SIGTERM', () => shutdown(0));
 process.on('SIGINT', () => shutdown(0));
 
-const appUser = { uid: 1000, gid: 1000 };
-start('API', process.execPath, ['apps/api/dist/main.js'], appUser);
+start('API', 'apps/api/dist/main.js');
 
 if (process.env.SIMULATOR_ENABLED === 'true') {
-  start('IoT simulator', process.execPath, ['apps/iot-simulator/dist/main.js'], {
-    ...appUser,
-    env: { ...process.env, API_BASE_URL: 'http://127.0.0.1:3000', SIM_MODE: 'handoff' },
+  start('IoT simulator', 'apps/iot-simulator/dist/main.js', {
+    ...process.env,
+    API_BASE_URL: 'http://127.0.0.1:3000',
+    SIM_MODE: 'handoff',
   });
 }
-
-start('Nginx', 'nginx', ['-g', 'daemon off;'], {}, 'SIGQUIT');

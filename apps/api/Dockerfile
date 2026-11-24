@@ -35,13 +35,12 @@ CMD ["npm", "run", "start", "-w", "@semh/api"]
 FROM runtime AS production
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates nginx-light \
-    && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
-COPY --from=frontend /app/apps/web/dist /usr/share/nginx/html
-COPY infra/nginx/production.conf /etc/nginx/conf.d/semh.conf
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=frontend /app/apps/web/dist /app/apps/web/dist
 COPY infra/ec2/start-production.mjs /app/start-production.mjs
-ENV API_HOST=127.0.0.1 TRUST_PROXY=1
-EXPOSE 80 443
+ENV TRUST_PROXY=1
+USER node
 CMD ["node", "/app/start-production.mjs"]
 
 FROM runtime AS api
