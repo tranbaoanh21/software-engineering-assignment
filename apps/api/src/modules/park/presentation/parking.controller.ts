@@ -1,6 +1,7 @@
 import {
   BadRequestException, Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Req, UseGuards,
 } from '@nestjs/common';
+import { number, object, text } from '../../../shared/http/input.js';
 import { AccessGuard, Roles, type SessionRequest } from '../../gen/presentation/access.guard.js';
 import { ParkingService } from '../application/parking.service.js';
 
@@ -19,6 +20,17 @@ export class ParkingController {
   @Get()
   overview(@Req() request: SessionRequest) {
     return this.parking.overview(request.sessionView.accountId);
+  }
+
+  @Post('vehicles')
+  registerVehicle(@Req() request: SessionRequest, @Body() body: unknown) {
+    const input = object(body);
+    const plate = text(input.plate, 'biển số', 24).toUpperCase().replace(/[\s.-]/g, '');
+    if (!/^[A-Z0-9]{5,12}$/.test(plate) || !/\d/.test(plate)) {
+      throw new BadRequestException('Biển số phải có 5–12 chữ cái hoặc chữ số, gồm ít nhất một chữ số.');
+    }
+    const batteryPercent = input.batteryPercent == null ? null : number(input.batteryPercent, 'mức pin', 0, 100, true);
+    return this.parking.registerVehicle(request.sessionToken, { plate, batteryPercent });
   }
 
   @Post('reservations')

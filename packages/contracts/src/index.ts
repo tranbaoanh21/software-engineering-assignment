@@ -130,6 +130,15 @@ export interface PrivateVehicleView {
   plate: string;
 }
 
+export interface RegisterPrivateVehicleInput {
+  plate: string;
+  batteryPercent: number | null;
+}
+
+export interface PrivateChargingVehicleView extends PrivateVehicleView {
+  batteryPercent: number | null;
+}
+
 export interface ParkingReservationView {
   id: string;
   status: ParkingReservationStatus;

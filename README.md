@@ -28,7 +28,11 @@ SIM_MODE=handoff SIM_DEMO_STREAM=true npm run dev:simulator
 
 `IOT_DEMO_ACCELERATED=true` cho phép simulator hoàn tất sạc sau khoảng sáu giây khi demo. Lịch dự kiến trên màn hình vẫn tính theo pin, công suất và hiệu suất 90%. Simulator gửi xác nhận nhận/trả xe, vào/rời chỗ đỗ và các mốc sạc về API. `SIM_DEMO_STREAM=true` phát sự kiện pin cho xe demo được cấu hình mỗi 15 giây.
 
-Sinh viên có thể tự đăng ký bằng MSSV ở `/register` rồi đăng nhập tại `/login`. Dùng `student`, `operator`, `maintenance`, `admin` với mật khẩu tương ứng trong biến `DEMO_STU_PASSWORD`, `DEMO_OPR_PASSWORD`, `DEMO_MNT_PASSWORD`, `DEMO_ADM_PASSWORD`. Seed bổ sung xe cá nhân cho `student`, xe dùng chung, bốn chỗ đỗ và hai cổng sạc mỗi Hub. Sáu điểm đặt Hub là vị trí mô phỏng quanh ga Metro ĐHQG, KTX A/B, Bách Khoa, trường KHXH&NV và Đại học TDTT TP.HCM. Vị trí đối chiếu theo [dữ liệu ga Metro](https://www.citylines.co/api/ho-chi-minh-city/raw_source/stations), [bảng tọa độ khu ĐHQG](https://gis.hcmuaf.edu.vn/data/file/KhoaLuanTotNghiep_DH12GI/ThuyKieu.pdf) và [hướng dẫn đến cơ sở TDTT](https://forum.uit.edu.vn/t/hoc-giao-duc-the-chat-o-dau/140521).
+Sinh viên có thể tự đăng ký bằng MSSV ở `/register` rồi đăng nhập tại `/login`. Dùng `student`, `operator`, `maintenance`, `admin` với mật khẩu tương ứng trong biến `DEMO_STU_PASSWORD`, `DEMO_OPR_PASSWORD`, `DEMO_MNT_PASSWORD`, `DEMO_ADM_PASSWORD`. Seed bổ sung một xe cá nhân cho tài khoản `student`.
+
+Trên cơ sở dữ liệu mới, seed tạo 10 Hub, 45 xe dùng chung, 88 chỗ đỗ cá nhân và 20 cổng sạc. Ga Metro và KTX A/B có nhiều xe và chỗ đỗ hơn. Khi chạy lại seed, hệ thống bổ sung tài nguyên theo mã, trong giới hạn sức chứa xe và chỗ đã dành cho các kế hoạch điều chuyển.
+
+Các Hub là vị trí mô phỏng quanh ga Metro ĐHQG, KTX A/B, Bách Khoa, KHXH&NV, ĐH TDTT TP.HCM, ĐH CNTT, ĐH Khoa học Tự nhiên, ĐH Quốc tế và Thư viện Trung tâm. Vị trí đối chiếu theo [dữ liệu ga Metro](https://www.citylines.co/api/ho-chi-minh-city/raw_source/stations), [bảng tọa độ khu ĐHQG](https://gis.hcmuaf.edu.vn/data/file/KhoaLuanTotNghiep_DH12GI/ThuyKieu.pdf), [hướng dẫn đến cơ sở TDTT](https://forum.uit.edu.vn/t/hoc-giao-duc-the-chat-o-dau/140521) và dữ liệu OpenStreetMap cho [ĐH CNTT](https://www.openstreetmap.org/way/1303838982), [ĐH Khoa học Tự nhiên](https://www.openstreetmap.org/node/9593572488), [ĐH Quốc tế](https://www.openstreetmap.org/way/1419109086) và [Thư viện Trung tâm](https://www.openstreetmap.org/way/290230693).
 
 ### Chạy bằng Docker Compose
 

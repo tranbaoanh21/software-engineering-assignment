@@ -40,7 +40,7 @@ docker compose --project-name semh --env-file .env.production --env-file .releas
   app npm run db:seed -w @semh/api
 ```
 
-Seed tạo sáu Hub, tài nguyên và các tài khoản demo `student`, `operator`, `maintenance`, `admin`. Chạy lại seed giữ tài khoản đã tồn tại. Sinh viên cũng có thể mở `/register` để tự tạo tài khoản `STU` và đăng nhập bằng MSSV. Dùng tài khoản demo `student` để trình diễn đỗ và sạc với xe cá nhân đã seed.
+Với cơ sở dữ liệu mới, seed tạo 10 Hub, 45 xe dùng chung, 88 chỗ đỗ cá nhân, 20 cổng sạc và các tài khoản demo `student`, `operator`, `maintenance`, `admin`. Sau khi phát hành bản có dữ liệu demo mới, chạy lại lệnh seed để bổ sung tài nguyên theo mã và sức chứa còn lại. Sinh viên có thể mở `/register` để tự tạo tài khoản `STU`, đăng nhập bằng MSSV và thêm xe cá nhân trên màn đỗ hoặc sạc.
 
 ## Simulator và kiểm tra sau deploy
 

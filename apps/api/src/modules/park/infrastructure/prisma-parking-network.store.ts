@@ -5,10 +5,13 @@ import type { Transaction } from '../../../shared/database/transaction.js';
 
 @Injectable()
 export class PrismaParkingNetworkStore implements PrivateCharging {
-  listChargingVehicles(tx: Transaction, ownerId: string) {
-    return tx.privateVehicle.findMany({
-      where: { ownerId }, select: { id: true, plate: true }, orderBy: { plate: 'asc' },
+  async listChargingVehicles(tx: Transaction, ownerId: string) {
+    const vehicles = await tx.privateVehicle.findMany({
+      where: { ownerId }, select: { id: true, plate: true, batteryPercent: true, lastObservedAt: true }, orderBy: { plate: 'asc' },
     });
+    return vehicles.map(({ id, plate, batteryPercent, lastObservedAt }) => ({
+      id, plate, batteryPercent: lastObservedAt ? batteryPercent : null,
+    }));
   }
 
   async chargingVehicle(tx: Transaction, id: string): Promise<ChargingVehicle | null> {

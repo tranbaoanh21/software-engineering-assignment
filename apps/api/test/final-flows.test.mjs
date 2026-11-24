@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { randomUUID } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, beforeAll, expect, test } from '@jest/globals';
 import request from 'supertest';
@@ -74,6 +74,51 @@ function ingest(type, input) {
     type, eventId: randomUUID(), sourceId, observedAt: new Date().toISOString(), ...input,
   });
 }
+
+test('a newly registered student can add a private vehicle, park, and provide its initial charging battery', async () => {
+  const username = String(randomInt(100000000, 999999999));
+  const password = 'first-student-password';
+  await request(server).post('/api/auth/register').set('Origin', origin).send({
+    username, password, displayName: 'Sinh viên mới',
+  }).expect(201);
+  const fresh = await login(username, password);
+  const suffix = randomUUID().slice(0, 8).toUpperCase();
+  const plate = '59X1' + suffix;
+  const formatted = '59-x1 ' + suffix.slice(0, 5) + '.' + suffix.slice(5);
+  const addVehicle = (actor, input) => write(actor, '/parking/vehicles', input);
+
+  expect((await read(fresh, '/parking').expect(200)).body.vehicles).toEqual([]);
+  await addVehicle(operator, { plate }).expect(403);
+  await addVehicle(fresh, { plate: '??' }).expect(400);
+  await addVehicle(fresh, { plate, batteryPercent: 101 }).expect(400);
+  await addVehicle(fresh, { plate: '59x112345' }).expect(409);
+  const [added, repeated] = await Promise.all([
+    addVehicle(fresh, { plate }).expect(201),
+    addVehicle(fresh, { plate: formatted }).expect(201),
+  ]);
+  const vehicle = added.body;
+  expect(vehicle.plate).toBe(plate);
+  expect(repeated.body).toEqual(vehicle);
+  await addVehicle(student, { plate: formatted }).expect(409);
+
+  const hub = await fixtureHub('Private vehicle onboarding');
+  await db.parkingSpace.create({ data: {
+    hubId: hub.id, code: hub.code + '-P', serviceStatus: 'ACTIVE', status: 'AVAILABLE',
+    occupied: false, sourceId, lastObservedAt: new Date(),
+  } });
+  const parking = await write(fresh, '/parking/reservations', { hubId: hub.id, privateVehicleId: vehicle.id }).expect(201);
+  expect(parking.body).toMatchObject({ status: 'CONFIRMED', vehicle });
+
+  const chargingPath = '/charging';
+  const before = await read(fresh, chargingPath).expect(200);
+  expect(before.body.vehicles).toEqual([{ ...vehicle, batteryPercent: null }]);
+  await addVehicle(fresh, { plate: formatted, batteryPercent: 32 }).expect(201, vehicle);
+  await addVehicle(fresh, { plate, batteryPercent: 90 }).expect(201, vehicle);
+  const after = await read(fresh, chargingPath).expect(200);
+  expect(after.body.vehicles).toEqual([{ ...vehicle, batteryPercent: 32 }]);
+  const charge = await write(fresh, '/charging/requests', { kind: 'PRIVATE', hubId: hub.id, vehicleId: vehicle.id }).expect(201);
+  expect(charge.body).toMatchObject({ status: 'SCHEDULED', session: { batteryPercent: 32 } });
+});
 
 test('admin grants scoped operator access, revokes sessions on lock and protects the last active admin', async () => {
   const username = 'final-' + randomUUID().slice(0, 12);

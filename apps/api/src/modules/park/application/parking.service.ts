@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CreateParkingReservationInput, ParkingOverview, ParkingReservationView, ParkingStateEvent,
-  ParkingVerificationKind, StateEventReceipt,
+  ParkingVerificationKind, RegisterPrivateVehicleInput, StateEventReceipt,
 } from '@semh/contracts';
 import { AuditService } from '../../../shared/audit/audit.service.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
@@ -53,6 +53,31 @@ export class ParkingService {
       hubs: hubs.map(({ id, name }) => ({ id, name, availableSpaces: counts.get(id) ?? 0 })),
       reservations: reservations.map(record => reservationView(record)),
     };
+  }
+
+  registerVehicle(token: string, { plate, batteryPercent }: RegisterPrivateVehicleInput) {
+    return this.store.serializable(async tx => {
+      const { accountId } = await this.access.verifyAccess(token, ['STU'], tx);
+      const matches = await this.store.findVehiclesByPlate(tx, plate);
+      const [existing] = matches;
+      if (matches.length > 1 || (existing && existing.ownerId !== accountId)) {
+        throw new ConflictException('Biển số này đã được đăng ký.');
+      }
+      if (existing && (batteryPercent === null || (existing.lastObservedAt && existing.batteryPercent !== null))) {
+        return { id: existing.id, plate: existing.plate };
+      }
+
+      const occurredAt = new Date();
+      const reading = { batteryPercent, lastObservedAt: batteryPercent === null ? null : occurredAt };
+      const vehicle = existing
+        ? await this.store.setInitialVehicleReading(tx, existing.id, reading)
+        : await this.store.createVehicle(tx, { ownerId: accountId, plate, ...reading });
+      await this.audit.append(tx, {
+        actorId: accountId, action: existing ? 'PRIVATE_VEHICLE_BATTERY_INITIALIZED' : 'PRIVATE_VEHICLE_REGISTERED',
+        targetType: 'private-vehicle', targetId: vehicle.id, occurredAt, details: { batteryPercent },
+      });
+      return vehicle;
+    });
   }
 
   createReservation(token: string, input: CreateParkingReservationInput) {

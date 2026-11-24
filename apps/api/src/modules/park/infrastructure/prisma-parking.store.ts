@@ -4,7 +4,9 @@ import type { ParkingReservationStatus, ParkingSpaceStatus, Prisma } from '../..
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
-import { ParkingStore, type NewParkingReservation, type ParkingReading } from '../application/parking-store.port.js';
+import {
+  ParkingStore, type NewParkingReservation, type ParkingReading, type PrivateVehicleReading, type RegisteredPrivateVehicle,
+} from '../application/parking-store.port.js';
 
 const hubName = { hub: { select: { id: true, name: true } } } as const;
 const vehicleSummary = { id: true, plate: true } as const;
@@ -32,6 +34,23 @@ export class PrismaParkingStore extends ParkingStore {
     return this.prisma.privateVehicle.findMany({
       where: { ownerId: studentId }, select: vehicleSummary, orderBy: { plate: 'asc' },
     });
+  }
+
+  findVehiclesByPlate(tx: Transaction, plate: string) {
+    return tx.$queryRaw<RegisteredPrivateVehicle[]>`
+      SELECT "id", "plate", "ownerId", "batteryPercent", "lastObservedAt"
+      FROM "PrivateVehicle"
+      WHERE regexp_replace(upper("plate"), '[[:space:].-]', '', 'g') = ${plate}
+      LIMIT 2
+    `;
+  }
+
+  createVehicle(tx: Transaction, data: Omit<RegisteredPrivateVehicle, 'id'>) {
+    return tx.privateVehicle.create({ data, select: vehicleSummary });
+  }
+
+  setInitialVehicleReading(tx: Transaction, id: string, reading: PrivateVehicleReading) {
+    return tx.privateVehicle.update({ where: { id }, data: reading, select: vehicleSummary });
   }
 
   async availableSpacesByHub() {
