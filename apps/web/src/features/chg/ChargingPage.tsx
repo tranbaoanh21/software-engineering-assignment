@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { useLocation, useSearchParams } from 'react-router';
-import type { ChargingRequestView, NetworkHub, PrivateChargingVehicleView, PrivateVehicleView } from '@semh/contracts';
+import { Link, useLocation, useSearchParams } from 'react-router';
+import type { ChargingRequestView, NetworkHub, PrivateChargingVehicleView } from '@semh/contracts';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { displayTime, field, useCommand, useScreen } from '../../shared/api/use-screen';
 import { PrivateVehicleForm } from '../park/PrivateVehicleForm';
@@ -65,13 +65,6 @@ export function ChargingPage() {
     }, 'PATCH');
   }
 
-  function vehicleSaved(vehicle: PrivateVehicleView, feedback: string) {
-    setPrivateVehicleId(vehicle.id);
-    setPreview(null);
-    setMessage(feedback);
-    screen.refresh();
-  }
-
   const { data } = screen;
   const privateVehicle = data?.vehicles.find(vehicle => vehicle.id === privateVehicleId);
   const hubs = new Map(data?.hubs.map(hub => [hub.id, hub.name]));
@@ -104,29 +97,31 @@ export function ChargingPage() {
         </div>}
         {formOpen && <section className="work-card">
           <h2>Yêu cầu sạc mới</h2>
-          {!operator && <details open={!data.vehicles.length}>
-            <summary>Thêm xe cá nhân</summary>
-            <PrivateVehicleForm onSaved={vehicle => vehicleSaved(vehicle, 'Đã lưu xe cá nhân.')} />
-          </details>}
-          <form className="work-form work-form-wide" onSubmit={previewRequest} onChange={() => setPreview(null)}>
-            <label>Hub<select name="hub" required value={hubId} onChange={event => setHubId(event.target.value)}>
-              <option value="">Chọn Hub</option>
-              {data.hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
-            </select></label>
-            <label>{operator ? 'Xe dùng chung' : 'Xe cá nhân'}<select name="vehicle" required key={operator ? hubId : 'private'}
-              value={operator ? undefined : privateVehicleId} onChange={operator ? undefined : event => setPrivateVehicleId(event.target.value)}>
-              <option value="">Chọn xe</option>
-              {operator ? fleet.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.code} · {vehicle.batteryPercent}%</option>)
-                : data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
-            </select></label>
-            <label>Cần xe lúc<input name="neededAt" type="datetime-local" /></label>
-            <label>Hạn hoàn tất<input name="desiredBy" type="datetime-local" /></label>
-            <button className="outline" disabled={action.pending}>Xem lịch dự kiến</button>
-          </form>
+          {!operator && data.vehicles.length === 0
+            ? <Link className="outline" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>
+            : <form className="work-form work-form-wide" onSubmit={previewRequest} onChange={() => setPreview(null)}>
+              <label>Hub<select name="hub" required value={hubId} onChange={event => setHubId(event.target.value)}>
+                <option value="">Chọn Hub</option>
+                {data.hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
+              </select></label>
+              <label>{operator ? 'Xe dùng chung' : 'Xe cá nhân'}<select name="vehicle" required key={operator ? hubId : 'private'}
+                value={operator ? undefined : privateVehicleId} onChange={operator ? undefined : event => setPrivateVehicleId(event.target.value)}>
+                <option value="">Chọn xe</option>
+                {operator ? fleet.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.code} · {vehicle.batteryPercent}%</option>)
+                  : data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
+              </select></label>
+              <label>Cần xe lúc<input name="neededAt" type="datetime-local" /></label>
+              <label>Hạn hoàn tất<input name="desiredBy" type="datetime-local" /></label>
+              <button className="outline" disabled={action.pending}>Xem lịch dự kiến</button>
+            </form>}
           {!operator && privateVehicle?.batteryPercent === null && <details className="work-notice">
             <summary>Bổ sung mức pin để lên lịch</summary>
             <PrivateVehicleForm key={privateVehicle.id} vehicle={privateVehicle}
-              onSaved={vehicle => vehicleSaved(vehicle, 'Đã lưu mức pin ban đầu.')} />
+              onSaved={() => {
+                setPreview(null);
+                setMessage('Đã lưu mức pin ban đầu.');
+                screen.refresh();
+              }} />
           </details>}
           {preview && <div className="work-notice">
             <p>{preview.quote.startsAt && preview.quote.endsAt

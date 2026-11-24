@@ -123,10 +123,10 @@ p { line-height: 1.55; }
 }
 .site-header .brand-logo { width: clamp(118px, 14vw, 208px); }
 .site-brand { flex: 0 0 auto; display: flex; align-items: center; }
-.student-header .feature-nav { flex: 1; gap: 0; min-width: 0; }
+.student-header .feature-nav { flex: 1; flex-wrap: wrap; gap: 0; min-width: 0; }
 .feature-nav { display: flex; }
 .feature-nav a { display: flex; align-items: center; text-decoration: none; white-space: nowrap; font-weight: 500; }
-.student-header .feature-nav a { min-height: 64px; color: var(--muted); padding: 0 clamp(8px, 1.2vw, 17px); border-bottom: 2px solid transparent; }
+.student-header .feature-nav a { min-height: 64px; color: var(--muted); padding: 0 clamp(8px, 1vw, 16px); border-bottom: 2px solid transparent; }
 .student-header .feature-nav a:hover { color: var(--teal); }
 .student-header .feature-nav a.active { border-color: var(--teal); color: var(--teal); }
 .account-menu { position: relative; flex-shrink: 0; z-index: 5; }
@@ -149,9 +149,9 @@ p { line-height: 1.55; }
 .page-banner p { margin: 4px 0 0; color: #ecf8fa; }
 .loading { margin: 60px auto; text-align: center; padding: 18px; }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .student-header { flex-wrap: wrap; padding-top: 8px; gap: 4px 12px; }
-  .student-header .feature-nav { order: 1; flex: 0 0 100%; flex-wrap: wrap; }
+  .student-header .feature-nav { order: 1; flex: 0 0 100%; }
   .student-header .feature-nav a { min-height: 44px; }
 }
 @media (max-width: 560px) {

@@ -6,7 +6,7 @@ import { LoginPage } from '../features/gen/LoginPage';
 import { RegisterPage } from '../features/gen/RegisterPage';
 import { resRoute } from '../features/res/route';
 import { tripRoute } from '../features/trip/route';
-import { parkRoute } from '../features/park/route';
+import { parkRoute, privateVehiclesRoute } from '../features/park/route';
 import { chgRoute } from '../features/chg/route';
 import { opsRoutes } from '../features/ops/routes';
 import { simRoute } from '../features/sim/route';
@@ -39,7 +39,8 @@ const hubRoute = {
 const portals: Portal[] = [
   { path: 'student', role: 'STU', label: 'Sinh viên', features: [
     hubRoute, { path: 'activity', label: 'Hoạt động của tôi', element: <StudentActivity /> },
-    { ...resRoute, label: 'Lượt đặt xe' }, tripRoute, { ...parkRoute, label: 'Chỗ đỗ của tôi' }, { ...chgRoute, label: 'Sạc của tôi' },
+    { ...resRoute, label: 'Lượt đặt xe' }, tripRoute, privateVehiclesRoute,
+    { ...parkRoute, label: 'Chỗ đỗ của tôi' }, { ...chgRoute, label: 'Sạc của tôi' },
   ] },
   { path: 'operations', role: 'OPR', label: 'Vận hành', features: [opsRoutes.operations, chgRoute, simRoute] },
   { path: 'maintenance', role: 'MNT', label: 'Kỹ thuật', features: [opsRoutes.maintenance] },

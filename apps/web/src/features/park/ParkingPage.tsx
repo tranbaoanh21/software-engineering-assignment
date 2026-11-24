@@ -4,7 +4,6 @@ import { parkingHoldMinutes, type ParkingOverview, type ParkingReservationView }
 import { ApiError } from '../../shared/api/http';
 import { SessionContext } from '../../shared/auth/session-context';
 import { PageBanner } from '../../shared/ui/PageBanner';
-import { PrivateVehicleForm } from './PrivateVehicleForm';
 import { parkingApi, type ParkingAction } from './parking-api';
 
 const statusLabels = {
@@ -125,39 +124,32 @@ export function ParkingPage() {
       {!data && !refreshError && <p role="status">Đang tải chỗ đỗ…</p>}
       {data && (
         <div className="parking-grid">
-          <div className="work-stack">
-            <details className="work-card" open={!data.vehicles.length}>
-              <summary>Thêm xe cá nhân</summary>
-              <PrivateVehicleForm onSaved={vehicle => {
-                setVehicleId(vehicle.id);
-                setRevision(value => value + 1);
-              }} />
-            </details>
-            <form className="reservation-card parking-form" onSubmit={reserve}>
-              <div className="reservation-heading">
-                <h2>Đặt chỗ đỗ</h2>
-                <Link to="/student/hubs">Bản đồ Hub</Link>
-              </div>
-              <label htmlFor="parking-hub">Hub</label>
-              <select id="parking-hub" required value={selectedHub?.id ?? ''} onChange={event => setHubId(event.target.value)}>
-                <option value="">Chọn Hub</option>
-                {data.hubs.map(hub => (
-                  <option key={hub.id} value={hub.id}>{hub.name} · {hub.availableSpaces} chỗ trống</option>
-                ))}
-              </select>
+          <form className="reservation-card parking-form" onSubmit={reserve}>
+            <div className="reservation-heading">
+              <h2>Đặt chỗ đỗ</h2>
+              <Link to="/student/hubs">Bản đồ Hub</Link>
+            </div>
+            <label htmlFor="parking-hub">Hub</label>
+            <select id="parking-hub" required value={selectedHub?.id ?? ''} onChange={event => setHubId(event.target.value)}>
+              <option value="">Chọn Hub</option>
+              {data.hubs.map(hub => (
+                <option key={hub.id} value={hub.id}>{hub.name} · {hub.availableSpaces} chỗ trống</option>
+              ))}
+            </select>
+            {data.vehicles.length > 0 ? <>
               <label htmlFor="parking-vehicle">Xe cá nhân</label>
               <select id="parking-vehicle" required value={selectedVehicle?.id ?? ''} onChange={event => setVehicleId(event.target.value)}>
                 <option value="">Chọn phương tiện</option>
                 {data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
               </select>
-              {selectedHub?.availableSpaces === 0 && <p>Hub này đã hết chỗ. Vui lòng chọn Hub khác.</p>}
-              <p>Thời gian giữ chỗ {parkingHoldMinutes} phút.</p>
-              <button className="primary" type="submit"
-                disabled={sending || !selectedVehicle || !selectedHub?.availableSpaces || active.some(item => item.vehicle.id === selectedVehicle.id)}>
-                Xác nhận đặt chỗ
-              </button>
-            </form>
-          </div>
+            </> : <Link className="outline" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>}
+            {selectedHub?.availableSpaces === 0 && <p>Hub này đã hết chỗ. Vui lòng chọn Hub khác.</p>}
+            <p>Thời gian giữ chỗ {parkingHoldMinutes} phút.</p>
+            <button className="primary" type="submit"
+              disabled={sending || !selectedVehicle || !selectedHub?.availableSpaces || active.some(item => item.vehicle.id === selectedVehicle.id)}>
+              Xác nhận đặt chỗ
+            </button>
+          </form>
 
           <div className="parking-reservations">
             <h2>Lượt đỗ của tôi</h2>
