@@ -1,21 +1,22 @@
 import { Link } from 'react-router';
 import type { ChargingRequestView, NetworkHub, ParkingOverview, ReservationView, TripView } from '@semh/contracts';
 import { displayTime, useScreen } from '../../shared/api/use-screen';
+import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 
 export function StudentActivity() {
   const reservation = useScreen<{ reservation: ReservationView | null }>('/reservations/active', 10000);
-  const trips = useScreen<TripView[]>('/trips');
+  const trips = useScreen<TripView[]>('/trips', 4000);
   const parking = useScreen<ParkingOverview>('/parking', 10000);
   const charging = useScreen<{ requests: ChargingRequestView[] }>('/charging?mode=STU', 10000);
   const network = useScreen<NetworkHub[]>('/network/hubs');
   const current = reservation.data?.reservation;
   const counts = [
-    { label: 'Lượt đặt xe', count: reservation.data ? Number(!!current) : '—', path: 'reservations' },
-    { label: 'Chuyến đi', count: trips.data?.filter(item => item.status === 'IN_PROGRESS').length ?? '—', path: 'trips' },
-    { label: 'Chỗ đỗ', count: parking.data?.reservations.filter(item => ['CONFIRMED', 'CHECKED_IN'].includes(item.status)).length ?? '—', path: 'parking' },
-    { label: 'Sạc', count: charging.data?.requests.filter(item => ['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status)).length ?? '—', path: 'charging' },
-  ];
+    { label: 'Lượt đặt xe', icon: 'reservation', count: reservation.data ? Number(!!current) : '—', path: 'reservations' },
+    { label: 'Chuyến đi', icon: 'trip', count: trips.data?.filter(item => item.status === 'IN_PROGRESS').length ?? '—', path: 'trips' },
+    { label: 'Chỗ đỗ', icon: 'parking', count: parking.data?.reservations.filter(item => ['CONFIRMED', 'CHECKED_IN'].includes(item.status)).length ?? '—', path: 'parking' },
+    { label: 'Sạc', icon: 'charging', count: charging.data?.requests.filter(item => ['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status)).length ?? '—', path: 'charging' },
+  ] as const;
   const hubNames = new Map(network.data?.map(hub => [hub.id, hub.name]));
   const history = [
     ...(trips.data ?? []).flatMap(item => item.endedAt ? [{
@@ -37,9 +38,10 @@ export function StudentActivity() {
   return <section className="student-activity">
     <PageBanner title="Hoạt động của tôi"><p>Lượt đặt xe, chuyến đi, chỗ đỗ và sạc</p></PageBanner>
     {error && <p className="error" role="alert">{error}</p>}
-    <div className="metric-grid activity-metrics">{counts.map(({ label, count, path }, index) =>
-      <Link key={path} to={'/student/' + path} className="work-card tinted-panel" data-tone={index === 0 ? 'info' : undefined}>
-        <span>{label}</span><b>{count}</b>
+    <div className="metric-grid activity-metrics">{counts.map(({ label, count, path, icon }) =>
+      <Link key={path} to={'/student/' + path} className="work-card metric-card">
+        <span className="metric-label">{label}</span><b className="metric-value">{count}</b>
+        <MetricIcon name={icon} />
       </Link>)}</div>
     {current && <article className="work-card work-heading">
       <div><h2>Lượt đặt xe hiện tại</h2><p>{current.vehicle.code} · {current.hub.name}</p>

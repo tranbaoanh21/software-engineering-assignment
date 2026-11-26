@@ -20,7 +20,13 @@ function view(command: HandoffRecord): TripHandoffView {
 }
 
 function tripView(trip: TripRecord): TripView {
-  return { ...trip, startedAt: trip.startedAt.toISOString(), endedAt: trip.endedAt?.toISOString() ?? null };
+  const { vehicle: { id, code, batteryPercent, fault }, ...details } = trip;
+  return {
+    ...details, vehicle: { id, code },
+    vehicleFault: trip.status === 'IN_PROGRESS' && fault,
+    currentBattery: trip.status === 'IN_PROGRESS' ? batteryPercent : null,
+    startedAt: trip.startedAt.toISOString(), endedAt: trip.endedAt?.toISOString() ?? null,
+  };
 }
 
 @Injectable()
@@ -83,6 +89,7 @@ export class TripJourneyService {
       const trip = await this.store.findTrip(accountId, tripId, tx);
       if (!trip) throw new NotFoundException('Không tìm thấy chuyến đi.');
       if (trip.status !== 'IN_PROGRESS') throw new ConflictException('Chuyến đi đã kết thúc.');
+      if (trip.vehicle.fault) throw new ConflictException('Xe đang có sự cố. Chờ kỹ thuật tiếp nhận tại vị trí báo hỏng.');
       const hub = await this.hubs.readArrivalCapacityInTx(tx, input.hubId);
       if (!hub?.active || hub.spaces === 0) throw new ConflictException('Hub đã chọn hiện không thể nhận thêm xe.');
 
@@ -109,6 +116,10 @@ export class TripJourneyService {
 
   pendingHandoffs(sourceId: string) {
     return this.store.listPending(sourceId, new Date());
+  }
+
+  activeTripBatteries(sourceId: string) {
+    return this.store.activeTripBatteries(sourceId);
   }
 
   applyHandoff(event: VehicleHandoffEvent, onFault?: (tx: Transaction) => Promise<unknown>): Promise<StateEventReceipt> {
@@ -171,11 +182,14 @@ export class TripJourneyService {
     if (!trip || trip.status !== 'IN_PROGRESS' || command.vehicle.status !== 'IN_USE') {
       return this.reject(tx, command.id, 'Chuyến đi hoặc xe đã đổi trạng thái.');
     }
+    if (command.vehicle.fault) {
+      return this.reject(tx, command.id, 'Xe đang có sự cố. Chờ kỹ thuật tiếp nhận tại vị trí báo hỏng.');
+    }
     if (!hub?.active || hub.spaces === 0) {
       return this.reject(tx, command.id, 'Hub hiện không còn chỗ tiếp nhận. Vui lòng chọn Hub khác.');
     }
 
-    const vehicleStatus = returnedVehicleStatus(event.batteryPercent, event.fault || command.vehicle.fault || command.vehicle.serviceStatus !== 'ACTIVE');
+    const vehicleStatus = returnedVehicleStatus(event.batteryPercent, event.fault || command.vehicle.serviceStatus !== 'ACTIVE');
     await this.store.finish(tx, trip, { hubId: command.hubId, at: now, battery: event.batteryPercent, vehicleStatus });
     await this.store.recordOutcome(tx, command.id, { tripId: trip.id });
     await this.audit.append(tx, {

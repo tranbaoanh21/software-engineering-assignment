@@ -27,7 +27,7 @@ export class PrismaNetworkStore implements NetworkReader {
     });
     const inbound = await tx.transferItem.groupBy({
       by: ['planId'], where: {
-        plan: { targetHubId: { in: hubs.map(hub => hub.id) }, status: { in: ['APPROVED', 'IN_PROGRESS'] } },
+        plan: { targetHubId: { in: hubs.map(hub => hub.id) }, status: { in: ['APPROVED', 'IN_PROGRESS', 'AWAITING_APPROVAL'] } },
         status: { in: ['PLANNED', 'DEPARTED'] },
       }, _count: { _all: true },
     });

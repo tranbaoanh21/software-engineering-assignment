@@ -5,6 +5,7 @@ import { field, useCommand } from '../../shared/api/use-screen';
 import { api, ApiError } from '../../shared/api/http';
 import { SessionContext } from '../../shared/auth/session-context';
 import { reservationApi } from '../res/reservation-api';
+import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { tripApi } from './trip-api';
 
@@ -24,6 +25,7 @@ export function TripPage() {
   const [trips, setTrips] = useState<TripView[]>([]);
   const [hubs, setHubs] = useState<HubView[]>([]);
   const [selectedTripId, setSelectedTripId] = useState('');
+  const [returningTripId, setReturningTripId] = useState('');
   const [vehicleCode, setVehicleCode] = useState('');
   const [selectedHubId, setSelectedHubId] = useState('');
   const [handoff, setHandoff] = useState<TripHandoffView | null>(null);
@@ -68,6 +70,7 @@ export function TripPage() {
         attempt.current = null;
         if (state.status === 'APPLIED') {
           setVehicleCode('');
+          setSelectedHubId('');
           setLoading(true);
           setRevision(value => value + 1);
         } else {
@@ -85,8 +88,36 @@ export function TripPage() {
     };
   }, [handoff]);
 
-  const trip = trips.find(item => item.id === selectedTripId) ?? trips[0];
+  const activeTrips = trips.filter(item => item.status === 'IN_PROGRESS');
+  const history = trips.filter(item => item.status !== 'IN_PROGRESS');
+  const trip = activeTrips.find(item => item.id === selectedTripId) ?? activeTrips[0];
+  const returned = history.find(item => item.id === (returningTripId || reportedTrip));
+  const hasActiveTrip = activeTrips.length > 0;
   const waiting = handoff?.status === 'PENDING';
+  const pickupReservation = reservation?.status === 'CONFIRMED' ? reservation : null;
+  const step = trip ? 2 : pickupReservation ? 1 : returned ? 3 : null;
+
+  useEffect(() => {
+    if (!hasActiveTrip || waiting || loading) return;
+    const controller = new AbortController();
+    let busy = false;
+    const timer = window.setInterval(async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        const next = await tripApi.list(AbortSignal.any([controller.signal, AbortSignal.timeout(3500)]));
+        if (!controller.signal.aborted) setTrips(next);
+      } catch (err) {
+        if (!controller.signal.aborted && err instanceof ApiError && err.status === 401) window.location.assign('/login');
+      } finally {
+        busy = false;
+      }
+    }, 1500);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [hasActiveTrip, waiting, loading]);
 
   async function submit(key: string, run: (requestId: string, csrfToken: string) => Promise<TripHandoffView>) {
     if (!session || sendingRef.current || waiting) return;
@@ -100,6 +131,8 @@ export function TripPage() {
       if (state.status !== 'PENDING') {
         attempt.current = null;
         if (state.status === 'APPLIED') {
+          setVehicleCode('');
+          setSelectedHubId('');
           setLoading(true);
           setRevision(value => value + 1);
         } else {
@@ -124,6 +157,8 @@ export function TripPage() {
     const code = vehicleCode.trim().toUpperCase();
     if (!reservation || !code) return;
     setSelectedTripId('');
+    setReturningTripId('');
+    setReportedTrip('');
     void submit('pickup:' + reservation.id + ':' + code, (requestId, token) => tripApi.pickup({
       requestId, reservationId: reservation.id, vehicleCode: code,
     }, token));
@@ -131,93 +166,121 @@ export function TripPage() {
 
   function returnVehicle(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!trip || !selectedHubId) return;
+    if (!trip || trip.vehicleFault || !selectedHubId) return;
     setSelectedTripId(trip.id);
+    setReturningTripId(trip.id);
     void submit('return:' + trip.id + ':' + selectedHubId, (requestId, token) => tripApi.returnVehicle(
       trip.id, { requestId, hubId: selectedHubId }, token,
     ));
   }
 
   if (loading) return <p role="status">Đang tải chuyến đi…</p>;
+  const pickupForm = pickupReservation && <form className="work-card trip-form" onSubmit={pickup}>
+    <h2>Nhận xe đã đặt</h2>
+    <p><strong>{pickupReservation.vehicle.code}</strong> · {pickupReservation.hub.name}</p>
+    <label htmlFor="vehicle-code">Mã trên xe</label>
+    <input id="vehicle-code" required maxLength={80} value={vehicleCode} onChange={event => setVehicleCode(event.target.value)} />
+    <button className="primary" type="submit" disabled={sending || waiting}>Xác nhận nhận xe</button>
+  </form>;
+
   return (
-    <div className="trip-content">
+    <section className="trip-content">
       <PageBanner title="Chuyến đi của bạn" />
-      {(trip || reservation) && <ol className="trip-steps" aria-label="Tiến độ chuyến đi">
-        <li aria-current={!trip ? 'step' : undefined}>Nhận xe</li>
-        <li aria-current={trip?.status === 'IN_PROGRESS' ? 'step' : undefined}>Đang sử dụng</li>
-        <li aria-current={trip && trip.status !== 'IN_PROGRESS' ? 'step' : undefined}>Kết thúc</li>
+      {step && <ol className="trip-steps" aria-label="Tiến độ chuyến đi">
+        <li aria-current={step === 1 ? 'step' : undefined}>Nhận xe</li>
+        <li aria-current={step === 2 ? 'step' : undefined}>Đang sử dụng</li>
+        <li aria-current={step === 3 ? 'step' : undefined}>Kết thúc</li>
       </ol>}
       {error && <p className="error" role="alert">{error}</p>}
       {waiting && <p className="handoff-notice" role="status">Đang chờ thiết bị xác nhận bàn giao…</p>}
-      {reservation?.status === 'CONFIRMED' && (
-        <form className="reservation-card trip-form" onSubmit={pickup}>
-          <h2>Nhận xe đã đặt</h2>
-          <p>{reservation.vehicle.code} · {reservation.hub.name}</p>
-          <label htmlFor="vehicle-code">Mã xe</label>
-          <input id="vehicle-code" required maxLength={80} value={vehicleCode} onChange={event => setVehicleCode(event.target.value)} />
-          <button className="primary" type="submit" disabled={sending || waiting}>Xác nhận nhận xe</button>
-        </form>
-      )}
 
-      {trip && (
-        <div className="trip-layout">
-          <section className="work-card trip-vehicle-panel">
-            <div className="trip-vehicle-visual"><img src="/design/bike.svg" alt="" width={160} height={160} /></div>
-            <div><h2>{trip.vehicle.code}</h2><p>Xe dùng chung · {trip.startBattery}% pin đầu chuyến</p></div>
-          </section>
-        <section className="reservation-card">
-          {trips.length > 1 && (
-            <div className="trip-picker">
-              <label htmlFor="selected-trip">Chọn chuyến</label>
-              <select id="selected-trip" value={trip.id} onChange={event => setSelectedTripId(event.target.value)}>
-                {trips.map(item => <option key={item.id} value={item.id}>{item.vehicle.code} · {date.format(new Date(item.startedAt))}</option>)}
-              </select>
-            </div>
-          )}
-          <h2>{trip.status === 'IN_PROGRESS' ? 'Đang diễn ra' : trip.status === 'COMPLETED' ? 'Chuyến đi hoàn tất' : 'Chuyến đi gián đoạn'}</h2>
+      {!trip && pickupForm}
+      {trip && <article className="work-card work-stack trip-current">
+        <div className="work-heading">
+          <h2>{trip.vehicle.code}</h2>
+          <span className="status-pill" data-tone="info">Đang sử dụng</span>
+        </div>
+        {activeTrips.length > 1 && <div className="trip-picker">
+          <label htmlFor="selected-trip">Chuyến đang diễn ra</label>
+          <select id="selected-trip" value={trip.id} onChange={event => {
+            setSelectedTripId(event.target.value);
+            setSelectedHubId('');
+          }} disabled={waiting || sending}>
+            {activeTrips.map(item => <option key={item.id} value={item.id}>{item.vehicle.code}</option>)}
+          </select>
+        </div>}
+        <div className="work-card metric-card trip-battery">
+          <span className="metric-label">Pin hiện tại</span>
+          <strong className="metric-value">{trip.currentBattery ?? trip.startBattery}%</strong>
+          <MetricIcon name="battery" />
+          <progress value={trip.currentBattery ?? trip.startBattery} max={100} aria-label="Pin hiện tại" />
+        </div>
+        {trip.vehicleFault || reportedTrip === trip.id
+          ? <p className="handoff-notice" role="status">Đã ghi nhận sự cố. Chờ kỹ thuật tiếp nhận xe tại địa điểm báo hỏng.</p>
+          : <form onSubmit={returnVehicle} className="trip-form">
+            <label htmlFor="return-hub">Hub trả xe</label>
+            <select id="return-hub" required value={selectedHubId} onChange={event => setSelectedHubId(event.target.value)}>
+              <option value="">Chọn Hub tiếp nhận</option>
+              {hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
+            </select>
+            <button className="primary" type="submit" disabled={sending || waiting || report.pending}>Xác nhận trả xe</button>
+          </form>}
+        <details>
+          <summary>Thông tin chuyến đi</summary>
           <dl className="reservation-details">
-            <div><dt>Xe dùng chung</dt><dd>{trip.vehicle.code}</dd></div>
             <div><dt>Hub xuất phát</dt><dd>{trip.startHub.name}</dd></div>
             <div><dt>Bắt đầu</dt><dd>{date.format(new Date(trip.startedAt))}</dd></div>
             <div><dt>Pin đầu chuyến</dt><dd>{trip.startBattery}%</dd></div>
-            {trip.endHub && <div><dt>Hub trả xe</dt><dd>{trip.endHub.name}</dd></div>}
-            {trip.endBattery != null && <div><dt>Pin cuối chuyến</dt><dd>{trip.endBattery}%</dd></div>}
-            {trip.endedAt && <div><dt>Kết thúc</dt><dd>{date.format(new Date(trip.endedAt))}</dd></div>}
-            {trip.durationSeconds != null && <div><dt>Thời lượng</dt><dd>{Math.floor(trip.durationSeconds / 60)} phút {trip.durationSeconds % 60} giây</dd></div>}
           </dl>
+        </details>
+        {reportedTrip !== trip.id && <details className="trip-incident">
+          <summary>{trip.vehicleFault ? 'Cập nhật địa điểm sự cố' : 'Báo sự cố với xe'}</summary>
+          <form className="work-form" key={trip.id} onSubmit={async event => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            const result = await report.send('/operations/trip-faults/' + trip.id, {
+              location: field(form, 'location'), description: field(form, 'description') || undefined,
+            });
+            if (result) setReportedTrip(trip.id);
+          }}>
+            <label>Địa điểm xe bị hư<input name="location" maxLength={240} placeholder="Ví dụ: Cổng chính KTX B" required /></label>
+            <label>Mô tả thêm (tùy chọn)<textarea name="description" maxLength={1000} /></label>
+            <button className="primary" disabled={report.pending || sending || waiting}>{report.pending ? 'Đang gửi…' : 'Gửi vận hành'}</button>
+          </form>
+          {report.error && <p className="error" role="alert">{report.error}</p>}
+        </details>}
+      </article>}
+      {trip && pickupForm && <details className="work-card"><summary>Xe đang được giữ</summary>{pickupForm}</details>}
 
-          {trip.status === 'IN_PROGRESS' && (
-            <form onSubmit={returnVehicle} className="trip-form">
-              <label htmlFor="return-hub">Hub trả xe</label>
-              <select id="return-hub" required value={selectedHubId} onChange={event => setSelectedHubId(event.target.value)}>
-                <option value="">Chọn Hub tiếp nhận</option>
-                {hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
-              </select>
-              <button className="primary" type="submit" disabled={sending || waiting}>Xác nhận trả xe</button>
-            </form>
-          )}
-          {trip.status === 'IN_PROGRESS' && <details className="trip-incident">
-            <summary>Báo sự cố với xe</summary>
-            <form className="work-form" onSubmit={async event => {
-              event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const result = await report.send('/operations/trip-faults/' + trip.id, { description: field(form, 'description') });
-              if (result) setReportedTrip(trip.id);
-            }}>
-              <label>Mô tả và vị trí hiện tại<textarea name="description" maxLength={1000} required /></label>
-              <button className="outline" disabled={report.pending}>Gửi vận hành</button>
-            </form>
-            {report.error && <p className="error" role="alert">{report.error}</p>}
-            {reportedTrip === trip.id && <p className="handoff-notice" role="status">Đã gửi sự cố cho vận hành.</p>}
-          </details>}
-          {trip.status === 'COMPLETED' && <p>{resultMessage(trip.endVehicleStatus)}</p>}
-        </section>
-        </div>
-      )}
+      {!trip && !pickupReservation && returned && <article className="work-card trip-current" role="status">
+        <h2>{returned.status === 'COMPLETED' ? 'Chuyến đi hoàn tất' : 'Chuyến đi gián đoạn'}</h2>
+        <p>{returned.vehicle.code}{returned.endHub && ' · ' + returned.endHub.name}</p>
+        {returned.endBattery !== null && <p>Pin đầu chuyến {returned.startBattery}% → Pin cuối chuyến {returned.endBattery}%</p>}
+        {returned.status === 'COMPLETED' ? <p>{resultMessage(returned.endVehicleStatus)}</p>
+          : <p>Kỹ thuật đã tiếp nhận xe và kết thúc chuyến đi.</p>}
+        <Link className="outline" to="/student/hubs">Về bản đồ Hub</Link>
+      </article>}
+      {!trip && !pickupReservation && !returned && !error && <div className="work-card trip-current">
+        <p>Bạn chưa có chuyến đi đang diễn ra.</p>
+        <Link className="primary" to="/student/hubs">Chọn xe trên bản đồ Hub</Link>
+      </div>}
 
-      {!trip && !reservation && !error && (
-        <p>Bạn chưa có chuyến đi. <Link to="/student/hubs">Chọn xe trên bản đồ Hub</Link></p>
-      )}
-    </div>
+      {history.length > 0 && <details className="work-card trip-history">
+        <summary>Lịch sử chuyến đi ({history.length})</summary>
+        {history.map(item => <details key={item.id} className="trip-history-item">
+          <summary><strong>{item.vehicle.code}</strong> · {date.format(new Date(item.startedAt))}
+            <span>{item.status === 'COMPLETED' ? 'Hoàn tất' : 'Gián đoạn'}</span>
+          </summary>
+          <dl className="reservation-details">
+            <div><dt>Hub xuất phát</dt><dd>{item.startHub.name}</dd></div>
+            <div><dt>Pin đầu chuyến</dt><dd>{item.startBattery}%</dd></div>
+            {item.endHub && <div><dt>Hub trả xe</dt><dd>{item.endHub.name}</dd></div>}
+            {item.endBattery !== null && <div><dt>Pin cuối chuyến</dt><dd>{item.endBattery}%</dd></div>}
+            {item.endedAt && <div><dt>Kết thúc</dt><dd>{date.format(new Date(item.endedAt))}</dd></div>}
+            {item.durationSeconds !== null && <div><dt>Thời lượng</dt><dd>{Math.floor(item.durationSeconds / 60)} phút {item.durationSeconds % 60} giây</dd></div>}
+          </dl>
+        </details>)}
+      </details>}
+    </section>
   );
 }

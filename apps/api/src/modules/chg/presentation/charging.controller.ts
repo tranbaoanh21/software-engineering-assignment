@@ -22,6 +22,12 @@ export class ChargingController {
     return this.charging.overview(req.sessionView, mode === 'OPR' && req.sessionView.roles.includes('OPR') ? 'OPR' : 'STU');
   }
 
+  @Post('vehicles/:id/demo-low-battery')
+  @Roles('STU')
+  simulateLowBattery(@Req() req: SessionRequest, @Param('id') id: string, @Body() data: unknown) {
+    return this.charging.simulateLowBattery(req.sessionToken, uuid(id, 'mã xe'), change(object(data)));
+  }
+
   @Post('preview')
   @Roles('STU', 'OPR')
   preview(@Req() req: SessionRequest, @Body() data: unknown) {

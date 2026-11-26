@@ -68,11 +68,25 @@ export class PrismaFleetNetworkStore implements FleetNetwork {
   }
 
   async closeFaultedTrip(tx: Transaction, tripId: string, vehicleId: string) {
-    const result = await tx.trip.updateMany({
+    const trip = await tx.trip.findFirst({
       where: { id: tripId, vehicleId, status: 'IN_PROGRESS' },
-      data: { status: 'INTERRUPTED', endedAt: new Date(), endVehicleStatus: 'OUT_OF_SERVICE' },
+      select: { startedAt: true, vehicle: { select: { batteryPercent: true } } },
     });
-    if (!result.count) throw new ConflictException('Chuyến đi đã kết thúc hoặc không khớp xe.');
-    await tx.sharedVehicle.update({ where: { id: vehicleId }, data: { status: 'OUT_OF_SERVICE', version: { increment: 1 } } });
+    if (!trip) throw new ConflictException('Chuyến đi đã kết thúc hoặc không khớp xe.');
+    const endedAt = new Date();
+    await tx.trip.update({
+      where: { id: tripId },
+      data: {
+        status: 'INTERRUPTED', endedAt, endBattery: trip.vehicle.batteryPercent, endVehicleStatus: 'OUT_OF_SERVICE',
+        durationSeconds: Math.max(0, Math.floor((endedAt.getTime() - trip.startedAt.getTime()) / 1000)),
+      },
+    });
+    await tx.sharedVehicle.update({
+      where: { id: vehicleId }, data: { status: 'OUT_OF_SERVICE', fault: true, version: { increment: 1 } },
+    });
+    await tx.tripHandoffCommand.updateMany({
+      where: { kind: 'RETURN', subjectId: tripId, status: 'PENDING' },
+      data: { status: 'REJECTED', reason: 'Chuyến đi kết thúc khi kỹ thuật tiếp nhận xe.' },
+    });
   }
 }

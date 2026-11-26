@@ -31,7 +31,8 @@ function plan(body: Record<string, unknown>) {
   if (!vehicleIds.length) throw new BadRequestException('Chọn ít nhất một xe.');
   return {
     sourceHubId: uuid(body.sourceHubId, 'Hub nguồn'), targetHubId: uuid(body.targetHubId, 'Hub đích'),
-    vehicleIds, scheduledAt: date(body.scheduledAt, 'lịch điều chuyển'),
+    vehicleIds, scheduledAt: body.scheduledAt ? date(body.scheduledAt, 'lịch điều chuyển') : undefined,
+    assigneeId: body.assigneeId ? uuid(body.assigneeId, 'kỹ thuật viên') : undefined,
     recommendationId: body.recommendationId ? uuid(body.recommendationId, 'đề xuất') : null,
   };
 }
@@ -101,7 +102,10 @@ export class OperationsController {
   @Roles('STU')
   tripFault(@Req() req: SessionRequest, @Param('id') id: string, @Body() value: unknown) {
     const body = object(value);
-    return this.operations.reportTripFault(req.sessionToken, uuid(id), text(body.description, 'mô tả', 1000), change(body));
+    return this.operations.reportTripFault(req.sessionToken, uuid(id), {
+      location: text(body.location, 'địa điểm xe bị hư', 240),
+      description: body.description === undefined ? '' : text(body.description, 'mô tả', 1000, 0),
+    }, change(body));
   }
 
   @Patch('incidents/:id')
@@ -109,38 +113,37 @@ export class OperationsController {
   changeIncident(@Req() req: SessionRequest, @Param('id') id: string, @Body() value: unknown) {
     const body = object(value);
     return this.operations.changeIncident(req.sessionToken, uuid(id), {
-      action: member(body.action, ['ACKNOWLEDGE', 'ASSIGN', 'START', 'HANDOVER', 'CONFIRM_HANDOVER', 'RESOLVE', 'CLOSE'], 'thao tác'),
+      action: member(body.action, ['ACKNOWLEDGE', 'ASSIGN', 'START', 'RESOLVE', 'CLOSE'], 'thao tác'),
       assigneeId: body.assigneeId ? uuid(body.assigneeId, 'người xử lý') : undefined,
       safetyPassed: typeof body.safetyPassed === 'boolean' ? body.safetyPassed : undefined,
-      location: body.location ? text(body.location, 'vị trí bàn giao', 240) : undefined,
+      location: body.location === undefined ? undefined : text(body.location, 'địa điểm sự cố', 240),
       actualHubId: body.actualHubId ? uuid(body.actualHubId, 'Hub tiếp nhận') : undefined,
       severity: body.severity ? member(body.severity, ['LOW', 'MEDIUM', 'HIGH'], 'mức độ') : undefined,
       dueAt: body.dueAt ? date(body.dueAt, 'hạn xử lý') : undefined,
-    }, change(body, true, true));
+    }, change(body, false, true));
   }
 
   @Post('plans')
   @Roles('OPR')
   createPlan(@Req() req: SessionRequest, @Body() value: unknown) {
     const body = object(value);
-    return this.operations.savePlan(req.sessionToken, plan(body), change(body, true));
+    return this.operations.savePlan(req.sessionToken, plan(body), change(body));
   }
 
   @Patch('plans/:id')
   @Roles('OPR')
   updatePlan(@Req() req: SessionRequest, @Param('id') id: string, @Body() value: unknown) {
     const body = object(value);
-    return this.operations.savePlan(req.sessionToken, plan(body), change(body, true, true), uuid(id));
+    return this.operations.savePlan(req.sessionToken, plan(body), change(body, false, true), uuid(id));
   }
 
   @Post('plans/:id/actions')
-  @Roles('OPR')
+  @Roles('OPR', 'MNT')
   planAction(@Req() req: SessionRequest, @Param('id') id: string, @Body() value: unknown) {
     const body = object(value);
     return this.operations.changePlan(req.sessionToken, uuid(id), {
-      action: member(body.action, ['APPROVE', 'DEPART', 'ARRIVE', 'COMPLETE', 'CANCEL'], 'thao tác'),
-      vehicleId: body.vehicleId ? uuid(body.vehicleId, 'xe') : undefined,
-      actualHubId: body.actualHubId ? uuid(body.actualHubId, 'Hub thực tế') : undefined,
-    }, change(body, true, true));
+      action: member(body.action, ['ASSIGN', 'START', 'REPORT_ARRIVAL', 'COMPLETE', 'CANCEL'], 'thao tác'),
+      assigneeId: body.assigneeId ? uuid(body.assigneeId, 'kỹ thuật viên') : undefined,
+    }, change(body, false, true));
   }
 }

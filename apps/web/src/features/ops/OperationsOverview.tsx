@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router';
 import type { NetworkHub } from '@semh/contracts';
+import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { stateLabel } from './ResourceCatalog';
 import './operations.css';
@@ -27,18 +28,22 @@ export function OperationsOverview({ hubs, refresh }: { hubs: NetworkHub[]; refr
       <Link className="outline" to="?tab=resources">Quản lý tài nguyên</Link>
       <Link className="outline" to="/operations/simulation">Chạy mô phỏng</Link>
     </>} />
-    <dl className="operations-metrics">
-      <div className="work-card operations-metric tinted-panel" data-tone="info">
-        <dt>Xe sẵn sàng</dt><dd>{vehicles}<small>trên {hubs.reduce((total, hub) => total + hub.vehicleCount, 0)} xe tại các Hub</small></dd>
+    <dl className="metric-grid">
+      <div className="work-card metric-card">
+        <dt className="metric-label">Xe sẵn sàng<MetricIcon name="vehicle" /></dt>
+        <dd><b className="metric-value">{vehicles}</b><small>trên {hubs.reduce((total, hub) => total + hub.vehicleCount, 0)} xe tại các Hub</small></dd>
       </div>
-      <div className="work-card operations-metric tinted-panel" data-tone="success">
-        <dt>Chỗ đỗ cá nhân trống</dt><dd>{parking}<small>trên {hubs.reduce((total, hub) => total + hub.parkingCount, 0)} chỗ đỗ</small></dd>
+      <div className="work-card metric-card">
+        <dt className="metric-label">Chỗ đỗ cá nhân trống<MetricIcon name="parking" /></dt>
+        <dd><b className="metric-value">{parking}</b><small>trên {hubs.reduce((total, hub) => total + hub.parkingCount, 0)} chỗ đỗ</small></dd>
       </div>
-      <div className="work-card operations-metric tinted-panel" data-tone="aqua">
-        <dt>Cổng đang sạc</dt><dd>{charging}<small>trên {chargingPoints.length} cổng sạc</small></dd>
+      <div className="work-card metric-card">
+        <dt className="metric-label">Cổng đang sạc<MetricIcon name="charging" /></dt>
+        <dd><b className="metric-value">{charging}</b><small>trên {chargingPoints.length} cổng sạc</small></dd>
       </div>
-      <div className="work-card operations-metric tinted-panel" data-tone="warning">
-        <dt>Hub cần chú ý</dt><dd>{flaggedHubs.length}
+      <div className="work-card metric-card">
+        <dt className="metric-label">Hub cần chú ý<MetricIcon name="alert" /></dt>
+        <dd><b className="metric-value">{flaggedHubs.length}</b>
           {flaggedHubs.length > 0 && <button className="operations-text-action" type="button" onClick={() => {
             setFilter('flagged');
             document.getElementById('network-status-title')?.focus();
@@ -58,10 +63,11 @@ export function OperationsOverview({ hubs, refresh }: { hubs: NetworkHub[]; refr
         <div className="operations-attention-heading"><img src="/design/alert.svg" alt="" width={18} height={18} /><h2>Cần ưu tiên xử lý</h2></div>
         {flaggedHubs.length ? <div className="operations-attention">
           {flaggedHubs.flatMap(hub => hub.alerts.map(alert => <button key={hub.id + alert} type="button"
-            className="tinted-panel" data-tone={alert === 'LOW_FLEET' ? 'warning' : 'danger'}
+            className="metric-card"
             aria-pressed={selectedHub === hub.id} onClick={() => setSelectedHub(hub.id)}>
             <strong>{hub.code} · {alertLabels[alert]}</strong>
             <span>{hub.name} · {alert === 'LOW_FLEET' ? hub.availableVehicles : hub.vehicleCount}/{hub.capacity} xe</span>
+            <MetricIcon name={alert === 'LOW_FLEET' ? 'shortage' : 'capacity'} />
           </button>))}
         </div> : <p>Chưa có Hub cần ưu tiên.</p>}
         <Link className="outline" to="?tab=plans">Xem phương án điều phối</Link>

@@ -1,15 +1,5 @@
 .operations-overview { display: grid; gap: 24px; }
-.operations-metrics {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-.operations-metrics .operations-metric { padding: 16px; }
 .operations-overview > .page-banner { margin: 0; }
-.operations-metric dt { color: var(--muted); font-size: .92rem; line-height: 1.45; font-weight: 500; }
-.operations-metric dd { margin: 6px 0 0; color: var(--navy); line-height: 1.2; font-size: 2rem; font-weight: 600; }
-.operations-metric dd small { display: block; margin-top: 6px; color: var(--muted); font-size: .86rem; font-weight: 400; }
 .operations-distribution, .operations-status-grid { display: grid; gap: 24px; align-items: start; }
 .operations-distribution { grid-template-columns: minmax(0, 1.9fr) minmax(220px, 1fr); }
 .operations-status-grid { grid-template-columns: minmax(190px, 1fr) minmax(0, 2.1fr); }
@@ -17,11 +7,18 @@
 .operations-map-selection { color: var(--muted); }
 .operations-attention-heading { display: flex; align-items: center; gap: 7px; }
 .operations-attention { display: grid; gap: 10px; }
-.operations-attention button { display: grid; gap: 5px; text-align: left; border: 1px solid transparent; border-radius: 10px; padding: 12px; color: var(--navy); }
+.operations-attention button {
+  --metric-padding: 12px;
+  --metric-icon-size: 34px;
+  min-height: 0;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--navy);
+  background: #fff;
+}
 .operations-attention button span { color: var(--muted); font-size: .88rem; }
-.operations-attention button[data-tone=warning] strong { color: #794602; }
-.operations-attention button[data-tone=danger] strong { color: #9b2c36; }
-.operations-attention button[aria-pressed=true], .operations-attention button:hover { border-color: currentColor; }
+.operations-attention button[aria-pressed=true], .operations-attention button:hover { border-color: var(--teal); }
 .operations-chart { margin: 18px 0 0; padding: 0; list-style: none; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .operations-chart li { display: grid; justify-items: center; gap: 5px; flex: 1 1 30px; font-size: .76rem; }
 .operations-chart-track { height: 100px; width: min(23px, 100%); background: var(--canvas); border-radius: 4px; display: flex; align-items: end; }
@@ -86,18 +83,9 @@
 @media (max-width: 1180px) {
   .operations-status-grid { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 960px) {
-  .operations-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 
 @media (max-width: 660px) {
   .operations-distribution { grid-template-columns: minmax(0, 1fr); }
 }
-.incident-list .scroll-table table { min-width: 660px; }
-.incident-list .scroll-table th, .incident-list .scroll-table td { padding: 10px; vertical-align: middle; }
-.incident-list .scroll-table td small { display: block; color: var(--muted); margin-top: 3px; }
-.incident-list .scroll-table tr[data-selected=true] { background: var(--aqua); }
-.incident-list .scroll-table td[data-overdue=true] { color: #9b2c36; }
-.incident-list .scroll-table td .outline { white-space: nowrap; }
 .incident-status-tabs .outline { border-radius: 999px; min-height: 32px; }
 .incident-status-tabs [aria-pressed=true] { color: var(--teal); background: var(--aqua); border-color: #9ccbd0; }

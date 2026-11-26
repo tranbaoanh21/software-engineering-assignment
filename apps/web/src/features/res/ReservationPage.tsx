@@ -8,6 +8,7 @@ import {
 } from '@semh/contracts';
 import { api, ApiError } from '../../shared/api/http';
 import { SessionContext } from '../../shared/auth/session-context';
+import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { reservationApi } from './reservation-api';
 
@@ -126,9 +127,10 @@ function ReservationReceipt({ reservation, onChange }: {
         </div>
       )}
           </div>
-          {confirmed && <div className="work-card tinted-panel" data-tone="aqua">
+          {confirmed && <div className="work-card metric-card">
             <h2>Nhận xe tại {reservation.hub.name}</h2>
             <p>Đến đúng Hub trước khi hết hạn và nhập mã trên xe để xác nhận bàn giao.</p>
+            <MetricIcon name="hub" />
           </div>}
         </aside>
       </div>

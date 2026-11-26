@@ -5,7 +5,10 @@ import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 
-export const planInclude = { items: { orderBy: { vehicleId: 'asc' } } } as const;
+const planInclude = {
+  items: { orderBy: { vehicleId: 'asc' } },
+  assignee: { select: { displayName: true } },
+} as const;
 export type StoredPlan = Prisma.RedistributionPlanGetPayload<{ include: typeof planInclude }>;
 
 @Injectable()
@@ -59,6 +62,14 @@ export class PrismaOperationsStore {
     return tx.trip.findFirst({ where: { vehicleId, status: 'IN_PROGRESS' } });
   }
 
+  activeIncidentTrips(tx: Transaction, ids: string[]) {
+    return tx.trip.findMany({ where: { id: { in: ids }, status: 'IN_PROGRESS' }, select: { id: true } });
+  }
+
+  vehiclesByIds(tx: Transaction, ids: string[]) {
+    return tx.sharedVehicle.findMany({ where: { id: { in: ids } }, select: { id: true, code: true, hubId: true } });
+  }
+
   studentTrip(tx: Transaction, id: string, studentId: string) {
     return tx.trip.findFirst({ where: { id, studentId, status: 'IN_PROGRESS' } });
   }
@@ -67,11 +78,8 @@ export class PrismaOperationsStore {
     return tx.redistributionPlan.findUnique({ where: { id }, include: planInclude });
   }
 
-  plans(tx: Transaction, ids?: string[]) {
-    return tx.redistributionPlan.findMany({
-      where: ids ? { sourceHubId: { in: ids }, targetHubId: { in: ids } } : {},
-      orderBy: { createdAt: 'desc' }, include: planInclude,
-    });
+  plans(tx: Transaction, where: Prisma.RedistributionPlanWhereInput) {
+    return tx.redistributionPlan.findMany({ where, orderBy: { createdAt: 'desc' }, include: planInclude });
   }
 
   createPlan(tx: Transaction, data: Prisma.RedistributionPlanUncheckedCreateInput) {
@@ -92,6 +100,10 @@ export class PrismaOperationsStore {
 
   updateVehicleTelemetry(tx: Transaction, id: string, data: Prisma.SharedVehicleUncheckedUpdateInput) {
     return tx.sharedVehicle.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+  }
+
+  hubNames(tx: Transaction, ids: string[]) {
+    return tx.mobilityHub.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } });
   }
 
   hub(tx: Transaction, id: string) {

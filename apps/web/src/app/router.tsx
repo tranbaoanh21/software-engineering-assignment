@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
-import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import type { Role, SessionView } from '@semh/contracts';
 import { authApi } from '../features/gen/auth-api';
 import { LoginPage } from '../features/gen/LoginPage';
@@ -43,7 +43,7 @@ const portals: Portal[] = [
     { ...parkRoute, label: 'Chỗ đỗ của tôi' }, { ...chgRoute, label: 'Sạc của tôi' },
   ] },
   { path: 'operations', role: 'OPR', label: 'Vận hành', features: [opsRoutes.operations, chgRoute, simRoute] },
-  { path: 'maintenance', role: 'MNT', label: 'Kỹ thuật', features: [opsRoutes.maintenance] },
+  { path: 'maintenance', role: 'MNT', label: 'Kỹ thuật', features: [opsRoutes.maintenance, opsRoutes.maintenanceTransfers] },
   { path: 'admin', role: 'ADM', label: 'Quản trị', features: [administrationRoute] },
 ];
 
@@ -62,6 +62,7 @@ function AppFrame({ children, session, portal, feature, onLogout }: {
   const { pathname, search } = useLocation();
   const [logoutError, setLogoutError] = useState('');
   const [signingOut, setSigningOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function logout() {
     setLogoutError('');
@@ -87,12 +88,15 @@ function AppFrame({ children, session, portal, feature, onLogout }: {
     { label: 'Mô phỏng', to: '/operations/simulation', icon: 'simulation', active: feature?.path === 'simulation' },
     { ...operationViews[3], to: dashboard + '?tab=resources', active: pathname === dashboard && opsView.key === 'resources' },
   ];
-  const staff = portal?.role === 'OPR' || portal?.role === 'ADM';
+  const student = portal?.role === 'STU';
+  const staff = portal && !student;
   const sidebar = portal?.role === 'ADM'
     ? adminViews.map(item => ({ ...item, to: adminPath + (item.key === 'accounts' ? '' : '?tab=' + item.key), active: adminView.key === item.key }))
-    : opsItems;
-  const topbarTitle = portal?.role === 'ADM' ? adminView.title
-    : pathname === dashboard ? opsView.title : feature?.path === 'charging' ? 'Quản lý sạc' : 'Không gian mô phỏng';
+    : portal?.role === 'OPR' ? opsItems : portal?.role === 'MNT' ? portal.features.map(item => ({
+      label: item.label, to: portalPath(portal, item.path), icon: item.path === 'transfers' ? 'transfer' : 'alert',
+      active: feature?.path === item.path,
+    })) : [];
+  const topbarTitle = sidebar.find(item => item.active)?.label ?? portal?.label;
   const logo = <Link className="site-brand" to={portal ? portalPath(portal) : '/hubs'} aria-label="Smart E-Mobility Hub">
     <img className="brand-logo" src="/semh.svg" alt="" />
   </Link>;
@@ -120,24 +124,32 @@ function AppFrame({ children, session, portal, feature, onLogout }: {
   </details> : <Link className="primary" to="/login">Đăng nhập</Link>;
 
   return (
-    <div className={staff ? 'staff-shell' : 'site-shell'}>
-      {staff && <aside className="staff-sidebar">
+    <div className={staff ? 'workspace-shell' : student ? 'student-shell' : 'site-shell'} data-menu-open={menuOpen}
+      onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false); }}>
+      {staff && <aside className="workspace-sidebar" id="workspace-navigation">
         {logo}
-        <nav className="feature-nav staff-nav" aria-label="Chức năng">
-          {sidebar.map(item => <Link key={item.to} to={item.to} aria-current={item.active ? 'page' : undefined}>
-            <img src={'/design/' + item.icon + '.svg'} alt="" width={20} height={20} />{item.label}
-          </Link>)}
+        <nav className="workspace-nav" aria-label={'Chức năng ' + portal.label.toLowerCase()}>
+          <div className="workspace-nav-group">
+            <p>{portal.label}</p>
+            {sidebar.map(item => <Link key={item.to} to={item.to} aria-current={item.active ? 'page' : undefined}
+              onClick={() => setMenuOpen(false)}>
+              <img src={'/design/' + item.icon + '.svg'} alt="" width={18} height={18} />
+              {item.label}
+            </Link>)}
+          </div>
         </nav>
       </aside>}
       <div className="site-body">
-        <header className={staff ? 'site-header staff-header' : 'site-header student-header'}>
-          {staff ? <strong className="workspace-title">{topbarTitle}</strong> : logo}
-          {!staff && portal && <nav className="feature-nav" aria-label={'Chức năng ' + portal.label.toLowerCase()}>
-            {portal.features.map(item => (
-              <NavLink key={item.path} to={portalPath(portal, item.path)}>
-                {portal.role === 'MNT' ? 'Công việc của tôi' : item.label}
-              </NavLink>
-            ))}
+        <header className={'site-header' + (staff ? ' workspace-header' : ' student-header')}>
+          {staff ? <div className="workspace-header-place">
+            <button className="outline workspace-toggle" type="button" aria-controls="workspace-navigation"
+              aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>Danh mục</button>
+            <strong>{topbarTitle}</strong>
+          </div> : logo}
+          {student && <nav className="feature-nav" aria-label="Chức năng sinh viên">
+            {portal.features.map(item => <NavLink key={item.path} to={portalPath(portal, item.path)}>
+              {item.label}
+            </NavLink>)}
           </nav>}
           {account}
         </header>

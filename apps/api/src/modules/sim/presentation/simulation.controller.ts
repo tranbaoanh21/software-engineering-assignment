@@ -19,7 +19,8 @@ function scenario(body: Record<string, unknown>): ScenarioInput {
   } : undefined;
   if (override && !hubIds.includes(override.hubId)) throw new BadRequestException('Hub điều chỉnh phải nằm trong phạm vi.');
   return {
-    name: text(body.name, 'tên kịch bản', 120), objective: text(body.objective, 'mục tiêu', 400), hubIds,
+    name: text(body.name, 'tên kịch bản', 120), hubIds,
+    objective: body.objective === undefined ? '' : text(body.objective, 'mục tiêu', 400, 0),
     parameters: {
       durationMinutes: number(p.durationMinutes, 'thời lượng', 1, 240, true),
       demandMultiplier: number(p.demandMultiplier, 'hệ số nhu cầu', 0, 3),

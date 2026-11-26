@@ -21,9 +21,11 @@ export function AdminPage() {
   const [grant, setGrant] = useState(true);
   const [message, setMessage] = useState('');
   const permissionsId = params.get('account') ?? selectedId;
-  const selected = accounts.data?.find(item => item.id === (view.key === 'permissions' ? permissionsId : selectedId));
   const shown = accounts.data?.filter(item =>
     (item.username + ' ' + item.displayName).toLocaleLowerCase('vi').includes(query.trim().toLocaleLowerCase('vi'))) ?? [];
+  const selected = view.key === 'permissions' ? accounts.data?.find(item => item.id === permissionsId)
+    : shown.find(item => item.id === selectedId) ?? shown[0];
+  const operatorRole = selected?.assignments.find(item => item.role === 'OPR');
   const hubNames = new Map(catalog.data?.hubs.map(hub => [hub.id, hub.name]));
 
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -33,7 +35,10 @@ export function AdminPage() {
     const result = await action.send<AccountView>('/admin/accounts', {
       username: field(data, 'username'), displayName: field(data, 'displayName'), password: String(data.get('password') ?? ''),
     });
-    if (result) { setCreateOpen(false); setMessage('Đã tạo tài khoản ' + result.username + '.'); }
+    if (result) {
+      setCreateOpen(false); setQuery(''); setSelectedId(result.id); setAccountAction(undefined);
+      setMessage('Đã tạo tài khoản ' + result.username + '.');
+    }
   }
 
   async function save(event: FormEvent<HTMLFormElement>, mode: 'info' | 'status' | 'permissions') {
@@ -69,7 +74,6 @@ export function AdminPage() {
   return <section className="work-stack admin-content">
     <header className="page-heading">
       <h1>{view.title}</h1>
-      {view.key === 'accounts' && <p>Cấp tài khoản và kiểm soát quyền truy cập hệ thống.</p>}
       {view.key === 'catalog' && <p>Khai báo Hub và thiết bị ở trạng thái nháp.</p>}
     </header>
     {(action.error || screenError) && <p className="error" role="alert">{action.error || screenError}</p>}
@@ -81,7 +85,7 @@ export function AdminPage() {
       !accounts.error && <p role="status">Đang tải tài khoản…</p>
     ) : view.key === 'accounts' ? <>
       <div className="filter-toolbar">
-        <label className="search-field">Tìm tài khoản<input type="search" value={query} onChange={event => setQuery(event.target.value)}
+        <label className="search-field">Tìm tài khoản<input type="search" value={query} onChange={event => { setQuery(event.target.value); setAccountAction(undefined); }}
           placeholder="Tên hoặc tên đăng nhập" /></label>
         <button type="button" className="primary" onClick={() => setCreateOpen(!createOpen)} aria-expanded={createOpen}>
           {createOpen ? 'Đóng biểu mẫu' : 'Cấp tài khoản'}
@@ -94,29 +98,26 @@ export function AdminPage() {
         <label>Mật khẩu khởi tạo<input name="password" type="password" minLength={12} maxLength={256} autoComplete="new-password" required /></label>
         <button className="primary" disabled={action.pending}>Tạo tài khoản sinh viên</button>
       </form>}
-      <div className="work-card data-card">
-        <div className="scroll-table" tabIndex={0} role="region" aria-label="Danh sách tài khoản">
-          <table>
-            <thead><tr><th>Tài khoản</th><th>Họ và tên</th><th>Vai trò</th><th>Trạng thái</th><th>Phạm vi</th></tr></thead>
-            <tbody>{shown.map(account => <tr key={account.id} data-selected={account.id === selectedId}>
-              <td><button className="table-link" type="button" onClick={() => { setSelectedId(account.id); setAccountAction(undefined); }}>
-                {account.username}
-              </button></td>
-              <td>{account.displayName}</td>
-              <td>{account.assignments.map(assignment => roleNames[assignment.role]).join(', ') || 'Chưa cấp quyền'}</td>
-              <td><span className="status-pill" data-tone={account.status === 'LOCKED' ? 'danger' : 'success'}>
-                {account.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}
-              </span></td>
-              <td>{scope(account)}</td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-        {!shown.length && <p className="data-empty">Không tìm thấy tài khoản phù hợp.</p>}
-      </div>
+      <div className="app-pane-layout">
+      <section className="work-card work-stack">
+        <h2>Tài khoản ({shown.length})</h2>
+        {shown.length ? <div className="app-pane-list">{shown.map(account => <button key={account.id} type="button"
+          className="app-pane-item" aria-pressed={selected?.id === account.id} onClick={() => {
+            setSelectedId(account.id); setAccountAction(undefined); setMessage('');
+          }}>
+          <strong>{account.displayName}</strong><small>{account.username}</small>
+          <span className="status-pill" data-tone={account.status === 'LOCKED' ? 'danger' : 'success'}>
+            {account.status === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}</span>
+        </button>)}</div> : <p>Không tìm thấy tài khoản phù hợp.</p>}
+      </section>
       {selected && <section className="work-card work-stack" key={selected.id}>
-        <div className="work-heading"><h2>Tài khoản {selected.username}</h2>
-          <button className="outline" type="button" onClick={() => setSelectedId('')}>Đóng chi tiết</button></div>
-        <p>{selected.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa'} · {scope(selected)}</p>
+        <h2>{selected.displayName}</h2>
+        <dl className="reservation-details">
+          <div><dt>Tên đăng nhập</dt><dd>{selected.username}</dd></div>
+          <div><dt>Trạng thái</dt><dd>{selected.status === 'ACTIVE' ? 'Đang hoạt động' : 'Đã khóa'}</dd></div>
+          <div><dt>Vai trò</dt><dd>{selected.assignments.map(item => roleNames[item.role]).join(', ') || 'Chưa cấp quyền'}</dd></div>
+          <div><dt>Phạm vi</dt><dd>{scope(selected)}</dd></div>
+        </dl>
         <div className="work-actions">
           <button className="outline" type="button" onClick={() => setAccountAction('info')}>Sửa thông tin</button>
           <button className={selected.status === 'ACTIVE' ? 'danger' : 'outline'} type="button" onClick={() => setAccountAction('status')}>
@@ -124,18 +125,19 @@ export function AdminPage() {
           </button>
           <Link className="outline" to={'?tab=permissions&account=' + encodeURIComponent(selected.id)}>Phân quyền</Link>
         </div>
-        {accountAction === 'info' && <form className="work-form work-form-wide" onSubmit={event => void save(event, 'info')}>
+        {accountAction === 'info' && <form className="work-form inline-action" onSubmit={event => void save(event, 'info')}>
           <label>Tên hiển thị<input name="name" defaultValue={selected.displayName} maxLength={100} required /></label>
           <button className="primary" disabled={action.pending}>Lưu thông tin</button>
         </form>}
-        {accountAction === 'status' && <form className="work-form work-form-wide" onSubmit={event => void save(event, 'status')}>
+        {accountAction === 'status' && <form className="work-form inline-action" onSubmit={event => void save(event, 'status')}>
           <label>Lý do<input name="reason" required maxLength={500} /></label>
           <button className={selected.status === 'ACTIVE' ? 'danger' : 'primary'} disabled={action.pending}>
             {selected.status === 'ACTIVE' ? 'Xác nhận khóa' : 'Xác nhận mở khóa'}
           </button>
         </form>}
       </section>}
-    </> : <>
+      </div>
+    </> : <div className="app-pane-layout">
       <form className="work-card work-form work-form-wide" onSubmit={event => void save(event, 'permissions')} key={selected?.id ?? 'empty'}>
         <h2>Tài khoản được phân quyền</h2>
         <label>Tài khoản<select value={permissionsId} onChange={event => {
@@ -155,9 +157,9 @@ export function AdminPage() {
         </select></label>
         <label>Lý do<input name="reason" required maxLength={500} /></label>
         {role === 'OPR' && grant && <fieldset><legend>Phạm vi Hub</legend>
-          <label className="check-field"><input name="allHubs" type="checkbox" />Tất cả Hub</label>
+          <label className="check-field"><input name="allHubs" type="checkbox" defaultChecked={operatorRole?.allHubs} />Tất cả Hub</label>
           {catalog.data?.hubs.map(hub => <label className="check-field" key={hub.id}>
-            <input name="hubIds" type="checkbox" value={hub.id} />{hub.name}
+            <input name="hubIds" type="checkbox" value={hub.id} defaultChecked={operatorRole?.hubIds.includes(hub.id)} />{hub.name}
           </label>)}
         </fieldset>}
         <button className={grant ? 'primary' : 'danger'} disabled={action.pending || !selected}>
@@ -174,6 +176,6 @@ export function AdminPage() {
         </table></div>
         {!selected.assignments.length && <p className="data-empty">Tài khoản chưa có vai trò.</p>}
       </div>}
-    </>}
+    </div>}
   </section>;
 }

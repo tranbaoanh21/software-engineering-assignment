@@ -1,4 +1,4 @@
-import type { PendingTripHandoff, TripView } from '@semh/contracts';
+import type { ActiveTripBattery, PendingTripHandoff, TripView } from '@semh/contracts';
 import type { Transaction } from '../../../shared/database/transaction.js';
 
 export type HandoffKind = PendingTripHandoff['kind'];
@@ -19,7 +19,8 @@ export type HandoffInput = Pick<HandoffRecord, 'kind' | 'studentId' | 'subjectId
   requestId: string;
 };
 
-export type TripRecord = Omit<TripView, 'startedAt' | 'endedAt'> & {
+export type TripRecord = Omit<TripView, 'startedAt' | 'endedAt' | 'currentBattery' | 'vehicle' | 'vehicleFault'> & {
+  vehicle: TripView['vehicle'] & { batteryPercent: number; fault: boolean };
   startedAt: Date;
   endedAt: Date | null;
 };
@@ -38,6 +39,7 @@ export abstract class TripJourneyStore {
   abstract createHandoff(tx: Transaction, data: HandoffInput): Promise<HandoffRecord>;
   abstract handoff(id: string, tx?: Transaction): Promise<HandoffRecord | null>;
   abstract listPending(sourceId: string, now: Date): Promise<PendingTripHandoff[]>;
+  abstract activeTripBatteries(sourceId: string): Promise<ActiveTripBattery[]>;
   abstract recordEvent(tx: Transaction, sourceId: string, eventId: string): Promise<boolean>;
   abstract recordOutcome(tx: Transaction, commandId: string, outcome: { tripId: string } | { reason: string }): Promise<void>;
   abstract findTrip(studentId: string, tripId: string, tx: Transaction): Promise<TripRecord | null>;

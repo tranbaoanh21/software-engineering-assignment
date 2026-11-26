@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import type { PendingTripHandoff } from '@semh/contracts';
+import type { ActiveTripBattery, PendingTripHandoff } from '@semh/contracts';
 import type { Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
@@ -12,7 +12,7 @@ import {
 const handoffVehicle = { vehicle: { select: { sourceId: true, fault: true, code: true, serviceStatus: true, status: true } } } as const;
 const tripSummary = {
   id: true, reservationId: true, status: true,
-  vehicle: { select: { id: true, code: true } },
+  vehicle: { select: { id: true, code: true, batteryPercent: true, fault: true } },
   startHub: { select: { id: true, name: true } },
   endHub: { select: { id: true, name: true } },
   startedAt: true, endedAt: true, startBattery: true, endBattery: true, endVehicleStatus: true, durationSeconds: true,
@@ -59,6 +59,18 @@ export class PrismaTripJourneyStore extends TripJourneyStore {
       take: 30,
     });
     return commands.map(({ vehicle, ...command }) => ({ ...command, batteryPercent: vehicle.batteryPercent }));
+  }
+
+  async activeTripBatteries(sourceId: string): Promise<ActiveTripBattery[]> {
+    const trips = await this.prisma.trip.findMany({
+      where: { status: 'IN_PROGRESS', vehicle: { sourceId, status: 'IN_USE' } },
+      select: { id: true, vehicleId: true, startedAt: true, startBattery: true,
+        vehicle: { select: { batteryPercent: true, telemetrySequence: true } } },
+    });
+    return trips.map(({ id, startedAt, vehicle, ...trip }) => ({
+      ...trip, tripId: id, startedAt: startedAt.toISOString(), batteryPercent: vehicle.batteryPercent,
+      sequence: vehicle.telemetrySequence,
+    }));
   }
 
   async recordEvent(tx: Transaction, sourceId: string, eventId: string) {

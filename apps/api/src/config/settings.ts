@@ -20,6 +20,7 @@ export function getSettings() {
     origin,
     secureCookie: origin.startsWith('https://'),
     port,
+    demoBatteryEnabled: process.env.IOT_DEMO_BATTERY === 'true',
     iotSourceId: required('IOT_SOURCE_ID'),
     iotSourceKey: required('IOT_SOURCE_KEY'),
   };

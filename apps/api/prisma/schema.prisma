@@ -49,6 +49,7 @@ model Account {
   tripHandoffs        TripHandoffCommand[]
   privateVehicles     PrivateVehicle[]
   parkingReservations ParkingReservation[]
+  transferAssignments RedistributionPlan[]
   version Int @default(0)
 }
 
@@ -94,6 +95,7 @@ model MobilityHub {
   version Int @default(0)
   description String @default("")
   chargingPoints ChargingPoint[]
+  repairArrivals Incident[]
 }
 
 model SharedVehicle {
@@ -437,6 +439,7 @@ enum IncidentStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+  AWAITING_APPROVAL
 }
 
 model Incident {
@@ -444,6 +447,8 @@ model Incident {
   resourceKind   ResourceKind
   resourceId     String          @db.Uuid
   hubId          String?         @db.Uuid
+  receivingHubId String?         @db.Uuid
+  receivingHub   MobilityHub?    @relation(fields: [receivingHubId], references: [id], onDelete: Restrict)
   tripId         String?         @db.Uuid
   reporterId     String?         @db.Uuid
   assigneeId     String?         @db.Uuid
@@ -454,12 +459,15 @@ model Incident {
   severity       String @default("MEDIUM")
   dueAt          DateTime?
   handover       Json?
+  reportedLocation  String?
+  confirmedLocation String?
   safe           Boolean?
   version        Int             @default(0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@index([hubId, status])
+  @@index([receivingHubId, status])
   @@index([assigneeId, status])
 }
 
@@ -469,6 +477,7 @@ enum PlanStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  AWAITING_APPROVAL
 }
 
 enum TransferStatus {
@@ -483,6 +492,8 @@ model RedistributionPlan {
   sourceHubId   String      @db.Uuid
   targetHubId   String      @db.Uuid
   authorId      String      @db.Uuid
+  assigneeId    String?     @db.Uuid
+  assignee      Account?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
   scheduledAt   DateTime
   reason        String
   recommendationId String? @db.Uuid
@@ -492,6 +503,7 @@ model RedistributionPlan {
   items         TransferItem[]
 
   @@index([sourceHubId, targetHubId, status])
+  @@index([assigneeId, status])
 }
 
 model TransferItem {

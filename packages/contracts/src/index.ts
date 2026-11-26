@@ -30,6 +30,7 @@ export interface BatteryStateEvent {
   type: 'vehicle.battery';
   vehicleId: string;
   sequence: number;
+  tripId?: string;
   batteryPercent: number;
   observedAt: string;
 }
@@ -81,6 +82,8 @@ export interface TripView {
   startedAt: string;
   endedAt: string | null;
   startBattery: number;
+  currentBattery: number | null;
+  vehicleFault: boolean;
   endBattery: number | null;
   endVehicleStatus: string | null;
   durationSeconds: number | null;
@@ -99,6 +102,15 @@ export interface PendingTripHandoff {
   vehicleId: string;
   hubId: string;
   batteryPercent: number;
+}
+
+export interface ActiveTripBattery {
+  tripId: string;
+  vehicleId: string;
+  startedAt: string;
+  startBattery: number;
+  batteryPercent: number;
+  sequence: number;
 }
 
 export interface VehicleHandoffEvent {

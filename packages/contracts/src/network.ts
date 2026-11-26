@@ -34,6 +34,20 @@ export interface NetworkHub {
   resources: NetworkResource[];
 }
 
+function normalizeHubSearch(value: string) {
+  return value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('vi')
+    .replaceAll('đ', 'd').replace(/[^\p{Letter}\p{Number}]+/gu, ' ').trim();
+}
+
+export function matchesHubSearch(hub: Pick<NetworkHub, 'name' | 'code'>, query: string) {
+  const normalized = normalizeHubSearch(query);
+  if (!normalized) return !query.trim();
+  const searchable = normalizeHubSearch(hub.name + ' ' + hub.code + ' ' + hub.code.replaceAll('-', ''));
+  const words = searchable.split(' ');
+  return searchable.includes(normalized) ||
+    normalized.split(' ').every(term => words.some(word => word.startsWith(term)));
+}
+
 export interface ChangeInput {
   requestId: string;
   reason?: string;
@@ -57,8 +71,13 @@ export interface IncidentView {
   resourceId: string;
   hubId: string | null;
   tripId: string | null;
+  tripInProgress: boolean;
+  receivingHub: { id: string; name: string } | null;
+  vehicle: { code: string; hubId: string | null } | null;
   assigneeId: string | null;
-  status: 'OPEN' | 'ACKNOWLEDGED' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  status: 'OPEN' | 'ACKNOWLEDGED' | 'ASSIGNED' | 'IN_PROGRESS' | 'AWAITING_APPROVAL' | 'RESOLVED' | 'CLOSED';
+  reportedLocation: string | null;
+  confirmedLocation: string | null;
   resolution: string | null;
   severity: string;
   dueAt: string | null;
@@ -75,9 +94,11 @@ export interface PlanView {
   scheduledAt: string;
   recommendationId: string | null;
   reason: string;
-  status: 'DRAFT' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'APPROVED' | 'IN_PROGRESS' | 'AWAITING_APPROVAL' | 'COMPLETED' | 'CANCELLED';
+  assigneeId: string | null;
+  assigneeName: string | null;
   version: number;
-  items: { vehicleId: string; status: 'PLANNED' | 'DEPARTED' | 'ARRIVED' | 'CANCELLED' }[];
+  items: { vehicleId: string; vehicleCode: string; status: 'PLANNED' | 'DEPARTED' | 'ARRIVED' | 'CANCELLED' }[];
 }
 
 export interface ChargingVehicle {

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
 import type { ChargingRequestView, NetworkHub, PrivateChargingVehicleView } from '@semh/contracts';
+import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { displayTime, field, useCommand, useScreen } from '../../shared/api/use-screen';
 import { PrivateVehicleForm } from '../park/PrivateVehicleForm';
@@ -9,6 +10,7 @@ interface ChargingOverview {
   hubs: { id: string; name: string }[];
   vehicles: PrivateChargingVehicleView[];
   requests: ChargingRequestView[];
+  demoBatteryEnabled?: boolean;
 }
 interface Quote { reason: string | null; pointId: string | null; startsAt: string | null; endsAt: string | null }
 
@@ -16,6 +18,13 @@ const labels = {
   PENDING: 'Đang chờ', SCHEDULED: 'Đã xếp lịch', CHARGING: 'Đang sạc',
   COMPLETED: 'Đã hoàn tất', INTERRUPTED: 'Gián đoạn',
 };
+
+const chargingMetrics = [
+  { status: 'CHARGING', icon: 'charging' },
+  { status: 'SCHEDULED', icon: 'scheduled' },
+  { status: 'PENDING', icon: 'pending' },
+  { status: 'INTERRUPTED', icon: 'interrupted' },
+] as const;
 
 export function ChargingPage() {
   const operator = useLocation().pathname.startsWith('/operations');
@@ -28,7 +37,7 @@ export function ChargingPage() {
   const [privateVehicleId, setPrivateVehicleId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [hubFilter, setHubFilter] = useState('');
-  const [focusedRequest, setFocusedRequest] = useState('');
+  const [focusedRequest, setFocusedRequest] = useState(operator ? params.get('request') ?? '' : '');
   const [preview, setPreview] = useState<{ quote: Quote; input: object } | null>(null);
   const [message, setMessage] = useState('');
 
@@ -43,6 +52,13 @@ export function ChargingPage() {
     setMessage('');
     const quote = await action.send<Quote>('/charging/preview', input, 'POST', false);
     if (quote) setPreview({ quote, input });
+  }
+
+  async function simulateLowBattery(id: string) {
+    setPreview(null);
+    setMessage('');
+    const result = await action.send<{ batteryPercent: number }>('/charging/vehicles/' + id + '/demo-low-battery', {});
+    if (result) setMessage('IoT giả lập đã cập nhật pin xe còn ' + result.batteryPercent + '%.');
   }
 
   async function submit() {
@@ -70,21 +86,31 @@ export function ChargingPage() {
     : null;
   const { data } = screen;
   const privateVehicle = data?.vehicles.find(vehicle => vehicle.id === privateVehicleId);
+  const fullyCharged = privateVehicle?.batteryPercent === 100;
+  const activePrivateCharge = privateVehicle && data?.requests.some(item => item.vehicleId === privateVehicle.id &&
+    (['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status) ||
+      (item.session && !item.session.releasedAt && ['COMPLETED', 'INTERRUPTED'].includes(item.status))));
   const hubs = new Map(data?.hubs.map(hub => [hub.id, hub.name]));
   const fleet = network.data?.find(hub => hub.id === hubId)?.resources
     .filter(item => item.kind === 'VEHICLE' && ['AVAILABLE', 'AWAITING_CHARGE'].includes(item.status)) ?? [];
   const requests = data?.requests.filter(item => (!statusFilter || item.status === statusFilter) &&
     (!hubFilter || item.hubId === hubFilter)) ?? [];
-  const request = requests.find(item => item.id === focusedRequest) ?? requests.find(item => item.status === 'CHARGING') ?? requests[0];
+  const ongoing = operator ? requests.filter(item => ['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status) ||
+    (item.session && !item.session.releasedAt)) : requests;
+  const history = operator ? requests.filter(item => !ongoing.includes(item)) : [];
+  const request = requests.find(item => item.id === focusedRequest) ?? ongoing.find(item => item.status === 'CHARGING') ?? ongoing[0];
   const session = request?.session;
   const points = network.data?.find(hub => hub.id === request?.hubId)?.resources.filter(item => item.kind === 'CHARGING_POINT') ?? [];
   const statusTone = (status: ChargingRequestView['status']) => status === 'COMPLETED' ? 'success'
-    : status === 'CHARGING' ? 'info' : status === 'INTERRUPTED' ? 'danger' : 'warning';
+    : status === 'CHARGING' || (operator && status === 'SCHEDULED') ? 'info' : status === 'INTERRUPTED' ? 'danger' : 'warning';
 
   return (
     <section className="charging-content">
       <PageBanner title={operator ? 'Quản lý sạc' : 'Sạc của tôi'} actions={
-        <button type="button" className="outline" aria-expanded={formOpen} onClick={() => setFormOpen(!formOpen)}>
+        <button type="button" className={operator && !formOpen ? 'primary' : 'outline'} aria-expanded={formOpen} onClick={() => {
+          setFormOpen(!formOpen);
+          if (operator) setPreview(null);
+        }}>
           {formOpen ? 'Đóng biểu mẫu' : 'Đăng ký nhu cầu sạc'}
         </button>
       } />
@@ -93,9 +119,10 @@ export function ChargingPage() {
       {!data && !screen.error && <p role="status">Đang tải lịch sạc…</p>}
       {data && <div className="work-stack">
         {operator && <div className="metric-grid">
-          {(['CHARGING', 'SCHEDULED', 'PENDING', 'INTERRUPTED'] as const).map(status => <div className="work-card tinted-panel"
-            data-tone={status === 'CHARGING' ? 'aqua' : statusTone(status)} key={status}>
-            <span>{labels[status]}</span><b>{data.requests.filter(item => item.status === status).length}</b>
+          {chargingMetrics.map(({ status, icon }) => <div className="work-card metric-card" key={status}>
+            <span className="metric-label">{labels[status]}</span>
+            <b className="metric-value">{data.requests.filter(item => item.status === status).length}</b>
+            <MetricIcon name={icon} />
           </div>)}
         </div>}
         {formOpen && <section className="work-card">
@@ -111,25 +138,41 @@ export function ChargingPage() {
                 value={operator ? undefined : privateVehicleId} onChange={operator ? undefined : event => setPrivateVehicleId(event.target.value)}>
                 <option value="">Chọn xe</option>
                 {operator ? fleet.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.code} · {vehicle.batteryPercent}%</option>)
-                  : data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
+                  : data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.plate}{vehicle.batteryPercent !== null && ' · ' + vehicle.batteryPercent + '%'}
+                  </option>)}
               </select></label>
-              <div>
-                <label>Cần xe lúc
-                  <input name="neededAt" type="datetime-local" aria-describedby="charging-needed-help charging-time-help" />
-                </label>
-                <small id="charging-needed-help">Giờ bạn cần dùng xe. Yêu cầu được ưu tiên nếu cần xe trong 60 phút tới.</small>
-              </div>
-              <div>
-                <label>Hạn hoàn tất
-                  <input name="desiredBy" type="datetime-local" aria-describedby="charging-deadline-help charging-time-help" />
-                </label>
-                <small id="charging-deadline-help">Giờ muộn nhất bạn muốn sạc xong.</small>
-              </div>
-              <small className="charging-time-help" id="charging-time-help">
-                Cả hai ô đều tùy chọn. Nếu nhập cả hai, hệ thống xếp lịch theo mốc sớm hơn.
-              </small>
-              <button className="outline" disabled={action.pending}>Xem lịch dự kiến</button>
+              <details className="charging-time-options">
+                <summary>Thời gian mong muốn (tùy chọn)</summary>
+                <div className="charging-time-fields">
+                  <div>
+                    <label>Cần xe lúc
+                      <input name="neededAt" type="datetime-local" aria-describedby="charging-needed-help charging-time-help" />
+                    </label>
+                    <small id="charging-needed-help">Giờ bạn cần dùng xe. Yêu cầu được ưu tiên nếu cần xe trong 60 phút tới.</small>
+                  </div>
+                  <div>
+                    <label>Hạn hoàn tất
+                      <input name="desiredBy" type="datetime-local" aria-describedby="charging-deadline-help charging-time-help" />
+                    </label>
+                    <small id="charging-deadline-help">Giờ muộn nhất bạn muốn sạc xong.</small>
+                  </div>
+                  <small className="charging-time-help" id="charging-time-help">
+                    Nếu nhập cả hai, hệ thống xếp lịch theo mốc sớm hơn.
+                  </small>
+                </div>
+              </details>
+              {fullyCharged && <p className="charging-time-help" role="status">Xe đã đầy pin.</p>}
+              <button className="primary" disabled={action.pending || fullyCharged}>Xem lịch dự kiến</button>
             </form>}
+          {!operator && data.demoBatteryEnabled && privateVehicle && (privateVehicle.batteryPercent ?? 100) > 15 &&
+            <details className="work-notice">
+              <summary>Giả lập IoT</summary>
+              <p>Đưa pin xe về 15% để thử đăng ký sạc.</p>
+              {activePrivateCharge ? <p>Chờ phiên sạc kết thúc và cổng được giải phóng.</p>
+                : <button className="outline" type="button" disabled={action.pending}
+                  onClick={() => void simulateLowBattery(privateVehicle.id)}>Giả lập pin thấp</button>}
+            </details>}
           {!operator && privateVehicle?.batteryPercent === null && <details className="work-notice">
             <summary>Bổ sung mức pin để lên lịch</summary>
             <PrivateVehicleForm key={privateVehicle.id} vehicle={privateVehicle}
@@ -160,16 +203,32 @@ export function ChargingPage() {
                 {Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select></label>
             </div>
-            {!requests.length ? <p>Chưa có yêu cầu sạc phù hợp.</p> : <div className="scroll-table" role="region" tabIndex={0} aria-label="Yêu cầu sạc">
-              <table>
-                <thead><tr><th>Phương tiện</th><th>Hub</th><th>Trạng thái</th></tr></thead>
-                <tbody>{requests.map(item => <tr key={item.id} data-selected={request?.id === item.id}>
-                  <td><button className="table-link" type="button" onClick={() => setFocusedRequest(item.id)}>{item.vehicleCode}</button></td>
-                  <td>{hubs.get(item.hubId) ?? '—'}</td>
-                  <td><span className="status-pill" data-tone={statusTone(item.status)}>{labels[item.status]}</span></td>
-                </tr>)}</tbody>
-              </table>
-            </div>}
+            {operator ? <>
+              {ongoing.length ? <div className="app-pane-list">{ongoing.map(item => <button className="app-pane-item" type="button"
+                key={item.id} aria-pressed={item.id === request?.id} onClick={() => setFocusedRequest(item.id)}>
+                <strong>{item.vehicleCode}</strong><small>{hubs.get(item.hubId) ?? 'Hub đã ngừng phục vụ'}</small>
+                <span className="status-pill" data-tone={statusTone(item.status)}>{labels[item.status]}</span>
+              </button>)}</div> : <p>Chưa có yêu cầu sạc đang theo dõi.</p>}
+              {!!history.length && <details open={history.some(item => item.id === request?.id) || undefined}>
+                <summary>Lịch sử sạc ({history.length})</summary>
+                <div className="app-pane-list">{history.map(item => <button className="app-pane-item" type="button"
+                  key={item.id} aria-pressed={item.id === request?.id} onClick={() => setFocusedRequest(item.id)}>
+                  <strong>{item.vehicleCode}</strong><small>{hubs.get(item.hubId) ?? 'Hub đã ngừng phục vụ'}</small>
+                  <span className="status-pill" data-tone={statusTone(item.status)}>{labels[item.status]}</span>
+                </button>)}</div>
+              </details>}
+            </> : <>
+              {!requests.length ? <p>Chưa có yêu cầu sạc phù hợp.</p> : <div className="scroll-table" role="region" tabIndex={0} aria-label="Yêu cầu sạc">
+                <table>
+                  <thead><tr><th>Phương tiện</th><th>Hub</th><th>Trạng thái</th></tr></thead>
+                  <tbody>{requests.map(item => <tr key={item.id} data-selected={request?.id === item.id}>
+                    <td><button className="table-link" type="button" onClick={() => setFocusedRequest(item.id)}>{item.vehicleCode}</button></td>
+                    <td>{hubs.get(item.hubId) ?? '—'}</td>
+                    <td><span className="status-pill" data-tone={statusTone(item.status)}>{labels[item.status]}</span></td>
+                  </tr>)}</tbody>
+                </table>
+              </div>}
+            </>}
           </section>
           {request && <article className="work-card" key={request.id}>
               <div className="work-heading"><h2>{session ? 'Tiến độ phiên sạc' : 'Chi tiết yêu cầu'}</h2>
@@ -177,8 +236,10 @@ export function ChargingPage() {
               <p>{request.vehicleCode} · {hubs.get(request.hubId) ?? 'Hub đã ngừng phục vụ'}</p>
               {request.reason && <p>{request.reason}</p>}
               {session && <>
-                <div className="charging-battery tinted-panel" data-tone="aqua">
-                  <span>Mức pin hiện tại</span><strong>{session.batteryPercent}%</strong>
+                <div className="work-card metric-card charging-battery">
+                  <span className="metric-label">Mức pin hiện tại</span>
+                  <strong className="metric-value">{session.batteryPercent}%</strong>
+                  <MetricIcon name="charging" />
                   <progress value={session.batteryPercent} max={100} aria-label="Mức pin hiện tại" />
                 </div>
                 <dl className="reservation-details">

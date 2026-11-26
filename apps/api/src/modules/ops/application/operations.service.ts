@@ -19,12 +19,13 @@ export interface PlanInput {
   sourceHubId: string;
   targetHubId: string;
   vehicleIds: string[];
-  scheduledAt: Date;
+  scheduledAt?: Date;
+  assigneeId?: string;
   recommendationId: string | null;
 }
 
 export interface IncidentAction {
-  action: 'ACKNOWLEDGE' | 'ASSIGN' | 'START' | 'HANDOVER' | 'CONFIRM_HANDOVER' | 'RESOLVE' | 'CLOSE';
+  action: 'ACKNOWLEDGE' | 'ASSIGN' | 'START' | 'RESOLVE' | 'CLOSE';
   assigneeId?: string;
   safetyPassed?: boolean;
   location?: string;
@@ -34,20 +35,19 @@ export interface IncidentAction {
 }
 
 export interface PlanAction {
-  action: 'APPROVE' | 'DEPART' | 'ARRIVE' | 'COMPLETE' | 'CANCEL';
-  vehicleId?: string;
-  actualHubId?: string;
+  action: 'ASSIGN' | 'START' | 'REPORT_ARRIVAL' | 'COMPLETE' | 'CANCEL';
+  assigneeId?: string;
 }
 
-function incidentView(row: Incident): IncidentView {
+type IncidentDetails = Omit<IncidentView, 'tripInProgress' | 'vehicle' | 'receivingHub'> & {
+  receivingHubId: string | null;
+};
+
+function incidentDetails(row: Incident): IncidentDetails {
   return {
     ...row, handover: row.handover as IncidentView['handover'], createdAt: row.createdAt.toISOString(),
     dueAt: row.dueAt?.toISOString() ?? null,
   };
-}
-
-function planView(row: StoredPlan): PlanView {
-  return { ...row, scheduledAt: row.scheduledAt.toISOString() };
 }
 
 @Injectable()
@@ -67,14 +67,39 @@ export class OperationsService {
     return this.store.read(async tx => {
       const scope = actor.operatorHubIds === null ? undefined : actor.operatorHubIds ?? [];
       const hubs = mode === 'MNT' ? [] : await this.network.read(tx, mode === 'ADM' ? undefined : scope, false);
-      const where = mode === 'MNT' ? { assigneeId: actor.accountId } : { hubId: scope ? { in: scope } : undefined };
+      const where = mode === 'MNT' ? { assigneeId: actor.accountId } : scope ? { OR: [
+        { receivingHubId: { in: scope } },
+        { receivingHubId: null, hubId: { in: scope } },
+      ] } : {};
+      const plans = mode === 'ADM' ? [] : await this.store.plans(tx, mode === 'MNT' ? { assigneeId: actor.accountId }
+        : scope ? { sourceHubId: { in: scope }, targetHubId: { in: scope } } : {});
       return {
         hubs,
-        incidents: mode === 'ADM' ? [] : (await this.store.incidents(tx, where)).map(incidentView),
-        plans: mode === 'OPR' ? (await this.store.plans(tx, scope)).map(planView) : [],
+        incidents: mode === 'ADM' ? [] : await this.incidentViews(tx, (await this.store.incidents(tx, where)).map(incidentDetails)),
+        plans: await this.planViews(tx, plans),
         technicians: mode === 'OPR' ? await this.store.technicians(tx) : [],
       };
     });
+  }
+
+  private async incidentViews(tx: Transaction, incidents: IncidentDetails[]): Promise<IncidentView[]> {
+    const tripIds = [...new Set(incidents.flatMap(incident => incident.tripId ? [incident.tripId] : []))];
+    const vehicleIds = [...new Set(incidents.filter(incident => incident.resourceKind === 'VEHICLE').map(incident => incident.resourceId))];
+    const receivingHubIds = [...new Set(incidents.flatMap(incident => incident.receivingHubId ? [incident.receivingHubId] : []))];
+    const trips = tripIds.length ? await this.store.activeIncidentTrips(tx, tripIds) : [];
+    const vehicles = vehicleIds.length ? await this.store.vehiclesByIds(tx, vehicleIds) : [];
+    const receivingHubs = receivingHubIds.length ? await this.store.hubNames(tx, receivingHubIds) : [];
+    const activeTrips = new Set(trips.map(trip => trip.id));
+    const vehicleById = new Map(vehicles.map(({ id, code, hubId }) => [id, { code, hubId }]));
+    const receivingHubById = new Map(receivingHubs.map(hub => [hub.id, hub]));
+    return incidents.map(({ receivingHubId, ...incident }) => ({
+      ...incident,
+      receivingHub: receivingHubById.get(receivingHubId ?? '') ?? null,
+      reportedLocation: incident.reportedLocation ?? null,
+      confirmedLocation: incident.confirmedLocation ?? null,
+      tripInProgress: incident.tripId !== null && activeTrips.has(incident.tripId),
+      vehicle: vehicleById.get(incident.resourceId) ?? null,
+    }));
   }
 
   createResource(token: string, input: ResourceDraft, change: ChangeInput, mode: 'ADM' | 'OPR') {
@@ -133,20 +158,21 @@ export class OperationsService {
       const resource = await this.requireResource(tx, input.kind, input.id);
       const trip = input.kind === 'VEHICLE' ? await this.store.openTrip(tx, resource.id) : null;
       assertOperatorHubs(actor, resource.hubId ?? trip?.startHubId ?? null);
-      return withChange(tx, actor.accountId, 'INCIDENT_REPORTED', change, input, () =>
+      const incident = await withChange(tx, actor.accountId, 'INCIDENT_REPORTED', change, input, () =>
         this.openFault(tx, resource, input.title, input.description, { actorId: actor.accountId, requestId: change.requestId }));
+      return (await this.incidentViews(tx, [incident]))[0];
     });
   }
 
-  reportTripFault(token: string, tripId: string, description: string, change: ChangeInput) {
+  reportTripFault(token: string, tripId: string, input: { location: string; description: string }, change: ChangeInput) {
     return this.store.write(async tx => {
       const actor = await this.access.verifyAccess(token, ['STU'], tx);
-      return withChange(tx, actor.accountId, 'TRIP_FAULT_REPORTED', change, { tripId, description }, async () => {
+      return withChange(tx, actor.accountId, 'TRIP_FAULT_REPORTED', change, { tripId, ...input }, async () => {
         const trip = await this.store.studentTrip(tx, tripId, actor.accountId);
         if (!trip) throw new NotFoundException('Không tìm thấy chuyến đang đi của bạn.');
         const resource = await this.requireResource(tx, 'VEHICLE', trip.vehicleId);
-        const incident = await this.openFault(tx, resource, 'Xe gặp sự cố trong chuyến', description,
-          { actorId: actor.accountId, requestId: change.requestId });
+        const incident = await this.openFault(tx, resource, 'Xe gặp sự cố trong chuyến', input.description,
+          { actorId: actor.accountId, requestId: change.requestId, reportedLocation: input.location });
         return { id: incident.id, status: incident.status };
       });
     });
@@ -189,146 +215,227 @@ export class OperationsService {
 
   changeIncident(token: string, id: string, input: IncidentAction, change: ChangeInput) {
     return this.store.write(async tx => {
-      const isTech = ['START', 'HANDOVER', 'RESOLVE'].includes(input.action);
+      const isTech = input.action === 'START' || input.action === 'RESOLVE';
       const actor = await this.access.verifyAccess(token, isTech ? ['MNT'] : ['OPR'], tx);
       const row = await this.store.incident(tx, id);
       if (!row) throw new NotFoundException('Không tìm thấy sự cố.');
       if (isTech) {
         if (row.assigneeId !== actor.accountId) throw new ForbiddenException('Sự cố này chưa được giao cho bạn.');
-      } else assertOperatorHubs(actor, row.hubId);
+      } else {
+        assertOperatorHubs(actor, row.receivingHubId ?? row.hubId);
+        if (input.action === 'CLOSE' && input.actualHubId && !row.tripId) assertOperatorHubs(actor, input.actualHubId);
+      }
 
-      return withChange(tx, actor.accountId, 'INCIDENT_CHANGED', change, { id, input }, async () => {
+      const incident = await withChange(tx, actor.accountId, 'INCIDENT_CHANGED', change, { id, input }, async () => {
         assertVersion(row.version, change.version);
-        const updated = await this.applyIncidentAction(tx, row, actor.accountId, input, change.reason!);
+        const updated = await this.applyIncidentAction(tx, row, actor.accountId, input, change);
         await this.log(tx, actor.accountId, 'INCIDENT_' + input.action, 'incident', id, change,
-          { from: row.status, to: updated.status, assigneeId: updated.assigneeId, safe: updated.safe });
-        return incidentView(updated);
+          { from: row.status, to: updated.status, assigneeId: updated.assigneeId, safe: updated.safe,
+            confirmedLocation: updated.confirmedLocation, acceptingHubId: updated.receivingHubId ?? input.actualHubId ?? null });
+        return incidentDetails(updated);
       });
+      return (await this.incidentViews(tx, [incident]))[0];
     });
   }
 
-  private async applyIncidentAction(tx: Transaction, row: Incident, actorId: string, input: IncidentAction, reason: string) {
+  private async applyIncidentAction(tx: Transaction, row: Incident, actorId: string, input: IncidentAction, change: ChangeInput) {
     const { action } = input;
-    const { id, status } = row;
+    const { id, status, tripId } = row;
+    const tripInProgress = tripId !== null && (action === 'START' || action === 'RESOLVE')
+      && (await this.store.activeIncidentTrips(tx, [tripId])).length > 0;
+
     if (action === 'ACKNOWLEDGE' && status === 'OPEN') {
-      return this.store.updateIncident(tx, id, { status: 'ACKNOWLEDGED', severity: input.severity ?? 'MEDIUM' });
+      return this.store.updateIncident(tx, id, { status: 'ACKNOWLEDGED', severity: input.severity ?? row.severity });
     }
-    if (action === 'ASSIGN' && ['ACKNOWLEDGED', 'ASSIGNED', 'IN_PROGRESS'].includes(status) &&
-        input.assigneeId && await this.store.activeTechnician(tx, input.assigneeId)) {
-      return this.store.updateIncident(tx, id, { status: 'ASSIGNED', assigneeId: input.assigneeId, dueAt: input.dueAt });
+    const canAssign = (status === 'OPEN' && tripId !== null) || ['ACKNOWLEDGED', 'ASSIGNED', 'IN_PROGRESS'].includes(status);
+    if (action === 'ASSIGN' && canAssign && input.assigneeId && await this.store.activeTechnician(tx, input.assigneeId)) {
+      const confirmedLocation = input.location ?? row.confirmedLocation;
+      if (tripId && !confirmedLocation) throw new ConflictException('Xác nhận địa điểm xe bị hư trước khi giao kỹ thuật.');
+      return this.store.updateIncident(tx, id, {
+        status: 'ASSIGNED', assigneeId: input.assigneeId, dueAt: input.dueAt, confirmedLocation,
+      });
     }
-    if (action === 'START' && status === 'ASSIGNED') {
+    if (action === 'START' && (status === 'ASSIGNED' || (status === 'IN_PROGRESS' && tripInProgress))) {
+      if (tripId && tripInProgress) {
+        await this.fleet.closeFaultedTrip(tx, tripId, row.resourceId);
+        await this.audit.append(tx, {
+          actorId, action: 'TRIP_INTERRUPTED', targetType: 'trip', targetId: tripId, occurredAt: new Date(),
+          requestId: change.requestId, details: { incidentId: id, vehicleId: row.resourceId, location: row.confirmedLocation },
+        });
+      }
       return this.store.updateIncident(tx, id, { status: 'IN_PROGRESS' });
     }
-    if (action === 'HANDOVER' && status === 'IN_PROGRESS' && row.tripId && input.location) {
-      return this.store.updateIncident(tx, id, { handover: { location: input.location, at: new Date().toISOString(), by: actorId } });
+    const needsTripDelivery = tripId && status === 'AWAITING_APPROVAL' && !row.receivingHubId && input.safetyPassed;
+    if (action === 'RESOLVE' && (status === 'IN_PROGRESS' || needsTripDelivery) && typeof input.safetyPassed === 'boolean') {
+      if (tripInProgress) throw new ConflictException('Tiếp nhận xe trước khi xác nhận đã sửa.');
+      if (tripId && input.safetyPassed) {
+        const hubId = input.actualHubId;
+        if (!hubId) throw new ConflictException('Chọn Hub mà bạn đã đưa xe về.');
+        const resource = await this.requireResource(tx, 'VEHICLE', row.resourceId);
+        if (resource.hubId === hubId) {
+          if (!await this.hubs.isHubActiveInTx(tx, hubId)) throw new ConflictException('Hub chưa thể tiếp nhận xe.');
+        } else {
+          const destination = await this.hubs.readArrivalCapacityInTx(tx, hubId);
+          if (!destination?.active || destination.spaces < 1) throw new ConflictException('Hub chưa thể tiếp nhận xe.');
+        }
+        await this.resources.receiveFaultedVehicle(tx, resource.id, hubId);
+      }
+      return this.store.updateIncident(tx, id, {
+        status: input.safetyPassed ? 'AWAITING_APPROVAL' : 'IN_PROGRESS',
+        receivingHubId: tripId && input.safetyPassed ? input.actualHubId : undefined,
+        resolution: change.reason ?? null, safe: input.safetyPassed,
+      });
     }
-    if (action === 'CONFIRM_HANDOVER' && status === 'IN_PROGRESS' && row.tripId && row.handover &&
-        (row.handover as IncidentView['handover'])?.by === row.assigneeId) {
-      await this.fleet.closeFaultedTrip(tx, row.tripId, row.resourceId);
-      return this.store.updateIncident(tx, id, { resolution: reason });
-    }
-    if (action === 'RESOLVE' && status === 'IN_PROGRESS' && typeof input.safetyPassed === 'boolean') {
-      if (input.safetyPassed) {
+    if (action === 'CLOSE' && row.safe && (status === 'AWAITING_APPROVAL' || status === 'RESOLVED')) {
+      if (status === 'AWAITING_APPROVAL') {
         const resource = await this.requireResource(tx, row.resourceKind, row.resourceId);
-        if (!resource.hubId && resource.kind === 'VEHICLE') {
-          if (!input.actualHubId) throw new ConflictException('Chọn Hub đã xác nhận tiếp nhận xe.');
+        if (tripId) {
+          if (input.actualHubId) throw new ConflictException('Hub tiếp nhận do kỹ thuật xác nhận.');
+          if (!row.receivingHubId || resource.hubId !== row.receivingHubId) {
+            throw new ConflictException('Kỹ thuật chưa xác nhận xe đã về Hub.');
+          }
+          if (!await this.hubs.isHubActiveInTx(tx, row.receivingHubId)) {
+            throw new ConflictException('Hub tiếp nhận hiện chưa hoạt động.');
+          }
+        } else if (resource.kind === 'VEHICLE' && !resource.hubId) {
+          if (!input.actualHubId) throw new ConflictException('Chọn Hub đã tiếp nhận xe sau sửa chữa.');
           const destination = await this.hubs.readArrivalCapacityInTx(tx, input.actualHubId);
           if (!destination?.active || destination.spaces < 1) throw new ConflictException('Hub chưa thể tiếp nhận xe.');
         }
         await this.resources.restore(tx, resource, input.actualHubId);
       }
-      return this.store.updateIncident(tx, id, {
-        status: input.safetyPassed ? 'RESOLVED' : 'IN_PROGRESS', resolution: reason, safe: input.safetyPassed,
-      });
-    }
-    if (action === 'CLOSE' && status === 'RESOLVED' && row.safe) {
       return this.store.updateIncident(tx, id, { status: 'CLOSED' });
     }
     throw new ConflictException('Không thể thực hiện thao tác ở trạng thái sự cố hiện tại.');
+  }
+
+  private async planViews(tx: Transaction, plans: StoredPlan[]): Promise<PlanView[]> {
+    if (!plans.length) return [];
+    const ids = [...new Set(plans.flatMap(plan => plan.items.map(item => item.vehicleId)))];
+    const vehicles = await this.store.vehiclesByIds(tx, ids);
+    const codes = new Map(vehicles.map(vehicle => [vehicle.id, vehicle.code]));
+    return plans.map(({ assignee, items, ...plan }) => ({
+      ...plan, scheduledAt: plan.scheduledAt.toISOString(), assigneeName: assignee?.displayName ?? null,
+      items: items.map(item => ({ ...item, vehicleCode: codes.get(item.vehicleId) ?? item.vehicleId.slice(0, 8) })),
+    }));
   }
 
   savePlan(token: string, input: PlanInput, change: ChangeInput, id?: string) {
     return this.store.write(async tx => {
       const actor = await this.access.verifyAccess(token, ['OPR'], tx);
       assertOperatorHubs(actor, input.sourceHubId, input.targetHubId);
-      if (id) {
-        const previous = await this.store.plan(tx, id);
-        if (!previous) throw new NotFoundException('Không tìm thấy kế hoạch.');
-        assertOperatorHubs(actor, previous.sourceHubId, previous.targetHubId);
-      }
       return withChange(tx, actor.accountId, 'PLAN_SAVED', change, { id, input }, async () => {
-        if (id) {
-          const previous = (await this.store.plan(tx, id))!;
+        const previous = id ? await this.store.plan(tx, id) : null;
+        if (id && !previous) throw new NotFoundException('Không tìm thấy kế hoạch.');
+        if (previous) {
+          assertOperatorHubs(actor, previous.sourceHubId, previous.targetHubId);
           assertVersion(previous.version, change.version);
           if (previous.status !== 'DRAFT') throw new ConflictException('Chỉ có thể sửa kế hoạch nháp.');
         }
         await this.checkTransfer(tx, input);
+        if (input.assigneeId) await this.requireTechnician(tx, input.assigneeId);
+
         const data = {
           authorId: actor.accountId, sourceHubId: input.sourceHubId, targetHubId: input.targetHubId,
-          scheduledAt: input.scheduledAt, reason: change.reason!, recommendationId: input.recommendationId,
+          scheduledAt: input.scheduledAt ?? previous?.scheduledAt ?? new Date(), reason: change.reason ?? previous?.reason ?? '',
+          recommendationId: input.recommendationId,
+          assigneeId: input.assigneeId,
+          status: input.assigneeId ? 'APPROVED' as const : 'DRAFT' as const,
         };
         const vehicles = input.vehicleIds.map(vehicleId => ({ vehicleId }));
-        const row = id
-          ? await this.store.updatePlan(tx, id, { ...data, items: { deleteMany: {}, create: vehicles } })
+        const row = previous
+          ? await this.store.updatePlan(tx, previous.id, { ...data, items: { deleteMany: {}, create: vehicles } })
           : await this.store.createPlan(tx, { ...data, items: { create: vehicles } });
         await this.log(tx, actor.accountId, 'PLAN_SAVED', 'plan', row.id, change, { vehicleIds: input.vehicleIds });
-        return planView(row);
+        if (input.assigneeId) {
+          for (const item of row.items) await this.fleet.bindTransfer(tx, item.vehicleId, row.id, row.sourceHubId);
+          await this.log(tx, actor.accountId, 'PLAN_ASSIGN', 'plan', row.id, change, {
+            from: previous?.status ?? null, to: row.status, assigneeId: input.assigneeId,
+          });
+        }
+        return (await this.planViews(tx, [row]))[0]!;
       });
     });
   }
 
   changePlan(token: string, id: string, input: PlanAction, change: ChangeInput) {
     return this.store.write(async tx => {
-      const actor = await this.access.verifyAccess(token, ['OPR'], tx);
+      const technicianAction = input.action === 'START' || input.action === 'REPORT_ARRIVAL';
+      const actor = await this.access.verifyAccess(token, technicianAction ? ['MNT'] : ['OPR'], tx);
       const row = await this.store.plan(tx, id);
       if (!row) throw new NotFoundException('Không tìm thấy kế hoạch.');
-      assertOperatorHubs(actor, row.sourceHubId, row.targetHubId);
+      if (technicianAction) {
+        if (row.assigneeId !== actor.accountId) throw new ForbiddenException('Kế hoạch chưa được giao cho bạn.');
+      } else {
+        assertOperatorHubs(actor, row.sourceHubId, row.targetHubId);
+      }
       return withChange(tx, actor.accountId, 'PLAN_CHANGED', change, { id, input }, async () => {
         assertVersion(row.version, change.version);
         const updated = await this.applyPlanAction(tx, row, input);
-        await this.log(tx, actor.accountId, 'PLAN_' + input.action, 'plan', id, change,
-          { from: row.status, to: updated.status, vehicleId: input.vehicleId ?? null, actualHubId: input.actualHubId ?? null });
-        return planView(updated);
+        await this.log(tx, actor.accountId, 'PLAN_' + input.action, 'plan', id, change, {
+          from: row.status, to: updated.status, assigneeId: updated.assigneeId,
+          sourceHubId: row.sourceHubId, targetHubId: row.targetHubId, vehicleIds: row.items.map(item => item.vehicleId),
+        });
+        return (await this.planViews(tx, [updated]))[0]!;
       });
     });
+  }
+
+  private async requireTechnician(tx: Transaction, id: string) {
+    if (!await this.store.activeTechnician(tx, id)) throw new ConflictException('Chọn kỹ thuật viên đang hoạt động.');
   }
 
   private async applyPlanAction(tx: Transaction, row: StoredPlan, input: PlanAction) {
     const { id, status, items, sourceHubId, targetHubId } = row;
     const { action } = input;
-    if (action === 'APPROVE' && status === 'DRAFT') {
-      await this.checkTransfer(tx, { sourceHubId, targetHubId, vehicleIds: items.map(item => item.vehicleId) });
-      for (const item of items) await this.fleet.bindTransfer(tx, item.vehicleId, id, sourceHubId);
-      return this.store.updatePlan(tx, id, { status: 'APPROVED' });
+    const planned = items.filter(item => item.status === 'PLANNED');
+    const moving = items.filter(item => item.status === 'DEPARTED');
+
+    if (action === 'ASSIGN' && ['DRAFT', 'APPROVED', 'IN_PROGRESS'].includes(status) && input.assigneeId) {
+      await this.requireTechnician(tx, input.assigneeId);
+      if (status === 'DRAFT') {
+        await this.checkTransfer(tx, { sourceHubId, targetHubId, vehicleIds: items.map(item => item.vehicleId) });
+        for (const item of items) await this.fleet.bindTransfer(tx, item.vehicleId, id, sourceHubId);
+      } else if (!planned.length && !moving.length) {
+        throw new ConflictException('Xe đã đến đích. Xác nhận để hoàn tất kế hoạch.');
+      }
+      return this.store.updatePlan(tx, id, { status: status === 'DRAFT' ? 'APPROVED' : status, assigneeId: input.assigneeId });
     }
     if (action === 'CANCEL' && ['DRAFT', 'APPROVED', 'IN_PROGRESS'].includes(status)) {
-      if (items.some(item => item.status === 'DEPARTED')) throw new ConflictException('Có xe đang vận chuyển. Xác nhận nơi xe đến trước khi hủy.');
-      for (const item of items.filter(item => item.status === 'PLANNED')) {
+      if (moving.length) throw new ConflictException('Có xe đã rời Hub nguồn. Hãy hoàn tất bàn giao xe.');
+      for (const item of planned) {
         if (status !== 'DRAFT') await this.fleet.transfer(tx, item.vehicleId, id, 'CANCEL', sourceHubId);
         await this.store.moveItem(tx, id, item.vehicleId, { status: 'CANCELLED' });
       }
       return this.store.updatePlan(tx, id, { status: 'CANCELLED' });
     }
-    if (action === 'COMPLETE' && status === 'IN_PROGRESS' && items.every(item => item.status === 'ARRIVED')) {
+    if (action === 'START' && ['APPROVED', 'IN_PROGRESS'].includes(status) && planned.length) {
+      const departedAt = new Date();
+      for (const item of planned) {
+        await this.fleet.transfer(tx, item.vehicleId, id, 'DEPART', sourceHubId);
+        await this.store.moveItem(tx, id, item.vehicleId, { status: 'DEPARTED', departedAt });
+      }
+      return this.store.updatePlan(tx, id, { status: 'IN_PROGRESS' });
+    }
+    if (action === 'REPORT_ARRIVAL' && status === 'IN_PROGRESS' && !planned.length && moving.length) {
+      return this.store.updatePlan(tx, id, { status: 'AWAITING_APPROVAL' });
+    }
+    const alreadyArrived = status === 'IN_PROGRESS' && items.every(item => item.status === 'ARRIVED');
+    if (action === 'COMPLETE' && (status === 'AWAITING_APPROVAL' || alreadyArrived)) {
+      if (moving.length) {
+        const destination = await this.hubs.readArrivalCapacityInTx(tx, targetHubId);
+        if (!destination?.active || destination.physicalSpaces < moving.length) {
+          throw new ConflictException('Hub đích hiện chưa thể tiếp nhận toàn bộ xe.');
+        }
+        const arrivedAt = new Date();
+        for (const item of moving) {
+          await this.fleet.transfer(tx, item.vehicleId, id, 'ARRIVE', targetHubId);
+          await this.store.moveItem(tx, id, item.vehicleId, { status: 'ARRIVED', arrivedAt });
+        }
+      }
       return this.store.updatePlan(tx, id, { status: 'COMPLETED' });
     }
-    if (status === 'APPROVED' || status === 'IN_PROGRESS') {
-      const item = items.find(item => item.vehicleId === input.vehicleId);
-      if (item && action === 'DEPART' && item.status === 'PLANNED' && input.actualHubId === sourceHubId) {
-        await this.fleet.transfer(tx, item.vehicleId, id, 'DEPART', sourceHubId);
-        await this.store.moveItem(tx, id, item.vehicleId, { status: 'DEPARTED', departedAt: new Date() });
-        return this.store.updatePlan(tx, id, { status: 'IN_PROGRESS' });
-      }
-      if (item && action === 'ARRIVE' && item.status === 'DEPARTED' && input.actualHubId === targetHubId) {
-        const destination = await this.hubs.readArrivalCapacityInTx(tx, targetHubId);
-        if (!destination?.active || destination.physicalSpaces < 1) throw new ConflictException('Hub đích chưa thể nhận xe.');
-        await this.fleet.transfer(tx, item.vehicleId, id, 'ARRIVE', targetHubId);
-        await this.store.moveItem(tx, id, item.vehicleId, { status: 'ARRIVED', arrivedAt: new Date() });
-        return this.store.updatePlan(tx, id, {});
-      }
-    }
-    throw new ConflictException('Bằng chứng hoặc trạng thái điều chuyển không hợp lệ.');
+    throw new ConflictException('Thao tác chưa phù hợp với tiến độ điều chuyển hiện tại.');
   }
 
   private async checkTransfer(tx: Transaction, input: Pick<PlanInput, 'sourceHubId' | 'targetHubId' | 'vehicleIds'>) {
@@ -347,23 +454,29 @@ export class OperationsService {
 
   private async openFault(
     tx: Transaction, resource: Awaited<ReturnType<OperationsService['requireResource']>>, title: string, description: string,
-    source: { actorId?: string; requestId?: string; sourceId?: string; eventId?: string },
+    source: { actorId?: string; requestId?: string; sourceId?: string; eventId?: string; reportedLocation?: string },
   ) {
     const existing = await this.store.openIncident(tx, resource.kind, resource.id);
     const trip = resource.kind === 'VEHICLE' ? await this.store.openTrip(tx, resource.id) : null;
     await this.resources.markFault(tx, resource);
+    const reopen = existing?.status === 'RESOLVED' || (existing?.status === 'AWAITING_APPROVAL' && source.sourceId !== undefined);
     const incident = existing
-      ? await this.store.updateIncident(tx, existing.id, existing.status === 'RESOLVED' ? { status: 'IN_PROGRESS', safe: false } : {})
+      ? await this.store.updateIncident(tx, existing.id, {
+        ...(reopen ? { status: 'IN_PROGRESS', safe: false } : {}),
+        description: source.reportedLocation && description ? description : undefined,
+        reportedLocation: source.reportedLocation,
+      })
       : await this.store.createIncident(tx, {
         resourceKind: resource.kind, resourceId: resource.id, hubId: resource.hubId ?? trip?.startHubId,
-        tripId: trip?.id, reporterId: source.actorId, title, description,
+        tripId: trip?.id, reporterId: source.actorId, title, description, reportedLocation: source.reportedLocation,
       });
     await this.audit.append(tx, {
       actorId: source.actorId, action: existing ? 'INCIDENT_EVIDENCE_ADDED' : 'INCIDENT_OPENED', targetType: 'incident',
       targetId: incident.id, occurredAt: new Date(), requestId: source.requestId,
-      details: { description, sourceId: source.sourceId ?? null, eventId: source.eventId ?? null, resourceId: resource.id },
+      details: { description, location: source.reportedLocation ?? null, sourceId: source.sourceId ?? null,
+        eventId: source.eventId ?? null, resourceId: resource.id },
     });
-    return incidentView(incident);
+    return incidentDetails(incident);
   }
 
   private async requireResource(tx: Transaction, kind: ResourceKind, id: string) {

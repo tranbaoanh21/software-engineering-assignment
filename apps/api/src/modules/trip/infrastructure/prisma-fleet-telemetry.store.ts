@@ -21,7 +21,10 @@ export class PrismaFleetTelemetryStore extends FleetTelemetryStore {
         where: {
           id: event.vehicleId,
           sourceId: event.sourceId,
-          status: { in: ['AVAILABLE', 'IN_USE', 'RESERVED'] },
+          ...(event.tripId ? {
+            status: 'IN_USE', trips: { some: { id: event.tripId, status: 'IN_PROGRESS' } },
+            batteryPercent: { gt: event.batteryPercent },
+          } : { status: { in: ['AVAILABLE', 'IN_USE', 'RESERVED'] } }),
           telemetrySequence: { lt: event.sequence },
           OR: [{ lastObservedAt: null }, { lastObservedAt: { lte: new Date(event.observedAt) } }],
         },

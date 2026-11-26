@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import type {
-  BatteryStateEvent, ChargingStateEvent, ParkingStateEvent, PendingChargeStep, PendingParkingVerification,
+  ActiveTripBattery, BatteryStateEvent, ChargingStateEvent, ParkingStateEvent, PendingChargeStep, PendingParkingVerification,
   PendingTripHandoff, ResourceStateEvent, VehicleHandoffEvent,
 } from '@semh/contracts';
 
@@ -71,12 +71,34 @@ async function pollChargingCommands(deviceSource: string) {
   }
 }
 
+async function pollTripBattery(deviceSource: string) {
+  const trips = await pending<ActiveTripBattery>('active-trip-batteries');
+  const observedAt = new Date();
+  for (const trip of trips) {
+    const elapsed = Math.max(0, observedAt.getTime() - Date.parse(trip.startedAt));
+    const batteryPercent = Math.max(0, trip.startBattery - Math.floor(elapsed / 5_000));
+    if (batteryPercent >= trip.batteryPercent || trip.sequence >= 2147483647) continue;
+    await send({
+      type: 'vehicle.battery', sourceId: deviceSource, eventId: randomUUID(), tripId: trip.tripId,
+      vehicleId: trip.vehicleId, sequence: trip.sequence + 1, batteryPercent, observedAt: observedAt.toISOString(),
+    });
+  }
+}
+
 if (process.env.SIM_MODE === 'handoff') {
   console.log('IoT simulator is waiting for vehicle, parking and charging commands.');
   let nextTelemetry = 0;
-  const demoVehicle = process.env.SIM_DEMO_STREAM === 'true' ? process.env.SIM_VEHICLE_ID : undefined;
+  const drainTrips = process.env.IOT_DEMO_BATTERY === 'true';
+  const demoVehicle = !drainTrips && process.env.SIM_DEMO_STREAM === 'true' ? process.env.SIM_VEHICLE_ID : undefined;
   let sequence = Math.floor(Date.now() / 1000);
   for (;;) {
+    if (drainTrips) {
+      try {
+        await pollTripBattery(sourceId);
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : 'IoT battery update failed');
+      }
+    }
     const jobs = [pollTripCommands(sourceId), pollParkingCommands(sourceId), pollChargingCommands(sourceId)];
     if (demoVehicle && Date.now() >= nextTelemetry) {
       nextTelemetry = Date.now() + 15_000;

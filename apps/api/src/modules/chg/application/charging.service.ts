@@ -1,7 +1,8 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   ChangeInput, ChargingRequestView, ChargingStateEvent, ChargingVehicle, PendingChargeStep, SessionView, StateEventReceipt,
 } from '@semh/contracts';
+import { SETTINGS, type Settings } from '../../../config/settings.js';
 import { AuditService } from '../../../shared/audit/audit.service.js';
 import { withChange } from '../../../shared/database/change-receipt.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
@@ -51,6 +52,7 @@ export class ChargingService {
     private readonly store: PrismaChargingStore,
     private readonly context: OwnerChargingContextAdapter,
     private readonly audit: AuditService,
+    @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
   overview(session: SessionView, mode: 'STU' | 'OPR') {
@@ -59,7 +61,40 @@ export class ChargingService {
       const requests = await this.store.allRequests(tx, mode === 'OPR'
         ? { hubId: session.operatorHubIds === null ? undefined : { in: session.operatorHubIds ?? [] } }
         : { authorId: session.accountId, vehicleKind: 'PRIVATE' });
-      return { hubs, requests: requests.map(view), vehicles: mode === 'OPR' ? [] : await this.context.personalVehicles(tx, session.accountId) };
+      return {
+        hubs, requests: requests.map(view), vehicles: mode === 'OPR' ? [] : await this.context.personalVehicles(tx, session.accountId),
+        demoBatteryEnabled: mode === 'STU' && this.settings.demoBatteryEnabled,
+      };
+    });
+  }
+
+  simulateLowBattery(token: string, vehicleId: string, change: ChangeInput) {
+    if (!this.settings.demoBatteryEnabled) throw new NotFoundException('Chế độ giả lập pin chưa được bật.');
+    return this.store.write(async tx => {
+      const { accountId } = await this.access.verifyAccess(token, ['STU'], tx);
+      return withChange(tx, accountId, 'PRIVATE_BATTERY_SIMULATED', change, { vehicleId }, async () => {
+        const vehicle = await this.context.vehicle(tx, 'PRIVATE', vehicleId);
+        if (!vehicle || vehicle.ownerId !== accountId) throw new NotFoundException('Không tìm thấy xe cá nhân.');
+        if (await this.hasActiveCharge(tx, vehicleId)) {
+          throw new ConflictException('Hãy chờ yêu cầu sạc kết thúc và cổng sạc được giải phóng.');
+        }
+        const batteryPercent = 15;
+        if (vehicle.batteryPercent !== null && vehicle.batteryPercent <= batteryPercent) {
+          return { batteryPercent: vehicle.batteryPercent };
+        }
+
+        const observedAt = new Date();
+        const sourceId = this.settings.iotSourceId + ':demo';
+        const eventId = vehicleId + '_' + change.requestId;
+        await this.store.recordEvent(tx, sourceId, eventId);
+        await this.context.recordPrivateBattery(tx, vehicleId, batteryPercent, observedAt);
+        await this.audit.append(tx, {
+          actorId: accountId, action: 'PRIVATE_BATTERY_SIMULATED', targetType: 'private-vehicle', targetId: vehicleId,
+          requestId: change.requestId, occurredAt: observedAt,
+          details: { sourceId, eventId, type: 'private-vehicle.battery', batteryPercent },
+        });
+        return { batteryPercent };
+      });
     });
   }
 
@@ -87,14 +122,7 @@ export class ChargingService {
       const vehicle = await this.authorizeVehicle(tx, actor, input, false);
       return withChange(tx, actor.accountId, 'CHARGING_REQUEST_CREATED', change, input, async () => {
         if (vehicle.batteryPercent === 100) throw new ConflictException('Pin đã đạt mức mục tiêu.');
-        const active = await this.store.allRequests(tx, {
-          vehicleId: vehicle.id,
-          OR: [
-            { status: { in: ['PENDING', 'SCHEDULED', 'CHARGING'] } },
-            { session: { startedAt: { not: null }, releasedAt: null } },
-          ],
-        });
-        if (active.length) throw new ConflictException('Xe đã có yêu cầu hoặc phiên sạc chưa giải phóng.');
+        if (await this.hasActiveCharge(tx, vehicle.id)) throw new ConflictException('Xe đã có yêu cầu hoặc phiên sạc chưa giải phóng.');
         const created = await this.store.create(tx, {
           authorId: actor.accountId, requestId: change.requestId, vehicleKind: input.kind, vehicleId: vehicle.id,
           vehicleCode: vehicle.code, hubId: input.hubId, desiredBy: input.desiredBy, neededAt: input.neededAt,
@@ -259,6 +287,16 @@ export class ChargingService {
       await this.store.setPoint(tx, session.pointId, { lastObservedAt: observedAt });
     }
     return true;
+  }
+
+  private async hasActiveCharge(tx: Transaction, vehicleId: string) {
+    return (await this.store.allRequests(tx, {
+      vehicleId,
+      OR: [
+        { status: { in: ['PENDING', 'SCHEDULED', 'CHARGING'] } },
+        { session: { startedAt: { not: null }, releasedAt: null } },
+      ],
+    })).length > 0;
   }
 
   private async authorizeVehicle(tx: Transaction, actor: SessionView, input: ChargeInput, checkBattery = true) {

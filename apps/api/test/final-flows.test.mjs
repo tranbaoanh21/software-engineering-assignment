@@ -211,16 +211,17 @@ test('deduplicates device incidents, restricts technicians and restores only a v
   expect(failed.body.status).toBe('IN_PROGRESS');
   expect((await db.parkingSpace.findUniqueOrThrow({ where: { id: space.id } })).status).toBe('OUT_OF_SERVICE');
   const safe = await update(technician, failed.body.version, 'RESOLVE', { safetyPassed: true }).expect(200);
-  expect(safe.body.status).toBe('RESOLVED');
+  expect(safe.body.status).toBe('AWAITING_APPROVAL');
+  expect((await db.parkingSpace.findUniqueOrThrow({ where: { id: space.id } })).status).toBe('OUT_OF_SERVICE');
   await update(operator, safe.body.version, 'CLOSE').expect(200);
   expect((await db.parkingSpace.findUniqueOrThrow({ where: { id: space.id } })).status).toBe('AVAILABLE');
 });
 
-test('runs What-if on an isolated snapshot and transfers a real vehicle only after approved progress', async () => {
+test('runs What-if on an isolated snapshot and updates the target only after technician handoff and operator approval', async () => {
   const hubs = [source.id, target.id];
   const before = await db.sharedVehicle.findMany({ where: { hubId: { in: hubs } }, orderBy: { id: 'asc' } });
   const scenario = await write(operator, '/simulations/scenarios', {
-    name: 'Cao điểm kiểm thử', objective: 'So sánh nhu cầu xe', hubIds: hubs,
+    name: 'Cao điểm kiểm thử', hubIds: hubs,
     parameters: {
       durationMinutes: 48, demandMultiplier: 2, demandProfile: 'PEAK', chargingReduction: 75, closedHubId: null,
       override: { hubId: source.id, fleetCapacity: 1, chargeKw: 0.5 },
@@ -246,25 +247,52 @@ test('runs What-if on an isolated snapshot and transfers a real vehicle only aft
   expect(rec).toBeTruthy();
   const prepared = await read(operator, path + '/recommendations/' + rec.id + '/draft').expect(200);
   expect(await db.redistributionPlan.count({ where: { recommendationId: rec.id } })).toBe(0);
-  const input = { ...prepared.body, vehicleIds: prepared.body.vehicleIds.slice(0, 1), scheduledAt: new Date().toISOString() };
-  const saved = await write(operator, '/operations/plans', input).expect(201);
+  const input = {
+    sourceHubId: prepared.body.sourceHubId, targetHubId: prepared.body.targetHubId,
+    recommendationId: prepared.body.recommendationId, vehicleIds: prepared.body.vehicleIds.slice(0, 1),
+  };
   const vehicleId = input.vehicleIds[0];
+  const saved = await write(operator, '/operations/plans', input).expect(201);
+  expect(saved.body).toMatchObject({ status: 'DRAFT', reason: '', assigneeId: null });
   const planPath = '/operations/plans/' + saved.body.id + '/actions';
-  const change = (row, action, actualHubId) => write(operator, planPath, {
-    version: row.version, action, actualHubId, vehicleId, reason: 'Đối chiếu thực tế',
+  const change = (actor, row, action, extra = {}) => write(actor, planPath, { version: row.version, action, ...extra });
+  const getVehicle = () => db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicleId } });
+  const getTarget = async () => (await read(null, '/network/hubs').expect(200)).body.find(hub => hub.id === input.targetHubId);
+  const targetBefore = await getTarget();
+  const draftQueue = await read(technician, '/operations/maintenance').expect(200);
+  expect(draftQueue.body.plans.some(plan => plan.id === saved.body.id)).toBe(false);
+  await change(technician, saved.body, 'START').expect(403);
+  const assigned = await change(operator, saved.body, 'ASSIGN', { assigneeId: technician.id }).expect(201);
+  expect(assigned.body).toMatchObject({ status: 'APPROVED', assigneeId: technician.id });
+  expect(await getVehicle()).toMatchObject({ hubId: input.sourceHubId, transferPlanId: saved.body.id });
+  expect((await getTarget()).heldArrivals).toBe(targetBefore.heldArrivals + 1);
+  const assignedQueue = await read(technician, '/operations/maintenance').expect(200);
+  expect(assignedQueue.body.plans.find(plan => plan.id === saved.body.id)).toMatchObject({
+    items: [{ vehicleId, vehicleCode: (await getVehicle()).code }], assigneeId: technician.id,
   });
-  const approved = await change(saved.body, 'APPROVE').expect(201);
-  expect((await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicleId } })).hubId).toBe(input.sourceHubId);
-  const departed = await change(approved.body, 'DEPART', input.sourceHubId).expect(201);
-  expect((await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicleId } })).hubId).toBeNull();
-  await change(departed.body, 'ARRIVE', input.sourceHubId).expect(409);
-  const arrived = await change(departed.body, 'ARRIVE', input.targetHubId).expect(201);
-  const done = await change(arrived.body, 'COMPLETE').expect(201);
+  await change(operator, assigned.body, 'START').expect(403);
+  await change(technician, assigned.body, 'REPORT_ARRIVAL').expect(409);
+  const departed = await change(technician, assigned.body, 'START').expect(201);
+  expect(await getVehicle()).toMatchObject({ hubId: null, status: 'OUT_OF_SERVICE', transferPlanId: saved.body.id });
+  await change(operator, departed.body, 'COMPLETE').expect(409);
+  await change(operator, departed.body, 'CANCEL').expect(409);
+  const reportId = randomUUID();
+  const arrived = await change(technician, departed.body, 'REPORT_ARRIVAL', { requestId: reportId }).expect(201);
+  const duplicate = await change(technician, departed.body, 'REPORT_ARRIVAL', { requestId: reportId }).expect(201);
+  expect(duplicate.body.version).toBe(arrived.body.version);
+  expect(arrived.body.status).toBe('AWAITING_APPROVAL');
+  expect(await getVehicle()).toMatchObject({ hubId: null, status: 'OUT_OF_SERVICE', transferPlanId: saved.body.id });
+  const awaitingTarget = await getTarget();
+  expect(awaitingTarget.heldArrivals).toBe(targetBefore.heldArrivals + 1);
+  expect(awaitingTarget.resources.some(resource => resource.id === vehicleId)).toBe(false);
+  await change(technician, arrived.body, 'COMPLETE').expect(403);
+  const done = await change(operator, arrived.body, 'COMPLETE').expect(201);
   expect(done.body.status).toBe('COMPLETED');
-  expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicleId } })).toMatchObject({ hubId: input.targetHubId, transferPlanId: null });
+  expect(await getVehicle()).toMatchObject({ hubId: input.targetHubId, transferPlanId: null });
+  expect((await getTarget()).heldArrivals).toBe(targetBefore.heldArrivals);
 });
 
-test('routes a student trip report to operations and accepts a safe return without reopening the faulty vehicle', async () => {
+test('rejects a pending normal return when the student reports a fault, and retains the trip until technician pickup', async () => {
   const vehicle = await db.sharedVehicle.create({
     data: {
       hubId: source.id, code: 'TRIP-FAULT-' + randomUUID(), batteryPercent: 60, status: 'AVAILABLE',
@@ -277,14 +305,23 @@ test('routes a student trip report to operations and accepts a safe return witho
   await handoff({ commandId: pickup.body.id, hubId: source.id }).expect(200, { result: 'applied' });
   const trips = await read(student, '/trips').expect(200);
   const trip = trips.body.find(item => item.reservationId === held.body.id);
-  const reported = await write(student, '/operations/trip-faults/' + trip.id, { description: 'Phanh bị kẹt gần cổng' }).expect(201);
-  const incident = await db.incident.findUniqueOrThrow({ where: { id: reported.body.id } });
-  expect(incident).toMatchObject({ resourceId: vehicle.id, tripId: trip.id, hubId: source.id, status: 'OPEN' });
   const returning = await write(student, '/trips/' + trip.id + '/return', { hubId: target.id }).expect(202);
-  await handoff({ commandId: returning.body.id, hubId: target.id }).expect(200, { result: 'applied' });
-  expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } })).toMatchObject({
-    status: 'OUT_OF_SERVICE', fault: true, hubId: target.id,
+  const faultPath = '/operations/trip-faults/' + trip.id;
+  await write(student, faultPath, { description: 'Phanh bị kẹt' }).expect(400);
+  const reported = await write(student, faultPath, { location: 'Gần cổng KTX B' }).expect(201);
+  const incident = await db.incident.findUniqueOrThrow({ where: { id: reported.body.id } });
+  expect(incident).toMatchObject({
+    resourceId: vehicle.id, tripId: trip.id, hubId: source.id, status: 'OPEN', reportedLocation: 'Gần cổng KTX B',
   });
+  await handoff({ commandId: returning.body.id, hubId: target.id }).expect(200, { result: 'rejected' });
+  await write(student, '/trips/' + trip.id + '/return', { hubId: target.id }).expect(409);
+  expect((await db.trip.findUniqueOrThrow({ where: { id: trip.id } })).status).toBe('IN_PROGRESS');
+  expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } })).toMatchObject({ fault: true, hubId: null });
+  const issue = '/operations/incidents/' + incident.id;
+  const assigned = await write(operator, issue, {
+    version: incident.version, action: 'ASSIGN', assigneeId: technician.id, location: 'Gần cổng KTX B',
+  }, 'patch').expect(200);
+  await write(technician, issue, { version: assigned.body.version, action: 'START' }, 'patch').expect(200);
 });
 
 test('interrupts a session and opens one incident on a verified charger fault', async () => {
@@ -352,7 +389,8 @@ test('starts maintenance on a vehicle at its service threshold, preserves safe m
   const assigned = await change(operator, received.body.version, 'ASSIGN', { assigneeId: technician.id }).expect(200);
   const started = await change(technician, assigned.body.version, 'START').expect(200);
   const fixed = await change(technician, started.body.version, 'RESOLVE', { safetyPassed: true }).expect(200);
-  expect(fixed.body.status).toBe('RESOLVED');
+  expect(fixed.body.status).toBe('AWAITING_APPROVAL');
+  await change(operator, fixed.body.version, 'CLOSE').expect(200);
   expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id } })).toMatchObject({
     status: 'AVAILABLE', fault: false, sinceMaintenanceKm: 0, description: edited.body.description,
   });
@@ -376,7 +414,7 @@ test('keeps incomplete charging requests pending and rejects incompatible or una
   expect(incompatible.body.reason).toContain('Không có cổng tương thích');
 });
 
-test('interrupted-trip handover requires an assigned technician and an operator confirmation', async () => {
+test('ends the trip at technician pickup and restores the vehicle only when operations accepts it', async () => {
   const vehicle = await db.sharedVehicle.create({
     data: {
       hubId: source.id, code: 'HANDOVER-' + randomUUID(), batteryPercent: 70, status: 'AVAILABLE',
@@ -389,20 +427,77 @@ test('interrupted-trip handover requires an assigned technician and an operator 
     vehicleId: vehicle.id, batteryPercent: 70, confirmed: true, fault: false, commandId: pickup.body.id, hubId: source.id,
   }).expect(200);
   const trip = await db.trip.findUniqueOrThrow({ where: { reservationId: reserved.body.id } });
-  const reported = await write(student, '/operations/trip-faults/' + trip.id, { description: 'Xe dừng giữa đường' }).expect(201);
+  await ingest('vehicle.battery', { tripId: trip.id, vehicleId: vehicle.id, sequence: 10, batteryPercent: 67 }).expect(200, { result: 'applied' });
+  const reported = await write(student, '/operations/trip-faults/' + trip.id, {
+    location: 'Trạm xe buýt trước KTX B', description: 'Xe dừng giữa đường',
+  }).expect(201);
   const issue = '/operations/incidents/' + reported.body.id;
-  const act = (actor, version, action, more = {}) => write(actor, issue, {
-    version, action, reason: 'Biên nhận thực tế', ...more,
-  }, 'patch');
-  const seen = await act(operator, 0, 'ACKNOWLEDGE').expect(200);
-  const assigned = await act(operator, seen.body.version, 'ASSIGN', { assigneeId: technician.id }).expect(200);
-  const started = await act(technician, assigned.body.version, 'START').expect(200);
-  await act(operator, started.body.version, 'CONFIRM_HANDOVER').expect(409);
-  const evidence = await act(technician, started.body.version, 'HANDOVER', { location: 'Cổng gần trạm xe buýt' }).expect(200);
-  const handed = await act(operator, evidence.body.version, 'CONFIRM_HANDOVER').expect(200);
-  expect((await db.trip.findUniqueOrThrow({ where: { id: trip.id } })).status).toBe('INTERRUPTED');
-  await act(technician, handed.body.version, 'RESOLVE', { safetyPassed: true }).expect(409);
-  const fixed = await act(technician, handed.body.version, 'RESOLVE', { safetyPassed: true, actualHubId: target.id }).expect(200);
-  expect(fixed.body.status).toBe('RESOLVED');
-  expect((await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } })).hubId).toBe(target.id);
+  const act = (actor, version, action, more = {}) => write(actor, issue, { version, action, ...more }, 'patch');
+  await act(technician, 0, 'START').expect(403);
+  await act(operator, 0, 'ASSIGN', { assigneeId: technician.id }).expect(409);
+  const assigned = await act(operator, 0, 'ASSIGN', {
+    assigneeId: technician.id, location: 'Trạm xe buýt đối diện cổng KTX B',
+  }).expect(200);
+  expect(assigned.body).toMatchObject({
+    status: 'ASSIGNED', tripInProgress: true, reportedLocation: 'Trạm xe buýt trước KTX B',
+    confirmedLocation: 'Trạm xe buýt đối diện cổng KTX B', vehicle: { code: vehicle.code, hubId: null },
+  });
+  await act(operator, assigned.body.version, 'START').expect(403);
+  await act(operator, assigned.body.version, 'CLOSE').expect(409);
+  const pickupReceipt = { requestId: randomUUID() };
+  const started = await act(technician, assigned.body.version, 'START', pickupReceipt).expect(200);
+  const replay = await act(technician, assigned.body.version, 'START', pickupReceipt).expect(200);
+  expect(replay.body.version).toBe(started.body.version);
+  expect(started.body).toMatchObject({ status: 'IN_PROGRESS', tripInProgress: false });
+  const stopped = await db.trip.findUniqueOrThrow({ where: { id: trip.id } });
+  expect(stopped).toMatchObject({
+    status: 'INTERRUPTED', endedAt: expect.any(Date), endBattery: 67,
+    endVehicleStatus: 'OUT_OF_SERVICE', durationSeconds: expect.any(Number),
+  });
+  await act(operator, started.body.version, 'CLOSE').expect(409);
+  await act(technician, started.body.version, 'RESOLVE', { safetyPassed: true }).expect(409);
+  const fullHub = await fixtureHub('Hub hết chỗ');
+  await db.mobilityHub.update({ where: { id: fullHub.id }, data: { vehicleCapacity: 2 } });
+  await act(technician, started.body.version, 'RESOLVE', { safetyPassed: true, actualHubId: fullHub.id }).expect(409);
+
+  // Pending incidents from before the receiving-Hub update are handed back to the assigned technician.
+  await db.incident.update({ where: { id: reported.body.id }, data: { status: 'AWAITING_APPROVAL', safe: true } });
+  await act(operator, started.body.version, 'CLOSE').expect(409);
+  const delivery = { safetyPassed: true, actualHubId: target.id, requestId: randomUUID() };
+  const fixed = await act(technician, started.body.version, 'RESOLVE', delivery).expect(200);
+  expect(fixed.body).toMatchObject({
+    status: 'AWAITING_APPROVAL', safe: true, resolution: null,
+    receivingHub: { id: target.id, name: target.name }, vehicle: { hubId: target.id },
+  });
+  expect((await act(technician, started.body.version, 'RESOLVE', delivery).expect(200)).body.version).toBe(fixed.body.version);
+  expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } })).toMatchObject({
+    status: 'OUT_OF_SERVICE', fault: true, hubId: target.id,
+  });
+  const visibleForStudent = async () => (await read(student, '/hubs').expect(200)).body
+    .find(hub => hub.id === target.id).vehicles.some(item => item.id === vehicle.id);
+  expect(await visibleForStudent()).toBe(false);
+
+  const scopedOperator = async hubId => {
+    const username = 'repair-' + randomUUID().slice(0, 8);
+    const password = 'repair-test-password';
+    const account = await write(admin, '/admin/accounts', { username, displayName: 'Repair operator', password }).expect(201);
+    await write(admin, '/admin/accounts/' + account.body.id + '/roles', {
+      version: account.body.version, role: 'OPR', allHubs: false, hubIds: [hubId], grant: true, reason: 'Phụ trách Hub',
+    }).expect(201);
+    return login(username, password);
+  };
+  const sourceOnly = await scopedOperator(source.id);
+  const receivingOperator = await scopedOperator(target.id);
+  const incidentsFor = async actor => (await read(actor, '/operations').expect(200)).body.incidents;
+  expect((await incidentsFor(sourceOnly)).some(item => item.id === reported.body.id)).toBe(false);
+  expect((await incidentsFor(receivingOperator)).find(item => item.id === reported.body.id).receivingHub.id).toBe(target.id);
+  await act(technician, fixed.body.version, 'CLOSE').expect(403);
+  await act(sourceOnly, fixed.body.version, 'CLOSE').expect(403);
+  await act(receivingOperator, fixed.body.version, 'CLOSE', { actualHubId: source.id }).expect(409);
+  const accepted = await act(receivingOperator, fixed.body.version, 'CLOSE').expect(200);
+  expect(accepted.body).toMatchObject({ status: 'CLOSED', receivingHub: { id: target.id, name: target.name } });
+  expect(await visibleForStudent()).toBe(true);
+  expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } })).toMatchObject({
+    status: 'AVAILABLE', fault: false, hubId: target.id,
+  });
 });

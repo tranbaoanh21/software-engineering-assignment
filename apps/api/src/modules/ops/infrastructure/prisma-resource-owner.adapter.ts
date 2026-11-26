@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import type { NetworkResource, ResourceKind, ResourceServiceStatus } from '@semh/contracts';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import { ChargingService } from '../../chg/application/charging.service.js';
+import { returnedVehicleStatus } from '../../trip/domain/trip.policy.js';
 
 export interface ResourceDraft {
   kind: ResourceKind;
@@ -110,7 +111,7 @@ export class PrismaResourceOwnerAdapter {
     });
     const trip = await tx.trip.count({ where: { startHubId: hubId, status: 'IN_PROGRESS' } });
     const transfer = await tx.redistributionPlan.count({
-      where: { status: { in: ['APPROVED', 'IN_PROGRESS'] }, OR: [{ sourceHubId: hubId }, { targetHubId: hubId }] },
+      where: { status: { in: ['APPROVED', 'IN_PROGRESS', 'AWAITING_APPROVAL'] }, OR: [{ sourceHubId: hubId }, { targetHubId: hubId }] },
     });
     return [vehicle, parking, charging, trip, transfer];
   }
@@ -144,6 +145,14 @@ export class PrismaResourceOwnerAdapter {
     }
   }
 
+  async receiveFaultedVehicle(tx: Transaction, id: string, hubId: string) {
+    const received = await tx.sharedVehicle.updateMany({
+      where: { id, status: 'OUT_OF_SERVICE', fault: true, reservationHoldId: null, transferPlanId: null },
+      data: { hubId, version: { increment: 1 } },
+    });
+    if (!received.count) throw new ConflictException('Xe chưa ở trạng thái có thể bàn giao.');
+  }
+
   async restore(tx: Transaction, resource: NetworkResource, actualHubId?: string) {
     const { kind, id } = resource;
     if (await this.constrained(tx, resource)) throw new ConflictException('Tài nguyên vẫn có ràng buộc, chưa thể khôi phục.');
@@ -157,7 +166,7 @@ export class PrismaResourceOwnerAdapter {
       if (!hubId || !row.lastObservedAt) throw new ConflictException('Cần biết vị trí an toàn và mức pin của xe.');
       await tx.sharedVehicle.update({
         where, data: { fault: false, sinceMaintenanceKm: 0, hubId,
-          status: row.batteryPercent >= 30 ? 'AVAILABLE' : 'AWAITING_CHARGE', version },
+          status: returnedVehicleStatus(row.batteryPercent, false), version },
       });
     } else if (kind === 'PARKING_SPACE') {
       const row = await tx.parkingSpace.findUniqueOrThrow({ where });

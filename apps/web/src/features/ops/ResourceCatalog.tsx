@@ -16,14 +16,17 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
   const action = useCommand(refresh);
   const [kind, setKind] = useState<ResourceKind>(admin ? 'HUB' : 'VEHICLE');
   const [hubId, setHubId] = useState('');
+  const [category, setCategory] = useState('');
+  const [selectedId, setSelectedId] = useState('');
   const [query, setQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<{ resource: NetworkResource; service?: 'ACTIVE' | 'INACTIVE' }>();
   const [message, setMessage] = useState('');
   const term = query.trim().toLocaleLowerCase('vi');
   const shown = hubs.filter(hub => !hubId || hub.id === hubId).flatMap(hub => hub.resources
-    .filter(item => [item.code, item.description, hub.name, kindLabel[item.kind]].some(value => value.toLocaleLowerCase('vi').includes(term)))
+    .filter(item => (!category || item.kind === category) && [item.code, item.description, hub.name, kindLabel[item.kind]].some(value => value.toLocaleLowerCase('vi').includes(term)))
     .map(resource => ({ hub, resource })));
+  const selected = shown.find(item => item.resource.id === selectedId) ?? shown[0];
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,6 +43,10 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
     if (result) {
       element.reset();
       setCreateOpen(false);
+      setSelectedId(result.id);
+      setQuery('');
+      setCategory('');
+      setHubId('');
       setMessage('Đã tạo ' + result.code + ' ở trạng thái nháp.');
     }
   }
@@ -60,13 +67,16 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
   }
 
   return <div className="work-stack">
-    {action.error && <p className="error" role="alert">{action.error}</p>}
+    {!editing && action.error && <p className="error" role="alert">{action.error}</p>}
     {message && <p className="handoff-notice" role="status">{message}</p>}
     <div className="filter-toolbar">
       <label className="search-field">Tìm tài nguyên<input type="search" placeholder="Mã, tên hoặc loại tài nguyên" value={query}
-        onChange={event => setQuery(event.target.value)} /></label>
-      <label>Hub<select value={hubId} onChange={event => setHubId(event.target.value)}>
+        onChange={event => { setQuery(event.target.value); setEditing(undefined); }} /></label>
+      <label>Hub<select value={hubId} onChange={event => { setHubId(event.target.value); setEditing(undefined); }}>
         <option value="">Tất cả Hub</option>{hubs.map(hub => <option key={hub.id} value={hub.id}>{hub.name}</option>)}
+      </select></label>
+      <label>Loại<select value={category} onChange={event => { setCategory(event.target.value); setEditing(undefined); }}>
+        <option value="">Tất cả loại</option>{Object.entries(kindLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select></label>
       <button className="primary" type="button" onClick={() => {
         setKind('VEHICLE');
@@ -101,32 +111,44 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
           <button className="outline" type="button" onClick={() => setCreateOpen(false)}>Đóng</button>
         </div>
       </form>}
-    {editing && <form className="work-card work-form" onSubmit={update} key={editing.resource.id + editing.service}>
-      <h2>{editing.service === 'ACTIVE' ? 'Kích hoạt' : editing.service === 'INACTIVE' ? 'Ngừng phục vụ' : 'Sửa mô tả'} · {editing.resource.code}</h2>
-      {!editing.service && <label>Mô tả<input name="description" defaultValue={editing.resource.description} maxLength={400} /></label>}
-      <label>Lý do<input required name="reason" maxLength={500} /></label>
-      <div className="work-actions">
-        <button className="primary" disabled={action.pending}>Xác nhận cập nhật</button>
-        <button className="outline" type="button" onClick={() => setEditing(undefined)}>Đóng</button>
-      </div>
-    </form>}
-    <div className="work-card data-card">
-      <div className="scroll-table"><table>
-        <thead><tr><th>Mã</th><th>Tên / loại</th><th>Hub</th><th>Quyền phục vụ</th><th>Trạng thái</th><th>Cập nhật</th>{!admin && <th>Thao tác</th>}</tr></thead>
-        <tbody>{shown.map(({ hub, resource }) => <tr key={resource.id}>
-          <td><strong>{resource.code}</strong></td><td>{resource.description || (resource.kind === 'HUB' ? hub.name : kindLabel[resource.kind])}</td><td>{hub.name}</td>
-          <td><span className="status-pill" data-tone={resource.serviceStatus === 'DRAFT' ? 'warning'
-            : resource.serviceStatus === 'ACTIVE' ? 'success' : 'danger'}>{stateLabel(resource.serviceStatus)}</span></td><td>{stateLabel(resource.status)}</td>
-          <td>{resource.observedAt ? displayTime(resource.observedAt) : 'Chưa có dữ liệu'}</td>
-          {!admin && <td><div className="table-actions">
-            <button className="outline" type="button" onClick={() => setEditing({ resource })}>Sửa</button>
-            <button className="outline" type="button" onClick={() => setEditing({
-              resource, service: resource.serviceStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-            })}>{resource.serviceStatus === 'ACTIVE' ? 'Ngừng' : 'Kích hoạt'}</button>
-          </div></td>}
-        </tr>)}</tbody>
-      </table></div>
-      {!shown.length && <p className="data-empty">Không tìm thấy tài nguyên phù hợp.</p>}
+    <div className="app-pane-layout">
+      <section className="work-card work-stack">
+        <h2>Tài nguyên ({shown.length})</h2>
+        {shown.length ? <div className="app-pane-list">{shown.map(({ hub, resource }) => <button className="app-pane-item" type="button"
+          key={resource.id} aria-pressed={resource.id === selected?.resource.id} onClick={() => {
+            setSelectedId(resource.id); setEditing(undefined); setMessage('');
+          }}>
+          <strong>{resource.code} · {kindLabel[resource.kind]}</strong><small>{hub.name}</small>
+          <span className="status-pill" data-tone={resource.serviceStatus === 'DRAFT' ? 'warning'
+            : resource.serviceStatus === 'ACTIVE' ? 'success' : 'danger'}>{stateLabel(resource.serviceStatus)}</span>
+        </button>)}</div> : <p>Không tìm thấy tài nguyên phù hợp.</p>}
+      </section>
+      {selected && <section className="work-card work-stack" key={selected.resource.id}>
+        <div className="work-heading"><h2>{selected.resource.code}</h2>
+          <span className="status-pill">{stateLabel(selected.resource.status)}</span></div>
+        <p>{kindLabel[selected.resource.kind]} · {selected.hub.name}</p>
+        {selected.resource.description && <p>{selected.resource.description}</p>}
+        <dl className="reservation-details">
+          <div><dt>Phục vụ</dt><dd>{stateLabel(selected.resource.serviceStatus)}</dd></div>
+          <div><dt>Cập nhật</dt><dd>{selected.resource.observedAt ? displayTime(selected.resource.observedAt) : 'Chưa có dữ liệu'}</dd></div>
+        </dl>
+        {!admin && <div className="work-actions">
+          <button className="outline" type="button" onClick={() => setEditing({ resource: selected.resource })}>Sửa mô tả</button>
+          <button className={selected.resource.serviceStatus === 'ACTIVE' ? 'outline' : 'primary'} type="button" onClick={() => setEditing({
+            resource: selected.resource, service: selected.resource.serviceStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+          })}>{selected.resource.serviceStatus === 'ACTIVE' ? 'Ngừng phục vụ' : 'Kích hoạt'}</button>
+        </div>}
+        {editing && editing.resource.id === selected.resource.id && <form className="work-form inline-action" onSubmit={update} key={editing.resource.id + editing.service}>
+          <h3>{editing.service === 'ACTIVE' ? 'Kích hoạt' : editing.service === 'INACTIVE' ? 'Ngừng phục vụ' : 'Sửa mô tả'} · {editing.resource.code}</h3>
+          {!editing.service && <label>Mô tả<input name="description" defaultValue={editing.resource.description} maxLength={400} /></label>}
+          <label>Lý do<input required name="reason" maxLength={500} /></label>
+          {action.error && <p className="error" role="alert">{action.error}</p>}
+          <div className="work-actions">
+            <button className="primary" disabled={action.pending}>Xác nhận cập nhật</button>
+            <button className="outline" type="button" onClick={() => setEditing(undefined)}>Đóng</button>
+          </div>
+        </form>}
+      </section>}
     </div>
   </div>;
 }

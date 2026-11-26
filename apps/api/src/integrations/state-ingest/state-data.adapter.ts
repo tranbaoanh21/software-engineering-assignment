@@ -27,6 +27,11 @@ export class StateDataAdapter {
     return this.journey.pendingHandoffs(this.settings.iotSourceId);
   }
 
+  activeTripBatteries(key: string | undefined) {
+    this.authorize(key);
+    return this.journey.activeTripBatteries(this.settings.iotSourceId);
+  }
+
   listParkingVerifications(key: string | undefined) {
     this.authorize(key);
     return this.parking.pendingVerifications(this.settings.iotSourceId);
@@ -106,7 +111,10 @@ export class StateDataAdapter {
     if (type !== 'vehicle.battery' || typeof sequence !== 'number' || !Number.isInteger(sequence) || sequence < 1 || sequence > 2147483647) {
       throw new BadRequestException('Bản tin trạng thái pin không hợp lệ');
     }
-    return this.trips.applyVehicleStateEvent({ eventId, sourceId, type, vehicleId, sequence, batteryPercent, observedAt });
+    return this.trips.applyVehicleStateEvent({
+      eventId, sourceId, type, vehicleId, sequence, batteryPercent, observedAt,
+      tripId: record.tripId === undefined ? undefined : validUuid(record.tripId, 'chuyến đi'),
+    });
   }
 
   private authorize(key: string | undefined) {

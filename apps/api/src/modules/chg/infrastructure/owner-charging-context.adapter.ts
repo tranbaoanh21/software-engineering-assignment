@@ -16,6 +16,10 @@ export class OwnerChargingContextAdapter {
     return this.parking.listChargingVehicles(tx, ownerId);
   }
 
+  recordPrivateBattery(tx: Transaction, id: string, batteryPercent: number, observedAt: Date) {
+    return this.parking.recordBattery(tx, id, batteryPercent, observedAt);
+  }
+
   updateVehicle(
     tx: Transaction, vehicle: Pick<ChargingVehicle, 'kind' | 'id'>,
     hubId: string, phase: 'STARTED' | 'PROGRESS' | 'RELEASED' | 'FAULT', battery: number, observedAt: Date,

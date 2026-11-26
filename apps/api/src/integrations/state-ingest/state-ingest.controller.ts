@@ -10,6 +10,11 @@ export class StateIngestController {
     return this.adapter.listHandoffs(key);
   }
 
+  @Get('active-trip-batteries')
+  activeTripBatteries(@Headers('x-iot-source-key') key: string | undefined) {
+    return this.adapter.activeTripBatteries(key);
+  }
+
   @Get('parking-verifications')
   listParkingVerifications(@Headers('x-iot-source-key') key: string | undefined) {
     return this.adapter.listParkingVerifications(key);

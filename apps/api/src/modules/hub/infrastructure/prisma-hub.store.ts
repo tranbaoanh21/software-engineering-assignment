@@ -21,7 +21,7 @@ export async function readHubArrivalCapacity(tx: Transaction, hubId: string) {
   if (!hub) return null;
   const held = await tx.transferItem.count({
     where: {
-      plan: { targetHubId: hubId, status: { in: ['APPROVED', 'IN_PROGRESS'] } },
+      plan: { targetHubId: hubId, status: { in: ['APPROVED', 'IN_PROGRESS', 'AWAITING_APPROVAL'] } },
       status: { in: ['PLANNED', 'DEPARTED'] },
     },
   });
