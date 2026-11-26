@@ -44,7 +44,7 @@ Với cơ sở dữ liệu mới, seed tạo 10 Hub, 45 xe dùng chung, 88 chỗ
 
 ## Simulator và kiểm tra sau deploy
 
-`SIMULATOR_ENABLED=true` khởi động simulator trong service `app`. Nó tự gửi xác nhận nhận/trả xe, check-in/check-out chỗ đỗ và các mốc sạc. `SIM_DEMO_STREAM=true` thêm bản tin pin định kỳ. `IOT_DEMO_ACCELERATED=true` rút thời gian chờ hoàn tất sạc demo tính từ khi phiên bắt đầu.
+`SIMULATOR_ENABLED=true` khởi động simulator trong service `app`. Nó tự gửi xác nhận nhận/trả xe, check-in/check-out chỗ đỗ và các mốc sạc. `IOT_DEMO_BATTERY=true` bật nút giả lập pin xe cá nhân và giảm 1% pin xe dùng chung mỗi 5 giây khi đang đi. Khi tắt chế độ này, `SIM_DEMO_STREAM=true` thêm bản tin pin định kỳ cho xe demo. `IOT_DEMO_ACCELERATED=true` rút thời gian chờ hoàn tất sạc demo tính từ khi phiên bắt đầu.
 
 Kiểm tra đăng ký → đăng nhập → đặt xe → nhận xe → trả xe bằng URL sản phẩm. Kiểm tra thêm check-in/check-out và sạc với tài khoản demo sau khi seed. Khởi động lại app rồi xác nhận tài khoản và lịch sử vẫn đọc được từ Neon.
 

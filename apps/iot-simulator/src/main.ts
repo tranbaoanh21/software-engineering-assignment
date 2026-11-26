@@ -71,12 +71,27 @@ async function pollChargingCommands(deviceSource: string) {
   }
 }
 
+const batterySimulationStartedAt = Date.now();
+const resumedTripBatteries = new Map<string, { at: number; percent: number }>();
+
 async function pollTripBattery(deviceSource: string) {
   const trips = await pending<ActiveTripBattery>('active-trip-batteries');
+  const active = new Set(trips.map(trip => trip.tripId));
+  for (const tripId of resumedTripBatteries.keys()) {
+    if (!active.has(tripId)) resumedTripBatteries.delete(tripId);
+  }
+
   const observedAt = new Date();
   for (const trip of trips) {
-    const elapsed = Math.max(0, observedAt.getTime() - Date.parse(trip.startedAt));
-    const batteryPercent = Math.max(0, trip.startBattery - Math.floor(elapsed / 5_000));
+    const startedAt = Date.parse(trip.startedAt);
+    let baseline = resumedTripBatteries.get(trip.tripId);
+    if (!baseline && startedAt < batterySimulationStartedAt) {
+      baseline = { at: observedAt.getTime(), percent: trip.batteryPercent };
+      resumedTripBatteries.set(trip.tripId, baseline);
+    }
+    const elapsed = Math.max(0, observedAt.getTime() - (baseline?.at ?? startedAt));
+    const initialBattery = baseline?.percent ?? trip.startBattery;
+    const batteryPercent = Math.max(0, initialBattery - Math.floor(elapsed / 5_000));
     if (batteryPercent >= trip.batteryPercent || trip.sequence >= 2147483647) continue;
     await send({
       type: 'vehicle.battery', sourceId: deviceSource, eventId: randomUUID(), tripId: trip.tripId,
