@@ -6,7 +6,9 @@ import {
   type HubView,
   type ReservationView,
 } from '@semh/contracts';
-import { api, ApiError } from '../../shared/api/http';
+import { ApiError } from '../../shared/api/http';
+import { useLiveUpdates } from '../../shared/api/use-live-updates';
+import { useScreen } from '../../shared/api/use-screen';
 import { SessionContext } from '../../shared/auth/session-context';
 import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
@@ -180,10 +182,12 @@ export function ReservationPage() {
   const attempt = useRef<{ key: string; id: string }>(null);
   const submitting = useRef(false);
   const [reservation, setReservation] = useState<ReservationView | null>(null);
-  const [hubs, setHubs] = useState<HubView[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const choosingVehicle = !!(session && hubId && vehicleId && !reservation);
+  const connected = useLiveUpdates(choosingVehicle ? ['vehicle'] : undefined, () => inventory.refresh(), hubId);
+  const inventory = useScreen<HubView[]>(choosingVehicle ? '/hubs' : '', connected ? 30000 : 5000);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -192,7 +196,6 @@ export function ReservationPage() {
     setLoading(true);
     setError('');
     setReservation(null);
-    setHubs([]);
 
     async function load() {
       const previous = attemptKey && readAttempt(attemptKey);
@@ -213,9 +216,6 @@ export function ReservationPage() {
       if (!live) return;
       if (current.reservation) {
         setReservation(current.reservation);
-      } else if (vehicleId && hubId) {
-        const list = await api<HubView[]>('/hubs', { signal });
-        if (live) setHubs(list);
       }
     }
 
@@ -232,7 +232,7 @@ export function ReservationPage() {
     };
   }, [attemptKey, hubId, vehicleId]);
 
-  const hub = hubs.find(item => item.id === hubId);
+  const hub = inventory.data?.find(item => item.id === hubId);
   const vehicle = hub?.vehicles.find(item => item.id === vehicleId);
   const bookable = vehicle?.status === 'AVAILABLE' && vehicle.batteryPercent >= reservationMinimumBatteryPercent;
 
@@ -267,6 +267,7 @@ export function ReservationPage() {
         }
         clearAttempt();
         if (err.status === 409) {
+          inventory.refresh();
           const current = await reservationApi.active(AbortSignal.timeout(5000)).catch(() => null);
           if (current?.reservation) {
             setReservation(current.reservation);
@@ -291,7 +292,9 @@ export function ReservationPage() {
     saveAttempt(attemptKey);
   }
 
-  if (loading) return <p role="status">Đang tải thông tin đặt xe…</p>;
+  if (loading || (choosingVehicle && !inventory.data && !inventory.error)) {
+    return <p role="status">Đang tải thông tin đặt xe…</p>;
+  }
   if (reservation) {
     const choseAnotherVehicle = Boolean(hubId && vehicleId && vehicleId !== reservation.vehicle.id);
     return <>
@@ -303,7 +306,7 @@ export function ReservationPage() {
   return (
     <section><PageBanner title="Đặt xe" />
     <article className="reservation-card">
-      {error && <p className="error" role="alert">{error}</p>}
+      {(error || inventory.error) && <p className="error" role="alert">{error || inventory.error}</p>}
       {vehicle && hub ? (
         <>
           <dl className="reservation-details">
@@ -312,7 +315,8 @@ export function ReservationPage() {
             <div><dt>Mức pin</dt><dd>{vehicle.batteryPercent}%</dd></div>
             <div><dt>Thời gian giữ xe</dt><dd>{reservationHoldMinutes} phút</dd></div>
           </dl>
-          {!bookable && <p role="status">Xe hiện chưa đủ điều kiện đặt. Vui lòng chọn xe khác.</p>}
+          {!bookable && <p role="status">{vehicle.status === 'RESERVED' ? 'Xe vừa được giữ.' : 'Xe hiện chưa đủ điều kiện đặt.'}
+            {' '}Vui lòng chọn xe khác.</p>}
           <div className="reservation-actions">
             <button className="primary" type="button" disabled={!bookable || saving} onClick={confirm}>
               {saving ? 'Đang xác nhận…' : 'Xác nhận đặt xe'}
@@ -322,7 +326,7 @@ export function ReservationPage() {
         </>
       ) : (
         <>
-          {!error && <p>{vehicleId ? 'Xe đã chọn hiện không còn trong danh sách Hub.' : 'Bạn chưa có lượt đặt hiệu lực.'}</p>}
+          {!error && !inventory.error && <p>{vehicleId ? 'Xe đã chọn hiện không còn trong danh sách Hub.' : 'Bạn chưa có lượt đặt hiệu lực.'}</p>}
           <Link className="outline" to={bookingPath}>Chọn xe trên bản đồ Hub</Link>
         </>
       )}

@@ -5,14 +5,22 @@ import { api, ApiError } from './http';
 export function useScreen<T>(path: string, interval = 0) {
   const [response, setResponse] = useState<{ path: string; data: T }>();
   const [failure, setFailure] = useState<{ path: string; message: string }>();
-  const [revision, setRevision] = useState(0);
-  const refresh = useCallback(() => setRevision(value => value + 1), []);
+  const reload = useRef<(() => void) | undefined>(undefined);
+  const refresh = useCallback(() => reload.current?.(), []);
 
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
     let timer: number | undefined;
+    let fetching = false;
+    let queued = false;
     async function read() {
+      if (fetching) {
+        queued = true;
+        return;
+      }
+      window.clearTimeout(timer);
+      fetching = true;
       try {
         const result = await api<T>(path, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]) });
         if (controller.signal.aborted) return;
@@ -22,15 +30,24 @@ export function useScreen<T>(path: string, interval = 0) {
         if (controller.signal.aborted) return;
         if (err instanceof ApiError && err.status === 401) window.location.assign('/login');
         else setFailure({ path, message: err instanceof ApiError ? err.message : 'Chưa tải được dữ liệu.' });
+      } finally {
+        fetching = false;
+        if (!controller.signal.aborted) {
+          if (queued) {
+            queued = false;
+            void read();
+          } else if (interval) timer = window.setTimeout(read, interval);
+        }
       }
-      if (interval && !controller.signal.aborted) timer = window.setTimeout(read, interval);
     }
+    reload.current = () => { void read(); };
     void read();
     return () => {
       controller.abort();
       window.clearTimeout(timer);
+      reload.current = undefined;
     };
-  }, [path, interval, revision]);
+  }, [path, interval]);
   return {
     data: response?.path === path ? response.data : undefined,
     error: failure?.path === path ? failure.message : '',

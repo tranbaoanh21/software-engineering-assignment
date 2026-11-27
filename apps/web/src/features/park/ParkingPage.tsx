@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { parkingHoldMinutes, type ParkingOverview, type ParkingReservationView } from '@semh/contracts';
 import { ApiError } from '../../shared/api/http';
+import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { SessionContext } from '../../shared/auth/session-context';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { parkingApi, type ParkingAction } from './parking-api';
@@ -36,16 +37,18 @@ export function ParkingPage() {
   const [confirmCancel, setConfirmCancel] = useState<string>();
   const busy = useRef(false);
   const attempt = useRef<{ key: string; id: string }>(null);
+  const connected = useLiveUpdates(['parking'], () => setRevision(value => value + 1));
+  const refreshInterval = connected ? 30000 : 8000;
 
   useEffect(() => {
     const controller = new AbortController();
     let timer: number | undefined;
     async function load() {
-      let nextRefresh = 8000;
+      let nextRefresh = refreshInterval;
       try {
         const result = await parkingApi.overview(AbortSignal.any([controller.signal, AbortSignal.timeout(7000)]));
         if (controller.signal.aborted) return;
-        nextRefresh = result.reservations.some(item => item.verification?.status === 'PENDING') ? 1500 : 8000;
+        if (result.reservations.some(item => item.verification?.status === 'PENDING')) nextRefresh = 1500;
         if (!busy.current) setData(result);
         setRefreshError('');
       } catch (err) {
@@ -63,7 +66,7 @@ export function ParkingPage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [revision]);
+  }, [revision, refreshInterval]);
 
   const selectedHub = data?.hubs.find(hub => hub.id === hubId);
   const selectedVehicle = vehicleId

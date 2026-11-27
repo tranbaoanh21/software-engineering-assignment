@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import type { ChargingPointStatus, ChargingRequestStatus, Prisma } from '../../../generated/prisma/client.js';
 
 export const chargeInclude = { session: { include: { point: true } } } as const;
@@ -54,18 +55,26 @@ export class PrismaChargingStore {
     return tx.chargingRequest.findMany({ where, include: chargeInclude, orderBy: [{ createdAt: 'desc' }, { id: 'asc' }] });
   }
 
-  create(tx: Transaction, data: Prisma.ChargingRequestUncheckedCreateInput) {
-    return tx.chargingRequest.create({ data, include: chargeInclude });
+  async create(tx: Transaction, data: Prisma.ChargingRequestUncheckedCreateInput) {
+    const request = await tx.chargingRequest.create({ data, include: chargeInclude });
+    markLiveChange(tx, 'charging', request.hubId);
+    return request;
   }
 
-  update(tx: Transaction, id: string, data: Prisma.ChargingRequestUncheckedUpdateInput) {
-    return tx.chargingRequest.update({ where: { id }, data: { ...data, version: { increment: 1 } }, include: chargeInclude });
+  async update(tx: Transaction, id: string, data: Prisma.ChargingRequestUncheckedUpdateInput) {
+    const request = await tx.chargingRequest.update({ where: { id }, data: { ...data, version: { increment: 1 } }, include: chargeInclude });
+    markLiveChange(tx, 'charging', request.hubId);
+    return request;
   }
 
-  setAllocation(tx: Transaction, id: string, data: {
+  async setAllocation(tx: Transaction, id: string, data: {
     pointId: string; startAt: Date; endAt: Date; powerKw: number; batteryPercent: number;
   }) {
-    return tx.chargingSession.upsert({ where: { requestId: id }, create: { ...data, requestId: id }, update: data });
+    const { request } = await tx.chargingSession.upsert({
+      where: { requestId: id }, create: { ...data, requestId: id }, update: data,
+      select: { request: { select: { hubId: true } } },
+    });
+    markLiveChange(tx, 'charging', request.hubId);
   }
 
   async removeAllocation(tx: Transaction, requestId: string) {
@@ -82,12 +91,17 @@ export class PrismaChargingStore {
     });
   }
 
-  setSession(tx: Transaction, id: string, data: Prisma.ChargingSessionUpdateInput) {
-    return tx.chargingSession.update({ where: { id }, data });
+  async setSession(tx: Transaction, id: string, data: Prisma.ChargingSessionUpdateInput) {
+    const result = await tx.chargingSession.update({ where: { id }, data, include: { request: { select: { hubId: true } } } });
+    const { request, ...session } = result;
+    markLiveChange(tx, 'charging', request.hubId);
+    return session;
   }
 
-  setPoint(tx: Transaction, id: string, data: { status?: ChargingPointStatus; fault?: boolean; lastObservedAt?: Date }) {
-    return tx.chargingPoint.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+  async setPoint(tx: Transaction, id: string, data: { status?: ChargingPointStatus; fault?: boolean; lastObservedAt?: Date }) {
+    const point = await tx.chargingPoint.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+    if (data.status !== undefined || data.fault !== undefined) markLiveChange(tx, 'charging', point.hubId);
+    return point;
   }
 
   async updateStatus(tx: Transaction, id: string, status: ChargingRequestStatus) {

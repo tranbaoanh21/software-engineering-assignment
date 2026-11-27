@@ -44,7 +44,9 @@ export class AccessService implements OnModuleInit {
     return { token, session: this.toSession(account, token) };
   }
 
-  async verifyAccess(token: string, roles: readonly Role[] = [], tx?: Transaction): Promise<SessionView> {
+  async verifyAccess(
+    token: string, roles: readonly Role[] = [], tx?: Transaction, options: { touch?: boolean } = {},
+  ): Promise<SessionView> {
     const now = new Date();
     const cutoff = new Date(now.getTime() - sessionIdleMs);
     const entry = await this.store.findSession(digest(token), tx);
@@ -57,7 +59,7 @@ export class AccessService implements OnModuleInit {
       throw new ForbiddenException('Tài khoản không có quyền thực hiện thao tác');
     }
 
-    if (!tx && !await this.store.touchSession(entry.id, cutoff, now)) {
+    if (!tx && options.touch !== false && !await this.store.touchSession(entry.id, cutoff, now)) {
       throw new UnauthorizedException('Phiên đăng nhập đã hết hiệu lực');
     }
     return session;

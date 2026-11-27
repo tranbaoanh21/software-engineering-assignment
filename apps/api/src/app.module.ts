@@ -11,6 +11,7 @@ import { ResModule } from './modules/res/res.module.js';
 import { SimModule } from './modules/sim/sim.module.js';
 import { TripModule } from './modules/trip/trip.module.js';
 import { DatabaseModule } from './shared/database/database.module.js';
+import { LiveGateway } from './shared/live/live.gateway.js';
 
 @Module({
   imports: [
@@ -19,5 +20,6 @@ import { DatabaseModule } from './shared/database/database.module.js';
     StateIngestModule,
   ],
   controllers: [HealthController],
+  providers: [LiveGateway],
 })
 export class AppModule {}

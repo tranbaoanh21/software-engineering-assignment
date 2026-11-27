@@ -3,6 +3,7 @@ import type { ActiveTripBattery, PendingTripHandoff } from '@semh/contracts';
 import type { Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import {
   TripJourneyStore, type HandoffInput, type HandoffKind, type HandoffRecord,
@@ -112,6 +113,7 @@ export class PrismaTripJourneyStore extends TripJourneyStore {
       data: { hubId: null, reservationHoldId: null, status: 'IN_USE', batteryPercent: battery, lastObservedAt: at },
     });
     if (!vehicle.count) throw new ConflictException('Xe đã đổi trạng thái. Vui lòng kiểm tra lượt đặt.');
+    markLiveChange(tx, 'vehicle', command.hubId);
     const trip = await tx.trip.create({
       data: {
         reservationId: command.subjectId, studentId: command.studentId,
@@ -136,5 +138,6 @@ export class PrismaTripJourneyStore extends TripJourneyStore {
       data: { hubId: end.hubId, status: end.vehicleStatus, batteryPercent: end.battery, lastObservedAt: end.at },
     });
     if (!tripChange.count || !vehicle.count) throw new ConflictException('Chuyến đi hoặc xe vừa đổi trạng thái.');
+    markLiveChange(tx, 'vehicle', end.hubId);
   }
 }
