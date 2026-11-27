@@ -3,6 +3,7 @@ import type { PendingParkingVerification } from '@semh/contracts';
 import type { ParkingReservationStatus, ParkingSpaceStatus, Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import {
   ParkingStore, type NewParkingReservation, type ParkingReading, type PrivateVehicleReading, type RegisteredPrivateVehicle,
@@ -137,7 +138,8 @@ export class PrismaParkingStore extends ParkingStore {
   }
 
   async updateSpace(tx: Transaction, id: string, status: ParkingSpaceStatus, reading?: ParkingReading) {
-    await tx.parkingSpace.update({ where: { id }, data: { ...reading, status } });
+    const { hubId } = await tx.parkingSpace.update({ where: { id }, data: { ...reading, status }, select: { hubId: true } });
+    markLiveChange(tx, 'parking', hubId);
   }
 
   findVerification(tx: Transaction, id: string) {
@@ -148,14 +150,23 @@ export class PrismaParkingStore extends ParkingStore {
     return tx.parkingVerification.findUnique({ where: { reservationId_requestId: { reservationId, requestId } } });
   }
 
-  createVerification(tx: Transaction, data: Parameters<ParkingStore['createVerification']>[1]) {
-    return tx.parkingVerification.create({ data });
+  async createVerification(tx: Transaction, data: Parameters<ParkingStore['createVerification']>[1]) {
+    const result = await tx.parkingVerification.create({
+      data, include: { reservation: { select: { space: { select: { hubId: true } } } } },
+    });
+    const { reservation, ...verification } = result;
+    markLiveChange(tx, 'parking', reservation.space.hubId);
+    return verification;
   }
 
-  settleVerification(tx: Transaction, id: string, reason?: string) {
-    return tx.parkingVerification.update({
+  async settleVerification(tx: Transaction, id: string, reason?: string) {
+    const result = await tx.parkingVerification.update({
       where: { id }, data: reason ? { status: 'REJECTED', reason } : { status: 'APPLIED' },
+      include: { reservation: { select: { space: { select: { hubId: true } } } } },
     });
+    const { reservation, ...verification } = result;
+    markLiveChange(tx, 'parking', reservation.space.hubId);
+    return verification;
   }
 
   async listPending(sourceId: string, now: Date): Promise<PendingParkingVerification[]> {

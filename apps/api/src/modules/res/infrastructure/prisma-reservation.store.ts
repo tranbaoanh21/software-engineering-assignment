@@ -4,6 +4,7 @@ import type { Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import { ReservationStore } from '../application/reservation-store.port.js';
 
 const summary = {
@@ -38,11 +39,13 @@ export class PrismaReservationStore extends ReservationStore {
     tx: Transaction, reservationId: string, expected: VehicleReservationStatus,
     status: VehicleReservationStatus, now: Date,
   ) {
-    const changed = await tx.vehicleReservation.updateMany({
+    const [changed] = await tx.vehicleReservation.updateManyAndReturn({
       where: { id: reservationId, status: expected },
       data: { status, endedAt: now, version: { increment: 1 } },
+      select: { hubId: true },
     });
-    return changed.count === 1;
+    if (changed) markLiveChange(tx, 'vehicle', changed.hubId);
+    return !!changed;
   }
 
   findByRequest(studentId: string, requestId: string, tx: Transaction = this.prisma) {
@@ -78,20 +81,24 @@ export class PrismaReservationStore extends ReservationStore {
     });
   }
 
-  createConfirmed(
+  async createConfirmed(
     tx: Transaction, studentId: string, input: CreateReservationInput, confirmedAt: Date, expiresAt: Date,
   ) {
-    return tx.vehicleReservation.create({
+    const reservation = await tx.vehicleReservation.create({
       data: { ...input, studentId, status: 'CONFIRMED', confirmedAt, expiresAt },
       select: summary,
     });
+    markLiveChange(tx, 'vehicle', input.hubId);
+    return reservation;
   }
 
   async expire(tx: Transaction, reservationId: string, now: Date) {
-    const result = await tx.vehicleReservation.updateMany({
+    const [changed] = await tx.vehicleReservation.updateManyAndReturn({
       where: { id: reservationId, status: 'CONFIRMED', expiresAt: { lte: now } },
       data: { status: 'EXPIRED', endedAt: now, version: { increment: 1 } },
+      select: { hubId: true },
     });
-    return result.count === 1;
+    if (changed) markLiveChange(tx, 'vehicle', changed.hubId);
+    return !!changed;
   }
 }

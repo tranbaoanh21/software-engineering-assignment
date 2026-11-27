@@ -3,6 +3,7 @@ import type { IncidentView, NetworkHub, PlanView } from '@semh/contracts';
 import { operationViews } from '../../app/navigation';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { useScreen } from '../../shared/api/use-screen';
+import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { ResourceCatalog } from './ResourceCatalog';
 import { OperationsOverview } from './OperationsOverview';
 import { IncidentPanel, type Technician } from './IncidentPanel';
@@ -21,7 +22,8 @@ export function OperationsPage() {
   const recId = params.get('rec');
   const review = useScreen<TransferDraft>(!maintenance && tab === 'plans' && draftId && recId ?
     '/simulations/runs/' + encodeURIComponent(draftId) + '/recommendations/' + encodeURIComponent(recId) + '/draft' : '');
-  const screen = useScreen<Overview>(maintenance ? '/operations/maintenance' : '/operations', 4000);
+  const connected = useLiveUpdates(!maintenance && tab === 'incidents' ? ['incident'] : undefined, () => screen.refresh());
+  const screen = useScreen<Overview>(maintenance ? '/operations/maintenance' : '/operations', connected ? 30000 : 4000);
   const publicHubs = useScreen<NetworkHub[]>(maintenance ? '/network/hubs' : '');
   const { data } = screen;
   const maintenanceHubs = publicHubs.data ?? [];

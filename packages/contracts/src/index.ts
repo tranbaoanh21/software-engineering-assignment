@@ -128,6 +128,9 @@ export interface VehicleHandoffEvent {
 
 export const parkingHoldMinutes = 20;
 
+export const liveTopics = ['vehicle', 'parking', 'charging', 'incident'] as const;
+export type LiveTopic = (typeof liveTopics)[number];
+
 export type ParkingReservationStatus = 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
 export type ParkingVerificationKind = 'CHECK_IN' | 'CHECK_OUT';
 

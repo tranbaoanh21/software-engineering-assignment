@@ -1,6 +1,6 @@
 # Release SEMH lên EC2 và Neon
 
-Nginx chạy dưới `systemd` trên Ubuntu EC2. Nginx nhận HTTP/HTTPS trên cổng 80/443, phục vụ React từ `/var/www/semh/current` và chuyển `/api/` tới NestJS qua `127.0.0.1:8080`. Container `app` dùng image `semh-app` và chạy NestJS cùng IoT simulator dưới dạng hai tiến trình Node.js. Simulator gọi API qua `http://127.0.0.1:3000`. NestJS lưu dữ liệu người dùng, phiên đăng nhập và nghiệp vụ trong PostgreSQL trên Neon.
+Nginx chạy dưới `systemd` trên Ubuntu EC2. Nginx nhận HTTP/HTTPS trên cổng 80/443, phục vụ React từ `/var/www/semh/current` và chuyển `/api/` tới NestJS qua `127.0.0.1:8080`. Mẫu cấu hình production chuyển tiếp yêu cầu nâng cấp WebSocket ở `/api/live` trên cùng cổng HTTPS. Container `app` dùng image `semh-app` và chạy NestJS cùng IoT simulator dưới dạng hai tiến trình Node.js. Simulator gọi API qua `http://127.0.0.1:3000`. NestJS lưu dữ liệu người dùng, phiên đăng nhập và nghiệp vụ trong PostgreSQL trên Neon.
 
 ## Chuẩn bị Neon
 

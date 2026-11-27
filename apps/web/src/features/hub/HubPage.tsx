@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { reservationMinimumBatteryPercent, type NetworkHub } from '@semh/contracts';
 import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { displayTime, field, useScreen } from '../../shared/api/use-screen';
+import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { kindLabel, stateLabel } from '../ops/ResourceCatalog';
 import { availability, HubMap, type Need } from './HubMap';
 import { HubSearchField } from './HubSearchField';
@@ -97,8 +98,13 @@ export function HubPage({ canBook = false }: { canBook?: boolean }) {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const searchForm = useRef<HTMLFormElement>(null);
-  const all = useScreen<Site[]>('/network/hubs', 10000);
-  const search = useScreen<Site[]>(filters ? '/network/hubs?' + filters : '', 10000);
+  const connected = useLiveUpdates(canBook ? ['vehicle', 'parking', 'charging'] : undefined, () => {
+    all.refresh();
+    search.refresh();
+  }, detailId ?? undefined);
+  const interval = connected ? 30000 : 10000;
+  const all = useScreen<Site[]>('/network/hubs', interval);
+  const search = useScreen<Site[]>(filters ? '/network/hubs?' + filters : '', interval);
   const screen = filters ? search : all;
   const hubs = screen.data ?? noHubs;
   const active = hubs.find(hub => hub.id === selected) ?? hubs[0];

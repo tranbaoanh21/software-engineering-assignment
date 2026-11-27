@@ -4,6 +4,7 @@ import type { Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 
 const planInclude = {
   items: { orderBy: { vehicleId: 'asc' } },
@@ -39,12 +40,16 @@ export class PrismaOperationsStore {
     return tx.incident.findUnique({ where: { id } });
   }
 
-  createIncident(tx: Transaction, data: Prisma.IncidentUncheckedCreateInput) {
-    return tx.incident.create({ data });
+  async createIncident(tx: Transaction, data: Prisma.IncidentUncheckedCreateInput) {
+    const incident = await tx.incident.create({ data });
+    markLiveChange(tx, 'incident', incident.hubId);
+    return incident;
   }
 
-  updateIncident(tx: Transaction, id: string, data: Prisma.IncidentUncheckedUpdateInput) {
-    return tx.incident.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+  async updateIncident(tx: Transaction, id: string, data: Prisma.IncidentUncheckedUpdateInput) {
+    const incident = await tx.incident.update({ where: { id }, data: { ...data, version: { increment: 1 } } });
+    markLiveChange(tx, 'incident', incident.hubId);
+    return incident;
   }
 
   technicians(tx: Transaction) {

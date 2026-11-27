@@ -4,6 +4,7 @@ import type { ChargingRequestView, NetworkHub, PrivateChargingVehicleView } from
 import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { displayTime, field, useCommand, useScreen } from '../../shared/api/use-screen';
+import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { PrivateVehicleForm } from '../park/PrivateVehicleForm';
 
 interface ChargingOverview {
@@ -29,9 +30,15 @@ const chargingMetrics = [
 export function ChargingPage() {
   const operator = useLocation().pathname.startsWith('/operations');
   const [params] = useSearchParams();
-  const screen = useScreen<ChargingOverview>('/charging?mode=' + (operator ? 'OPR' : 'STU'), 4000);
-  const network = useScreen<NetworkHub[]>('/network/hubs', 12000);
+  const connected = useLiveUpdates(['charging'], () => {
+    screen.refresh();
+    network.refresh();
+    if (preview && !action.pending) void refreshQuote(preview);
+  });
+  const screen = useScreen<ChargingOverview>('/charging?mode=' + (operator ? 'OPR' : 'STU'), connected ? 30000 : 4000);
+  const network = useScreen<NetworkHub[]>('/network/hubs', connected ? 30000 : 12000);
   const action = useCommand(screen.refresh);
+  const quoteRefresh = useCommand();
   const [hubId, setHubId] = useState(params.get('hubId') ?? '');
   const [formOpen, setFormOpen] = useState(!!params.get('hubId'));
   const [privateVehicleId, setPrivateVehicleId] = useState('');
@@ -40,6 +47,11 @@ export function ChargingPage() {
   const [focusedRequest, setFocusedRequest] = useState(operator ? params.get('request') ?? '' : '');
   const [preview, setPreview] = useState<{ quote: Quote; input: object } | null>(null);
   const [message, setMessage] = useState('');
+
+  async function refreshQuote(current: NonNullable<typeof preview>) {
+    const quote = await quoteRefresh.send<Quote>('/charging/preview', current.input, 'POST', false);
+    if (quote) setPreview(latest => latest === current ? { ...current, quote } : latest);
+  }
 
   async function previewRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -185,7 +197,7 @@ export function ChargingPage() {
           {preview && <div className="work-notice">
             <h3>{previewTime ? 'Lịch dự kiến' : 'Chưa có lịch phù hợp'}</h3>
             {(previewTime || preview.quote.reason) && <p>{previewTime ?? preview.quote.reason}</p>}
-            <button className="primary" type="button" onClick={() => void submit()} disabled={action.pending}>
+            <button className="primary" type="button" onClick={() => void submit()} disabled={action.pending || quoteRefresh.pending}>
               {previewTime ? 'Đăng ký sạc' : 'Gửi yêu cầu chờ xếp lịch'}
             </button>
           </div>}
