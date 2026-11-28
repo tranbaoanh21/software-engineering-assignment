@@ -34,6 +34,7 @@ enum VehicleStatus {
   CHARGING
   OUT_OF_SERVICE
   AWAITING_CHARGE
+  AWAITING_CHARGE_APPROVAL
 }
 
 model Account {
@@ -273,7 +274,8 @@ enum ParkingVerificationStatus {
 
 model PrivateVehicle {
   id           String               @id @default(uuid()) @db.Uuid
-  plate        String               @unique
+  plate        String
+  removedAt    DateTime?
   batteryPercent Int?
   batteryKwh Float? @default(0.8)
   maxChargeKw Float? @default(0.5)
@@ -359,6 +361,7 @@ enum ChargingRequestStatus {
   PENDING
   SCHEDULED
   CHARGING
+  AWAITING_APPROVAL
   COMPLETED
   INTERRUPTED
 }
@@ -391,7 +394,7 @@ model ChargingPoint {
 
 model ChargingRequest {
   id            String                 @id @default(uuid()) @db.Uuid
-  authorId      String                 @db.Uuid
+  authorId      String?                @db.Uuid
   requestId     String                 @db.Uuid
   vehicleKind   String
   vehicleId     String                 @db.Uuid
@@ -405,6 +408,7 @@ model ChargingRequest {
   priority      Int                    @default(0)
   overrideRank  Int?
   preferredPointId String?             @db.Uuid
+  requiresFleetHandoff Boolean           @default(false)
   version       Int                    @default(0)
   session       ChargingSession?
 
@@ -424,6 +428,7 @@ model ChargingSession {
   endAt             DateTime
   powerKw           Float
   batteryPercent    Int
+  plugConfirmedAt   DateTime?
   startedAt         DateTime?
   completedAt       DateTime?
   releasedAt        DateTime?
@@ -497,6 +502,7 @@ model RedistributionPlan {
   scheduledAt   DateTime
   reason        String
   recommendationId String? @db.Uuid
+  completeOnArrival Boolean @default(false)
   status        PlanStatus  @default(DRAFT)
   version       Int         @default(0)
   createdAt     DateTime    @default(now())

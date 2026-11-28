@@ -4,7 +4,7 @@ import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import { NetworkReader } from '../../hub/application/network-reader.port.js';
-import type { Snapshot } from '../domain/simulation-engine.js';
+import { donorStock, type Snapshot } from '../domain/simulation-engine.js';
 
 @Injectable()
 export class PrismaSimulationStore {
@@ -18,8 +18,11 @@ export class PrismaSimulationStore {
     return this.prisma.$transaction(work, { isolationLevel: 'RepeatableRead' });
   }
 
-  async capture(tx: Transaction, ids: string[], now: Date): Promise<Snapshot> {
-    const hubs = await this.network.read(tx, ids, false);
+  async capture(tx: Transaction, ids: string[], now: Date, operatorScope?: string[]): Promise<Snapshot> {
+    const network = await this.network.read(tx, operatorScope, false);
+    const selected = new Set(ids);
+    const hubs = network.filter(hub => selected.has(hub.id));
+    const donors = network.filter(hub => !selected.has(hub.id)).map(donorStock);
     const fleetHolds = await tx.vehicleReservation.findMany({
       where: {
         status: 'CONFIRMED', expiresAt: { gt: now }, hubId: { in: ids },
@@ -37,7 +40,7 @@ export class PrismaSimulationStore {
     });
     const minute = (date: Date) => Math.ceil((date.getTime() - now.getTime()) / 60_000);
     return {
-      hubs, releases: [
+      hubs, donors, releases: [
         ...fleetHolds.map(row => ({
           hubId: row.hubId, resourceId: row.vehicleId, kind: 'VEHICLE' as const,
           minute: minute(row.expiresAt), batteryPercent: row.vehicle.batteryPercent,

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { ConflictException, Injectable, Logger, NotFoundException, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import type { ChangeInput, ScenarioView, SessionView, SimulationParameters, SimulationResult, SimulationRunView } from '@semh/contracts';
+import type { ChangeInput, ScenarioView, SessionView, SimulationParameters, SimulationRecommendation, SimulationResult, SimulationRunView } from '@semh/contracts';
 import type { Prisma, SimulationRun, SimulationScenario } from '../../../generated/prisma/client.js';
 import { AuditService } from '../../../shared/audit/audit.service.js';
 import { withChange } from '../../../shared/database/change-receipt.js';
@@ -9,7 +9,8 @@ import { assertVersion } from '../../../shared/http/input.js';
 import { AccessService } from '../../gen/application/access.service.js';
 import { assertOperatorHubs, canOperateAt } from '../../gen/application/operator-scope.js';
 import { NetworkReader } from '../../hub/application/network-reader.port.js';
-import { analyzeSimulation, campusDemand, executeSimulation, modelVersion, type Snapshot } from '../domain/simulation-engine.js';
+import { OperationsService } from '../../ops/application/operations.service.js';
+import { analyzeSimulation, campusDemand, donorStock, executeSimulation, hubIsOperating, modelVersion, transferableVehicles, type Snapshot } from '../domain/simulation-engine.js';
 import { PrismaSimulationStore } from '../infrastructure/prisma-simulation.store.js';
 
 export type ScenarioInput = Omit<ScenarioView, 'id' | 'version'>;
@@ -23,7 +24,7 @@ function json(data: object): Prisma.InputJsonValue {
 
 function scenarioView(row: SimulationScenario): ScenarioView {
   return { id: row.id, name: row.name, objective: row.objective, hubIds: row.hubIds,
-    parameters: row.parameters as unknown as SimulationParameters, version: row.version };
+    parameters: row.parameters as unknown as ScenarioView['parameters'], version: row.version };
 }
 
 function runView(row: SimulationRun, details = false): SimulationRunView {
@@ -44,6 +45,7 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly store: PrismaSimulationStore,
     private readonly network: NetworkReader,
+    private readonly operations: OperationsService,
     private readonly access: AccessService,
     private readonly audit: AuditService,
   ) {}
@@ -83,6 +85,9 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
         if (input.parameters.pausedResourceIds?.some(id => !allowed.has(id))) {
           throw new ConflictException('Tài nguyên tạm ngừng nằm ngoài phạm vi kịch bản.');
         }
+        if (input.parameters.snapshotRunId) {
+          await this.completedSnapshotRun(tx, actor, input.parameters.snapshotRunId, input.hubIds);
+        }
         const data = { authorId: actor.accountId, ...input, parameters: json(input.parameters) };
         if (id) assertVersion((await this.store.scenario(tx, id))!.version, change.version);
         const row = id ? await this.store.update(tx, id, data) : await this.store.create(tx, data);
@@ -92,7 +97,7 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async start(token: string, scenarioId: string, sourceRunId: string | null, change: ChangeInput) {
+  async start(token: string, scenarioId: string, sourceRunId: string | null | undefined, change: ChangeInput) {
     let started: SimulationRun | undefined;
     const response = await this.store.write(async tx => {
       started = undefined;
@@ -103,17 +108,17 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
       return withChange(tx, actor.accountId, 'SIMULATION_STARTED', change, { scenarioId, sourceRunId }, async () => {
         assertVersion(row.version, change.version);
         const now = new Date();
-        const previous = sourceRunId ? await this.accessRun(tx, actor, sourceRunId) : null;
-        if (previous && (previous.status !== 'COMPLETED' || !row.hubIds.every(id => previous.hubIds.includes(id)))) {
-          throw new ConflictException('Snapshot đã lưu không đủ dữ liệu cho phạm vi đã chọn.');
-        }
+        const { snapshotRunId, ...parameters } = row.parameters as unknown as ScenarioView['parameters'];
+        const selectedRunId = sourceRunId === undefined ? snapshotRunId ?? null : sourceRunId;
+        const previous = selectedRunId ? await this.completedSnapshotRun(tx, actor, selectedRunId, row.hubIds) : null;
         const source = previous?.snapshot as unknown as Snapshot | undefined;
         const snapshot = source ? {
           hubs: source.hubs.filter(hub => row.hubIds.includes(hub.id)),
           releases: source.releases.filter(release => row.hubIds.includes(release.hubId)),
-        } : await this.store.capture(tx, row.hubIds, now);
+          donors: source.donors && [...source.donors, ...source.hubs.map(donorStock)].filter(hub =>
+            !row.hubIds.includes(hub.id) && canOperateAt(actor, hub.id)),
+        } : await this.store.capture(tx, row.hubIds, now, actor.operatorHubIds === null ? undefined : actor.operatorHubIds ?? []);
         if (snapshot.hubs.length !== row.hubIds.length) throw new ConflictException('Không chụp được trạng thái đủ Hub.');
-        const parameters = row.parameters as unknown as SimulationParameters;
         const snapshotResources = new Set(snapshot.hubs.flatMap(hub => hub.resources.map(item => item.id)));
         if (parameters.pausedResourceIds?.some(id => !snapshotResources.has(id))) {
           throw new ConflictException('Snapshot không có đầy đủ tài nguyên đã chọn.');
@@ -122,7 +127,7 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
           profileVersion: 'campus-demand-v1' } satisfies PinnedInput;
         const run = await this.store.createRun(tx, {
           authorId: actor.accountId, requestId: change.requestId, scenarioId, scenarioVersion: row.version, hubIds: row.hubIds,
-          inputs: json(inputs), snapshot: json(snapshot), baseTime: previous?.baseTime ?? now, sourceRunId, modelVersion,
+          inputs: json(inputs), snapshot: json(snapshot), baseTime: previous?.baseTime ?? now, sourceRunId: selectedRunId, modelVersion,
         });
         await this.logChange(tx, actor.accountId, 'SIMULATION_STARTED', 'simulation-run', run.id, change, { scenarioId, modelVersion });
         started = run;
@@ -141,29 +146,74 @@ export class SimulationService implements OnModuleInit, OnModuleDestroy {
     return this.store.read(async tx => {
       const row = await this.accessRun(tx, actor, id);
       const input = row.inputs as unknown as PinnedInput;
-      return { ...runView(row, true), parameters: input.parameters, profileVersion: input.profileVersion, sourceRunId: row.sourceRunId };
+      const view = runView(row, true);
+      if (view.result) {
+        view.result.recommendations = view.result.recommendations.filter(rec =>
+          rec.kind !== 'TRANSFER' || (!!rec.sourceHubId && !row.hubIds.includes(rec.sourceHubId) && canOperateAt(actor, rec.sourceHubId)));
+      }
+      const hasDonorSnapshot = (row.snapshot as unknown as Snapshot).donors !== undefined;
+      return { ...view, parameters: input.parameters, profileVersion: input.profileVersion, sourceRunId: row.sourceRunId, hasDonorSnapshot };
     });
   }
 
   prepare(actor: SessionView, id: string, recommendationId: string) {
     return this.store.read(async tx => {
-      const row = await this.accessRun(tx, actor, id);
-      if (row.status !== 'COMPLETED' || !row.analysisReady) throw new ConflictException('Phân tích chưa sẵn sàng.');
-      const result = row.results as unknown as SimulationResult;
-      const rec = result.recommendations.find(item => item.id === recommendationId && item.kind === 'TRANSFER');
-      if (!rec?.sourceHubId) throw new NotFoundException('Không tìm thấy đề xuất điều chuyển.');
-      const current = await this.network.read(tx, [rec.sourceHubId, rec.hubId]);
-      const source = current.find(hub => hub.id === rec.sourceHubId);
-      const target = current.find(hub => hub.id === rec.hubId);
-      if (!source || !target) throw new ConflictException('Hub nguồn hoặc đích đã ngừng phục vụ.');
-      const spaces = Math.max(0, target.capacity - target.vehicleCount - target.heldArrivals);
-      const vehicleIds = source.resources
-        .filter(item => item.kind === 'VEHICLE' && item.status === 'AVAILABLE' && item.serviceStatus === 'ACTIVE' &&
-          item.observedAt && (item.batteryPercent ?? 0) >= 30)
-        .slice(0, Math.min(rec.count, spaces)).map(item => item.id);
-      if (!vehicleIds.length) throw new ConflictException('Không còn xe hoặc sức chứa đáp ứng đề xuất ở thời điểm hiện tại.');
-      return { sourceHubId: source.id, targetHubId: target.id, vehicleIds, reason: rec.evidence, recommendationId };
+      const recommendation = await this.transferRecommendation(tx, actor, id, recommendationId);
+      return this.prepareTransferInTx(tx, recommendation);
     });
+  }
+
+  approveTransfer(token: string, id: string, recommendationId: string, assigneeId: string, change: ChangeInput) {
+    return this.store.write(async tx => {
+      const actor = await this.access.verifyAccess(token, ['OPR'], tx);
+      const recommendation = await this.transferRecommendation(tx, actor, id, recommendationId);
+      return withChange(tx, actor.accountId, 'SIMULATION_TRANSFER_APPROVED', change, { id, recommendationId, assigneeId }, async () => {
+        const approved = await this.operations.approvedRecommendationInTx(tx, recommendationId);
+        if (approved) {
+          assertOperatorHubs(actor, approved.sourceHubId, approved.targetHubId);
+          return approved;
+        }
+        const { reason, ...draft } = await this.prepareTransferInTx(tx, recommendation);
+        return this.operations.approveRecommendationInTx(tx, actor, { ...draft, assigneeId }, { ...change, reason });
+      });
+    });
+  }
+
+  private async transferRecommendation(tx: Transaction, actor: SessionView, id: string, recommendationId: string) {
+    const row = await this.accessRun(tx, actor, id);
+    if (row.status !== 'COMPLETED' || !row.analysisReady) throw new ConflictException('Phân tích chưa sẵn sàng.');
+    const result = row.results as unknown as SimulationResult;
+    const recommendation = result.recommendations.find(item => item.id === recommendationId && item.kind === 'TRANSFER');
+    if (!recommendation?.sourceHubId) throw new NotFoundException('Không tìm thấy đề xuất điều chuyển.');
+    assertOperatorHubs(actor, recommendation.sourceHubId, recommendation.hubId);
+    if (row.hubIds.includes(recommendation.sourceHubId)) {
+      throw new ConflictException('Chạy lại với trạng thái hiện tại để tìm nguồn xe ngoài các Hub đã chọn.');
+    }
+    return { ...recommendation, sourceHubId: recommendation.sourceHubId };
+  }
+
+  private async prepareTransferInTx(tx: Transaction, rec: SimulationRecommendation & { sourceHubId: string }) {
+    const current = await this.network.read(tx, [rec.sourceHubId, rec.hubId], false);
+    const source = current.find(hub => hub.id === rec.sourceHubId);
+    const target = current.find(hub => hub.id === rec.hubId);
+    if (!source || !target || !hubIsOperating(source) || !hubIsOperating(target)) {
+      throw new ConflictException('Hub nguồn hoặc đích đã ngừng phục vụ.');
+    }
+    const spaces = Math.max(0, target.capacity - target.vehicleCount - target.heldArrivals);
+    const vehicleIds = source.resources
+      .filter(item => item.kind === 'VEHICLE' && item.status === 'AVAILABLE' && item.serviceStatus === 'ACTIVE' &&
+        item.observedAt && (item.batteryPercent ?? 0) >= 30)
+      .slice(0, Math.min(rec.count, spaces, transferableVehicles(donorStock(source)))).map(item => item.id);
+    if (!vehicleIds.length) throw new ConflictException('Hub nguồn không còn xe dư hoặc Hub đích đã hết chỗ nhận.');
+    return { sourceHubId: source.id, targetHubId: target.id, vehicleIds, reason: rec.evidence, recommendationId: rec.id };
+  }
+
+  private async completedSnapshotRun(tx: Transaction, actor: SessionView, runId: string, hubIds: string[]) {
+    const run = await this.accessRun(tx, actor, runId);
+    if (run.status !== 'COMPLETED' || !hubIds.every(id => run.hubIds.includes(id))) {
+      throw new ConflictException('Mốc dữ liệu đã lưu chưa có đủ các Hub đã chọn.');
+    }
+    return run;
   }
 
   private async accessRun(tx: Transaction, actor: SessionView, id: string) {

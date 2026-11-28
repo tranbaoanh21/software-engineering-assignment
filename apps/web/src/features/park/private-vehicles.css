@@ -1,0 +1,16 @@
+.private-vehicle-identity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.private-vehicle-dialog {
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  color: var(--navy);
+  box-shadow: 0 12px 36px #102a4333;
+}
+
+.private-vehicle-dialog::backdrop { background: #102a4373; }
+.private-vehicle-dialog .work-actions { justify-content: flex-end; }

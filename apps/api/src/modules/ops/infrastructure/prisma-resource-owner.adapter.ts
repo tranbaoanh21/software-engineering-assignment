@@ -138,6 +138,7 @@ export class PrismaResourceOwnerAdapter {
       const row = await tx.sharedVehicle.findUniqueOrThrow({ where });
       const keep = row.status === 'IN_USE' || row.status === 'CHARGING';
       await tx.sharedVehicle.update({ where, data: { fault: true, status: keep ? row.status : 'OUT_OF_SERVICE', version } });
+      if (row.status === 'AWAITING_CHARGE_APPROVAL') await this.charging.invalidateFleetApprovalInTx(tx, id);
     } else if (kind === 'PARKING_SPACE') {
       await tx.parkingSpace.update({ where, data: { status: 'OUT_OF_SERVICE', fault: true, version } });
     } else {

@@ -7,7 +7,7 @@ import { RegisterPage } from '../features/gen/RegisterPage';
 import { resRoute } from '../features/res/route';
 import { tripRoute } from '../features/trip/route';
 import { parkRoute, privateVehiclesRoute } from '../features/park/route';
-import { chgRoute } from '../features/chg/route';
+import { chgRoute, maintenanceChgRoute } from '../features/chg/route';
 import { opsRoutes } from '../features/ops/routes';
 import { simRoute } from '../features/sim/route';
 import { administrationRoute } from '../features/gen/route';
@@ -43,7 +43,7 @@ const portals: Portal[] = [
     { ...parkRoute, label: 'Chỗ đỗ của tôi' }, { ...chgRoute, label: 'Sạc của tôi' },
   ] },
   { path: 'operations', role: 'OPR', label: 'Vận hành', features: [opsRoutes.operations, chgRoute, simRoute] },
-  { path: 'maintenance', role: 'MNT', label: 'Kỹ thuật', features: [opsRoutes.maintenance, opsRoutes.maintenanceTransfers] },
+  { path: 'maintenance', role: 'MNT', label: 'Kỹ thuật', features: [opsRoutes.maintenance, opsRoutes.maintenanceTransfers, maintenanceChgRoute] },
   { path: 'admin', role: 'ADM', label: 'Quản trị', features: [administrationRoute] },
 ];
 
@@ -93,7 +93,7 @@ function AppFrame({ children, session, portal, feature, onLogout }: {
   const sidebar = portal?.role === 'ADM'
     ? adminViews.map(item => ({ ...item, to: adminPath + (item.key === 'accounts' ? '' : '?tab=' + item.key), active: adminView.key === item.key }))
     : portal?.role === 'OPR' ? opsItems : portal?.role === 'MNT' ? portal.features.map(item => ({
-      label: item.label, to: portalPath(portal, item.path), icon: item.path === 'transfers' ? 'transfer' : 'alert',
+      label: item.label, to: portalPath(portal, item.path), icon: item.path === 'transfers' ? 'transfer' : item.path === 'charging' ? 'bolt' : 'alert',
       active: feature?.path === item.path,
     })) : [];
   const topbarTitle = sidebar.find(item => item.active)?.label ?? portal?.label;

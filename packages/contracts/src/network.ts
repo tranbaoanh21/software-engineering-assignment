@@ -93,6 +93,7 @@ export interface PlanView {
   targetHubId: string;
   scheduledAt: string;
   recommendationId: string | null;
+  completeOnArrival: boolean;
   reason: string;
   status: 'DRAFT' | 'APPROVED' | 'IN_PROGRESS' | 'AWAITING_APPROVAL' | 'COMPLETED' | 'CANCELLED';
   assigneeId: string | null;
@@ -120,7 +121,8 @@ export interface ChargingRequestView {
   vehicleKind: 'PRIVATE' | 'SHARED';
   vehicleId: string;
   hubId: string;
-  status: 'PENDING' | 'SCHEDULED' | 'CHARGING' | 'COMPLETED' | 'INTERRUPTED';
+  status: 'PENDING' | 'SCHEDULED' | 'CHARGING' | 'AWAITING_APPROVAL' | 'COMPLETED' | 'INTERRUPTED';
+  requiresFleetHandoff: boolean;
   priority: number;
   reason: string | null;
   version: number;
@@ -132,6 +134,7 @@ export interface ChargingRequestView {
     endAt: string;
     batteryPercent: number;
     status: 'READY' | 'CHARGING' | 'COMPLETED' | 'INTERRUPTED';
+    plugConfirmedAt: string | null;
     releasedAt: string | null;
     observedAt: string | null;
   } | null;
@@ -188,7 +191,7 @@ export interface ScenarioView {
   name: string;
   objective: string;
   hubIds: string[];
-  parameters: SimulationParameters;
+  parameters: SimulationParameters & { snapshotRunId?: string | null };
   version: number;
 }
 

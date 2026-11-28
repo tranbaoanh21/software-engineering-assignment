@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { reservationMinimumBatteryPercent, type NetworkHub } from '@semh/contracts';
+import { reservationMinimumBatteryPercent, type NetworkHub, type NetworkResource } from '@semh/contracts';
 import { MetricIcon } from '../../shared/ui/MetricIcon';
+import { VehiclePlate } from '../../shared/ui/VehicleVisual';
 import { displayTime, field, useScreen } from '../../shared/api/use-screen';
 import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { kindLabel, stateLabel } from '../ops/ResourceCatalog';
@@ -14,13 +15,51 @@ type Position = { latitude: number; longitude: number };
 const needs: readonly Need[] = ['vehicle', 'parking', 'charging'];
 const noHubs: readonly Site[] = [];
 
-function HubAvailability({ hub }: { hub: NetworkHub }) {
-  return <dl className="metric-grid hub-availability">
-    {needs.map(need => <div className="work-card metric-card" key={need}>
-      <dt className="metric-label">{availability[need].label}<MetricIcon name={need} /></dt>
-      <dd className="metric-value">{hub[availability[need].field]}</dd>
-    </div>)}
-  </dl>;
+function HubAvailability({ hub, selected, onSelect }: {
+  hub: NetworkHub; selected: Need; onSelect: (need: Need) => void;
+}) {
+  return <div className="metric-grid hub-availability" role="group" aria-label="Dịch vụ tại Hub">
+    {needs.map(need => <button key={need} type="button" className="work-card metric-card"
+      aria-pressed={selected === need} aria-controls="hub-service-results" onClick={() => onSelect(need)}>
+      <span className="metric-label">{availability[need].label}</span>
+      <span className="metric-value">{hub[availability[need].field]}</span>
+      <MetricIcon name={need} />
+    </button>)}
+  </div>;
+}
+
+function HubFleet({ hub, resources, canBook }: {
+  hub: Site; resources: NetworkResource[]; canBook: boolean;
+}) {
+  if (!resources.length) return <p className="work-card data-empty">Hub này chưa có xe dùng chung.</p>;
+  const fleet = resources.map(item => {
+    const state = item.serviceStatus === 'ACTIVE' ? item.status : item.serviceStatus;
+    const battery = item.batteryPercent;
+    const bookable = state === 'AVAILABLE' && hub.availableVehicles > 0 && (battery ?? 0) >= reservationMinimumBatteryPercent;
+    return { item, state, battery, bookable };
+  }).sort((left, right) => Number(right.bookable) - Number(left.bookable));
+
+  return <ul className="hub-fleet" role="list" aria-label="Danh sách xe dùng chung">
+    {fleet.map(({ item, state, battery, bookable }) => {
+      const bookingUrl = canBook
+        ? '/student/reservations?' + new URLSearchParams({ hubId: hub.id, vehicleId: item.id })
+        : '/login';
+      return <li className="hub-fleet-card" key={item.id}>
+        <div className="hub-fleet-identity">
+          <VehiclePlate code={item.code} />
+          <span className="status-pill" data-tone={state === 'AVAILABLE' ? 'success' : 'neutral'}>{stateLabel(state)}</span>
+        </div>
+        {battery === undefined ? <p className="hub-fleet-muted">Chưa có dữ liệu pin</p> : <div className="hub-fleet-battery">
+          <span>Pin</span><strong>{battery}%</strong>
+          <progress value={battery} max={100} aria-label={'Pin xe ' + item.code} />
+        </div>}
+        {bookable && <Link className="primary" to={bookingUrl}
+          aria-label={(canBook ? 'Đặt xe ' : 'Đăng nhập để đặt xe ') + item.code}>
+          {canBook ? 'Đặt xe' : 'Đăng nhập để đặt'}
+        </Link>}
+      </li>;
+    })}
+  </ul>;
 }
 
 function HubDetails({ hub, canBook, initialNeed, onAlternatives }: {
@@ -33,7 +72,7 @@ function HubDetails({ hub, canBook, initialNeed, onAlternatives }: {
   const hubQuery = new URLSearchParams({ hubId: hub.id });
   const resourceKind = { vehicle: 'VEHICLE', parking: 'PARKING_SPACE', charging: 'CHARGING_POINT' } as const;
   const resources = hub.resources.filter(item => item.kind === resourceKind[kind]);
-  const chargingIsPrimary = canBook && kind === 'charging' && hub.availableCharging > 0;
+  const hasAvailability = hub[availability[kind].field] > 0;
   const updatedAt = hub.resources.reduce((latest, item) =>
     item.observedAt && item.observedAt > latest ? item.observedAt : latest, '');
 
@@ -47,42 +86,32 @@ function HubDetails({ hub, canBook, initialNeed, onAlternatives }: {
       </div>
       <span className="status-pill" data-tone={hub.serviceStatus === 'ACTIVE' ? 'success' : 'neutral'}>{stateLabel(hub.serviceStatus)}</span>
     </header>
-    <HubAvailability hub={hub} />
-    <div className="hub-detail-toolbar">
-      <div className="work-tabs hub-detail-tabs" role="group" aria-label="Dịch vụ tại Hub">
-        {needs.map(item => <button key={item} className="outline" type="button" aria-pressed={item === kind}
-          onClick={() => setKind(item)}>{kindLabel[resourceKind[item]]}</button>)}
-      </div>
-      <div className="work-actions">
-        {canBook && kind === 'charging' && <Link className={chargingIsPrimary ? 'primary' : 'outline'}
+    <HubAvailability hub={hub} selected={kind} onSelect={setKind} />
+    <div id="hub-service-results" className="work-stack">
+      <div className="work-actions hub-service-actions">
+        {canBook && kind === 'parking' && hasAvailability && <Link className="primary"
+          to={'/student/parking?' + hubQuery}>Đặt chỗ đỗ</Link>}
+        {canBook && kind === 'charging' && <Link className={hasAvailability ? 'primary' : 'outline'}
           to={'/student/charging?' + hubQuery}>Đăng ký nhu cầu sạc</Link>}
-        <button className={chargingIsPrimary ? 'outline' : 'primary'} type="button"
+        <button className={hasAvailability ? 'quiet-action' : 'primary'} type="button"
           onClick={() => onAlternatives(kind)}>Tìm Hub thay thế</button>
       </div>
-    </div>
-    <div className="work-card data-card">
-      <div className="scroll-table" role="region" tabIndex={0} aria-label={kindLabel[resourceKind[kind]]}>
-        <table>
-          <thead><tr><th>Mã tài nguyên</th><th>Loại</th>{kind === 'vehicle' && <th>Pin</th>}<th>Trạng thái</th><th>Thao tác</th></tr></thead>
-          <tbody>{resources.map(item => {
-            const state = item.serviceStatus === 'ACTIVE' ? item.status : item.serviceStatus;
-            const available = state === 'AVAILABLE';
-            const bookable = available && hub.availableVehicles > 0 && (item.batteryPercent ?? 0) >= reservationMinimumBatteryPercent;
-            return <tr key={item.id}>
-              <td><strong>{item.code}</strong></td><td>{kindLabel[item.kind]}</td>
-              {kind === 'vehicle' && <td>{item.batteryPercent === undefined ? '—' : item.batteryPercent + '%'}</td>}
-              <td><span className="status-pill" data-tone={available ? 'success' : 'neutral'}>{stateLabel(state)}</span></td>
-              <td>{kind === 'vehicle' && bookable ? <Link className="table-link" to={canBook
-                  ? '/student/reservations?' + new URLSearchParams({ hubId: hub.id, vehicleId: item.id }) : '/login'}>{canBook ? 'Đặt xe' : 'Đăng nhập để đặt'}</Link>
-                : kind !== 'vehicle' && canBook && available ? <Link className="table-link"
-                  to={'/student/' + (kind === 'parking' ? 'parking?' : 'charging?') + hubQuery}>
-                  {kind === 'parking' ? 'Đặt chỗ đỗ' : 'Đăng ký sạc'}
-                </Link> : '—'}</td>
-            </tr>;
-          })}</tbody>
-        </table>
-      </div>
-      {!resources.length && <p className="data-empty">Chưa có tài nguyên thuộc loại này.</p>}
+      {kind === 'vehicle' ? <HubFleet hub={hub} resources={resources} canBook={canBook} /> : <div className="work-card data-card">
+        <div className="scroll-table" role="region" tabIndex={0} aria-label={kindLabel[resourceKind[kind]]}>
+          <table>
+            <thead><tr><th>Mã tài nguyên</th><th>Loại</th><th>Trạng thái</th></tr></thead>
+            <tbody>{resources.map(item => {
+              const state = item.serviceStatus === 'ACTIVE' ? item.status : item.serviceStatus;
+              const available = state === 'AVAILABLE';
+              return <tr key={item.id}>
+                <td><strong>{item.code}</strong></td><td>{kindLabel[item.kind]}</td>
+                <td><span className="status-pill" data-tone={available ? 'success' : 'neutral'}>{stateLabel(state)}</span></td>
+              </tr>;
+            })}</tbody>
+          </table>
+        </div>
+        {!resources.length && <p className="data-empty">Chưa có tài nguyên thuộc loại này.</p>}
+      </div>}
     </div>
   </section>;
 }
@@ -220,7 +249,7 @@ export function HubPage({ canBook = false }: { canBook?: boolean }) {
               </button>
             </div>
           </details>
-          {filters && <button className="outline" type="button" onClick={reset}>Xóa bộ lọc</button>}
+          {filters && <button className="quiet-action" type="button" onClick={reset}>Xóa bộ lọc</button>}
         </div>
         {locationError && <p className="error" role="status">{locationError}</p>}
       </form>}

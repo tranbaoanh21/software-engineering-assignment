@@ -41,6 +41,7 @@ export interface StateEventReceipt {
 
 export const reservationHoldMinutes = 10;
 export const reservationMinimumBatteryPercent = 30;
+export const hubMinimumFleetRatio = 0.15;
 
 export type VehicleReservationStatus = 'PENDING' | 'CONFIRMED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED' | 'REJECTED';
 
@@ -148,6 +149,18 @@ export interface PrivateVehicleView {
 export interface RegisterPrivateVehicleInput {
   plate: string;
   batteryPercent: number | null;
+}
+
+export function normalizePrivateVehiclePlate(plate: string): string {
+  return plate.toUpperCase().replace(/[\s.-]/g, '');
+}
+
+export function formatPrivateVehiclePlate(plate: string): string | null {
+  const parts = /^(\d{2})([A-Z]\d)(\d{4,5})$/.exec(normalizePrivateVehiclePlate(plate));
+  const [, province, series, serial] = parts ?? [];
+  if (!province || !series || !serial) return null;
+  const digits = serial.length === 5 ? serial.slice(0, 3) + '.' + serial.slice(3) : serial;
+  return province + '-' + series + ' ' + digits;
 }
 
 export interface PrivateChargingVehicleView extends PrivateVehicleView {

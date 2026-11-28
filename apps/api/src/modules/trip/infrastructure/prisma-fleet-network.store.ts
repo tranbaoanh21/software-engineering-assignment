@@ -1,11 +1,35 @@
-import type { FleetNetwork } from '../application/fleet-network.port.js';
+import type { FleetChargingPhase, FleetNetwork } from '../application/fleet-network.port.js';
 import { ConflictException, Injectable } from '@nestjs/common';
-import type { ChargingVehicle } from '@semh/contracts';
+import { reservationMinimumBatteryPercent, type ChargingVehicle } from '@semh/contracts';
 import type { Transaction } from '../../../shared/database/transaction.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import { returnedVehicleStatus } from '../domain/trip.policy.js';
 
 @Injectable()
 export class PrismaFleetNetworkStore implements FleetNetwork {
+  lowBatteryVehicles(tx: Transaction) {
+    return tx.sharedVehicle.findMany({
+      where: {
+        hub: { serviceStatus: 'ACTIVE', fault: false }, serviceStatus: 'ACTIVE', fault: false,
+        status: { in: ['AVAILABLE', 'AWAITING_CHARGE'] }, batteryPercent: { lt: reservationMinimumBatteryPercent },
+        lastObservedAt: { not: null }, reservationHoldId: null, transferPlanId: null,
+      },
+      select: { id: true, code: true, hubId: true },
+    });
+  }
+
+  async approveChargedVehicle(tx: Transaction, id: string, hubId: string) {
+    const result = await tx.sharedVehicle.updateMany({
+      where: {
+        id, hubId, status: 'AWAITING_CHARGE_APPROVAL', serviceStatus: 'ACTIVE', fault: false,
+        batteryPercent: { gte: reservationMinimumBatteryPercent }, reservationHoldId: null, transferPlanId: null,
+      },
+      data: { status: 'AVAILABLE', version: { increment: 1 } },
+    });
+    if (!result.count) throw new ConflictException('Xe chưa đủ điều kiện trở lại phục vụ tại Hub.');
+    markLiveChange(tx, 'vehicle', hubId);
+  }
+
   async chargingVehicle(tx: Transaction, id: string): Promise<ChargingVehicle | null> {
     const vehicle = await tx.sharedVehicle.findUnique({ where: { id } });
     if (!vehicle) return null;
@@ -18,7 +42,7 @@ export class PrismaFleetNetworkStore implements FleetNetwork {
     };
   }
 
-  async applyCharge(tx: Transaction, id: string, hubId: string, phase: 'STARTED' | 'PROGRESS' | 'RELEASED' | 'FAULT', battery: number) {
+  async applyCharge(tx: Transaction, id: string, hubId: string, phase: FleetChargingPhase, battery: number) {
     const vehicle = await tx.sharedVehicle.findUnique({ where: { id } });
     if (!vehicle || vehicle.hubId !== hubId || vehicle.reservationHoldId || vehicle.transferPlanId) {
       throw new ConflictException('Xe dùng chung không ở trạng thái phù hợp để sạc.');
@@ -27,12 +51,15 @@ export class PrismaFleetNetworkStore implements FleetNetwork {
       vehicle.serviceStatus !== 'ACTIVE' || vehicle.fault || !['AVAILABLE', 'AWAITING_CHARGE'].includes(vehicle.status)
     )) throw new ConflictException('Xe dùng chung đang có ràng buộc hoặc không thể phục vụ.');
     if (phase === 'PROGRESS' && vehicle.status !== 'CHARGING') return;
-    const status = phase === 'RELEASED'
-      ? returnedVehicleStatus(battery, vehicle.fault || vehicle.status === 'OUT_OF_SERVICE')
-      : phase === 'FAULT' ? returnedVehicleStatus(battery, vehicle.fault) : 'CHARGING';
+    const afterRelease = returnedVehicleStatus(battery, vehicle.fault || vehicle.status === 'OUT_OF_SERVICE');
+    const status = phase === 'RELEASED_FOR_APPROVAL' && afterRelease === 'AVAILABLE'
+      ? 'AWAITING_CHARGE_APPROVAL'
+      : phase === 'STARTED' || phase === 'PROGRESS' ? 'CHARGING' : afterRelease;
     await tx.sharedVehicle.update({
       where: { id }, data: { status, batteryPercent: battery, lastObservedAt: new Date(), version: { increment: 1 } },
     });
+    if (status !== vehicle.status) markLiveChange(tx, 'vehicle', hubId);
+    return status;
   }
 
   async bindTransfer(tx: Transaction, id: string, planId: string, hubId: string) {
@@ -44,6 +71,7 @@ export class PrismaFleetNetworkStore implements FleetNetwork {
       data: { transferPlanId: planId, version: { increment: 1 } },
     });
     if (!result.count) throw new ConflictException('Xe nguồn đã đổi trạng thái hoặc đang được giữ.');
+    markLiveChange(tx, 'vehicle', hubId);
   }
 
   async transfer(tx: Transaction, id: string, planId: string, movement: 'DEPART' | 'ARRIVE' | 'CANCEL', hubId: string) {
@@ -65,6 +93,7 @@ export class PrismaFleetNetworkStore implements FleetNetwork {
             status: returnedVehicleStatus(vehicle.batteryPercent, vehicle.fault), version: { increment: 1 },
           },
     });
+    markLiveChange(tx, 'vehicle', hubId);
   }
 
   async closeFaultedTrip(tx: Transaction, tripId: string, vehicleId: string) {

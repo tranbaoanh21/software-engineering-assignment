@@ -72,7 +72,10 @@ export abstract class ParkingStore {
   abstract setInitialVehicleReading(tx: Transaction, id: string, reading: PrivateVehicleReading): Promise<PrivateVehicleView>;
   abstract availableSpacesByHub(): Promise<{ hubId: string; count: number }[]>;
   abstract listReservations(studentId: string): Promise<ParkingReservationRecord[]>;
-  abstract findOwnedVehicle(tx: Transaction, studentId: string, vehicleId: string): Promise<PrivateVehicleView | null>;
+  abstract findOwnedVehicle(tx: Transaction, studentId: string, vehicleId: string, includeRemoved?: boolean):
+    Promise<(PrivateVehicleView & { removedAt: Date | null }) | null>;
+  abstract hasActiveCharge(tx: Transaction, vehicleId: string): Promise<boolean>;
+  abstract removeVehicle(tx: Transaction, vehicleId: string, removedAt: Date): Promise<void>;
   abstract findByRequest(tx: Transaction, studentId: string, requestId: string): Promise<ParkingReservationRecord | null>;
   abstract findReservation(tx: Transaction, id: string): Promise<ParkingReservationRecord | null>;
   abstract findAvailableSpace(tx: Transaction, hubId: string): Promise<ParkingSpaceRecord | null>;

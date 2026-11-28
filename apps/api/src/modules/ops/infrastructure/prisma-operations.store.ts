@@ -83,6 +83,13 @@ export class PrismaOperationsStore {
     return tx.redistributionPlan.findUnique({ where: { id }, include: planInclude });
   }
 
+  approvedRecommendation(tx: Transaction, recommendationId: string) {
+    return tx.redistributionPlan.findFirst({
+      where: { recommendationId, status: { notIn: ['DRAFT', 'CANCELLED'] } },
+      orderBy: { createdAt: 'desc' }, include: planInclude,
+    });
+  }
+
   plans(tx: Transaction, where: Prisma.RedistributionPlanWhereInput) {
     return tx.redistributionPlan.findMany({ where, orderBy: { createdAt: 'desc' }, include: planInclude });
   }

@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import type { NetworkHub, NetworkResource, ResourceKind } from '@semh/contracts';
+import { useNavigate } from 'react-router';
+import type { ChargingRequestView, NetworkHub, NetworkResource, ResourceKind } from '@semh/contracts';
+import { canChargeLowBattery, lowBatteryChargePath } from '../chg/shared-charge';
 import { displayTime, field, useCommand } from '../../shared/api/use-screen';
 
 export const kindLabel: Record<ResourceKind, string> = {
@@ -8,12 +10,13 @@ export const kindLabel: Record<ResourceKind, string> = {
 const statuses: Record<string, string> = {
   DRAFT: 'Nháp', ACTIVE: 'Đang phục vụ', INACTIVE: 'Đã ngừng', AVAILABLE: 'Khả dụng',
   OUT_OF_SERVICE: 'Ngoài phục vụ', RESERVED: 'Đang giữ', OCCUPIED: 'Đang sử dụng',
-  AWAITING_CHARGE: 'Chờ sạc', CHARGING: 'Đang sạc', TRANSFER_HELD: 'Đang giữ để điều chuyển',
+  AWAITING_CHARGE: 'Chờ sạc', AWAITING_CHARGE_APPROVAL: 'Chờ đưa vào sử dụng', CHARGING: 'Đang sạc', TRANSFER_HELD: 'Đang giữ để điều chuyển',
 };
 export const stateLabel = (status: string) => statuses[status] ?? status;
 
 export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; admin?: boolean; refresh: () => void }) {
   const action = useCommand(refresh);
+  const navigate = useNavigate();
   const [kind, setKind] = useState<ResourceKind>(admin ? 'HUB' : 'VEHICLE');
   const [hubId, setHubId] = useState('');
   const [category, setCategory] = useState('');
@@ -27,6 +30,16 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
     .filter(item => (!category || item.kind === category) && [item.code, item.description, hub.name, kindLabel[item.kind]].some(value => value.toLocaleLowerCase('vi').includes(term)))
     .map(resource => ({ hub, resource })));
   const selected = shown.find(item => item.resource.id === selectedId) ?? shown[0];
+  const serving = selected?.resource.serviceStatus === 'ACTIVE';
+  const canCharge = !admin && selected && selected.hub.serviceStatus === 'ACTIVE' &&
+    selected.hub.resources.find(resource => resource.kind === 'HUB')?.status !== 'OUT_OF_SERVICE' &&
+    canChargeLowBattery(selected.resource);
+
+  async function chargeSelectedVehicle() {
+    if (!selected) return;
+    const result = await action.send<ChargingRequestView>(lowBatteryChargePath(selected.resource.id), { hubId: selected.hub.id });
+    if (result) navigate('/operations/charging?' + new URLSearchParams({ request: result.id }));
+  }
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,11 +91,12 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
       <label>Loại<select value={category} onChange={event => { setCategory(event.target.value); setEditing(undefined); }}>
         <option value="">Tất cả loại</option>{Object.entries(kindLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select></label>
-      <button className="primary" type="button" onClick={() => {
+      {!createOpen && <button className={admin || !selected ? 'primary' : 'outline'} type="button" onClick={() => {
         setKind('VEHICLE');
-        setCreateOpen(!createOpen || kind === 'HUB');
-      }}>{admin ? 'Khai báo tài nguyên' : 'Thêm tài nguyên'}</button>
-      {admin && <button type="button" className="outline" onClick={() => { setKind('HUB'); setCreateOpen(true); }}>Khai báo Hub</button>}
+        setEditing(undefined);
+        setCreateOpen(true);
+      }}>{admin ? 'Khai báo tài nguyên' : 'Thêm tài nguyên'}</button>}
+      {admin && !createOpen && <button type="button" className="outline" onClick={() => { setKind('HUB'); setCreateOpen(true); }}>Khai báo Hub</button>}
     </div>
     {createOpen && <form className="work-card work-form work-form-wide" onSubmit={create}>
         <h2>{kind === 'HUB' ? 'Khai báo Hub' : 'Thêm tài nguyên'}</h2>
@@ -130,22 +144,30 @@ export function ResourceCatalog({ hubs, admin, refresh }: { hubs: NetworkHub[]; 
         {selected.resource.description && <p>{selected.resource.description}</p>}
         <dl className="reservation-details">
           <div><dt>Phục vụ</dt><dd>{stateLabel(selected.resource.serviceStatus)}</dd></div>
+          {selected.resource.batteryPercent !== undefined && <div><dt>Mức pin</dt><dd>{selected.resource.batteryPercent}%</dd></div>}
           <div><dt>Cập nhật</dt><dd>{selected.resource.observedAt ? displayTime(selected.resource.observedAt) : 'Chưa có dữ liệu'}</dd></div>
         </dl>
-        {!admin && <div className="work-actions">
-          <button className="outline" type="button" onClick={() => setEditing({ resource: selected.resource })}>Sửa mô tả</button>
-          <button className={selected.resource.serviceStatus === 'ACTIVE' ? 'outline' : 'primary'} type="button" onClick={() => setEditing({
-            resource: selected.resource, service: selected.resource.serviceStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-          })}>{selected.resource.serviceStatus === 'ACTIVE' ? 'Ngừng phục vụ' : 'Kích hoạt'}</button>
+        {!admin && !editing && !createOpen && <div className="work-actions">
+          {!serving && <button className="primary" type="button"
+            onClick={() => setEditing({ resource: selected.resource, service: 'ACTIVE' })}>Kích hoạt</button>}
+          {canCharge && <button className="primary" type="button" disabled={action.pending}
+            onClick={() => void chargeSelectedVehicle()}>Sạc xe</button>}
+          <button className={serving && !canCharge ? 'primary' : 'outline'} type="button"
+            onClick={() => setEditing({ resource: selected.resource })}>Sửa mô tả</button>
+          {serving && <button className="quiet-action quiet-action-destructive" type="button"
+            onClick={() => setEditing({ resource: selected.resource, service: 'INACTIVE' })}>Ngừng phục vụ</button>}
         </div>}
         {editing && editing.resource.id === selected.resource.id && <form className="work-form inline-action" onSubmit={update} key={editing.resource.id + editing.service}>
           <h3>{editing.service === 'ACTIVE' ? 'Kích hoạt' : editing.service === 'INACTIVE' ? 'Ngừng phục vụ' : 'Sửa mô tả'} · {editing.resource.code}</h3>
           {!editing.service && <label>Mô tả<input name="description" defaultValue={editing.resource.description} maxLength={400} /></label>}
+          {editing.service === 'INACTIVE' && <p>Tài nguyên sẽ không nhận lượt sử dụng mới sau khi ngừng phục vụ.</p>}
           <label>Lý do<input required name="reason" maxLength={500} /></label>
           {action.error && <p className="error" role="alert">{action.error}</p>}
           <div className="work-actions">
-            <button className="primary" disabled={action.pending}>Xác nhận cập nhật</button>
-            <button className="outline" type="button" onClick={() => setEditing(undefined)}>Đóng</button>
+            <button className={editing.service === 'INACTIVE' ? 'danger' : 'primary'} disabled={action.pending}>
+              {editing.service === 'ACTIVE' ? 'Xác nhận kích hoạt' : editing.service === 'INACTIVE' ? 'Xác nhận ngừng phục vụ' : 'Lưu mô tả'}
+            </button>
+            <button className="outline" type="button" disabled={action.pending} onClick={() => setEditing(undefined)}>Quay lại</button>
           </div>
         </form>}
       </section>}

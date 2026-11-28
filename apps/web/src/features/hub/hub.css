@@ -61,9 +61,17 @@
 .hub-detail h1 { margin: 4px 0 0; }
 .hub-code, .hub-distance { color: var(--muted); margin: 0; font-size: .9rem; }
 .metric-grid.hub-availability { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.hub-detail-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.hub-detail .hub-detail-tabs { margin: 0; }
-.hub-detail-tabs [aria-pressed=true] { background: var(--aqua); border-color: #9dcfd0; color: var(--teal); }
+.hub-availability .metric-card { width: 100%; color: var(--navy); text-align: left; }
+.hub-availability .metric-card:hover { border-color: var(--teal); }
+.hub-availability .metric-card[aria-pressed=true] {
+  border-color: var(--teal);
+  background: #e6f6f3;
+  box-shadow: inset 0 0 0 1px var(--teal);
+}
+.hub-availability [aria-pressed=true] .metric-label { color: #075d57; font-weight: 700; }
+.hub-availability [aria-pressed=true] .metric-value { color: #075d57; }
+.hub-availability [aria-pressed=true] .metric-icon { background: #ccece6; }
+.hub-service-actions { justify-content: flex-end; }
 @media (max-width: 730px) {
   .hub-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .hub-options { max-height: 245px; }
@@ -76,3 +84,42 @@
   .hub-query { position: static; }
   .site-shell .hub-service-filters .outline { min-height: 40px; }
 }
+
+.hub-fleet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.hub-fleet-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.hub-fleet-identity { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.hub-fleet-battery { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; color: var(--muted); }
+.hub-fleet-battery strong { color: var(--navy); font-variant-numeric: tabular-nums; }
+.hub-fleet-battery progress {
+  grid-column: 1 / -1;
+  appearance: none;
+  overflow: hidden;
+  width: 100%;
+  height: 7px;
+  border: 0;
+  border-radius: 99px;
+  background: #e5eded;
+}
+.hub-fleet-battery progress::-webkit-progress-bar { background: #e5eded; }
+.hub-fleet-battery progress::-webkit-progress-value { border-radius: 99px; background: var(--teal); }
+.hub-fleet-battery progress::-moz-progress-bar { border-radius: 99px; background: var(--teal); }
+.hub-fleet-muted { margin: 0; font-size: .9rem; color: var(--muted); }
+.hub-fleet-card .primary { justify-self: start; }

@@ -12,6 +12,7 @@ import { useScreen } from '../../shared/api/use-screen';
 import { SessionContext } from '../../shared/auth/session-context';
 import { MetricIcon } from '../../shared/ui/MetricIcon';
 import { PageBanner } from '../../shared/ui/PageBanner';
+import { SharedVehicleSummary, VehiclePlate } from '../../shared/ui/VehicleVisual';
 import { reservationApi } from './reservation-api';
 
 const bookingPath = '/student/hubs';
@@ -88,21 +89,7 @@ function ReservationReceipt({ reservation, onChange }: {
         reservation.status === 'CANCELLED' ? 'Đã hủy lượt đặt' : 'Chi tiết lượt đặt xe'}
         actions={confirmed && <span className="status-pill">Đã xác nhận</span>} />
       <div className="receipt-grid">
-        <div className="work-stack">
-          <section className="work-card receipt-vehicle">
-            <div className="receipt-illustration"><img src="/design/scooter.svg" width={96} height={96} alt="" /></div>
-            <div><h2>{reservation.vehicle.code}</h2><p>Xe dùng chung · {reservation.hub.name}</p></div>
-          </section>
-          <section className="work-card">
-            <h2>Thông tin lượt đặt</h2>
-            <dl className="reservation-details">
-              <div><dt>Mã lượt đặt</dt><dd className="reservation-id">{reservation.id}</dd></div>
-              <div><dt>Thời điểm xác nhận</dt><dd>{dateFormat.format(new Date(reservation.confirmedAt))}</dd></div>
-              <div><dt>Hạn nhận xe</dt><dd>{dateFormat.format(new Date(reservation.expiresAt))}</dd></div>
-              <div><dt>Hub nhận xe</dt><dd>{reservation.hub.name}</dd></div>
-            </dl>
-          </section>
-        </div>
+        <SharedVehicleSummary code={reservation.vehicle.code} hubName={reservation.hub.name} />
         <aside className="work-stack">
           <div className="work-card receipt-actions">
             <h2>{confirmed ? 'Xe đang được giữ cho bạn' : 'Thao tác'}</h2>
@@ -111,23 +98,24 @@ function ReservationReceipt({ reservation, onChange }: {
               <strong className="receipt-timer" aria-label="Thời gian giữ xe còn lại">{duration}</strong>
               <progress max={initial || 1} value={remaining} aria-label="Thời gian giữ xe" />
             </>}
-      {showCancel && confirmed ? (
-        <section className="cancel-confirmation" aria-label="Xác nhận hủy">
-          <p>Hủy lượt đặt xe này?</p>
-          <div className="reservation-actions">
-            <button className="outline" onClick={() => { setShowCancel(false); setCancelError(''); }} disabled={cancelling}>Giữ lượt đặt</button>
-            <button className="danger" onClick={cancel} disabled={cancelling}>Xác nhận hủy</button>
-          </div>
-          {cancelError && <p className="error" role="alert">{cancelError}</p>}
-        </section>
-      ) : (
-        <div className="reservation-actions">
-          {confirmed && <Link className="primary" to="/student/trips">Nhận xe</Link>}
-          {confirmed && <button className="outline" type="button" onClick={() => setShowCancel(true)}>Hủy lượt đặt</button>}
-          {reservation.status === 'FULFILLED' && <Link className="primary" to="/student/trips">Xem chuyến đi</Link>}
-          <Link className="outline" to={bookingPath}>Về bản đồ Hub</Link>
-        </div>
-      )}
+            {showCancel && confirmed ? (
+              <section className="cancel-confirmation" aria-label="Xác nhận hủy">
+                <p>Hủy lượt đặt xe này?</p>
+                <div className="reservation-actions">
+                  <button className="outline" onClick={() => { setShowCancel(false); setCancelError(''); }} disabled={cancelling}>Giữ lượt đặt</button>
+                  <button className="danger" onClick={cancel} disabled={cancelling}>Xác nhận hủy</button>
+                </div>
+                {cancelError && <p className="error" role="alert">{cancelError}</p>}
+              </section>
+            ) : (
+              <div className="reservation-actions">
+                {confirmed && <Link className="primary" to="/student/trips">Nhận xe</Link>}
+                {reservation.status === 'FULFILLED' && <Link className="primary" to="/student/trips">Xem chuyến đi</Link>}
+                <Link className={confirmed || reservation.status === 'FULFILLED' ? 'outline' : 'primary'} to={bookingPath}>Về bản đồ Hub</Link>
+                {confirmed && <button className="quiet-action quiet-action-destructive" type="button"
+                  onClick={() => setShowCancel(true)}>Hủy lượt đặt</button>}
+              </div>
+            )}
           </div>
           {confirmed && <div className="work-card metric-card">
             <h2>Nhận xe tại {reservation.hub.name}</h2>
@@ -135,6 +123,14 @@ function ReservationReceipt({ reservation, onChange }: {
             <MetricIcon name="hub" />
           </div>}
         </aside>
+        <section className="work-card receipt-details">
+          <h2>Thông tin lượt đặt</h2>
+          <dl className="reservation-details">
+            <div><dt>Mã lượt đặt</dt><dd className="reservation-id">{reservation.id}</dd></div>
+            <div><dt>Thời điểm xác nhận</dt><dd>{dateFormat.format(new Date(reservation.confirmedAt))}</dd></div>
+            <div><dt>Hạn nhận xe</dt><dd>{dateFormat.format(new Date(reservation.expiresAt))}</dd></div>
+          </dl>
+        </section>
       </div>
     </article>
   );
@@ -159,7 +155,7 @@ function ReservationHoldDialog({ reservation }: { reservation: ReservationView }
       }}>
       <h2 id="reservation-hold-title">Bạn đang giữ một xe</h2>
       <dl className="reservation-details">
-        <div><dt>Mã xe</dt><dd>{reservation.vehicle.code}</dd></div>
+        <div><dt>Mã xe</dt><dd><VehiclePlate code={reservation.vehicle.code} /></dd></div>
         <div><dt>Hub nhận xe</dt><dd>{reservation.hub.name}</dd></div>
         <div><dt>Hạn nhận xe</dt><dd>{dateFormat.format(new Date(reservation.expiresAt))}</dd></div>
       </dl>
@@ -309,9 +305,8 @@ export function ReservationPage() {
       {(error || inventory.error) && <p className="error" role="alert">{error || inventory.error}</p>}
       {vehicle && hub ? (
         <>
+          <SharedVehicleSummary code={vehicle.code} hubName={hub.name} />
           <dl className="reservation-details">
-            <div><dt>Xe dùng chung</dt><dd>{vehicle.code}</dd></div>
-            <div><dt>Hub nhận xe</dt><dd>{hub.name}</dd></div>
             <div><dt>Mức pin</dt><dd>{vehicle.batteryPercent}%</dd></div>
             <div><dt>Thời gian giữ xe</dt><dd>{reservationHoldMinutes} phút</dd></div>
           </dl>
@@ -327,7 +322,7 @@ export function ReservationPage() {
       ) : (
         <>
           {!error && !inventory.error && <p>{vehicleId ? 'Xe đã chọn hiện không còn trong danh sách Hub.' : 'Bạn chưa có lượt đặt hiệu lực.'}</p>}
-          <Link className="outline" to={bookingPath}>Chọn xe trên bản đồ Hub</Link>
+          <Link className="primary" to={bookingPath}>Chọn xe trên bản đồ Hub</Link>
         </>
       )}
     </article>

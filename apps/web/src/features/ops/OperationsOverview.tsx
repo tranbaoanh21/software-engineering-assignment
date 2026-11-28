@@ -25,8 +25,8 @@ export function OperationsOverview({ hubs, refresh }: { hubs: NetworkHub[]; refr
 
   return <div className="operations-overview">
     <PageBanner title="Mạng lưới Mobility Hub" actions={<>
-      <Link className="outline" to="?tab=resources">Quản lý tài nguyên</Link>
-      <Link className="outline" to="/operations/simulation">Chạy mô phỏng</Link>
+      <Link className={flaggedHubs.length ? 'outline' : 'primary'} to="?tab=resources">Quản lý tài nguyên</Link>
+      <Link className="quiet-action" to="/operations/simulation">Chạy mô phỏng</Link>
     </>} />
     <dl className="metric-grid">
       <div className="work-card metric-card">
@@ -70,7 +70,9 @@ export function OperationsOverview({ hubs, refresh }: { hubs: NetworkHub[]; refr
             <MetricIcon name={alert === 'LOW_FLEET' ? 'shortage' : 'capacity'} />
           </button>))}
         </div> : <p>Chưa có Hub cần ưu tiên.</p>}
-        <Link className="outline" to="?tab=plans">Xem phương án điều phối</Link>
+        <div className="work-actions">
+          <Link className={flaggedHubs.length ? 'primary' : 'quiet-action'} to="?tab=plans">Xem phương án điều phối</Link>
+        </div>
       </section>
     </div>
     <div className="operations-status-grid">
@@ -101,7 +103,7 @@ export function OperationsOverview({ hubs, refresh }: { hubs: NetworkHub[]; refr
               <option value="NEAR_CAPACITY">Gần đầy</option>
             </select>
           </label>
-          <button className="outline" type="button" onClick={refresh}>Làm mới</button>
+          <button className="quiet-action" type="button" onClick={refresh}>Làm mới</button>
         </div>
       </header>
       {visible.length > 0 ? <div className="scroll-table" tabIndex={0} role="region" aria-label="Bảng trạng thái các Hub">

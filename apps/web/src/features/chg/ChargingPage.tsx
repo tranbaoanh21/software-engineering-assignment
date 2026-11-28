@@ -6,6 +6,7 @@ import { PageBanner } from '../../shared/ui/PageBanner';
 import { displayTime, field, useCommand, useScreen } from '../../shared/api/use-screen';
 import { useLiveUpdates } from '../../shared/api/use-live-updates';
 import { PrivateVehicleForm } from '../park/PrivateVehicleForm';
+import { canChargeLowBattery, lowBatteryChargePath } from './shared-charge';
 
 interface ChargingOverview {
   hubs: { id: string; name: string }[];
@@ -17,14 +18,26 @@ interface Quote { reason: string | null; pointId: string | null; startsAt: strin
 
 const labels = {
   PENDING: 'Đang chờ', SCHEDULED: 'Đã xếp lịch', CHARGING: 'Đang sạc',
-  COMPLETED: 'Đã hoàn tất', INTERRUPTED: 'Gián đoạn',
+  AWAITING_APPROVAL: 'Chờ đưa vào sử dụng', COMPLETED: 'Đã hoàn tất', INTERRUPTED: 'Gián đoạn',
 };
 
+function hasUnfinishedCharge(request: ChargingRequestView) {
+  return ['PENDING', 'SCHEDULED', 'CHARGING', 'AWAITING_APPROVAL'].includes(request.status) ||
+    (!!request.session && !request.session.releasedAt && ['COMPLETED', 'INTERRUPTED'].includes(request.status));
+}
+
+function requestLabel(request: ChargingRequestView) {
+  if (request.status === 'SCHEDULED' && request.requiresFleetHandoff) {
+    return request.session?.plugConfirmedAt ? 'Chờ cổng xác nhận' : 'Chờ Kỹ thuật cắm sạc';
+  }
+  return labels[request.status];
+}
+
 const chargingMetrics = [
+  { status: 'AWAITING_APPROVAL', icon: 'pending' },
   { status: 'CHARGING', icon: 'charging' },
   { status: 'SCHEDULED', icon: 'scheduled' },
   { status: 'PENDING', icon: 'pending' },
-  { status: 'INTERRUPTED', icon: 'interrupted' },
 ] as const;
 
 export function ChargingPage() {
@@ -84,6 +97,26 @@ export function ChargingPage() {
     }
   }
 
+  async function chargeSharedVehicle(vehicleId: string, currentHubId: string) {
+    setMessage('');
+    const created = await action.send<ChargingRequestView>(lowBatteryChargePath(vehicleId), { hubId: currentHubId });
+    if (!created) return;
+    setPreview(null);
+    setFormOpen(false);
+    setStatusFilter('');
+    setHubFilter('');
+    setFocusedRequest(created.id);
+    setMessage(created.status === 'SCHEDULED'
+      ? 'Xe ' + created.vehicleCode + ' đã được xếp lịch sạc.'
+      : 'Xe ' + created.vehicleCode + ' đã được đưa vào hàng chờ sạc.');
+  }
+
+  async function approveService(request: ChargingRequestView) {
+    setMessage('');
+    const result = await action.send<ChargingRequestView>('/charging/requests/' + request.id + '/approve-service', {});
+    if (result) setMessage('Xe ' + result.vehicleCode + ' đã sẵn sàng cho sinh viên đặt.');
+  }
+
   async function adjust(request: ChargingRequestView, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -100,17 +133,20 @@ export function ChargingPage() {
   const privateVehicle = data?.vehicles.find(vehicle => vehicle.id === privateVehicleId);
   const fullyCharged = privateVehicle?.batteryPercent === 100;
   const activePrivateCharge = privateVehicle && data?.requests.some(item => item.vehicleId === privateVehicle.id &&
-    (['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status) ||
-      (item.session && !item.session.releasedAt && ['COMPLETED', 'INTERRUPTED'].includes(item.status))));
+    hasUnfinishedCharge(item));
   const hubs = new Map(data?.hubs.map(hub => [hub.id, hub.name]));
+  const requestedVehicles = new Set(data?.requests.filter(hasUnfinishedCharge).map(item => item.vehicleId));
+  const lowBatteryFleet = operator ? (network.data ?? []).filter(hub => hubs.has(hub.id)).flatMap(hub =>
+    hub.resources.filter(vehicle => canChargeLowBattery(vehicle) && !requestedVehicles.has(vehicle.id))
+      .map(vehicle => ({ hubId: hub.id, hubName: hub.name, vehicle }))) : [];
   const fleet = network.data?.find(hub => hub.id === hubId)?.resources
     .filter(item => item.kind === 'VEHICLE' && ['AVAILABLE', 'AWAITING_CHARGE'].includes(item.status)) ?? [];
   const requests = data?.requests.filter(item => (!statusFilter || item.status === statusFilter) &&
     (!hubFilter || item.hubId === hubFilter)) ?? [];
-  const ongoing = operator ? requests.filter(item => ['PENDING', 'SCHEDULED', 'CHARGING'].includes(item.status) ||
-    (item.session && !item.session.releasedAt)) : requests;
+  const ongoing = operator ? requests.filter(hasUnfinishedCharge) : requests;
   const history = operator ? requests.filter(item => !ongoing.includes(item)) : [];
-  const request = requests.find(item => item.id === focusedRequest) ?? ongoing.find(item => item.status === 'CHARGING') ?? ongoing[0];
+  const request = requests.find(item => item.id === focusedRequest) ??
+    ongoing.find(item => item.status === 'AWAITING_APPROVAL') ?? ongoing.find(item => item.status === 'CHARGING') ?? ongoing[0];
   const session = request?.session;
   const points = network.data?.find(hub => hub.id === request?.hubId)?.resources.filter(item => item.kind === 'CHARGING_POINT') ?? [];
   const statusTone = (status: ChargingRequestView['status']) => status === 'COMPLETED' ? 'success'
@@ -119,11 +155,11 @@ export function ChargingPage() {
   return (
     <section className="charging-content">
       <PageBanner title={operator ? 'Quản lý sạc' : 'Sạc của tôi'} actions={
-        <button type="button" className={operator && !formOpen ? 'primary' : 'outline'} aria-expanded={formOpen} onClick={() => {
+        <button type="button" className={formOpen || (operator && (ongoing.length > 0 || lowBatteryFleet.length > 0)) ? 'outline' : 'primary'} aria-expanded={formOpen} onClick={() => {
           setFormOpen(!formOpen);
           if (operator) setPreview(null);
         }}>
-          {formOpen ? 'Đóng biểu mẫu' : 'Đăng ký nhu cầu sạc'}
+          {formOpen ? 'Đóng biểu mẫu' : operator ? 'Tạo yêu cầu thủ công' : 'Đăng ký nhu cầu sạc'}
         </button>
       } />
       {(screen.error || action.error) && <p className="error" role="alert">{action.error || screen.error}</p>}
@@ -137,10 +173,21 @@ export function ChargingPage() {
             <MetricIcon name={icon} />
           </div>)}
         </div>}
+        {operator && lowBatteryFleet.length > 0 && <section className="work-card work-stack" aria-labelledby="fleet-needs-charge">
+          <h2 id="fleet-needs-charge">Xe dùng chung cần sạc</h2>
+          <ul className="work-list">
+            {lowBatteryFleet.map(({ hubId: currentHubId, hubName, vehicle }) => <li key={vehicle.id}>
+              <div><strong>{vehicle.code}</strong><br /><small>{hubName} · Pin {vehicle.batteryPercent}%</small></div>
+              <button type="button" className="primary" disabled={action.pending}
+                aria-label={'Sạc xe ' + vehicle.code}
+                onClick={() => void chargeSharedVehicle(vehicle.id, currentHubId)}>Sạc xe</button>
+            </li>)}
+          </ul>
+        </section>}
         {formOpen && <section className="work-card">
           <h2>Yêu cầu sạc mới</h2>
           {!operator && data.vehicles.length === 0
-            ? <Link className="outline" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>
+            ? <Link className="primary" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>
             : <form className="work-form charging-request-form" onSubmit={previewRequest} onChange={() => setPreview(null)}>
               <label>Hub<select name="hub" required value={hubId} onChange={event => setHubId(event.target.value)}>
                 <option value="">Chọn Hub</option>
@@ -175,7 +222,9 @@ export function ChargingPage() {
                 </div>
               </details>
               {fullyCharged && <p className="charging-time-help" role="status">Xe đã đầy pin.</p>}
-              <button className="primary" disabled={action.pending || fullyCharged}>Xem lịch dự kiến</button>
+              <button className={preview ? 'outline' : 'primary'} disabled={action.pending || fullyCharged}>
+                {preview ? 'Kiểm tra lại lịch' : 'Xem lịch dự kiến'}
+              </button>
             </form>}
           {!operator && data.demoBatteryEnabled && privateVehicle && (privateVehicle.batteryPercent ?? 100) > 15 &&
             <details className="work-notice">
@@ -204,7 +253,7 @@ export function ChargingPage() {
         </section>}
         <div className={'charging-layout' + (operator ? '' : ' charging-layout-student')}>
           <section className="work-card work-stack">
-            <div className="work-heading"><h2>Lịch và phiên sạc</h2><button type="button" className="outline" onClick={screen.refresh}>Làm mới</button></div>
+            <div className="work-heading"><h2>Lịch và phiên sạc</h2><button type="button" className="quiet-action" onClick={screen.refresh}>Làm mới</button></div>
             <div className="filter-toolbar">
               <label>Hub<select value={hubFilter} onChange={event => setHubFilter(event.target.value)}>
                 <option value="">Tất cả Hub</option>
@@ -212,14 +261,15 @@ export function ChargingPage() {
               </select></label>
               <label>Trạng thái<select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
                 <option value="">Tất cả trạng thái</option>
-                {Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                {Object.entries(labels).filter(([value]) => operator || value !== 'AWAITING_APPROVAL')
+                  .map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select></label>
             </div>
             {operator ? <>
               {ongoing.length ? <div className="app-pane-list">{ongoing.map(item => <button className="app-pane-item" type="button"
                 key={item.id} aria-pressed={item.id === request?.id} onClick={() => setFocusedRequest(item.id)}>
                 <strong>{item.vehicleCode}</strong><small>{hubs.get(item.hubId) ?? 'Hub đã ngừng phục vụ'}</small>
-                <span className="status-pill" data-tone={statusTone(item.status)}>{labels[item.status]}</span>
+                <span className="status-pill" data-tone={statusTone(item.status)}>{requestLabel(item)}</span>
               </button>)}</div> : <p>Chưa có yêu cầu sạc đang theo dõi.</p>}
               {!!history.length && <details open={history.some(item => item.id === request?.id) || undefined}>
                 <summary>Lịch sử sạc ({history.length})</summary>
@@ -244,7 +294,7 @@ export function ChargingPage() {
           </section>
           {request && <article className="work-card" key={request.id}>
               <div className="work-heading"><h2>{session ? 'Tiến độ phiên sạc' : 'Chi tiết yêu cầu'}</h2>
-                <span className="status-pill" data-tone={statusTone(request.status)}>{labels[request.status]}</span></div>
+                <span className="status-pill" data-tone={statusTone(request.status)}>{requestLabel(request)}</span></div>
               <p>{request.vehicleCode} · {hubs.get(request.hubId) ?? 'Hub đã ngừng phục vụ'}</p>
               {request.reason && <p>{request.reason}</p>}
               {session && <>
@@ -258,10 +308,18 @@ export function ChargingPage() {
                   <div><dt>Cổng sạc</dt><dd>{session.pointCode}</dd></div>
                   <div><dt>Lịch dự kiến</dt><dd>{displayTime(session.startAt)} – {displayTime(session.endAt)}</dd></div>
                   {session.observedAt && <div><dt>Cập nhật</dt><dd>{displayTime(session.observedAt)}</dd></div>}
-                  {request.status === 'COMPLETED' && <div><dt>Cổng</dt><dd>{session.releasedAt ? 'Đã giải phóng' : 'Chờ xác nhận xe đã rời'}</dd></div>}
+                  {['COMPLETED', 'AWAITING_APPROVAL'].includes(request.status) && <div>
+                    <dt>Cổng</dt><dd>{session.releasedAt ? 'Đã giải phóng' : 'Chờ xác nhận xe đã rời'}</dd>
+                  </div>}
                 </dl>
               </>}
-              {operator && ['PENDING', 'SCHEDULED'].includes(request.status) && <details>
+              {operator && request.status === 'AWAITING_APPROVAL' && <div className="work-notice">
+                <p>{session?.status === 'INTERRUPTED' ? 'Xe đã rời cổng sạc. Kiểm tra mức pin trước khi xác nhận.'
+                  : 'Xe đã sạc xong và cổng đã trống.'}</p>
+                <button type="button" className="primary" disabled={action.pending}
+                  onClick={() => void approveService(request)}>Đưa vào sử dụng</button>
+              </div>}
+              {operator && ['PENDING', 'SCHEDULED'].includes(request.status) && !session?.plugConfirmedAt && <details>
                 <summary>Điều chỉnh lịch</summary>
                 <form className="work-form" onSubmit={event => void adjust(request, event)}>
                   <label>Thứ tự ưu tiên<input name="rank" type="number" min="1" max="999" /></label>

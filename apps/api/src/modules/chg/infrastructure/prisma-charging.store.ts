@@ -8,6 +8,17 @@ import type { ChargingPointStatus, ChargingRequestStatus, Prisma } from '../../.
 export const chargeInclude = { session: { include: { point: true } } } as const;
 export type StoredCharge = Prisma.ChargingRequestGetPayload<{ include: typeof chargeInclude }>;
 
+const activeCharge: Prisma.ChargingRequestWhereInput = {
+  OR: [
+    { status: { in: ['PENDING', 'SCHEDULED', 'CHARGING', 'AWAITING_APPROVAL'] } },
+    { session: { startedAt: { not: null }, releasedAt: null } },
+  ],
+};
+
+export function activeChargeForVehicle(vehicleId: string): Prisma.ChargingRequestWhereInput {
+  return { vehicleId, ...activeCharge };
+}
+
 @Injectable()
 export class PrismaChargingStore {
   constructor(private readonly prisma: PrismaService) {}
@@ -47,6 +58,20 @@ export class PrismaChargingStore {
     });
   }
 
+  async activeSharedVehicles(tx: Transaction, vehicleIds: string[]) {
+    const rows = await tx.chargingRequest.findMany({
+      where: { ...activeCharge, vehicleKind: 'SHARED', vehicleId: { in: vehicleIds } },
+      select: { vehicleId: true },
+    });
+    return new Set(rows.map(row => row.vehicleId));
+  }
+
+  confirmedPlugs(tx: Transaction, hubId: string) {
+    return tx.chargingSession.findMany({
+      where: { point: { hubId }, status: 'READY', plugConfirmedAt: { not: null } },
+    });
+  }
+
   request(tx: Transaction, id: string) {
     return tx.chargingRequest.findUnique({ where: { id }, include: chargeInclude });
   }
@@ -71,7 +96,7 @@ export class PrismaChargingStore {
     pointId: string; startAt: Date; endAt: Date; powerKw: number; batteryPercent: number;
   }) {
     const { request } = await tx.chargingSession.upsert({
-      where: { requestId: id }, create: { ...data, requestId: id }, update: data,
+      where: { requestId: id }, create: { ...data, requestId: id }, update: { ...data, plugConfirmedAt: null },
       select: { request: { select: { hubId: true } } },
     });
     markLiveChange(tx, 'charging', request.hubId);
@@ -118,7 +143,10 @@ export class PrismaChargingStore {
       where: {
         point: { sourceId }, releasedAt: null,
         OR: [
-          { status: 'READY', startAt: { lte: now }, point: { serviceStatus: 'ACTIVE', fault: false, status: 'AVAILABLE' } },
+          {
+            status: 'READY', startAt: { lte: now }, point: { serviceStatus: 'ACTIVE', fault: false, status: 'AVAILABLE' },
+            OR: [{ request: { requiresFleetHandoff: false } }, { plugConfirmedAt: { not: null } }],
+          },
           { status: { in: ['CHARGING', 'COMPLETED', 'INTERRUPTED'] }, startedAt: { not: null } },
         ],
       },

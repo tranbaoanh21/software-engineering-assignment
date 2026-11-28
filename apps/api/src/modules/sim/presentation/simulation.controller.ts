@@ -25,6 +25,7 @@ function scenario(body: Record<string, unknown>): ScenarioInput {
       durationMinutes: number(p.durationMinutes, 'thời lượng', 1, 240, true),
       demandMultiplier: number(p.demandMultiplier, 'hệ số nhu cầu', 0, 3),
       demandProfile: member(p.demandProfile, ['REGULAR', 'PEAK'], 'mẫu nhu cầu'),
+      snapshotRunId: p.snapshotRunId == null ? undefined : uuid(p.snapshotRunId, 'mốc dữ liệu'),
       chargingReduction: number(p.chargingReduction, 'mức giảm công suất sạc', 0, 100, true), closedHubId,
       override, pausedResourceIds: p.pausedResourceIds === undefined ? [] : uuidList(p.pausedResourceIds, 'tài nguyên', 150),
     },
@@ -58,12 +59,21 @@ export class SimulationController {
   @HttpCode(202)
   start(@Req() req: SessionRequest, @Param('id') id: string, @Body() data: unknown) {
     const body = object(data);
-    return this.simulation.start(req.sessionToken, uuid(id), body.sourceRunId ? uuid(body.sourceRunId) : null, change(body, false, true));
+    const sourceRunId = body.sourceRunId === undefined ? undefined : body.sourceRunId ? uuid(body.sourceRunId) : null;
+    return this.simulation.start(req.sessionToken, uuid(id), sourceRunId, change(body, false, true));
   }
 
   @Get('runs/:id')
   result(@Req() req: SessionRequest, @Param('id') id: string) {
     return this.simulation.result(req.sessionView, uuid(id));
+  }
+
+  @Post('runs/:id/recommendations/:recommendationId/approve')
+  approveTransfer(@Req() req: SessionRequest, @Param('id') id: string, @Param('recommendationId') recommendationId: string, @Body() data: unknown) {
+    const body = object(data);
+    return this.simulation.approveTransfer(
+      req.sessionToken, uuid(id), uuid(recommendationId), uuid(body.assigneeId, 'kỹ thuật viên'), change(body),
+    );
   }
 
   @Get('runs/:id/recommendations/:recommendationId/draft')

@@ -1,4 +1,5 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { formatPrivateVehiclePlate } from '@semh/contracts';
 import type {
   CreateParkingReservationInput, ParkingOverview, ParkingReservationView, ParkingStateEvent,
   ParkingVerificationKind, RegisterPrivateVehicleInput, StateEventReceipt,
@@ -16,7 +17,7 @@ function reservationView(record: ParkingReservationRecord, latest = record.verif
   return {
     id: record.id,
     status,
-    vehicle: record.privateVehicle,
+    vehicle: { ...record.privateVehicle, plate: formatPrivateVehiclePlate(record.privateVehicle.plate) ?? record.privateVehicle.plate },
     space: { id: record.space.id, code: record.space.code },
     hub: record.space.hub,
     confirmedAt: record.confirmedAt.toISOString(),
@@ -49,7 +50,7 @@ export class ParkingService {
     ]);
     const counts = new Map(spaces.map(({ hubId, count }) => [hubId, count]));
     return {
-      vehicles,
+      vehicles: vehicles.map(vehicle => ({ ...vehicle, plate: formatPrivateVehiclePlate(vehicle.plate) ?? vehicle.plate })),
       hubs: hubs.map(({ id, name }) => ({ id, name, availableSpaces: counts.get(id) ?? 0 })),
       reservations: reservations.map(record => reservationView(record)),
     };
@@ -63,20 +64,47 @@ export class ParkingService {
       if (matches.length > 1 || (existing && existing.ownerId !== accountId)) {
         throw new ConflictException('Biển số này đã được đăng ký.');
       }
+      const formattedPlate = formatPrivateVehiclePlate(plate) ?? existing?.plate;
+      if (!formattedPlate) {
+        throw new BadRequestException('Nhập biển số theo mẫu 59-X1 1234 hoặc 59-X1 123.45.');
+      }
       if (existing && (batteryPercent === null || (existing.lastObservedAt && existing.batteryPercent !== null))) {
-        return { id: existing.id, plate: existing.plate };
+        return { id: existing.id, plate: formattedPlate };
       }
 
       const occurredAt = new Date();
       const reading = { batteryPercent, lastObservedAt: batteryPercent === null ? null : occurredAt };
       const vehicle = existing
         ? await this.store.setInitialVehicleReading(tx, existing.id, reading)
-        : await this.store.createVehicle(tx, { ownerId: accountId, plate, ...reading });
+        : await this.store.createVehicle(tx, { ownerId: accountId, plate: formattedPlate, ...reading });
       await this.audit.append(tx, {
         actorId: accountId, action: existing ? 'PRIVATE_VEHICLE_BATTERY_INITIALIZED' : 'PRIVATE_VEHICLE_REGISTERED',
         targetType: 'private-vehicle', targetId: vehicle.id, occurredAt, details: { batteryPercent },
       });
-      return vehicle;
+      return { ...vehicle, plate: formattedPlate };
+    });
+  }
+
+  removeVehicle(token: string, vehicleId: string) {
+    return this.store.serializable(async tx => {
+      const { accountId } = await this.access.verifyAccess(token, ['STU'], tx);
+      const vehicle = await this.store.findOwnedVehicle(tx, accountId, vehicleId, true);
+      if (!vehicle) throw new NotFoundException('Không tìm thấy xe cá nhân của bạn.');
+      if (vehicle.removedAt) return { id: vehicle.id };
+      const now = new Date();
+      const parking = await this.store.activeForVehicle(tx, vehicle.id);
+      if (parking && !await this.expireInTx(tx, parking, now)) {
+        throw new ConflictException('Xe đang có lượt đặt chỗ đỗ. Hãy hủy lượt đặt hoặc hoàn tất gửi xe trước khi xóa.');
+      }
+      if (await this.store.hasActiveCharge(tx, vehicle.id)) {
+        throw new ConflictException('Xe còn yêu cầu sạc hoặc đang chiếm cổng sạc. Hãy kết thúc lượt sạc và giải phóng cổng trước khi xóa.');
+      }
+      await this.store.removeVehicle(tx, vehicle.id, now);
+      await this.audit.append(tx, {
+        actorId: accountId, action: 'PRIVATE_VEHICLE_REMOVED', targetType: 'private-vehicle',
+        targetId: vehicle.id, occurredAt: now, details: {},
+      });
+      return { id: vehicle.id };
     });
   }
 

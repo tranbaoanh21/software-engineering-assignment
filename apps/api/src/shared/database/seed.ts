@@ -83,13 +83,16 @@ try {
     for (const data of accountData) {
       const account = await tx.account.upsert({ where: { username: data.username }, create: data, update: {} });
       if (account.username === 'student') {
-        await tx.privateVehicle.upsert({
-          where: { plate: '59-X1 123.45' },
-          create: { ownerId: account.id, plate: '59-X1 123.45', batteryPercent: 36, lastObservedAt: new Date() }, update: {},
-        });
+        const plate = '59-X1 123.45';
+        const demoVehicle = await tx.privateVehicle.findFirst({ where: { plate }, select: { id: true } });
+        if (!demoVehicle) {
+          await tx.privateVehicle.create({
+            data: { ownerId: account.id, plate, batteryPercent: 36, lastObservedAt: observedAt },
+          });
+        }
         await tx.privateVehicle.updateMany({
-          where: { ownerId: account.id, plate: '59-X1 123.45', lastObservedAt: null },
-          data: { batteryPercent: 36, lastObservedAt: new Date() },
+          where: { ownerId: account.id, plate, lastObservedAt: null, removedAt: null },
+          data: { batteryPercent: 36, lastObservedAt: observedAt },
         });
       }
     }

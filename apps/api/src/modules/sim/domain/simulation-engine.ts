@@ -1,11 +1,30 @@
+import { hubMinimumFleetRatio, reservationMinimumBatteryPercent } from '@semh/contracts';
 import type {
   NetworkHub, SimulationMetrics, SimulationParameters, SimulationRecommendation, SimulationResult,
 } from '@semh/contracts';
 
-export const modelVersion = 'semh-minute-1';
+export const modelVersion = 'semh-minute-2';
+
+type DonorStock = Pick<NetworkHub, 'id' | 'code' | 'capacity' | 'availableVehicles'>;
+
+export function hubIsOperating(hub: NetworkHub): boolean {
+  return hub.serviceStatus === 'ACTIVE' && !hub.resources.some(resource => resource.kind === 'HUB' && resource.status === 'OUT_OF_SERVICE');
+}
+
+export function donorStock(hub: NetworkHub): DonorStock {
+  const { id, code, capacity } = hub;
+  const observed = hub.resources.filter(resource => resource.kind === 'VEHICLE' && resource.status === 'AVAILABLE' &&
+    resource.serviceStatus === 'ACTIVE' && (resource.batteryPercent ?? 0) >= reservationMinimumBatteryPercent && resource.observedAt);
+  return { id, code, capacity, availableVehicles: hubIsOperating(hub) ? Math.min(hub.availableVehicles, observed.length) : 0 };
+}
+
+export function transferableVehicles({ capacity, availableVehicles }: DonorStock): number {
+  return Math.max(0, availableVehicles - Math.max(1, Math.ceil(capacity * hubMinimumFleetRatio)));
+}
 
 export interface Snapshot {
   hubs: NetworkHub[];
+  donors?: DonorStock[];
   releases: { hubId: string; kind: 'VEHICLE' | 'PARKING' | 'CHARGING'; minute: number; resourceId?: string; batteryPercent?: number }[];
 }
 
@@ -54,8 +73,7 @@ function fleetPool(hub: NetworkHub, paused: Set<string>) {
 }
 
 function workingHub(hub: NetworkHub, p: SimulationParameters, scenario: boolean): WorkingHub {
-  const closed = hub.serviceStatus !== 'ACTIVE' || hub.resources.some(resource => resource.kind === 'HUB' && resource.status === 'OUT_OF_SERVICE') ||
-    (scenario && hub.id === p.closedHubId);
+  const closed = !hubIsOperating(hub) || (scenario && hub.id === p.closedHubId);
   const override = scenario && p.override?.hubId === hub.id ? p.override : undefined;
   const paused = new Set(scenario ? p.pausedResourceIds ?? [] : []);
   const available = (kind: 'PARKING_SPACE' | 'CHARGING_POINT') => hub.resources.filter(resource =>
@@ -180,19 +198,21 @@ export function analyzeSimulation(
   snapshot: Snapshot, result: SimulationResult, closedHubId: string | null, makeId: () => string,
 ): SimulationRecommendation[] {
   const recommendations: SimulationRecommendation[] = [];
+  const donors = (snapshot.donors ?? []).map(hub => ({ hub, remaining: transferableVehicles(hub) }));
   for (const row of result.hubs) {
     const target = snapshot.hubs.find(hub => hub.id === row.hubId)!;
-    if (row.hubId === closedHubId) continue;
+    if (row.hubId === closedHubId || !hubIsOperating(target)) continue;
     const spare = Math.max(0, target.capacity - target.vehicleCount - target.heldArrivals);
-    const source = snapshot.hubs
-      .filter(hub => hub.id !== row.hubId && hub.id !== closedHubId && hub.availableVehicles > 0)
-      .sort((a, b) => b.availableVehicles - a.availableVehicles || a.code.localeCompare(b.code))[0];
-    if (row.scenario.tripsMissed > 0 && spare > 0 && source) {
-      recommendations.push({
-        id: makeId(), kind: 'TRANSFER', hubId: row.hubId, sourceHubId: source.id,
-        count: Math.min(spare, row.scenario.tripsMissed, source.availableVehicles),
-        evidence: row.scenario.tripsMissed + ' yêu cầu chuyến đi không được phục vụ trong kịch bản.',
-      });
+    if (row.scenario.tripsMissed > 0 && spare > 0) {
+      const source = donors.sort((a, b) => b.remaining - a.remaining || a.hub.code.localeCompare(b.hub.code))[0];
+      if (source && source.remaining > 0) {
+        const count = Math.min(spare, row.scenario.tripsMissed, source.remaining);
+        source.remaining -= count;
+        recommendations.push({
+          id: makeId(), kind: 'TRANSFER', hubId: row.hubId, sourceHubId: source.hub.id, count,
+          evidence: row.scenario.tripsMissed + ' yêu cầu chuyến đi không được phục vụ trong kịch bản.',
+        });
+      }
     }
     if (row.scenario.parkingMissed > 0) {
       recommendations.push({ id: makeId(), kind: 'PARKING', hubId: row.hubId, count: row.scenario.parkingMissed,

@@ -147,10 +147,13 @@ export function IncidentPanel({ incidents, hubs, technicians, maintenance, refre
     <div className="work-heading">
       <span className="muted">{incidents.filter(overdue).length} sự cố quá hạn</span>
       <div className="work-actions">
-        <button className="outline" type="button" onClick={refresh}>Làm mới</button>
-        {!maintenance && <button className="primary" type="button" onClick={() => setReportOpen(!reportOpen)} aria-expanded={reportOpen}>
+        {!maintenance && <button className={reportOpen || action ? 'outline' : 'primary'} type="button" onClick={() => {
+          setEditing(undefined);
+          setReportOpen(!reportOpen);
+        }} aria-expanded={reportOpen}>
           {reportOpen ? 'Đóng biểu mẫu' : 'Ghi nhận sự cố'}
         </button>}
+        <button className="quiet-action" type="button" onClick={refresh}>Làm mới</button>
       </div>
     </div>
     {reportOpen && <form className="work-card work-form work-form-wide" onSubmit={report}>
@@ -222,7 +225,7 @@ export function IncidentPanel({ incidents, hubs, technicians, maintenance, refre
           {selected.tripId ? 'Kỹ thuật cần xác nhận Hub đã nhận xe.' : 'Kỹ thuật đã báo sửa xong. Tài nguyên chờ vận hành xác nhận để phục vụ trở lại.'}
         </p>}
         {selected.resolution && selected.safe !== null && <p><strong>Kết quả kiểm tra</strong> · {selected.resolution}</p>}
-        {action && !formVisible && <div className="work-actions">
+        {action && !formVisible && !reportOpen && <div className="work-actions">
           <button type="button" className={action === 'ASSIGN' && selected.assigneeId ? 'outline' : 'primary'}
             disabled={command.pending} onClick={() => act(selected, action)}>{actionLabel(action, selected)}</button>
         </div>}

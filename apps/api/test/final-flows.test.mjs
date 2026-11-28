@@ -5,6 +5,7 @@ import { afterAll, beforeAll, expect, test } from '@jest/globals';
 import request from 'supertest';
 import { createApp } from '../dist/create-app.js';
 import { PrismaService } from '../dist/shared/database/prisma.service.js';
+import { ChargingService } from '../dist/modules/chg/application/charging.service.js';
 
 let app;
 let server;
@@ -37,14 +38,15 @@ beforeAll(async () => {
 
 afterAll(async () => { await app?.close(); });
 
-async function fixtureHub(name) {
+async function fixtureHub(name, vehicleCount = 2) {
   const code = 'QA-' + randomUUID().slice(0, 8);
   const now = new Date();
   return db.mobilityHub.create({
     data: {
       code, name: 'Final flow ' + name, latitude: 10.87, longitude: 106.8, serviceStatus: 'ACTIVE', lastObservedAt: now,
-      vehicles: { create: [1, 2].map(i => ({
-        code: code + '-V' + i, sourceId, status: 'AVAILABLE', serviceStatus: 'ACTIVE', batteryPercent: 70, lastObservedAt: now,
+      vehicleCapacity: Math.max(8, vehicleCount + 2),
+      vehicles: { create: Array.from({ length: vehicleCount }, (_, index) => ({
+        code: code + '-V' + (index + 1), sourceId, status: 'AVAILABLE', serviceStatus: 'ACTIVE', batteryPercent: 70, lastObservedAt: now,
       })) },
       chargingPoints: { create: [1, 2].map(i => ({
         code: code + '-C' + i, sourceId, connector: 'AC', powerKw: 0.5,
@@ -75,29 +77,30 @@ function ingest(type, input) {
   });
 }
 
-test('a newly registered student can add a private vehicle, park, and provide its initial charging battery', async () => {
+test('student registers and removes a private vehicle shared by parking and charging without losing history', async () => {
   const username = String(randomInt(100000000, 999999999));
   const password = 'first-student-password';
   await request(server).post('/api/auth/register').set('Origin', origin).send({
     username, password, displayName: 'Sinh viên mới',
   }).expect(201);
   const fresh = await login(username, password);
-  const suffix = randomUUID().slice(0, 8).toUpperCase();
-  const plate = '59X1' + suffix;
-  const formatted = '59-x1 ' + suffix.slice(0, 5) + '.' + suffix.slice(5);
+  const suffix = String(randomInt(100000)).padStart(5, '0');
+  const plate = '60Y2' + suffix;
+  const formatted = '60-Y2 ' + suffix.slice(0, 3) + '.' + suffix.slice(3);
   const addVehicle = (actor, input) => write(actor, '/parking/vehicles', input);
 
   expect((await read(fresh, '/parking').expect(200)).body.vehicles).toEqual([]);
   await addVehicle(operator, { plate }).expect(403);
   await addVehicle(fresh, { plate: '??' }).expect(400);
+  await addVehicle(fresh, { plate: '60YY12345' }).expect(400);
   await addVehicle(fresh, { plate, batteryPercent: 101 }).expect(400);
   await addVehicle(fresh, { plate: '59x112345' }).expect(409);
   const [added, repeated] = await Promise.all([
     addVehicle(fresh, { plate }).expect(201),
-    addVehicle(fresh, { plate: formatted }).expect(201),
+    addVehicle(fresh, { plate: formatted.toLowerCase() }).expect(201),
   ]);
   const vehicle = added.body;
-  expect(vehicle.plate).toBe(plate);
+  expect(vehicle.plate).toBe(formatted);
   expect(repeated.body).toEqual(vehicle);
   await addVehicle(student, { plate: formatted }).expect(409);
 
@@ -108,6 +111,10 @@ test('a newly registered student can add a private vehicle, park, and provide it
   } });
   const parking = await write(fresh, '/parking/reservations', { hubId: hub.id, privateVehicleId: vehicle.id }).expect(201);
   expect(parking.body).toMatchObject({ status: 'CONFIRMED', vehicle });
+  const removePath = '/parking/vehicles/' + vehicle.id;
+  await write(student, removePath, {}, 'delete').expect(404);
+  await write(fresh, removePath, {}, 'delete').expect(409);
+  await write(fresh, '/parking/reservations/' + parking.body.id + '/cancel', {}).expect(200);
 
   const chargingPath = '/charging';
   const before = await read(fresh, chargingPath).expect(200);
@@ -116,8 +123,33 @@ test('a newly registered student can add a private vehicle, park, and provide it
   await addVehicle(fresh, { plate, batteryPercent: 90 }).expect(201, vehicle);
   const after = await read(fresh, chargingPath).expect(200);
   expect(after.body.vehicles).toEqual([{ ...vehicle, batteryPercent: 32 }]);
-  const charge = await write(fresh, '/charging/requests', { kind: 'PRIVATE', hubId: hub.id, vehicleId: vehicle.id }).expect(201);
+  const chargeInput = { kind: 'PRIVATE', hubId: hub.id, vehicleId: vehicle.id };
+  const charge = await write(fresh, '/charging/requests', chargeInput).expect(201);
   expect(charge.body).toMatchObject({ status: 'SCHEDULED', session: { batteryPercent: 32 } });
+  await write(fresh, removePath, {}, 'delete').expect(409);
+  const { id: sessionId, pointId } = charge.body.session;
+  const evidence = { sessionId, pointId };
+  await ingest('charging.state', { ...evidence, phase: 'STARTED', batteryPercent: 32 }).expect(200, { result: 'applied' });
+  await ingest('charging.state', { ...evidence, phase: 'COMPLETED', batteryPercent: 100 }).expect(200, { result: 'applied' });
+  await write(fresh, removePath, {}, 'delete').expect(409);
+  await ingest('charging.state', { ...evidence, phase: 'RELEASED', batteryPercent: 100 }).expect(200, { result: 'applied' });
+
+  await write(fresh, removePath, {}, 'delete').expect(200, { id: vehicle.id });
+  await write(fresh, removePath, {}, 'delete').expect(200, { id: vehicle.id });
+  expect((await read(fresh, '/parking').expect(200)).body).toMatchObject({
+    vehicles: [], reservations: [{ id: parking.body.id, status: 'CANCELLED', vehicle }],
+  });
+  expect((await read(fresh, chargingPath).expect(200)).body).toMatchObject({
+    vehicles: [], requests: [{ id: charge.body.id, vehicleId: vehicle.id, vehicleCode: formatted, status: 'COMPLETED' }],
+  });
+  await write(fresh, '/parking/reservations', { hubId: hub.id, privateVehicleId: vehicle.id }).expect(404);
+  await write(fresh, '/charging/requests', chargeInput).expect(403);
+
+  const readded = await addVehicle(fresh, { plate }).expect(201);
+  expect(readded.body.plate).toBe(formatted);
+  expect(readded.body.id).not.toBe(vehicle.id);
+  const short = await addVehicle(fresh, { plate: '61s20406' }).expect(201);
+  expect(short.body.plate).toBe('61-S2 0406');
 });
 
 test('admin grants scoped operator access, revokes sessions on lock and protects the last active admin', async () => {
@@ -219,6 +251,7 @@ test('deduplicates device incidents, restricts technicians and restores only a v
 
 test('runs What-if on an isolated snapshot and updates the target only after technician handoff and operator approval', async () => {
   const hubs = [source.id, target.id];
+  const outside = await fixtureHub('Nguồn ngoài kịch bản', 12);
   const before = await db.sharedVehicle.findMany({ where: { hubId: { in: hubs } }, orderBy: { id: 'asc' } });
   const scenario = await write(operator, '/simulations/scenarios', {
     name: 'Cao điểm kiểm thử', hubIds: hubs,
@@ -242,9 +275,21 @@ test('runs What-if on an isolated snapshot and updates the target only after tec
     version: scenario.body.version, sourceRunId: result.body.id,
   }).expect(202);
   expect(rerun.body.baseTime).toBe(completed.baseTime);
+  const snapshotInput = {
+    name: 'Dùng lại mốc dữ liệu', hubIds: hubs,
+    parameters: { ...scenario.body.parameters, snapshotRunId: completed.id },
+  };
+  const savedSnapshot = await write(operator, '/simulations/scenarios', snapshotInput).expect(201);
+  expect(savedSnapshot.body.parameters.snapshotRunId).toBe(completed.id);
+  const snapshotPath = '/simulations/scenarios/' + savedSnapshot.body.id + '/runs';
+  const fromSaved = await write(operator, snapshotPath, { version: savedSnapshot.body.version }).expect(202);
+  expect(fromSaved.body.baseTime).toBe(completed.baseTime);
+  expect((await read(operator, '/simulations/runs/' + fromSaved.body.id).expect(200)).body.sourceRunId).toBe(completed.id);
+  const fresh = await write(operator, snapshotPath, { version: savedSnapshot.body.version, sourceRunId: null }).expect(202);
+  expect((await read(operator, '/simulations/runs/' + fresh.body.id).expect(200)).body.sourceRunId).toBeNull();
   expect(await db.sharedVehicle.findMany({ where: { hubId: { in: hubs } }, orderBy: { id: 'asc' } })).toEqual(before);
   const rec = completed.result.recommendations.find(item => item.kind === 'TRANSFER');
-  expect(rec).toBeTruthy();
+  expect(rec).toMatchObject({ sourceHubId: outside.id });
   const prepared = await read(operator, path + '/recommendations/' + rec.id + '/draft').expect(200);
   expect(await db.redistributionPlan.count({ where: { recommendationId: rec.id } })).toBe(0);
   const input = {
@@ -290,6 +335,79 @@ test('runs What-if on an isolated snapshot and updates the target only after tec
   expect(done.body.status).toBe('COMPLETED');
   expect(await getVehicle()).toMatchObject({ hubId: input.targetHubId, transferPlanId: null });
   expect((await getTarget()).heldArrivals).toBe(targetBefore.heldArrivals);
+});
+
+test('approves a simulation transfer once and completes it when the assigned technician arrives', async () => {
+  const selected = await fixtureHub('Hub tăng nhu cầu');
+  const available = await fixtureHub('Hub cho xe', 15);
+  const receiving = await db.mobilityHub.create({ data: {
+    code: 'QA-' + randomUUID().slice(0, 8), name: 'Hub thiếu xe', latitude: 10.87, longitude: 106.8,
+    serviceStatus: 'ACTIVE', lastObservedAt: new Date(),
+  } });
+  const scenario = (await write(operator, '/simulations/scenarios', {
+    name: 'Điều phối sáng', hubIds: [selected.id, receiving.id],
+    parameters: { durationMinutes: 15, demandMultiplier: 2, demandProfile: 'PEAK', chargingReduction: 0, closedHubId: null },
+  }).expect(201)).body;
+  const run = (await write(operator, '/simulations/scenarios/' + scenario.id + '/runs', { version: scenario.version }).expect(202)).body;
+  const path = '/simulations/runs/' + run.id;
+  let result;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    result = (await read(operator, path).expect(200)).body;
+    if (result.analysisReady) break;
+    await delay(50);
+  }
+  const rec = result.result?.recommendations.find(item => item.kind === 'TRANSFER' && item.hubId === receiving.id);
+  expect(result.result.hubs.map(hub => hub.hubId).sort()).toEqual([selected.id, receiving.id].sort());
+  expect(rec).toMatchObject({ sourceHubId: available.id });
+  const username = 'sim-scope-' + randomUUID().slice(0, 8);
+  const password = 'test-sim-scope-password';
+  const account = (await write(admin, '/admin/accounts', { username, displayName: 'Scoped SIM operator', password }).expect(201)).body;
+  await write(admin, '/admin/accounts/' + account.id + '/roles', {
+    role: 'OPR', allHubs: false, grant: true, hubIds: [selected.id, receiving.id], version: account.version, reason: 'Kiểm tra phạm vi',
+  }).expect(201);
+  const restricted = await login(username, password);
+  const restrictedResult = (await read(restricted, path).expect(200)).body;
+  expect(restrictedResult.result.recommendations.some(item => item.kind === 'TRANSFER')).toBe(false);
+  await read(restricted, path + '/recommendations/' + rec.id + '/draft').expect(403);
+
+  const approve = path + '/recommendations/' + rec.id + '/approve';
+  const approval = { assigneeId: technician.id };
+  await write(technician, approve, approval).expect(403);
+  await write(operator, approve, { assigneeId: student.id }).expect(409);
+  const usable = await db.sharedVehicle.findFirstOrThrow({ where: { hubId: available.id } });
+  const remaining = { hubId: available.id, id: { not: usable.id } };
+  await db.sharedVehicle.updateMany({ where: remaining, data: { status: 'AWAITING_CHARGE' } });
+  await write(operator, approve, approval).expect(409);
+  await db.sharedVehicle.updateMany({ where: remaining, data: { status: 'AVAILABLE' } });
+  const [first, duplicate] = await Promise.all([
+    write(operator, approve, approval).expect(201), write(operator, approve, approval).expect(201),
+  ]);
+  const plan = first.body;
+  expect(duplicate.body.id).toBe(plan.id);
+  expect(plan).toMatchObject({ status: 'APPROVED', assigneeId: technician.id, completeOnArrival: true, recommendationId: rec.id });
+  expect(await db.redistributionPlan.count({ where: { recommendationId: rec.id } })).toBe(1);
+  expect((await read(technician, '/operations/maintenance').expect(200)).body.plans.some(item => item.id === plan.id)).toBe(true);
+
+  const change = (actor, version, action, extra = {}) => write(actor, '/operations/plans/' + plan.id + '/actions', {
+    version, action, ...extra,
+  });
+  await change(technician, plan.version, 'REPORT_ARRIVAL').expect(409);
+  const started = (await change(technician, plan.version, 'START').expect(201)).body;
+  expect(started.status).toBe('IN_PROGRESS');
+  await change(operator, started.version, 'REPORT_ARRIVAL').expect(403);
+  const requestId = randomUUID();
+  const completed = (await change(technician, started.version, 'REPORT_ARRIVAL', { requestId }).expect(201)).body;
+  expect(completed).toMatchObject({
+    status: 'COMPLETED', items: plan.items.map(({ vehicleId }) => ({
+      vehicleId, status: 'ARRIVED', departedAt: expect.any(String), arrivedAt: expect.any(String),
+    })),
+  });
+  await change(technician, started.version, 'REPORT_ARRIVAL', { requestId }).expect(201, completed);
+  const vehicles = await db.sharedVehicle.findMany({ where: { id: { in: plan.items.map(item => item.vehicleId) } } });
+  expect(vehicles).toHaveLength(plan.items.length);
+  for (const vehicle of vehicles) {
+    expect(vehicle).toMatchObject({ hubId: receiving.id, transferPlanId: null, status: 'AVAILABLE' });
+  }
 });
 
 test('rejects a pending normal return when the student reports a fault, and retains the trip until technician pickup', async () => {
@@ -394,6 +512,105 @@ test('starts maintenance on a vehicle at its service threshold, preserves safe m
   expect(await db.sharedVehicle.findUniqueOrThrow({ where: { id } })).toMatchObject({
     status: 'AVAILABLE', fault: false, sinceMaintenanceKm: 0, description: edited.body.description,
   });
+});
+
+test('queues a low-battery return and requires MNT, IoT and OPR to put the vehicle back in service', async () => {
+  const hub = await fixtureHub('Sạc xe dùng chung');
+  const [vehicle, fullEnough] = await db.sharedVehicle.findMany({ where: { hubId: hub.id } });
+  const current = () => db.sharedVehicle.findUniqueOrThrow({ where: { id: vehicle.id } });
+  const reserve = () => write(student, '/reservations', { vehicleId: vehicle.id, hubId: hub.id });
+  const path = id => '/charging/shared-vehicles/' + id + '/charge';
+  const refresh = () => app.get(ChargingService).refresh();
+  await db.sharedVehicle.update({
+    where: { id: vehicle.id }, data: { status: 'OUT_OF_SERVICE', batteryPercent: 24, fault: true },
+  });
+  await write(student, path(vehicle.id), { hubId: hub.id }).expect(403);
+  await write(operator, path(vehicle.id), { hubId: hub.id }).expect(409);
+  await write(operator, path(fullEnough.id), { hubId: hub.id }).expect(409);
+  await refresh();
+  expect(await db.chargingRequest.count({ where: { vehicleId: vehicle.id } })).toBe(0);
+
+  await db.sharedVehicle.update({
+    where: { id: vehicle.id }, data: { status: 'AVAILABLE', batteryPercent: 70, fault: false },
+  });
+  const reservation = await reserve().expect(201);
+  const pickup = await write(student, '/trips/pickups', {
+    reservationId: reservation.body.id, vehicleCode: vehicle.code,
+  }).expect(202);
+  const handoff = (commandId, batteryPercent) => ingest('vehicle.handoff', {
+    commandId, vehicleId: vehicle.id, hubId: hub.id, batteryPercent, confirmed: true, fault: false,
+  });
+  await handoff(pickup.body.id, 70).expect(200, { result: 'applied' });
+  const trip = await db.trip.findUniqueOrThrow({ where: { reservationId: reservation.body.id } });
+  const returning = await write(student, '/trips/' + trip.id + '/return', { hubId: hub.id }).expect(202);
+  await handoff(returning.body.id, 24).expect(200, { result: 'applied' });
+  expect(await current()).toMatchObject({ status: 'AWAITING_CHARGE', batteryPercent: 24 });
+
+  await refresh();
+  await refresh();
+  const rows = await db.chargingRequest.findMany({ where: { vehicleId: vehicle.id } });
+  expect(rows).toEqual([expect.objectContaining({
+    authorId: null, vehicleKind: 'SHARED', status: 'SCHEDULED', requiresFleetHandoff: true,
+  })]);
+  const [charge] = rows;
+  const maintenance = (await read(technician, '/charging?mode=MNT').expect(200)).body;
+  const created = maintenance.requests.find(item => item.id === charge.id);
+  expect(created).toMatchObject({ session: { batteryPercent: 24, plugConfirmedAt: null } });
+  const existing = await write(operator, path(vehicle.id), { hubId: hub.id }).expect(201);
+  expect(existing.body.id).toBe(charge.id);
+  const { id: sessionId, pointId } = created.session;
+  const evidence = { sessionId, pointId };
+  const readySteps = async () => (await request(server).get('/api/state-events/charging-steps')
+    .set('X-IoT-Source-Key', key).expect(200)).body;
+  const step = phase => (readySteps()).then(steps => steps.some(item => item.sessionId === sessionId && item.phase === phase));
+  const plug = '/charging/requests/' + charge.id + '/confirm-plug';
+  const approve = '/charging/requests/' + charge.id + '/approve-service';
+
+  expect(await step('STARTED')).toBe(false);
+  await write(operator, approve, {}).expect(409);
+  await ingest('charging.state', { ...evidence, phase: 'STARTED', batteryPercent: 24 }).expect(200, { result: 'rejected' });
+  await write(operator, plug, { pointId }).expect(403);
+  await write(technician, plug, { pointId: randomUUID() }).expect(409);
+  const plugInput = { pointId, requestId: randomUUID() };
+  const confirmed = await write(technician, plug, plugInput).expect(201);
+  expect(confirmed.body.session.plugConfirmedAt).toBeTruthy();
+  await write(technician, plug, plugInput).expect(201, confirmed.body);
+  await refresh();
+  expect(await step('STARTED')).toBe(true);
+  await ingest('charging.state', { ...evidence, phase: 'STARTED', batteryPercent: 24 }).expect(200, { result: 'applied' });
+  expect(await current()).toMatchObject({ status: 'CHARGING', batteryPercent: 24 });
+  await ingest('charging.state', { ...evidence, phase: 'COMPLETED', batteryPercent: 100 }).expect(200, { result: 'applied' });
+  expect(await current()).toMatchObject({ status: 'CHARGING', batteryPercent: 100 });
+  await write(operator, approve, {}).expect(409);
+  await ingest('charging.state', { ...evidence, phase: 'RELEASED', batteryPercent: 100 }).expect(200, { result: 'applied' });
+  expect(await db.chargingPoint.findUniqueOrThrow({ where: { id: pointId } })).toMatchObject({ status: 'AVAILABLE' });
+  expect(await current()).toMatchObject({ status: 'AWAITING_CHARGE_APPROVAL', batteryPercent: 100 });
+  expect(await db.chargingRequest.findUniqueOrThrow({ where: { id: charge.id } })).toMatchObject({ status: 'AWAITING_APPROVAL' });
+  await reserve().expect(409);
+  await write(technician, approve, {}).expect(403);
+  const approval = { requestId: randomUUID() };
+  const accepted = await write(operator, approve, approval).expect(201);
+  expect(accepted.body).toMatchObject({ status: 'COMPLETED', session: { releasedAt: expect.any(String) } });
+  await write(operator, approve, approval).expect(201, accepted.body);
+  expect(await current()).toMatchObject({ status: 'AVAILABLE', batteryPercent: 100 });
+  const bookedAgain = await reserve().expect(201);
+  await write(student, '/reservations/' + bookedAgain.body.id + '/cancel', {}).expect(200);
+});
+
+test('allows operations to queue shared charging before the automatic scan picks it up', async () => {
+  const hub = await fixtureHub('Sạc nhanh xe dùng chung');
+  const vehicle = await db.sharedVehicle.findFirstOrThrow({ where: { hubId: hub.id } });
+  await db.sharedVehicle.update({
+    where: { id: vehicle.id }, data: { status: 'AWAITING_CHARGE', batteryPercent: 24 },
+  });
+  const path = '/charging/shared-vehicles/' + vehicle.id + '/charge';
+  const input = { hubId: hub.id, requestId: randomUUID() };
+  const first = await write(operator, path, input).expect(201);
+  expect(first.body).toMatchObject({ requiresFleetHandoff: true, status: 'SCHEDULED', session: { batteryPercent: 24 } });
+  await write(operator, path, input).expect(201, first.body);
+  await write(operator, path, { hubId: hub.id }).expect(409);
+  await app.get(ChargingService).refresh();
+  expect(await db.chargingRequest.count({ where: { vehicleId: vehicle.id } })).toBe(1);
 });
 
 test('keeps incomplete charging requests pending and rejects incompatible or unauthorized requests', async () => {

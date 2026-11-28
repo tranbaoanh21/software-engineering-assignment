@@ -3,8 +3,9 @@ import type { PendingParkingVerification } from '@semh/contracts';
 import type { ParkingReservationStatus, ParkingSpaceStatus, Prisma } from '../../../generated/prisma/client.js';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import { runSerializable } from '../../../shared/database/serializable.js';
-import { markLiveChange } from '../../../shared/live/committed-changes.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
+import { markLiveChange } from '../../../shared/live/committed-changes.js';
+import { activeChargeForVehicle } from '../../chg/infrastructure/prisma-charging.store.js';
 import {
   ParkingStore, type NewParkingReservation, type ParkingReading, type PrivateVehicleReading, type RegisteredPrivateVehicle,
 } from '../application/parking-store.port.js';
@@ -33,7 +34,7 @@ export class PrismaParkingStore extends ParkingStore {
 
   listVehicles(studentId: string) {
     return this.prisma.privateVehicle.findMany({
-      where: { ownerId: studentId }, select: vehicleSummary, orderBy: { plate: 'asc' },
+      where: { ownerId: studentId, removedAt: null }, select: vehicleSummary, orderBy: { plate: 'asc' },
     });
   }
 
@@ -41,7 +42,7 @@ export class PrismaParkingStore extends ParkingStore {
     return tx.$queryRaw<RegisteredPrivateVehicle[]>`
       SELECT "id", "plate", "ownerId", "batteryPercent", "lastObservedAt"
       FROM "PrivateVehicle"
-      WHERE regexp_replace(upper("plate"), '[[:space:].-]', '', 'g') = ${plate}
+      WHERE "removedAt" IS NULL AND regexp_replace(upper("plate"), '[[:space:].-]', '', 'g') = ${plate}
       LIMIT 2
     `;
   }
@@ -79,8 +80,21 @@ export class PrismaParkingStore extends ParkingStore {
     return [...active, ...recent];
   }
 
-  findOwnedVehicle(tx: Transaction, studentId: string, vehicleId: string) {
-    return tx.privateVehicle.findFirst({ where: { id: vehicleId, ownerId: studentId }, select: vehicleSummary });
+  findOwnedVehicle(tx: Transaction, studentId: string, vehicleId: string, includeRemoved = false) {
+    return tx.privateVehicle.findFirst({
+      where: { id: vehicleId, ownerId: studentId, ...(includeRemoved ? {} : { removedAt: null }) },
+      select: { ...vehicleSummary, removedAt: true },
+    });
+  }
+
+  async hasActiveCharge(tx: Transaction, vehicleId: string) {
+    return !!await tx.chargingRequest.findFirst({
+      where: { ...activeChargeForVehicle(vehicleId), vehicleKind: 'PRIVATE' }, select: { id: true },
+    });
+  }
+
+  async removeVehicle(tx: Transaction, id: string, removedAt: Date) {
+    await tx.privateVehicle.update({ where: { id }, data: { removedAt } });
   }
 
   findByRequest(tx: Transaction, studentId: string, requestId: string) {

@@ -332,30 +332,47 @@ export class OperationsService {
           assertVersion(previous.version, change.version);
           if (previous.status !== 'DRAFT') throw new ConflictException('Chỉ có thể sửa kế hoạch nháp.');
         }
-        await this.checkTransfer(tx, input);
-        if (input.assigneeId) await this.requireTechnician(tx, input.assigneeId);
-
-        const data = {
-          authorId: actor.accountId, sourceHubId: input.sourceHubId, targetHubId: input.targetHubId,
-          scheduledAt: input.scheduledAt ?? previous?.scheduledAt ?? new Date(), reason: change.reason ?? previous?.reason ?? '',
-          recommendationId: input.recommendationId,
-          assigneeId: input.assigneeId,
-          status: input.assigneeId ? 'APPROVED' as const : 'DRAFT' as const,
-        };
-        const vehicles = input.vehicleIds.map(vehicleId => ({ vehicleId }));
-        const row = previous
-          ? await this.store.updatePlan(tx, previous.id, { ...data, items: { deleteMany: {}, create: vehicles } })
-          : await this.store.createPlan(tx, { ...data, items: { create: vehicles } });
-        await this.log(tx, actor.accountId, 'PLAN_SAVED', 'plan', row.id, change, { vehicleIds: input.vehicleIds });
-        if (input.assigneeId) {
-          for (const item of row.items) await this.fleet.bindTransfer(tx, item.vehicleId, row.id, row.sourceHubId);
-          await this.log(tx, actor.accountId, 'PLAN_ASSIGN', 'plan', row.id, change, {
-            from: previous?.status ?? null, to: row.status, assigneeId: input.assigneeId,
-          });
-        }
-        return (await this.planViews(tx, [row]))[0]!;
+        return this.writePlanInTx(tx, actor, input, change, previous);
       });
     });
+  }
+
+  async approvedRecommendationInTx(tx: Transaction, recommendationId: string) {
+    const row = await this.store.approvedRecommendation(tx, recommendationId);
+    return row ? (await this.planViews(tx, [row]))[0] : undefined;
+  }
+
+  approveRecommendationInTx(tx: Transaction, actor: SessionView, input: PlanInput & { assigneeId: string }, change: ChangeInput) {
+    assertOperatorHubs(actor, input.sourceHubId, input.targetHubId);
+    return this.writePlanInTx(tx, actor, input, change, null, true);
+  }
+
+  private async writePlanInTx(
+    tx: Transaction, actor: SessionView, input: PlanInput, change: ChangeInput,
+    previous: StoredPlan | null, completeOnArrival = false,
+  ) {
+    await this.checkTransfer(tx, input);
+    if (input.assigneeId) await this.requireTechnician(tx, input.assigneeId);
+
+    const data = {
+      authorId: actor.accountId, sourceHubId: input.sourceHubId, targetHubId: input.targetHubId,
+      scheduledAt: input.scheduledAt ?? previous?.scheduledAt ?? new Date(), reason: change.reason ?? previous?.reason ?? '',
+      recommendationId: input.recommendationId, completeOnArrival,
+      assigneeId: input.assigneeId,
+      status: input.assigneeId ? 'APPROVED' as const : 'DRAFT' as const,
+    };
+    const vehicles = input.vehicleIds.map(vehicleId => ({ vehicleId }));
+    const row = previous
+      ? await this.store.updatePlan(tx, previous.id, { ...data, items: { deleteMany: {}, create: vehicles } })
+      : await this.store.createPlan(tx, { ...data, items: { create: vehicles } });
+    await this.log(tx, actor.accountId, 'PLAN_SAVED', 'plan', row.id, change, { vehicleIds: input.vehicleIds });
+    if (input.assigneeId) {
+      for (const item of row.items) await this.fleet.bindTransfer(tx, item.vehicleId, row.id, row.sourceHubId);
+      await this.log(tx, actor.accountId, 'PLAN_ASSIGN', 'plan', row.id, change, {
+        from: previous?.status ?? null, to: row.status, assigneeId: input.assigneeId,
+      });
+    }
+    return (await this.planViews(tx, [row]))[0]!;
   }
 
   changePlan(token: string, id: string, input: PlanAction, change: ChangeInput) {
@@ -417,11 +434,12 @@ export class OperationsService {
       }
       return this.store.updatePlan(tx, id, { status: 'IN_PROGRESS' });
     }
-    if (action === 'REPORT_ARRIVAL' && status === 'IN_PROGRESS' && !planned.length && moving.length) {
+    const reportsArrival = action === 'REPORT_ARRIVAL' && status === 'IN_PROGRESS' && !planned.length && moving.length > 0;
+    if (reportsArrival && !row.completeOnArrival) {
       return this.store.updatePlan(tx, id, { status: 'AWAITING_APPROVAL' });
     }
     const alreadyArrived = status === 'IN_PROGRESS' && items.every(item => item.status === 'ARRIVED');
-    if (action === 'COMPLETE' && (status === 'AWAITING_APPROVAL' || alreadyArrived)) {
+    if (reportsArrival || (action === 'COMPLETE' && (status === 'AWAITING_APPROVAL' || alreadyArrived))) {
       if (moving.length) {
         const destination = await this.hubs.readArrivalCapacityInTx(tx, targetHubId);
         if (!destination?.active || destination.physicalSpaces < moving.length) {

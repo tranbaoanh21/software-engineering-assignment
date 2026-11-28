@@ -131,7 +131,8 @@ export function TransferPanel({ hubs, plans, technicians, maintenance, prefilled
       setOperation(undefined);
       setSelectedId(result.id);
       setFilter('');
-      setMessage(confirmations[action]);
+      setMessage(action === 'REPORT_ARRIVAL' && result.status === 'COMPLETED'
+        ? 'Đã cập nhật vị trí xe tại Hub đích.' : confirmations[action]);
     }
   }
 
@@ -144,7 +145,7 @@ export function TransferPanel({ hubs, plans, technicians, maintenance, prefilled
         {Object.entries(statuses).filter(([status]) => !maintenance || status !== 'DRAFT')
           .map(([status, label]) => <option key={status} value={status}>{label}</option>)}
       </select></label>}
-      {!maintenance && <button className={formOpen ? 'outline' : 'primary'} type="button" aria-expanded={formOpen}
+      {!maintenance && <button className={formOpen || canAssign || canComplete ? 'outline' : 'primary'} type="button" aria-expanded={formOpen}
         onClick={() => { editPlan(); setFormOpen(!formOpen); }}>
         {formOpen ? 'Đóng biểu mẫu' : 'Tạo kế hoạch'}
       </button>}
@@ -178,9 +179,10 @@ export function TransferPanel({ hubs, plans, technicians, maintenance, prefilled
         <label>Ghi chú<input name="reason" maxLength={500} defaultValue={editing?.reason ?? recommendation?.reason} /></label>
       </details>
       <div className="work-actions">
-        <button className="primary" type="submit" value="assign"
+        <button className={assignee ? 'primary' : 'outline'} type="submit" value="assign"
           disabled={command.pending || !assignee || !eligiblePicked.length}>Giao kỹ thuật</button>
-        <button className="outline" type="submit" value="draft" disabled={command.pending || !eligiblePicked.length}>Lưu nháp</button>
+        <button className={assignee ? 'outline' : 'primary'} type="submit" value="draft"
+          disabled={command.pending || !eligiblePicked.length}>Lưu nháp</button>
       </div>
     </form>}
     {!formOpen && <div className="app-pane-layout">
@@ -215,7 +217,9 @@ export function TransferPanel({ hubs, plans, technicians, maintenance, prefilled
               onClick={() => void apply(selected, 'START')}>Bắt đầu điều chuyển</button>}
           {maintenance && selected.status === 'IN_PROGRESS' && !hasPlanned && hasMoving &&
             <button className="primary" type="button" disabled={command.pending}
-              onClick={() => void apply(selected, 'REPORT_ARRIVAL')}>Báo đã đến Hub đích</button>}
+              onClick={() => void apply(selected, 'REPORT_ARRIVAL')}>
+              {selected.completeOnArrival ? 'Xác nhận đã đến Hub đích' : 'Báo đã đến Hub đích'}
+            </button>}
           {!maintenance && canComplete &&
             <button className="primary" type="button" disabled={command.pending}
               onClick={() => void apply(selected, 'COMPLETE')}>Xác nhận hoàn tất</button>}
@@ -226,7 +230,8 @@ export function TransferPanel({ hubs, plans, technicians, maintenance, prefilled
           {!maintenance && selected.status === 'DRAFT' &&
             <button className="outline" type="button" onClick={() => { editPlan(selected); setFormOpen(true); }}>Sửa nháp</button>}
           {!maintenance && canCancel &&
-            <button className="outline" type="button" onClick={() => setOperation('CANCEL')}>Hủy kế hoạch</button>}
+            <button className="quiet-action quiet-action-destructive" type="button"
+              onClick={() => setOperation('CANCEL')}>Hủy kế hoạch</button>}
         </div>}
         {operation && <form className="work-form inline-action" onSubmit={event => {
           event.preventDefault();

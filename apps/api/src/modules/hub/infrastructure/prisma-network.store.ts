@@ -1,6 +1,6 @@
 import { NetworkReader } from '../application/network-reader.port.js';
 import { Injectable } from '@nestjs/common';
-import { reservationMinimumBatteryPercent, type NetworkHub, type NetworkResource } from '@semh/contracts';
+import { hubMinimumFleetRatio, reservationMinimumBatteryPercent, type NetworkHub, type NetworkResource } from '@semh/contracts';
 import { PrismaService } from '../../../shared/database/prisma.service.js';
 import type { Transaction } from '../../../shared/database/transaction.js';
 
@@ -72,7 +72,7 @@ export class PrismaNetworkStore implements NetworkReader {
         !vehicle.fault && !vehicle.reservationHoldId && !vehicle.transferPlanId).length : 0;
       const vehicleCount = hub.vehicles.filter(vehicle => vehicle.serviceStatus !== 'DRAFT' || vehicle.lastObservedAt).length;
       const alerts: NetworkHub['alerts'] = [];
-      if (enabled && hub.vehicleCapacity > 0 && availableVehicles < hub.vehicleCapacity * 0.15) alerts.push('LOW_FLEET');
+      if (enabled && hub.vehicleCapacity > 0 && availableVehicles < hub.vehicleCapacity * hubMinimumFleetRatio) alerts.push('LOW_FLEET');
       if (enabled && hub.vehicleCapacity > 0 && vehicleCount > hub.vehicleCapacity * 0.9) alerts.push('NEAR_CAPACITY');
       return {
         id: hub.id, code: hub.code, name: hub.name, latitude: hub.latitude, longitude: hub.longitude,

@@ -17,9 +17,12 @@ export class ChargingController {
   constructor(private readonly charging: ChargingService) {}
 
   @Get()
-  @Roles('STU', 'OPR')
+  @Roles('STU', 'OPR', 'MNT')
   overview(@Req() req: SessionRequest, @Query('mode') mode?: string) {
-    return this.charging.overview(req.sessionView, mode === 'OPR' && req.sessionView.roles.includes('OPR') ? 'OPR' : 'STU');
+    const roles = req.sessionView.roles;
+    const fallback = roles.includes('STU') ? 'STU' : roles.includes('OPR') ? 'OPR' : 'MNT';
+    const selected = mode === 'OPR' && roles.includes('OPR') ? 'OPR' : mode === 'MNT' && roles.includes('MNT') ? 'MNT' : fallback;
+    return this.charging.overview(req.sessionView, selected);
   }
 
   @Post('vehicles/:id/demo-low-battery')
@@ -39,6 +42,29 @@ export class ChargingController {
   create(@Req() req: SessionRequest, @Body() data: unknown) {
     const body = object(data);
     return this.charging.create(req.sessionToken, input(body), change(body));
+  }
+
+  @Post('shared-vehicles/:id/charge')
+  @Roles('OPR')
+  chargeLowBattery(@Req() req: SessionRequest, @Param('id') id: string, @Body() data: unknown) {
+    const body = object(data);
+    return this.charging.create(req.sessionToken, {
+      kind: 'SHARED', vehicleId: uuid(id, 'mã xe'), hubId: uuid(body.hubId, 'mã Hub'),
+      desiredBy: null, neededAt: null,
+    }, change(body), true);
+  }
+
+  @Post('requests/:id/confirm-plug')
+  @Roles('MNT')
+  confirmPlug(@Req() req: SessionRequest, @Param('id') id: string, @Body() data: unknown) {
+    const body = object(data);
+    return this.charging.confirmPlug(req.sessionToken, uuid(id), uuid(body.pointId, 'mã cổng'), change(body));
+  }
+
+  @Post('requests/:id/approve-service')
+  @Roles('OPR')
+  approveService(@Req() req: SessionRequest, @Param('id') id: string, @Body() data: unknown) {
+    return this.charging.approveService(req.sessionToken, uuid(id), change(object(data)));
   }
 
   @Patch('requests/:id')

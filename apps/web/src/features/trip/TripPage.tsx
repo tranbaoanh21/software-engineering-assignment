@@ -6,6 +6,7 @@ import { api, ApiError } from '../../shared/api/http';
 import { SessionContext } from '../../shared/auth/session-context';
 import { reservationApi } from '../res/reservation-api';
 import { MetricIcon } from '../../shared/ui/MetricIcon';
+import { SharedVehicleSummary, VehiclePlate } from '../../shared/ui/VehicleVisual';
 import { PageBanner } from '../../shared/ui/PageBanner';
 import { tripApi } from './trip-api';
 
@@ -177,7 +178,7 @@ export function TripPage() {
   if (loading) return <p role="status">Đang tải chuyến đi…</p>;
   const pickupForm = pickupReservation && <form className="work-card trip-form" onSubmit={pickup}>
     <h2>Nhận xe đã đặt</h2>
-    <p><strong>{pickupReservation.vehicle.code}</strong> · {pickupReservation.hub.name}</p>
+    <p className="trip-pickup-vehicle"><VehiclePlate code={pickupReservation.vehicle.code} /><span>{pickupReservation.hub.name}</span></p>
     <label htmlFor="vehicle-code">Mã trên xe</label>
     <input id="vehicle-code" required maxLength={80} value={vehicleCode} onChange={event => setVehicleCode(event.target.value)} />
     <button className="primary" type="submit" disabled={sending || waiting}>Xác nhận nhận xe</button>
@@ -196,10 +197,7 @@ export function TripPage() {
 
       {!trip && pickupForm}
       {trip && <article className="work-card work-stack trip-current">
-        <div className="work-heading">
-          <h2>{trip.vehicle.code}</h2>
-          <span className="status-pill" data-tone="info">Đang sử dụng</span>
-        </div>
+        <SharedVehicleSummary code={trip.vehicle.code} hubName={trip.startHub.name} status="Đang sử dụng" />
         {activeTrips.length > 1 && <div className="trip-picker">
           <label htmlFor="selected-trip">Chuyến đang diễn ra</label>
           <select id="selected-trip" value={trip.id} onChange={event => {
@@ -234,7 +232,9 @@ export function TripPage() {
           </dl>
         </details>
         {reportedTrip !== trip.id && <details className="trip-incident">
-          <summary>{trip.vehicleFault ? 'Cập nhật địa điểm sự cố' : 'Báo sự cố với xe'}</summary>
+          <summary className={trip.vehicleFault ? 'primary' : undefined}>
+            {trip.vehicleFault ? 'Cập nhật địa điểm sự cố' : 'Báo sự cố với xe'}
+          </summary>
           <form className="work-form" key={trip.id} onSubmit={async event => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
@@ -258,7 +258,7 @@ export function TripPage() {
         {returned.endBattery !== null && <p>Pin đầu chuyến {returned.startBattery}% → Pin cuối chuyến {returned.endBattery}%</p>}
         {returned.status === 'COMPLETED' ? <p>{resultMessage(returned.endVehicleStatus)}</p>
           : <p>Kỹ thuật đã tiếp nhận xe và kết thúc chuyến đi.</p>}
-        <Link className="outline" to="/student/hubs">Về bản đồ Hub</Link>
+        <Link className="primary" to="/student/hubs">Về bản đồ Hub</Link>
       </article>}
       {!trip && !pickupReservation && !returned && !error && <div className="work-card trip-current">
         <p>Bạn chưa có chuyến đi đang diễn ra.</p>

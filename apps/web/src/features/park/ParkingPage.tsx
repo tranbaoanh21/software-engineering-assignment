@@ -145,13 +145,15 @@ export function ParkingPage() {
                 <option value="">Chọn phương tiện</option>
                 {data.vehicles.map(vehicle => <option key={vehicle.id} value={vehicle.id}>{vehicle.plate}</option>)}
               </select>
-            </> : <Link className="outline" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>}
+            </> : <Link className="primary" to="/student/vehicles?add=1">Thêm xe cá nhân</Link>}
             {selectedHub?.availableSpaces === 0 && <p>Hub này đã hết chỗ. Vui lòng chọn Hub khác.</p>}
-            <p>Thời gian giữ chỗ {parkingHoldMinutes} phút.</p>
-            <button className="primary" type="submit"
-              disabled={sending || !selectedVehicle || !selectedHub?.availableSpaces || active.some(item => item.vehicle.id === selectedVehicle.id)}>
-              Xác nhận đặt chỗ
-            </button>
+            {data.vehicles.length > 0 && <>
+              <p>Thời gian giữ chỗ {parkingHoldMinutes} phút.</p>
+              <button className="primary" type="submit"
+                disabled={sending || !selectedVehicle || !selectedHub?.availableSpaces || active.some(item => item.vehicle.id === selectedVehicle.id)}>
+                Xác nhận đặt chỗ
+              </button>
+            </>}
           </form>
 
           <div className="parking-reservations">
@@ -159,6 +161,7 @@ export function ParkingPage() {
             {active.length === 0 && <p>Bạn chưa có lượt đỗ đang hiệu lực.</p>}
             {active.map(item => {
               const waiting = item.verification?.status === 'PENDING';
+              const confirming = item.status === 'CONFIRMED' && confirmCancel === item.id;
               const message = verificationMessage(item);
               return (
                 <article className="reservation-card" key={item.id}>
@@ -175,18 +178,19 @@ export function ParkingPage() {
                       : <div><dt>Giữ đến</dt><dd>{time(item.expiresAt)}</dd></div>}
                   </dl>
                   {message && <p className={waiting ? 'handoff-notice' : 'error'} role="status">{message}</p>}
-                  <div className="reservation-actions parking-actions">
-                    <button className="primary" type="button" disabled={sending || waiting || confirmCancel === item.id}
+                  {!confirming && <div className="reservation-actions parking-actions">
+                    <button className="primary" type="button" disabled={sending || waiting}
                       onClick={() => update(item.id, item.status === 'CONFIRMED' ? 'check-in' : 'check-out')}>
                       {item.status === 'CONFIRMED' ? 'Check-in' : 'Check-out'}
                     </button>
                     {item.status === 'CONFIRMED' && (
-                      <button className="outline" type="button" disabled={sending} onClick={() => setConfirmCancel(item.id)}>
+                      <button className="quiet-action quiet-action-destructive" type="button" disabled={sending}
+                        onClick={() => setConfirmCancel(item.id)}>
                         Hủy giữ chỗ
                       </button>
                     )}
-                  </div>
-                  {item.status === 'CONFIRMED' && confirmCancel === item.id && (
+                  </div>}
+                  {confirming && (
                     <div className="cancel-confirmation">
                       <p>Bạn muốn hủy lượt đặt tại {item.hub.name}?</p>
                       <div className="reservation-actions">

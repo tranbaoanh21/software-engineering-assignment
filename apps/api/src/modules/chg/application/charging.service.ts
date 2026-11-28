@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { formatPrivateVehiclePlate, reservationMinimumBatteryPercent } from '@semh/contracts';
 import type {
   ChangeInput, ChargingRequestView, ChargingStateEvent, ChargingVehicle, PendingChargeStep, SessionView, StateEventReceipt,
 } from '@semh/contracts';
@@ -11,7 +13,7 @@ import { AccessService } from '../../gen/application/access.service.js';
 import { assertOperatorHubs, canOperateAt } from '../../gen/application/operator-scope.js';
 import { chargingPriority, chargingWindowMs, findChargingSlot, type Slot } from '../domain/charging.policy.js';
 import { OwnerChargingContextAdapter } from '../infrastructure/owner-charging-context.adapter.js';
-import { PrismaChargingStore, type StoredCharge } from '../infrastructure/prisma-charging.store.js';
+import { activeChargeForVehicle, PrismaChargingStore, type StoredCharge } from '../infrastructure/prisma-charging.store.js';
 
 export interface ChargeInput {
   kind: ChargingVehicle['kind'];
@@ -30,16 +32,20 @@ interface Candidate {
   neededAt: Date | null;
   preferredPointId: string | null;
   overrideRank: number | null;
+  session?: StoredCharge['session'];
 }
 
 function view(row: StoredCharge): ChargingRequestView {
   const { session } = row;
+  const vehicleCode = row.vehicleKind === 'PRIVATE' ? formatPrivateVehiclePlate(row.vehicleCode) ?? row.vehicleCode : row.vehicleCode;
   return {
-    id: row.id, vehicleKind: row.vehicleKind as ChargingVehicle['kind'], vehicleId: row.vehicleId, vehicleCode: row.vehicleCode,
+    id: row.id, vehicleKind: row.vehicleKind as ChargingVehicle['kind'], vehicleId: row.vehicleId, vehicleCode,
     hubId: row.hubId, status: row.status, reason: row.reason, priority: row.priority, version: row.version,
+    requiresFleetHandoff: row.requiresFleetHandoff,
     session: session ? {
       id: session.id, pointId: session.pointId, pointCode: session.point.code, status: session.status,
       startAt: session.startAt.toISOString(), endAt: session.endAt.toISOString(), batteryPercent: session.batteryPercent,
+      plugConfirmedAt: session.plugConfirmedAt?.toISOString() ?? null,
       releasedAt: session.releasedAt?.toISOString() ?? null, observedAt: session.lastObservedAt?.toISOString() ?? null,
     } : null,
   };
@@ -55,14 +61,17 @@ export class ChargingService {
     @Inject(SETTINGS) private readonly settings: Settings,
   ) {}
 
-  overview(session: SessionView, mode: 'STU' | 'OPR') {
+  overview(session: SessionView, mode: 'STU' | 'OPR' | 'MNT') {
     return this.store.read(async tx => {
-      const hubs = (await this.store.activeHubs(tx)).filter(hub => mode === 'STU' || canOperateAt(session, hub.id));
+      const hubs = (await this.store.activeHubs(tx)).filter(hub => mode !== 'OPR' || canOperateAt(session, hub.id));
       const requests = await this.store.allRequests(tx, mode === 'OPR'
         ? { hubId: session.operatorHubIds === null ? undefined : { in: session.operatorHubIds ?? [] } }
-        : { authorId: session.accountId, vehicleKind: 'PRIVATE' });
+        : mode === 'MNT'
+          ? { vehicleKind: 'SHARED', requiresFleetHandoff: true, hubId: { in: hubs.map(hub => hub.id) },
+            status: { in: ['PENDING', 'SCHEDULED', 'CHARGING', 'AWAITING_APPROVAL'] } }
+          : { authorId: session.accountId, vehicleKind: 'PRIVATE' });
       return {
-        hubs, requests: requests.map(view), vehicles: mode === 'OPR' ? [] : await this.context.personalVehicles(tx, session.accountId),
+        hubs, requests: requests.map(view), vehicles: mode === 'STU' ? await this.context.personalVehicles(tx, session.accountId) : [],
         demoBatteryEnabled: mode === 'STU' && this.settings.demoBatteryEnabled,
       };
     });
@@ -116,16 +125,28 @@ export class ChargingService {
     });
   }
 
-  create(token: string, input: ChargeInput, change: ChangeInput) {
+  create(token: string, input: ChargeInput, change: ChangeInput, lowBatteryOnly = false) {
     return this.store.write(async tx => {
       const actor = await this.access.verifyAccess(token, ['STU', 'OPR'], tx);
       const vehicle = await this.authorizeVehicle(tx, actor, input, false);
       return withChange(tx, actor.accountId, 'CHARGING_REQUEST_CREATED', change, input, async () => {
+        if (lowBatteryOnly && (!vehicle.ready || vehicle.batteryPercent === null ||
+          vehicle.batteryPercent >= reservationMinimumBatteryPercent)) {
+          throw new ConflictException('Xe cần có pin dưới 30% và sẵn sàng tại Hub để dùng nút sạc nhanh.');
+        }
         if (vehicle.batteryPercent === 100) throw new ConflictException('Pin đã đạt mức mục tiêu.');
-        if (await this.hasActiveCharge(tx, vehicle.id)) throw new ConflictException('Xe đã có yêu cầu hoặc phiên sạc chưa giải phóng.');
+        const [active] = await this.store.allRequests(tx, activeChargeForVehicle(vehicle.id));
+        if (active) {
+          if (lowBatteryOnly && active.authorId === null && active.hubId === input.hubId && active.requiresFleetHandoff) {
+            return view(active);
+          }
+          throw new ConflictException('Xe đã có yêu cầu hoặc phiên sạc chưa giải phóng.');
+        }
         const created = await this.store.create(tx, {
           authorId: actor.accountId, requestId: change.requestId, vehicleKind: input.kind, vehicleId: vehicle.id,
           vehicleCode: vehicle.code, hubId: input.hubId, desiredBy: input.desiredBy, neededAt: input.neededAt,
+          requiresFleetHandoff: input.kind === 'SHARED' && vehicle.batteryPercent !== null &&
+            vehicle.batteryPercent < reservationMinimumBatteryPercent,
         });
         await this.reschedule(tx, input.hubId, new Date());
         const result = (await this.store.request(tx, created.id)) ?? created;
@@ -138,6 +159,78 @@ export class ChargingService {
     });
   }
 
+  confirmPlug(token: string, id: string, pointId: string, change: ChangeInput) {
+    return this.store.write(async tx => {
+      const actor = await this.access.verifyAccess(token, ['MNT'], tx);
+      return withChange(tx, actor.accountId, 'CHARGING_PLUG_CONFIRMED', change, { id, pointId }, async () => {
+        const record = await this.store.request(tx, id);
+        if (!record?.requiresFleetHandoff || record.vehicleKind !== 'SHARED') {
+          throw new NotFoundException('Không tìm thấy việc sạc xe dùng chung.');
+        }
+        const { session } = record;
+        if (record.status !== 'SCHEDULED' || !session || session.status !== 'READY' || session.pointId !== pointId ||
+            session.plugConfirmedAt || session.startAt > new Date()) {
+          throw new ConflictException('Lịch sạc đã thay đổi hoặc chưa đến giờ cắm sạc.');
+        }
+        const hub = await this.store.hub(tx, record.hubId);
+        const vehicle = await this.context.vehicle(tx, 'SHARED', record.vehicleId);
+        const { point } = session;
+        if (hub?.serviceStatus !== 'ACTIVE' || hub.fault || point.hubId !== record.hubId ||
+          point.serviceStatus !== 'ACTIVE' || point.fault || point.status !== 'AVAILABLE' ||
+          !vehicle?.ready || vehicle.hubId !== record.hubId || vehicle.connector !== point.connector) {
+          throw new ConflictException('Xe hoặc cổng sạc vừa thay đổi trạng thái. Vui lòng kiểm tra lại.');
+        }
+        const sessions = [
+          ...await this.store.physicalSessions(tx, record.hubId), ...await this.store.confirmedPlugs(tx, record.hubId),
+        ];
+        const load = sessions.filter(item => item.status === 'READY' || item.status === 'CHARGING')
+          .reduce((sum, item) => sum + item.powerKw, 0);
+        if (sessions.some(item => item.pointId === point.id) || load + session.powerKw > hub.chargeKw + 1e-8) {
+          throw new ConflictException('Cổng sạc hoặc công suất của Hub hiện chưa sẵn sàng.');
+        }
+        const now = new Date();
+        const updated = await this.store.setSession(tx, session.id, { plugConfirmedAt: now });
+        await this.audit.append(tx, {
+          actorId: actor.accountId, action: 'CHARGING_PLUG_CONFIRMED', targetType: 'charging-request', targetId: id,
+          requestId: change.requestId, occurredAt: now, details: { pointId },
+        });
+        return view({ ...record, session: { ...updated, point } });
+      });
+    });
+  }
+
+  approveService(token: string, id: string, change: ChangeInput) {
+    return this.store.write(async tx => {
+      const actor = await this.access.verifyAccess(token, ['OPR'], tx);
+      const record = await this.store.request(tx, id);
+      if (!record?.requiresFleetHandoff || record.vehicleKind !== 'SHARED') {
+        throw new NotFoundException('Không tìm thấy việc sạc xe dùng chung.');
+      }
+      assertOperatorHubs(actor, record.hubId);
+      return withChange(tx, actor.accountId, 'CHARGING_SERVICE_APPROVED', change, { id }, async () => {
+        if (record.status !== 'AWAITING_APPROVAL' || !record.session?.releasedAt) {
+          throw new ConflictException('Xe chưa sẵn sàng để xác nhận đưa vào sử dụng.');
+        }
+        const hub = await this.store.hub(tx, record.hubId);
+        if (hub?.serviceStatus !== 'ACTIVE' || hub.fault) throw new ConflictException('Hub không phục vụ.');
+        await this.context.approveChargedVehicle(tx, record.vehicleId, record.hubId);
+        const updated = await this.store.update(tx, id, { status: 'COMPLETED', reason: null });
+        await this.audit.append(tx, {
+          actorId: actor.accountId, action: 'CHARGING_SERVICE_APPROVED', targetType: 'charging-request', targetId: id,
+          requestId: change.requestId, occurredAt: new Date(), details: { hubId: record.hubId, vehicleId: record.vehicleId },
+        });
+        return view(updated);
+      });
+    });
+  }
+
+  async invalidateFleetApprovalInTx(tx: Transaction, vehicleId: string) {
+    const requests = await this.store.allRequests(tx, { vehicleId, vehicleKind: 'SHARED', status: 'AWAITING_APPROVAL' });
+    for (const record of requests) {
+      await this.store.update(tx, record.id, { status: 'INTERRUPTED', reason: 'Xe phát sinh sự cố trước khi đưa vào phục vụ.' });
+    }
+  }
+
   adjust(token: string, id: string, rank: number | null, pointId: string | null, change: ChangeInput) {
     return this.store.write(async tx => {
       const actor = await this.access.verifyAccess(token, ['OPR'], tx);
@@ -146,7 +239,9 @@ export class ChargingService {
       assertOperatorHubs(actor, record.hubId);
       return withChange(tx, actor.accountId, 'CHARGING_ADJUSTED', change, { id, rank, pointId }, async () => {
         assertVersion(record.version, change.version);
-        if (!['PENDING', 'SCHEDULED'].includes(record.status)) throw new ConflictException('Chỉ điều chỉnh phiên chưa bắt đầu.');
+        if (!['PENDING', 'SCHEDULED'].includes(record.status) || record.session?.plugConfirmedAt) {
+          throw new ConflictException('Chỉ điều chỉnh phiên chưa xác nhận cắm sạc.');
+        }
         if (pointId) {
           const point = await this.store.point(tx, pointId);
           if (!point || point.hubId !== record.hubId) throw new ConflictException('Cổng không thuộc Hub của yêu cầu.');
@@ -166,6 +261,22 @@ export class ChargingService {
   }
 
   async refresh() {
+    await this.store.write(async tx => {
+      const vehicles = await this.context.lowBatteryVehicles(tx);
+      if (!vehicles.length) return;
+      const requested = await this.store.activeSharedVehicles(tx, vehicles.map(vehicle => vehicle.id));
+      for (const vehicle of vehicles) {
+        if (!vehicle.hubId || requested.has(vehicle.id)) continue;
+        const request = await this.store.create(tx, {
+          requestId: randomUUID(), vehicleKind: 'SHARED', vehicleId: vehicle.id, vehicleCode: vehicle.code,
+          hubId: vehicle.hubId, requiresFleetHandoff: true,
+        });
+        await this.audit.append(tx, {
+          action: 'CHARGING_REQUEST_QUEUED', targetType: 'charging-request', targetId: request.id,
+          occurredAt: new Date(), details: { hubId: vehicle.hubId, vehicleId: vehicle.id },
+        });
+      }
+    });
     for (const { hubId } of await this.store.hubsWithQueue()) {
       await this.store.write(tx => this.reschedule(tx, hubId, new Date()));
     }
@@ -215,14 +326,18 @@ export class ChargingService {
         await reportFault(tx, point.hubId);
       } else if (event.phase === 'STARTED' && session?.status === 'READY' && event.batteryPercent !== null) {
         const hub = await this.store.hub(tx, point.hubId);
-        const load = bound.filter(item => item.status === 'CHARGING').reduce((sum, item) => sum + item.powerKw, 0);
-        if (existing || point.status !== 'AVAILABLE' || point.serviceStatus !== 'ACTIVE' || point.fault ||
-          hub?.serviceStatus !== 'ACTIVE' || hub.fault || load + session.powerKw > hub.chargeKw + 1e-8 || session.startAt > now) {
+        const otherPlugs = (await this.store.confirmedPlugs(tx, point.hubId)).filter(item => item.id !== session.id);
+        const load = [...bound.filter(item => item.status === 'CHARGING'), ...otherPlugs]
+          .reduce((sum, item) => sum + item.powerKw, 0);
+        if (existing || otherPlugs.some(item => item.pointId === point.id) ||
+          point.status !== 'AVAILABLE' || point.serviceStatus !== 'ACTIVE' || point.fault ||
+          hub?.serviceStatus !== 'ACTIVE' || hub.fault || load + session.powerKw > hub.chargeKw + 1e-8 || session.startAt > now ||
+          (session.request.requiresFleetHandoff && !session.plugConfirmedAt)) {
           return { result: 'rejected' };
         }
         const vehicle = await this.context.vehicle(tx, session.request.vehicleKind, session.request.vehicleId);
         if (!vehicle || !vehicle.ready || event.batteryPercent >= 100 ||
-          (vehicle.kind === 'SHARED' && vehicle.hubId !== point.hubId)) {
+          vehicle.connector !== point.connector || (vehicle.kind === 'SHARED' && vehicle.hubId !== point.hubId)) {
           return { result: 'rejected' };
         }
         await this.context.updateVehicle(tx, vehicle, point.hubId, 'STARTED', event.batteryPercent, observedAt);
@@ -270,7 +385,10 @@ export class ChargingService {
     const battery = event.batteryPercent!;
     const vehicle = { kind: session.request.vehicleKind as ChargingVehicle['kind'], id: session.request.vehicleId };
     if (event.phase === 'RELEASED' && ['INTERRUPTED', 'COMPLETED'].includes(session.status)) {
-      await this.context.updateVehicle(tx, vehicle, session.request.hubId, fault && battery < 30 ? 'FAULT' : 'RELEASED', battery, observedAt);
+      const phase = session.request.requiresFleetHandoff
+        ? 'RELEASED_FOR_APPROVAL' : fault && battery < reservationMinimumBatteryPercent ? 'FAULT' : 'RELEASED';
+      const vehicleStatus = await this.context.updateVehicle(tx, vehicle, session.request.hubId, phase, battery, observedAt);
+      if (vehicleStatus === 'AWAITING_CHARGE_APPROVAL') await this.store.updateStatus(tx, session.requestId, 'AWAITING_APPROVAL');
       await this.store.setSession(tx, session.id, { releasedAt: observedAt, lastObservedAt: observedAt, batteryPercent: battery });
       await this.store.setPoint(tx, session.pointId, { status: fault ? 'OUT_OF_SERVICE' : 'AVAILABLE', lastObservedAt: observedAt });
       return true;
@@ -290,13 +408,7 @@ export class ChargingService {
   }
 
   private async hasActiveCharge(tx: Transaction, vehicleId: string) {
-    return (await this.store.allRequests(tx, {
-      vehicleId,
-      OR: [
-        { status: { in: ['PENDING', 'SCHEDULED', 'CHARGING'] } },
-        { session: { startedAt: { not: null }, releasedAt: null } },
-      ],
-    })).length > 0;
+    return (await this.store.allRequests(tx, activeChargeForVehicle(vehicleId))).length > 0;
   }
 
   private async authorizeVehicle(tx: Transaction, actor: SessionView, input: ChargeInput, checkBattery = true) {
@@ -329,6 +441,14 @@ export class ChargingService {
     const candidates = [];
     for (const candidate of extra ? [...requests, extra] : requests) {
       const vehicle = await this.context.vehicle(tx, candidate.vehicleKind, candidate.vehicleId);
+      const { session } = candidate;
+      if (session?.plugConfirmedAt && session.status === 'READY' && session.point.status === 'AVAILABLE' &&
+          session.point.serviceStatus === 'ACTIVE' && !session.point.fault && hub?.serviceStatus === 'ACTIVE' && !hub.fault &&
+          vehicle?.ready && vehicle.hubId === hubId && vehicle.connector === session.point.connector &&
+          !physical.some(item => item.pointId === session.pointId)) {
+        timetable.push({ pointId: session.pointId, start: base, end: Math.max(base + 60_000, session.endAt.getTime()), powerKw: session.powerKw });
+        continue;
+      }
       const priority = chargingPriority(vehicle?.batteryPercent ?? null, candidate.neededAt, now);
       candidates.push({ candidate, vehicle, priority });
     }
@@ -351,7 +471,8 @@ export class ChargingService {
         if (slot) timetable.push(slot);
         else reason = 'Không có cổng tương thích hoặc khung giờ khả thi trong giới hạn công suất.';
       }
-      return { candidate, priority, battery: vehicle?.batteryPercent, reason, slot };
+      const departed = vehicle?.kind === 'SHARED' && vehicle.hubId !== hubId;
+      return { candidate, priority, battery: vehicle?.batteryPercent, reason, slot, departed };
     });
   }
 
@@ -362,7 +483,7 @@ export class ChargingService {
       if (item.slot && item.battery != null) {
         const { pointId, start, end, powerKw } = item.slot;
         const session = record.session;
-        if (session?.pointId !== pointId || session.startAt.getTime() !== start ||
+        if (session?.plugConfirmedAt || session?.pointId !== pointId || session.startAt.getTime() !== start ||
             session.endAt.getTime() !== end || session.batteryPercent !== item.battery) {
           await this.store.setAllocation(tx, record.id, {
             pointId, startAt: new Date(start), endAt: new Date(end), powerKw, batteryPercent: item.battery,
@@ -371,7 +492,7 @@ export class ChargingService {
       } else if (record.session) {
         await this.store.removeAllocation(tx, record.id);
       }
-      const status = item.slot ? 'SCHEDULED' : 'PENDING';
+      const status = item.departed ? 'INTERRUPTED' : item.slot ? 'SCHEDULED' : 'PENDING';
       if (record.status !== status || record.reason !== item.reason || record.priority !== item.priority ||
         (item.slot && (record.session?.pointId !== item.slot.pointId || record.session.startAt.getTime() !== item.slot.start))) {
         await this.store.update(tx, record.id, { status, reason: item.reason, priority: item.priority });

@@ -10,12 +10,15 @@ export class ChargingScheduler implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly charging: ChargingService) {}
 
   onModuleInit() {
-    this.timer = setInterval(() => {
+    if (process.env.NODE_ENV === 'test') return;
+    const refresh = () => {
       if (this.running) return;
       this.running = this.charging.refresh()
         .catch(error => this.logger.error('Charging schedule refresh failed', error))
         .finally(() => { this.running = undefined; });
-    }, 300_000);
+    };
+    refresh();
+    this.timer = setInterval(refresh, 10_000);
     this.timer.unref();
   }
 

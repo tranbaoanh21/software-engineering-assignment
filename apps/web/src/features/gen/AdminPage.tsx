@@ -25,6 +25,7 @@ export function AdminPage() {
     (item.username + ' ' + item.displayName).toLocaleLowerCase('vi').includes(query.trim().toLocaleLowerCase('vi'))) ?? [];
   const selected = view.key === 'permissions' ? accounts.data?.find(item => item.id === permissionsId)
     : shown.find(item => item.id === selectedId) ?? shown[0];
+  const locked = selected?.status === 'LOCKED';
   const operatorRole = selected?.assignments.find(item => item.role === 'OPR');
   const hubNames = new Map(catalog.data?.hubs.map(hub => [hub.id, hub.name]));
 
@@ -87,7 +88,10 @@ export function AdminPage() {
       <div className="filter-toolbar">
         <label className="search-field">Tìm tài khoản<input type="search" value={query} onChange={event => { setQuery(event.target.value); setAccountAction(undefined); }}
           placeholder="Tên hoặc tên đăng nhập" /></label>
-        <button type="button" className="primary" onClick={() => setCreateOpen(!createOpen)} aria-expanded={createOpen}>
+        <button type="button" className={selected || createOpen ? 'outline' : 'primary'} onClick={() => {
+          setAccountAction(undefined);
+          setCreateOpen(!createOpen);
+        }} aria-expanded={createOpen}>
           {createOpen ? 'Đóng biểu mẫu' : 'Cấp tài khoản'}
         </button>
       </div>
@@ -118,22 +122,32 @@ export function AdminPage() {
           <div><dt>Vai trò</dt><dd>{selected.assignments.map(item => roleNames[item.role]).join(', ') || 'Chưa cấp quyền'}</dd></div>
           <div><dt>Phạm vi</dt><dd>{scope(selected)}</dd></div>
         </dl>
-        <div className="work-actions">
-          <button className="outline" type="button" onClick={() => setAccountAction('info')}>Sửa thông tin</button>
-          <button className={selected.status === 'ACTIVE' ? 'danger' : 'outline'} type="button" onClick={() => setAccountAction('status')}>
-            {selected.status === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
-          </button>
-          <Link className="outline" to={'?tab=permissions&account=' + encodeURIComponent(selected.id)}>Phân quyền</Link>
-        </div>
+        {!createOpen && !accountAction && <div className="work-actions">
+          {locked && <button className="primary" type="button" onClick={() => setAccountAction('status')}>Mở khóa tài khoản</button>}
+          <Link className={locked ? 'outline' : 'primary'}
+            to={'?tab=permissions&account=' + encodeURIComponent(selected.id)}>Phân quyền</Link>
+          <button className={locked ? 'quiet-action' : 'outline'} type="button"
+            onClick={() => setAccountAction('info')}>Sửa thông tin</button>
+          {!locked && <button className="quiet-action quiet-action-destructive" type="button"
+            onClick={() => setAccountAction('status')}>Khóa tài khoản</button>}
+        </div>}
         {accountAction === 'info' && <form className="work-form inline-action" onSubmit={event => void save(event, 'info')}>
           <label>Tên hiển thị<input name="name" defaultValue={selected.displayName} maxLength={100} required /></label>
-          <button className="primary" disabled={action.pending}>Lưu thông tin</button>
+          <div className="work-actions">
+            <button className="primary" disabled={action.pending}>Lưu thông tin</button>
+            <button className="outline" type="button" disabled={action.pending} onClick={() => setAccountAction(undefined)}>Quay lại</button>
+          </div>
         </form>}
         {accountAction === 'status' && <form className="work-form inline-action" onSubmit={event => void save(event, 'status')}>
+          <h3>{locked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}</h3>
+          {!locked && <p>Tài khoản sẽ bị đăng xuất và không thể đăng nhập cho tới khi được mở khóa.</p>}
           <label>Lý do<input name="reason" required maxLength={500} /></label>
-          <button className={selected.status === 'ACTIVE' ? 'danger' : 'primary'} disabled={action.pending}>
-            {selected.status === 'ACTIVE' ? 'Xác nhận khóa' : 'Xác nhận mở khóa'}
-          </button>
+          <div className="work-actions">
+            <button className={locked ? 'primary' : 'danger'} disabled={action.pending}>
+              {locked ? 'Xác nhận mở khóa' : 'Xác nhận khóa'}
+            </button>
+            <button className="outline" type="button" disabled={action.pending} onClick={() => setAccountAction(undefined)}>Quay lại</button>
+          </div>
         </form>}
       </section>}
       </div>

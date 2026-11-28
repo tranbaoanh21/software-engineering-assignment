@@ -112,6 +112,24 @@ p { line-height: 1.55; }
 .primary:disabled { opacity: .7; }
 .outline { background: #fff; color: var(--navy); border-color: var(--border-strong); }
 .outline:hover:not(:disabled) { background: #f4f8fa; }
+.quiet-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--teal);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+.quiet-action:hover:not(:disabled) { background: #eaf4f5; }
+.quiet-action:disabled { opacity: .7; }
+.quiet-action-destructive { color: #9b2c36; }
+.quiet-action-destructive:hover:not(:disabled) { background: #fff2f4; }
 
 .error { color: #a12735; background: #fff2f4; border: 1px solid #f2ccd4; padding: 10px 12px; border-radius: 8px; }
 .site-body { min-width: 0; }
@@ -207,6 +225,8 @@ p { line-height: 1.55; }
   padding: 10px 15px;
   font-weight: 600;
 }
+.danger:hover:not(:disabled) { background: #82242e; }
+.danger:disabled { opacity: .7; }
 .trip-content { display: grid; gap: 18px; }
 .trip-content > h1 { margin-bottom: 0; }
 .trip-form { display: grid; gap: 10px; justify-items: start; }
@@ -348,8 +368,7 @@ details > summary { cursor: pointer; font-weight: 600; color: #075d69; }
 
 .receipt-back { display: inline-block; margin-bottom: 16px; color: var(--navy); }
 .receipt-grid, .trip-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 24px; align-items: start; }
-.receipt-vehicle { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
-.receipt-illustration { display: grid; place-items: center; width: 165px; height: 152px; border-radius: 12px; background: var(--blue); }
+.trip-form .trip-pickup-vehicle { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .receipt-actions { display: grid; gap: 10px; }
 .receipt-time-label { font-size: .93rem; color: var(--muted); }
 .receipt-timer { font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -378,8 +397,7 @@ details > summary { cursor: pointer; font-weight: 600; color: #075d69; }
 .charging-request-form label + small { margin-top: 6px; }
 .charging-time-help, .charging-time-options { grid-column: 1 / -1; }
 .charging-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-top: 12px; }
-.simulation-form { margin: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.simulation-form label:has(textarea), .simulation-form > details { grid-column: 1 / -1; }
+.simulation-form { margin: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 .simulation-form .check-field { display: inline-flex; margin-right: 12px; }
 @media (max-width: 760px) {
   .charging-request-form, .charging-time-fields, .simulation-layout, .simulation-form { grid-template-columns: minmax(0, 1fr); }
@@ -464,7 +482,6 @@ h1 { font-weight: 700; letter-spacing: -.025em; }
 .charging-layout .app-pane-list + details { margin-top: 4px; }
 .charging-layout details .app-pane-list { margin-top: 8px; }
 .simulation-form h2, .simulation-form > p { grid-column: 1 / -1; }
-.simulation-advanced { border-top: 1px solid var(--line); padding-top: 10px; }
 
 @media (max-width: 850px) {
   .workspace-sidebar { top: 65px; box-shadow: 0 12px 25px #102a4330; }
@@ -497,6 +514,11 @@ h1 { font-weight: 700; letter-spacing: -.025em; }
   border: 0; border-radius: 12px; margin-bottom: 24px;
 }
 .student-shell .page-banner p { color: #ecf8fa; }
+.student-shell .page-banner .primary { background: #fff; color: var(--navy); font-weight: 600; }
+.student-shell .page-banner .primary:hover { background: #eaf4f5; }
+.student-shell .page-banner .outline { background: transparent; border-color: #ffffffa6; color: #fff; }
+.student-shell .page-banner .outline:hover:not(:disabled) { background: #ffffff20; }
+.student-shell .page-banner :is(.primary, .outline):focus-visible { outline-color: #fff; }
 .student-shell .trip-content .page-banner { margin-bottom: 0; }
 .student-shell :is(.primary, .outline) { min-height: 40px; border-radius: 6px; }
 .student-shell :is(.work-card, .reservation-card) { box-shadow: none; }
@@ -506,6 +528,8 @@ h1 { font-weight: 700; letter-spacing: -.025em; }
 .student-shell .trip-form :is(input, select), .student-shell .parking-form select { min-height: 42px; }
 .student-shell .work-form > details label:first-child { margin-top: 0; }
 .student-shell .work-card > details:not(.work-notice) > summary { min-height: 0; }
+.student-shell .trip-current > .trip-incident > summary.primary { min-height: 40px; }
+.trip-incident[open] > summary.primary { background: transparent; color: var(--teal); padding-inline: 0; }
 .activity-metrics .work-card { color: var(--navy); text-decoration: none; }
 .activity-metrics .work-card:hover { border-color: var(--teal); }
 .charging-layout-student { grid-template-columns: minmax(240px, 1fr) minmax(0, 2.2fr); }

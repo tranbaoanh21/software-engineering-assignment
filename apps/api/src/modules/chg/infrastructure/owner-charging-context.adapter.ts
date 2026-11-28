@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { ChargingVehicle } from '@semh/contracts';
 import type { Transaction } from '../../../shared/database/transaction.js';
 import { PrivateCharging } from '../../park/application/private-charging.port.js';
-import { FleetNetwork } from '../../trip/application/fleet-network.port.js';
+import { FleetNetwork, type FleetChargingPhase } from '../../trip/application/fleet-network.port.js';
 
 @Injectable()
 export class OwnerChargingContextAdapter {
@@ -10,6 +10,14 @@ export class OwnerChargingContextAdapter {
 
   vehicle(tx: Transaction, kind: string, id: string) {
     return kind === 'PRIVATE' ? this.parking.chargingVehicle(tx, id) : this.fleet.chargingVehicle(tx, id);
+  }
+
+  lowBatteryVehicles(tx: Transaction) {
+    return this.fleet.lowBatteryVehicles(tx);
+  }
+
+  approveChargedVehicle(tx: Transaction, id: string, hubId: string) {
+    return this.fleet.approveChargedVehicle(tx, id, hubId);
   }
 
   personalVehicles(tx: Transaction, ownerId: string) {
@@ -22,7 +30,7 @@ export class OwnerChargingContextAdapter {
 
   updateVehicle(
     tx: Transaction, vehicle: Pick<ChargingVehicle, 'kind' | 'id'>,
-    hubId: string, phase: 'STARTED' | 'PROGRESS' | 'RELEASED' | 'FAULT', battery: number, observedAt: Date,
+    hubId: string, phase: FleetChargingPhase, battery: number, observedAt: Date,
   ) {
     return vehicle.kind === 'PRIVATE'
       ? this.parking.recordBattery(tx, vehicle.id, battery, observedAt)
